@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var pvc_plotClassByType = {};
+
 /**
  * Initializes a plot.
  * 
@@ -73,6 +75,15 @@ def
                     colorRoleName, 
                     this.option('DataPart'));
         }
+    }
+})
+.addStatic({
+    registerClass: function(Class) {
+        pvc_plotClassByType[Class.prototype.type] = Class;
+    },
+
+    getClass: function(type) {
+        return def.getOwn(pvc_plotClassByType, type);
     }
 });
 

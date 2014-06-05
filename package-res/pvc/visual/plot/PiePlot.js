@@ -43,6 +43,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.PiePlot.optionsDef; }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.PiePlot);
+
 pvc.visual.PiePlot.optionsDef = def.create(
     pvc.visual.Plot.optionsDef, {
         ActiveSliceRadius: {

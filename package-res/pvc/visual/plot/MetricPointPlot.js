@@ -34,6 +34,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.MetricPointPlot.optionsDef; }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.MetricPointPlot);
+
 function pvcMetricPoint_buildVisibleOption(type) {
     return {
         resolveV1: function(optionInfo) {

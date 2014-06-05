@@ -36,6 +36,8 @@ def
     }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.HeatGridPlot);
+
 pvc.visual.HeatGridPlot.optionsDef = def.create(
     pvc.visual.CategoricalPlot.optionsDef, 
     {

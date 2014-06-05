@@ -19,6 +19,8 @@ def
     }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.PointPlot);
+
 function pvcPoint_buildVisibleOption(type, dv){
     return {
         resolveV1: function(optionInfo) {

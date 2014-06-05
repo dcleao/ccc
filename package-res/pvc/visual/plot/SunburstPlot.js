@@ -33,6 +33,8 @@ def
     }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.SunburstPlot);
+
 pvc.visual.SunburstPlot.optionsDef = def.create(
     pvc.visual.Plot.optionsDef, {
         SizeRole: {

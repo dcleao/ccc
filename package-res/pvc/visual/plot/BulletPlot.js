@@ -19,6 +19,8 @@ def
     }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.BulletPlot);
+
 pvc.visual.BulletPlot.optionsDef = def.create(
     pvc.visual.Plot.optionsDef, {
         ValuesVisible: { // override

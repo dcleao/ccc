@@ -19,6 +19,8 @@ def
     }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.BoxPlot);
+
 pvc.visual.BoxPlot.optionsDef = def.create(
     pvc.visual.CategoricalPlot.optionsDef, 
     {

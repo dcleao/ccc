@@ -14,3 +14,5 @@ def
 .add({
     type: 'bar'
 });
+
+pvc.visual.Plot.registerClass(pvc.visual.BarPlot);

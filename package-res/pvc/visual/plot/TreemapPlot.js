@@ -33,6 +33,8 @@ def
     }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.TreemapPlot);
+
 pvc.visual.TreemapPlot.optionsDef = def.create(
     pvc.visual.Plot.optionsDef, {
         SizeRole: {

@@ -16,6 +16,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.NormalizedBarPlot.optionsDef; }
 });
 
+// TODO: pvc.visual.Plot.registerClass(pvc.visual.NormalizedBarPlot) cannot register under same name...
+
 pvc.visual.NormalizedBarPlot.optionsDef = def.create(
     pvc.visual.BarPlotAbstract.optionsDef, 
     {

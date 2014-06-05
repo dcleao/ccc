@@ -17,6 +17,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.WaterfallPlot.optionsDef; }
 });
 
+pvc.visual.Plot.registerClass(pvc.visual.WaterfallPlot);
+
 pvc.visual.WaterfallPlot.optionsDef = def.create(
     pvc.visual.BarPlotAbstract.optionsDef, 
     {
