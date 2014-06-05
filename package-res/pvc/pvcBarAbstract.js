@@ -7,15 +7,6 @@
  */
 def
 .type('pvc.BarAbstract', pvc.CategoricalAbstract)
-.init(function(options){
-
-    this.base(options);
-
-    var parent = this.parent;
-    if(parent) {
-        this._valueRole = parent._valueRole;
-    }
-})
 .add({
     // NOTE
     // Timeseries category with bar charts are supported differently in V2 than in V1
@@ -31,7 +22,7 @@ def
      * Initializes each chart's specific roles.
      * @override
      */
-    _initVisualRoles: function(){
+    _initVisualRoles: function() {
         
         this.base();
         
@@ -44,25 +35,14 @@ def
             valueType: Number,
             defaultDimension: 'value'
         });
-
-        this._valueRole = this.visualRoles.value;
     },
     
-    _getCategoryRoleSpec: function(){
+    _getCategoryRoleSpec: function() {
         var catRoleSpec = this.base();
         
         // Force dimension to be discrete!
         catRoleSpec.requireIsDiscrete = true;
         
         return catRoleSpec;
-    },
-    
-    _initData: function(){
-        this.base.apply(this, arguments);
-
-        var data = this.data;
-
-        // Cached
-        this._valueDim = data.dimensions(this._valueRole.firstDimensionName());
     }
 });
