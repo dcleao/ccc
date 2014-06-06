@@ -45,7 +45,7 @@ def
         }
     },
   
-    _createContent: function(contentOptions){
+    _createContent: function(parentPanel, contentOptions) {
         // Create DataEngine
         var structEngine  = this.structEngine;
         var structType    = structEngine ? structEngine.type : new pvc.data.ComplexType();
@@ -71,7 +71,7 @@ def
 
         // ------------------
         
-        this.dataTreePanel = new pvc.DataTreePanel(this, this.basePanel, def.create(contentOptions, {
+        this.dataTreePanel = new pvc.DataTreePanel(this, parentPanel, def.create(contentOptions, {
             topRuleOffset : this.options.topRuleOffset,
             botRuleOffset : this.options.botRuleOffset,
             leftRuleOffset : this.options.leftRuleOffset,

@@ -122,11 +122,11 @@ def
         new pvc.visual.BulletPlot(this);
     },
     
-    _createContent: function(contentOptions){
+    _createContent: function(parentPanel, contentOptions) {
         var bulletPlot = this.plots.bullet;
         this.bulletChartPanel = new pvc.BulletChartPanel(
             this, 
-            this.basePanel, 
+            parentPanel, 
             bulletPlot, 
             contentOptions);
     },

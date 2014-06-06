@@ -74,7 +74,9 @@ pvc.BaseChart
 
         if(!isMultichartRoot) {
             var o = this.options;
-            this._createContent({
+            this._createContent(
+                /*parentPanel*/this.basePanel,
+                /*options*/{
                 margins:           hasMultiRole ? o.smallContentMargins  : o.contentMargins,
                 paddings:          hasMultiRole ? o.smallContentPaddings : o.contentPaddings,
                 clickAction:       o.clickAction,
@@ -85,15 +87,19 @@ pvc.BaseChart
 
     /**
      * Override to create chart specific content panels here.
-     * No need to call base.
+     * Default implementation method creates plot panels.
      *
+     * @param {pvc.BasePanel} parentPanel parent panel for content.
      * @param {object} contentOptions Object with content specific options. Can be modified.
      * @param {pvc.Sides} [contentOptions.margins] The margins for the content panels.
      * @param {pvc.Sides} [contentOptions.paddings] The paddings for the content panels.
      * @virtual
      */
-     // TODO: maybe this should always call _createPlotPanels?
-    _createContent: function(contentOptions) { /* NOOP */ },
+    _createContent: function(parentPanel, contentOptions) {
+        this.plotList.forEach(function(plot) {
+            plot.createPanel(parentPanel, contentOptions);
+        });
+    },
 
     /**
      * Creates and initializes the base panel.

@@ -784,7 +784,7 @@ def
 
                 // Cannot go anymore in the current direction, if any
                 if(dir == null){
-                    if(ticks.exponent === this.exponentMin){
+                    if(ticks.exponent === ticks.exponentMin){
                         lastBelow = ticksInfo;
                         dir =  1;
                     } else {

@@ -72,12 +72,12 @@ def
         }
     },
     
-    _createContent: function(contentOptions){
+    _createContent: function(parentPanel, contentOptions) {
         
         this._createFocusWindow();
         
         /* Create the grid/docking panel */
-        this._gridDockPanel = new pvc.CartesianGridDockingPanel(this, this.basePanel, {
+        this._gridDockPanel = new pvc.CartesianGridDockingPanel(this, parentPanel, {
             margins:  contentOptions.margins,
             paddings: contentOptions.paddings
         });

@@ -88,7 +88,7 @@ def
         }
     },
 
-    _createContent: function(contentOptions) {
+    _createContent: function(parentPanel, contentOptions) {
 
         this.base();
         
@@ -102,7 +102,7 @@ def
         }
         
         var piePlot = this.plots.pie;
-        this.pieChartPanel = new pvc.PiePanel(this, this.basePanel, piePlot, def.create(contentOptions, {
+        this.pieChartPanel = new pvc.PiePanel(this, parentPanel, piePlot, def.create(contentOptions, {
             scenes: def.getPath(this.options, 'pie.scenes')
         }));
     }

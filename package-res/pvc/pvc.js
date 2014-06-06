@@ -615,11 +615,9 @@ pvc.splitIndexedId = function(indexedId){
     return [match[1], index];
 };
 
-function pvc_unwrapExtensionOne(id, prefix){
-    if(id){
-        if(def.object.is(id)){
-            return id.abs;
-        }
+function pvc_unwrapExtensionOne(id, prefix) {
+    if(id) {
+        if(id.abs != null) return id.abs;
 
         return prefix ? (prefix + def.firstUpperCase(id)) : id;
     }

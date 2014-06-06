@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Initializes a chart object with options.
+ * Initializes the object with options.
  * 
  * @name pvc.visual.OptionsBase
  * 
- * @class Represents a chart object that has options.
+ * @class Represents an object, associated with a chart, that has options.
  * 
  * @property {pvc.BaseChart} chart The associated chart.
  * @property {string} type The type of object.

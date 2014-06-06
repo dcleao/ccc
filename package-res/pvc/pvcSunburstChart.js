@@ -80,12 +80,12 @@ def
         return this.base(hasMultiRole);
     },
 
-    _createContent: function(contentOptions) {
+    _createContent: function(parentPanel, contentOptions) {
 
         this.base();
 
         var sunburstPlot = this.plots.sunburst;
-        new pvc.SunburstPanel(this, this.basePanel, sunburstPlot, contentOptions);
+        new pvc.SunburstPanel(this, parentPanel, sunburstPlot, contentOptions);
     },
 
     _createVisibleData: function(baseData, ka) {

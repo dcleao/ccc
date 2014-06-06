@@ -85,12 +85,12 @@ def
         return this.base(hasMultiRole);
     },
     
-    _createContent: function(contentOptions) {
+    _createContent: function(parentPanel, contentOptions) {
 
         this.base();
         
         var treemapPlot = this.plots.treemap;
-        new pvc.TreemapPanel(this, this.basePanel, treemapPlot, contentOptions);
+        new pvc.TreemapPanel(this, parentPanel, treemapPlot, contentOptions);
     },
     
     _createVisibleData: function(baseData, ka) {

@@ -53,7 +53,7 @@ def
     
     // Override
     _resolveByNaked: pvc.options.specify(function(optionInfo){
-        if(!this.globalIndex){
+        if(!this.globalIndex) {
             return this._chartOption(def.firstLowerCase(optionInfo.name));
         }
     }),
