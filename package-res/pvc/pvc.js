@@ -713,9 +713,11 @@ pvc.parseShape = pvc.makeEnumParser('shape', pv.Scene.hasSymbol, null);
 pvc.parseTreemapColorMode =
     pvc.makeEnumParser('colorMode', ['byParent', 'bySelf'], 'byParent');
 
-
 pvc.parseTreemapLayoutMode =
     pvc.makeEnumParser('layoutMode', ['squarify', 'slice-and-dice', 'slice', 'dice'], 'squarify');
+
+pvc.parseMetricPointSizeAxisRatioTo =
+    pvc.makeEnumParser('ratioTo', ['minWidthHeight', 'height', 'width'], 'minWidthHeight');
 
 pvc.parseContinuousColorScaleType = function(scaleType) {
     if(scaleType) {

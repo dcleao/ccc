@@ -8,6 +8,10 @@
 def
 .type('pvc.MetricPointAbstract', pvc.MetricXYAbstract)
 .add({
+    _axisClassByType: {
+        'size': pvc.visual.MetricPointSizeAxis
+    },
+    
     _trendable: true,
 
     _initPlotsCore: function(){
@@ -84,17 +88,9 @@ def
         
         this.base(parentPanel, contentOptions);
         
-        // TODO: integrate these options in the MetricPointPlot or in the SizeAxis?
-        var options = this.options;
-        var panelOptions = def.set(
-            Object.create(contentOptions),
-            'sizeAxisRatio',        options.sizeAxisRatio,
-            'sizeAxisRatioTo',      options.sizeAxisRatioTo,
-            'autoPaddingByDotSize', options.autoPaddingByDotSize);
-        
         var scatterPlot = this.plots.scatter;
             this.scatterChartPanel = // V1 property 
-            new pvc.MetricPointPanel(this, parentPanel, scatterPlot, panelOptions);
+            new pvc.MetricPointPanel(this, parentPanel, scatterPlot, contentOptions);
 
         var trendPlot = this.plots.trend;
         if(trendPlot) {
@@ -102,7 +98,7 @@ def
                 this, 
                 parentPanel, 
                 trendPlot, 
-                Object.create(panelOptions));
+                Object.create(contentOptions));
         }
     },
     

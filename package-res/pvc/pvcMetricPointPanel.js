@@ -26,29 +26,29 @@ def
 
     this.base(chart, parent, plot, options);
 
-    this.axes.size  = chart._getAxis('size', (plot.option('SizeAxis') || 0) - 1); // may be undefined
+    var sizeAxis = this.axes.size = chart._getAxis('size', (plot.option('SizeAxis') || 0) - 1); // may be undefined
 
     var sizeRoleName = plot.option('SizeRole'); // assumed to be always defined
     this.visualRoles.size = sizeRoleName ? chart.visualRole(sizeRoleName) : null;
 
-    this.linesVisible = plot.option('LinesVisible'); // TODO
-    this.dotsVisible  = plot.option('DotsVisible' ); // TODO
+    if(sizeRoleName) {
+        this.sizeAxisRatio = sizeAxis.option('Ratio');
+        this.sizeAxisRatioTo = sizeAxis.option('RatioTo');
+        this.autoPaddingByDotSize = plot.option('AutoPaddingByDotSize');
+    }
+
+    this.linesVisible = plot.option('LinesVisible');
+    this.dotsVisible  = plot.option('DotsVisible' );
     if(!this.linesVisible && !this.dotsVisible){
         this.linesVisible = true;
         plot.option.specify({'LinesVisible': true});
     }
 
-    if(!this.offsetPaddings){
+    if(!this.offsetPaddings) {
         this.offsetPaddings = new pvc_Sides(0.01);
     }
 })
 .add({
-    // Ratio of the biggest bubble diameter to
-    // the length of plot area dimension according to option 'sizeAxisRatioTo'
-    sizeAxisRatio: 1/5,
-    sizeAxisRatioTo: 'minWidthHeight', // 'height', 'width',
-    autoPaddingByDotSize: true,
-
     // Override default mappings
     _v1DimRoleName: {
         //'series':   'series', // inherited

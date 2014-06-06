@@ -89,5 +89,11 @@ pvc.visual.MetricPointPlot.optionsDef = def.create(
 
         ValuesMask: {
             value: "{x},{y}"
+        },
+
+        AutoPaddingByDotSize: {
+            resolve: '_resolveFull',
+            cast:    Boolean,
+            value:   true
         }
     });

@@ -150,12 +150,16 @@
 
         'pvcPointPanel': "pvcPointPanel",
         'pvcPoint': "pvcPoint",
+
         'pvcHeatGridPanel': "pvcHeatGridPanel",
         'pvcHeatGridChart': "pvcHeatGridChart",
+        
         'pvcMetricXYAbstract': "pvcMetricXYAbstract",
         'data/translation/MetricPointChartTranslationOper': "data/translation/MetricPointChartTranslationOper",
+        'visual/MetricPointSizeAxis': "visual/MetricPointSizeAxis",
         'pvcMetricPointPanel': "pvcMetricPointPanel",
         'pvcMetricPoint': "pvcMetricPoint",
+        
         'pvcBulletChart': "pvcBulletChart",
         'pvcParallelCoordinates': "pvcParallelCoordinates",
         'pvcDataTree': "pvcDataTree",
@@ -350,10 +354,13 @@
                 'pvcPoint',
                 'pvcHeatGridPanel',
                 'pvcHeatGridChart',
+
                 'pvcMetricXYAbstract',
                 'data/translation/MetricPointChartTranslationOper',
+                'visual/MetricPointSizeAxis',
                 'pvcMetricPointPanel',
                 'pvcMetricPoint',
+                
                 'pvcBulletChart',
                 'pvcParallelCoordinates',
                 'pvcDataTree',

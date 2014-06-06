@@ -142,8 +142,10 @@ package-res/pvc/pvcPointPanel.js
 package-res/pvc/pvcPoint.js
 package-res/pvc/pvcHeatGridPanel.js
 package-res/pvc/pvcHeatGridChart.js
+
 package-res/pvc/pvcMetricXYAbstract.js
 package-res/pvc/data/translation/MetricPointChartTranslationOper.js
+package-res/pvc/visual/MetricPointSizeAxis.js
 package-res/pvc/pvcMetricPointPanel.js
 package-res/pvc/pvcMetricPoint.js
 package-res/pvc/pvcBulletChart.js
