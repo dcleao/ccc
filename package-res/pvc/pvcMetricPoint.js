@@ -80,11 +80,14 @@ def
     },
     
      /** @override */
-    _createPlotPanels: function(parentPanel, baseOptions) {
+    _createContent: function(parentPanel, contentOptions) {
+        
+        this.base(parentPanel, contentOptions);
+        
         // TODO: integrate these options in the MetricPointPlot or in the SizeAxis?
         var options = this.options;
         var panelOptions = def.set(
-            Object.create(baseOptions),
+            Object.create(contentOptions),
             'sizeAxisRatio',        options.sizeAxisRatio,
             'sizeAxisRatioTo',      options.sizeAxisRatioTo,
             'autoPaddingByDotSize', options.autoPaddingByDotSize);

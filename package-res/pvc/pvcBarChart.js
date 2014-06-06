@@ -64,7 +64,10 @@ def
     /**
      * @override 
      */
-    _createPlotPanels: function(parentPanel, baseOptions){
+    _createContent: function(parentPanel, contentOptions) {
+        
+        this.base(parentPanel, contentOptions);
+
         var plots = this.plots;
         
         var barPlot = plots.bar;
@@ -72,7 +75,7 @@ def
                 this, 
                 parentPanel, 
                 barPlot, 
-                Object.create(baseOptions));
+                Object.create(contentOptions));
 
         // legacy field
         this.barChartPanel = barPanel;
@@ -87,7 +90,7 @@ def
                     this, 
                     parentPanel, 
                     plot2Plot,
-                    Object.create(baseOptions));
+                    Object.create(contentOptions));
             
             // Legacy fields
             barPanel.pvSecondLine = pointPanel.pvLine;
@@ -106,7 +109,7 @@ def
                     this, 
                     parentPanel, 
                     trendPlot,
-                    Object.create(baseOptions));
+                    Object.create(contentOptions));
         }
     }
 });

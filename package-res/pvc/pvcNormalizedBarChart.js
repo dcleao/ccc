@@ -45,7 +45,10 @@ def
     },
     
     /* @override */
-    _createPlotPanels: function(parentPanel, baseOptions){
+    _createContent: function(parentPanel, contentOptions) {
+        
+        this.base(parentPanel, contentOptions);
+        
         var barPlot = this.plots.bar;
         
         this.barChartPanel = 
@@ -53,6 +56,6 @@ def
                 this, 
                 parentPanel, 
                 barPlot, 
-                Object.create(baseOptions));
+                Object.create(contentOptions));
     }
 });

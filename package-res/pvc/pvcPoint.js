@@ -113,7 +113,10 @@ def
     //_createPointPlot: function(){},
     
     /* @override */
-    _createPlotPanels: function(parentPanel, baseOptions){
+    _createContent: function(parentPanel, contentOptions) {
+        
+        this.base(parentPanel, contentOptions);
+        
         var plots   = this.plots;
         
         var pointPlot = plots.point;
@@ -122,7 +125,7 @@ def
                 this, 
                 parentPanel, 
                 pointPlot, 
-                Object.create(baseOptions));
+                Object.create(contentOptions));
         
         var plot2Plot = plots.plot2;
         if(plot2Plot){
@@ -134,7 +137,7 @@ def
                     this, 
                     parentPanel, 
                     plot2Plot,
-                    Object.create(baseOptions));
+                    Object.create(contentOptions));
         }
         
         var trendPlot = plots.trend;
@@ -147,7 +150,7 @@ def
                     this, 
                     parentPanel, 
                     trendPlot,
-                    Object.create(baseOptions));
+                    Object.create(contentOptions));
         }
     },
     

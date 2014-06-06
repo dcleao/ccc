@@ -90,7 +90,10 @@ def
     },
     
     /* @override */
-    _createPlotPanels: function(parentPanel, baseOptions){
+    _createContent: function(parentPanel, contentOptions) {
+        
+        this.base(parentPanel, contentOptions);
+        
         var plots   = this.plots;
             
         var boxPlot  = plots.box; 
@@ -99,7 +102,7 @@ def
             this, 
             parentPanel, 
             boxPlot, 
-            Object.create(baseOptions));
+            Object.create(contentOptions));
 
         // v1 field
         this.bpChartPanel = boxPanel;
@@ -114,7 +117,7 @@ def
                     this, 
                     parentPanel, 
                     plot2Plot,
-                    Object.create(baseOptions));
+                    Object.create(contentOptions));
             
             // HACK:
             pointPanel._v1DimRoleName.value = plot2Plot.option('OrthoRole');

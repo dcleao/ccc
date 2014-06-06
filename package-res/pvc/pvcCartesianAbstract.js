@@ -98,9 +98,8 @@ def
             }
         }, this);
         
-        /* Create main content panel 
-         * (something derived from pvc.CartesianAbstractPanel) */
-        this._createPlotPanels(this._gridDockPanel, {
+        // Create main content panel
+        this.base(this._gridDockPanel, {
             clickAction:       contentOptions.clickAction,
             doubleClickAction: contentOptions.doubleClickAction
         });
