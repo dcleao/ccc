@@ -33,6 +33,15 @@ def
 
     _getOptionsDefinition: function(){
         return pvc.visual.HeatGridPlot.optionsDef;
+    },
+
+    /** @override */
+    createPanel: function(parentPanel, contentOptions) {
+        new pvc.HeatGridPanel(
+                parentPanel.chart,
+                parentPanel,
+                this,
+                Object.create(contentOptions));
     }
 });
 

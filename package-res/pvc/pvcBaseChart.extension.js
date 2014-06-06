@@ -7,33 +7,36 @@
 pvc.BaseChart
 .add({
     _processExtensionPoints: function() {
-        var components;
         if(!this.parent) {
-            // TODO: It's kind of non-sensical to keep the order
-            // of a map (like `extensionPoints`) - JS maps have no guaranteed order.
-            var points = this.options.extensionPoints;
-            components = {};
-            if(points) {
-                for(var p in points) {
-                    var id, prop;
-                    var splitIndex = p.indexOf("_");
-                    if(splitIndex > 0) {
-                        id   = p.substring(0, splitIndex);
-                        prop = p.substr(splitIndex + 1);
-                        if(id && prop) {
-                            var component = def.getOwn(components, id) ||
-                                            (components[id] = new def.OrderedMap());
-                            
-                            component.add(prop, points[p]);
-                        }
-                    }
-                }
-            }
+            this._processExtensionPointsIn(this.options);
+            this._processExtensionPointsIn(this.options.extensionPoints);
         } else {
-            components = this.parent._components;
+            this._components = this.parent._components;
         }
-        
-        this._components = components;
+    },
+
+    _processExtensionPointsIn: function(points, prefix, fNep) {
+        // TODO: It's kind of non-sensical to keep the order
+        // of a map (like `extensionPoints`) - JS maps have no guaranteed order.
+
+        var comps = this._components || (this._components = {}),
+            name, id, prop, splitIndex;
+
+        for(name in points) {
+            splitIndex = name.indexOf("_");
+            if(splitIndex > 0) {
+                id   = name.substring(0, splitIndex);
+                prop = name.substring(splitIndex + 1);
+                if(id && prop) {
+                    if(prefix) id = pvc_unwrapExtensionOne(id, prefix);
+                    (def.getOwn(comps, id) || (comps[id] = new def.OrderedMap()))
+                        .add(prop, points[name]);
+                }
+            } else if(fNep) {
+                id = prefix ? pvc_unwrapExtensionOne(name, prefix) : name;
+                fNep(points[name], id, name);
+            }
+        }
     },
     
     extend: function(mark, ids, keyArgs) {

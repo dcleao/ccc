@@ -25,7 +25,8 @@ def
         'color': true
     },
 
-    _processOptionsCore: function(options){
+    /* @override */
+    _processOptionsCore: function(options) {
         
         this.base(options);
         
@@ -35,7 +36,7 @@ def
             // Has no meaning in the current implementation
             'panelSizeRatio', 1);
         
-     // TODO: get a translator for this!!
+        // TODO: get a translator for this!!
         
         var colorDimName = 'value',
             sizeDimName  = 'value2';
@@ -58,7 +59,8 @@ def
         this._sizeDimName  = sizeDimName ;
     },
     
-    _getCategoryRoleSpec: function(){
+    /* @override */
+    _getCategoryRoleSpec: function() {
         var catRoleSpec = this.base();
         
         // Force dimension to be discrete!
@@ -67,7 +69,8 @@ def
         return catRoleSpec;
     },
     
-    _getColorRoleSpec: function(){
+    /* @override */
+    _getColorRoleSpec: function() {
         return {
             isMeasure: true,
             requireSingleDimension: true,
@@ -94,7 +97,8 @@ def
         });
     },
 
-    _initPlotsCore: function() {
+    /* @override */
+    _createPlotsInternal: function() {
         new pvc.visual.HeatGridPlot(this);
     },
     
@@ -103,14 +107,8 @@ def
         
         this.base(parentPanel, contentOptions);
 
-        var heatGridPlot = this.plots.heatGrid;
-        
-        this.heatGridChartPanel = 
-                new pvc.HeatGridPanel(
-                        this, 
-                        parentPanel, 
-                        heatGridPlot, 
-                        Object.create(contentOptions));
+        // Legacy fields
+        this.heatGridChartPanel = this.plotPanels.heatGrid;
     },
     
     defaults: {

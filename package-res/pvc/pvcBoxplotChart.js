@@ -56,7 +56,7 @@ def
             .add(pvc.data.BoxplotChartTranslationOper);
     },
     
-    _initPlotsCore: function(/*hasMultiRole*/){
+    _createPlotsInternal: function() {
         new pvc.visual.BoxPlot(this);
 
         if(this.options.plot2){
@@ -94,34 +94,12 @@ def
         
         this.base(parentPanel, contentOptions);
         
-        var plots   = this.plots;
-            
-        var boxPlot  = plots.box; 
+        // Legacy field
+        this.bpChartPanel = this.plotPanels.box;
         
-        var boxPanel = new pvc.BoxplotPanel(
-            this, 
-            parentPanel, 
-            boxPlot, 
-            Object.create(contentOptions));
-
-        // v1 field
-        this.bpChartPanel = boxPanel;
-        
-        var plot2Plot = plots.plot2;
-        if(plot2Plot){
-            if(pvc.debug >= 3){
-                this._log("Creating Point panel.");
-            }
-            
-            var pointPanel = new pvc.PointPanel(
-                    this, 
-                    parentPanel, 
-                    plot2Plot,
-                    Object.create(contentOptions));
-            
-            // HACK:
-            pointPanel._v1DimRoleName.value = plot2Plot.option('OrthoRole');
-        }
+        // TODO: HACK:
+        var plot2Panel = this.plotPanels.plot2;
+        if(plot2Panel) plot2Panel._v1DimRoleName.value = plot2Panel.plot.option('OrthoRole');
     },
     
     defaults: {

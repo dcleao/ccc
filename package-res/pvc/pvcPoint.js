@@ -12,6 +12,7 @@ def
     _animatable: true,
     _trendable:  true,
 
+    /** @override */
     _processOptionsCore: function(options){
         // Has no meaning in this chart type
         options.panelSizeRatio = 1;
@@ -19,14 +20,12 @@ def
         this.base(options);
     },
     
+    /** @override */
     _hasDataPartRole: function(){
         return true;
     },
     
-    /**
-     * Initializes each chart's specific roles.
-     * @override
-     */
+    /** @override */
     _initVisualRoles: function(){
         
         this.base();
@@ -42,16 +41,14 @@ def
             });
     },
     
-    _initPlotsCore: function(/*hasMultiRole*/){
-        var options = this.options;
-        
-        var pointPlot = this._createPointPlot();
+    /** @override */
+    _createPlotsInternal: function() {
 
-        var trend = pointPlot.option('Trend');
-        
-        if(options.plot2) {
+        this._createPointPlot();
+
+        if(this.options.plot2) {
             // Line Plot
-            var plot2Plot = new pvc.visual.PointPlot(this, {
+            new pvc.visual.PointPlot(this, {
                 name: 'plot2',
                 fixed: {
                     DataPart: '1'
@@ -61,32 +58,28 @@ def
                     LinesVisible: true,
                     DotsVisible:  true
                 }});
-
-            if(!trend){
-                trend = plot2Plot.option('Trend');
-            }
-        }
-        
-        this._trendable = !!trend;
-        if(trend) {
-            // Trend Plot
-            new pvc.visual.PointPlot(this, {
-                name: 'trend',
-                fixed: {
-                    DataPart: 'trend',
-                    TrendType: 'none',
-                    ColorRole: 'series', // one trend per series
-                    NullInterpolatioMode: 'none'
-                },
-                defaults: {
-                    ColorAxis:    2,
-                    LinesVisible: true,
-                    DotsVisible:  false
-                }
-            });
         }
     },
+
+    /** @override */
+    _createPlotTrend: function() {
+        new pvc.visual.PointPlot(this, {
+            name: 'trend',
+            fixed: {
+                DataPart: 'trend',
+                TrendType: 'none',
+                ColorRole: 'series', // one trend per series
+                NullInterpolatioMode: 'none'
+            },
+            defaults: {
+                ColorAxis:    2,
+                LinesVisible: true,
+                DotsVisible:  false
+            }
+        });
+    },
     
+    /** @override */
     _initAxes: function(hasMultiRole) {
         
         this.base(hasMultiRole);
@@ -110,48 +103,16 @@ def
         }
     },
     
-    //_createPointPlot: function(){},
+    /** @abstract */
+    //_createPointPlot: function() {},
     
-    /* @override */
+    /** @override */
     _createContent: function(parentPanel, contentOptions) {
         
         this.base(parentPanel, contentOptions);
         
-        var plots   = this.plots;
-        
-        var pointPlot = plots.point;
-            this.scatterChartPanel = 
-            new pvc.PointPanel(
-                this, 
-                parentPanel, 
-                pointPlot, 
-                Object.create(contentOptions));
-        
-        var plot2Plot = plots.plot2;
-        if(plot2Plot){
-            if(pvc.debug >= 3){
-                this._log("Creating second Point panel.");
-            }
-            
-            new pvc.PointPanel(
-                    this, 
-                    parentPanel, 
-                    plot2Plot,
-                    Object.create(contentOptions));
-        }
-        
-        var trendPlot = plots.trend;
-        if(trendPlot){
-            if(pvc.debug >= 3){
-                this._log("Creating Trends Point panel.");
-            }
-            
-            new pvc.PointPanel(
-                    this, 
-                    parentPanel, 
-                    trendPlot,
-                    Object.create(contentOptions));
-        }
+        // Legacy fields
+        this.scatterChartPanel = this.plotPanels.point;
     },
     
     defaults: {

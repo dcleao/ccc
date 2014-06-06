@@ -12,7 +12,16 @@
 def
 .type('pvc.visual.BarPlot', pvc.visual.BarPlotAbstract)
 .add({
-    type: 'bar'
+    type: 'bar',
+
+    /** @override */
+    createPanel: function(parentPanel, contentOptions) {
+        new pvc.BarPanel(
+                parentPanel.chart,
+                parentPanel,
+                this,
+                Object.create(contentOptions));
+    }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.BarPlot);

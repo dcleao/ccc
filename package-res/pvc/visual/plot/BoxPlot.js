@@ -14,8 +14,17 @@ def
 .add({
     type: 'box',
     
-    _getOptionsDefinition: function(){
+    _getOptionsDefinition: function() {
         return pvc.visual.BoxPlot.optionsDef;
+    },
+
+    /** @override */
+    createPanel: function(parentPanel, contentOptions) {
+        new pvc.BoxplotPanel(
+                parentPanel.chart,
+                parentPanel,
+                this,
+                Object.create(contentOptions));
     }
 });
 

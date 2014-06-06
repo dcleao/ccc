@@ -14,8 +14,18 @@ def
 .add({
     type: 'point',
     
-    _getOptionsDefinition: function(){
+    /** @override */
+    _getOptionsDefinition: function() {
         return pvc.visual.PointPlot.optionsDef;
+    },
+
+    /** @override */
+    createPanel: function(parentPanel, contentOptions) {
+        new pvc.PointPanel(
+                parentPanel.chart,
+                parentPanel,
+                this,
+                Object.create(contentOptions));
     }
 });
 

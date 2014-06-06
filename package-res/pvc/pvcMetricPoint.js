@@ -14,40 +14,35 @@ def
     
     _trendable: true,
 
-    _initPlotsCore: function(){
-        var pointPlot = this._createPointPlot();
-        
-        var trend = pointPlot.option('Trend');
-        if((this._trendable = !!trend)) {
-            // Trend Plot
-            new pvc.visual.MetricPointPlot(this, {
-                name: 'trend',
-                fixed: {
-                    DataPart: 'trend',
-                    TrendType: 'none',
-                    NullInterpolatioMode: 'none',
-                    ColorRole: 'series', // one trend per series
-                    SizeRole:  null,
-                    SizeAxis:  null,
-                    OrthoAxis:    1
-                },
-                defaults: {
-                    ColorAxis:    2,
-                    LinesVisible: true,
-                    DotsVisible:  false
-                }
-            });
-        }
+    /** @override */
+    _createPlotTrend: function() {
+        new pvc.visual.MetricPointPlot(this, {
+            name: 'trend',
+            fixed: {
+                DataPart: 'trend',
+                TrendType: 'none',
+                NullInterpolatioMode: 'none',
+                ColorRole: 'series', // one trend per series
+                SizeRole:  null,
+                SizeAxis:  null,
+                OrthoAxis: 1
+            },
+            defaults: {
+                ColorAxis:    2,
+                LinesVisible: true,
+                DotsVisible:  false
+            }
+        });
     },
     
-    //_createPointPlot: function(){},
-    
-    /* Required because of trends */
-    _hasDataPartRole: function(){
+    // Required because of trends
+    /** @override */
+    _hasDataPartRole: function() {
         return true;
     },
     
-    _getColorRoleSpec: function(){
+    /** @override */
+    _getColorRoleSpec: function() {
         return {
             //isMeasure: true, // TODO: not being set as measure when continuous...
             defaultSourceRole: 'series',
@@ -58,25 +53,23 @@ def
         };
     },
     
-    /**
-     * Initializes each chart's specific roles.
-     * @override
-     */
-    _initVisualRoles: function(){
+    /** @override */
+    _initVisualRoles: function() {
         
         this.base();
         
         this._addVisualRole('size', {
-                isMeasure: true,
-                requireSingleDimension: true,
-                requireIsDiscrete: false,
-                defaultDimension: 'size',
-                dimensionDefaults: {
-                    valueType: Number
-                }
-            });
+            isMeasure: true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            defaultDimension: 'size',
+            dimensionDefaults: {
+                valueType: Number
+            }
+        });
     },
     
+    /** @override */
     _getTranslationClass: function(translOptions) {
         return def
             .type(this.base(translOptions))
@@ -88,18 +81,8 @@ def
         
         this.base(parentPanel, contentOptions);
         
-        var scatterPlot = this.plots.scatter;
-            this.scatterChartPanel = // V1 property 
-            new pvc.MetricPointPanel(this, parentPanel, scatterPlot, contentOptions);
-
-        var trendPlot = this.plots.trend;
-        if(trendPlot) {
-            new pvc.MetricPointPanel(
-                this, 
-                parentPanel, 
-                trendPlot, 
-                Object.create(contentOptions));
-        }
+        // Legacy fields
+        this.scatterChartPanel = this.plotPanels.scatter;
     },
     
     defaults: {
@@ -114,7 +97,8 @@ def
 def
 .type('pvc.MetricDotChart', pvc.MetricPointAbstract)
 .add({
-    _createPointPlot: function(){
+    /** @override */
+    _createPlotsInternal: function() {
         return new pvc.visual.MetricPointPlot(this, {
             fixed: {DotsVisible: true}
         });
@@ -127,7 +111,8 @@ def
 def
 .type('pvc.MetricLineChart', pvc.MetricPointAbstract)
 .add({
-    _createPointPlot: function(){
+    /** @override */
+    _createPlotsInternal: function() {
         return new pvc.visual.MetricPointPlot(this, {
             fixed: {LinesVisible: true}
         });

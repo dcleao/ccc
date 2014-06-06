@@ -48,10 +48,21 @@ def
     }
 })
 .add({
-    // Override
+    /**
+     * Override to create the plot's panel.
+     *
+     * @param {pvc.BasePanel} parentPanel parent panel.
+     * @param {object} contentOptions Object with content specific options. Can be modified.
+     * @abstract
+     */
+    createPanel: function(parentPanel, contentOptions) {
+        // override me
+    },
+
+    /** @override */
     _getOptionsDefinition: function() { return pvc.visual.Plot.optionsDef; },
     
-    // Override
+    /** @override */
     _resolveByNaked: pvc.options.specify(function(optionInfo){
         if(!this.globalIndex) {
             return this._chartOption(def.firstLowerCase(optionInfo.name));
@@ -65,7 +76,7 @@ def
         }
     },
     
-    _getColorDataCell: function(){
+    _getColorDataCell: function() {
         var colorRoleName = this.option('ColorRole');
         if(colorRoleName) {
             return new pvc.visual.ColorDataCell(

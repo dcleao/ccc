@@ -14,8 +14,10 @@ def
 .add({
     type: 'sunburst',
 
+    /** @override */
     _getOptionsDefinition: function() { return pvc.visual.SunburstPlot.optionsDef; },
 
+    /** @override */
     collectDataCells: function(dataCells) {
 
         this.base(dataCells);
@@ -30,6 +32,15 @@ def
                     sizeRoleName,
                     this.option('DataPart')));
         }
+    },
+
+    /** @override */
+    createPanel: function(parentPanel, contentOptions) {
+        new pvc.SunburstPanel(
+                parentPanel.chart,
+                parentPanel,
+                this,
+                Object.create(contentOptions));
     }
 });
 

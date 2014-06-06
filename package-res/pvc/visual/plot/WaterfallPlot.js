@@ -13,8 +13,18 @@ def
 .type('pvc.visual.WaterfallPlot', pvc.visual.BarPlotAbstract)
 .add({
     type: 'water',
-    
-    _getOptionsDefinition: function() { return pvc.visual.WaterfallPlot.optionsDef; }
+
+    /** @override */    
+    _getOptionsDefinition: function() { return pvc.visual.WaterfallPlot.optionsDef; },
+
+    /** @override */
+    createPanel: function(parentPanel, contentOptions) {
+        new pvc.WaterfallPanel(
+                parentPanel.chart,
+                parentPanel,
+                this,
+                Object.create(contentOptions));
+    }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.WaterfallPlot);

@@ -20,10 +20,8 @@ def
         this.base(options);
     },
 
-    /**
-     * @override
-     */
-    _getContinuousVisibleExtentConstrained: function(axis, min, max){
+    /** @override */
+    _getContinuousVisibleExtentConstrained: function(axis, min, max) {
         if(axis.type === 'ortho') {
             /* 
              * Forces showing 0-100 in the axis.
@@ -39,8 +37,7 @@ def
         return this.base(axis, min, max);
     },
     
-    _initPlotsCore: function(hasMultiRole){
-        
+    _createPlotsInternal: function() {
         new pvc.visual.NormalizedBarPlot(this);
     },
     
@@ -49,13 +46,7 @@ def
         
         this.base(parentPanel, contentOptions);
         
-        var barPlot = this.plots.bar;
-        
-        this.barChartPanel = 
-            new pvc.NormalizedBarPanel(
-                this, 
-                parentPanel, 
-                barPlot, 
-                Object.create(contentOptions));
+        // Legacy fields
+        this.barChartPanel = this.plotPanels.bar;
     }
 });

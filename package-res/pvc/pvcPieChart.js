@@ -70,7 +70,7 @@ def
         });
     },
     
-    _initPlotsCore: function() {
+    _createPlotsInternal: function() {
         new pvc.visual.PiePlot(this);
     },
     
@@ -90,8 +90,8 @@ def
 
     _createContent: function(parentPanel, contentOptions) {
 
-        this.base();
-        
+        // TODO: move these to the pie plot?
+
         var isV1Compat = this.compatVersion() <= 1;
         if(isV1Compat){
             var innerGap = pvc.castNumber(this.options.innerGap) || 0.95;
@@ -100,10 +100,14 @@ def
         } else if(contentOptions.paddings == null) {
             contentOptions.paddings = new pvc_PercentValue(0.025);
         }
+
+        contentOptions.scenes = def.getPath(this.options, 'pie.scenes');
+
+        // ----------------
+
+        this.base(parentPanel, contentOptions);
         
-        var piePlot = this.plots.pie;
-        this.pieChartPanel = new pvc.PiePanel(this, parentPanel, piePlot, def.create(contentOptions, {
-            scenes: def.getPath(this.options, 'pie.scenes')
-        }));
+        // Legacy names
+        this.pieChartPanel = this.plotPanels.pie;
     }
 });

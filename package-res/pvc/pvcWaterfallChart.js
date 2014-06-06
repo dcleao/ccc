@@ -57,7 +57,7 @@ def
         options.plot2 = false;
     },
   
-    _initPlotsCore: function(){
+    _createPlotsInternal: function() {
         var waterPlot = new pvc.visual.WaterfallPlot(this);
         
         this._isFalling = waterPlot.option('Direction') === 'down';
@@ -176,18 +176,12 @@ def
         return result;
     },
     
-    /* @override */
+    /** @override */
     _createContent: function(parentPanel, contentOptions) {
         
         this.base(parentPanel, contentOptions);
-        
-        this.wfChartPanel = 
-            new pvc.WaterfallPanel(
-                    this, 
-                    parentPanel, 
-                    this.plots.water, 
-                    def.create(contentOptions, {
-                        waterfall:  this.options.waterfall
-                    }));
+       
+        // Legacy fields
+        this.wfChartPanel = this.plotPanels.water;
     }
 });

@@ -96,9 +96,9 @@ pvc.BaseChart
      * @virtual
      */
     _createContent: function(parentPanel, contentOptions) {
-        //this.plotList.forEach(function(plot) {
-        //    plot.createPanel(parentPanel, contentOptions);
-        //});
+        this.plotList.forEach(function(plot) {
+            plot.createPanel(parentPanel, contentOptions);
+        });
     },
 
     /**

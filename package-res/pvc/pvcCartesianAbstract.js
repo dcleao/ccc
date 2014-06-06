@@ -76,16 +76,15 @@ def
         
         this._createFocusWindow();
         
-        /* Create the grid/docking panel */
+        // Create the grid/docking panel
         this._gridDockPanel = new pvc.CartesianGridDockingPanel(this, parentPanel, {
             margins:  contentOptions.margins,
             paddings: contentOptions.paddings
         });
         
-        /* Create child axis panels
-         * The order is relevant because of docking order. 
-         */
-        ['base', 'ortho'].forEach(function(type){
+        // Create child axis panels.
+        // The order is relevant because of docking order.
+        ['base', 'ortho'].forEach(function(type) {
             var typeAxes = this.axesByType[type];
             if(typeAxes){
                 def
@@ -98,7 +97,7 @@ def
             }
         }, this);
         
-        // Create main content panel
+        // Create plot content panels inside the grid docking panel
         this.base(this._gridDockPanel, {
             clickAction:       contentOptions.clickAction,
             doubleClickAction: contentOptions.doubleClickAction

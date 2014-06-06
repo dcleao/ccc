@@ -55,7 +55,7 @@ def
     // @override
     _getIsNullDatum: def.fun.constant(),
     
-    _initPlotsCore: function(/*hasMultiRole*/) {
+    _createPlotsInternal: function() {
         var treemapPlot = new pvc.visual.TreemapPlot(this);
         
         if(this.options.legend == null) {
@@ -83,14 +83,6 @@ def
         }
         
         return this.base(hasMultiRole);
-    },
-    
-    _createContent: function(parentPanel, contentOptions) {
-
-        this.base();
-        
-        var treemapPlot = this.plots.treemap;
-        new pvc.TreemapPanel(this, parentPanel, treemapPlot, contentOptions);
     },
     
     _createVisibleData: function(baseData, ka) {

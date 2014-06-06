@@ -57,7 +57,7 @@ def
     // @override
     _getIsNullDatum: def.fun.constant(),
 
-    _initPlotsCore: function(/*hasMultiRole*/) {
+    _createPlotsInternal: function() {
         var sunburstPlot = new pvc.visual.SunburstPlot(this);
 
         // Not currently supported
@@ -79,15 +79,7 @@ def
 
         return this.base(hasMultiRole);
     },
-
-    _createContent: function(parentPanel, contentOptions) {
-
-        this.base();
-
-        var sunburstPlot = this.plots.sunburst;
-        new pvc.SunburstPanel(this, parentPanel, sunburstPlot, contentOptions);
-    },
-
+    
     _createVisibleData: function(baseData, ka) {
         return this.visualRoles.category.select(baseData, ka);
     }

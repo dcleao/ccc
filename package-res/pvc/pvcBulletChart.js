@@ -118,19 +118,10 @@ def
         return translation;
     },
     
-    _initPlotsCore: function(hasMultiRole){
+    _createPlotsInternal: function() {
         new pvc.visual.BulletPlot(this);
     },
     
-    _createContent: function(parentPanel, contentOptions) {
-        var bulletPlot = this.plots.bullet;
-        this.bulletChartPanel = new pvc.BulletChartPanel(
-            this, 
-            parentPanel, 
-            bulletPlot, 
-            contentOptions);
-    },
-  
     defaults: {
         compatVersion: 1,
       
