@@ -99,7 +99,7 @@ def
 
     /* @override */
     _createPlotsInternal: function() {
-        new pvc.visual.HeatGridPlot(this);
+        this._addPlot(new pvc.visual.HeatGridPlot(this));
     },
     
     /* @override */

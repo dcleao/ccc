@@ -60,6 +60,8 @@ def
     _createPlotsInternal: function() {
         var sunburstPlot = new pvc.visual.SunburstPlot(this);
 
+        this._addPlot(sunburstPlot);
+        
         // Not currently supported
         this.options.legend = false;
 

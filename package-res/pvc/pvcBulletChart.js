@@ -119,7 +119,7 @@ def
     },
     
     _createPlotsInternal: function() {
-        new pvc.visual.BulletPlot(this);
+        this._addPlot(new pvc.visual.BulletPlot(this));
     },
     
     defaults: {

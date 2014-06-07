@@ -57,12 +57,12 @@ def
     },
     
     _createPlotsInternal: function() {
-        new pvc.visual.BoxPlot(this);
+        this._addPlot(new pvc.visual.BoxPlot(this));
 
-        if(this.options.plot2){
+        if(this.options.plot2) {
             this._animatable = true;
             // Line Plot
-            new pvc.visual.PointPlot(this, {
+            this._addPlot(new pvc.visual.PointPlot(this, {
                 name: 'plot2',
                 defaults: {
                     LinesVisible: true,
@@ -72,7 +72,7 @@ def
                 },
                 fixed: {
                     OrthoAxis: 1
-                }});
+                }}));
         }
     },
     

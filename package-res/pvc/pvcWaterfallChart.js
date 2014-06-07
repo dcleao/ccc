@@ -60,6 +60,8 @@ def
     _createPlotsInternal: function() {
         var waterPlot = new pvc.visual.WaterfallPlot(this);
         
+        this._addPlot(waterPlot);
+
         this._isFalling = waterPlot.option('Direction') === 'down';
         
         var travProp = this._isFalling ? 'FlattenDfsPre' : 'FlattenDfsPost';

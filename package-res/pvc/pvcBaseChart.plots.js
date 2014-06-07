@@ -119,8 +119,11 @@ pvc.BaseChart
                     [name, plot.type]);
         }
 
-        if(!plot) plot = this._createPlot(name, type, plotDef);
-
+        if(!plot) {
+            plot = this._createPlot(name, type, plotDef);
+            this._addPlot(plot);
+        }
+        
         // Process extension points and publish options
         //  with the plot's most specific prefix (its id: type+index).
         var options = this.options;

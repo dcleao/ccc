@@ -30,9 +30,6 @@ def
     
     this.base(chart, this.type, index, keyArgs);
     
-    // fills globalIndex
-    chart._addPlot(this);
-    
     // -------------
     
     // Last prefix has more precedence.
@@ -41,7 +38,7 @@ def
     var prefixes = this.extensionPrefixes = [this.id];
     
     // Elements of the first plot of the chart (the main plot) can be accessed without prefix.
-    if(!this.globalIndex) prefixes.push('');
+    if(!globalIndex) prefixes.push('');
     
     // The plot name is a valid prefix.
     if(this.name) prefixes.push(this.name);

@@ -14,11 +14,11 @@ def
     
     /** @override */
     _createPlotsInternal: function() {
-        new pvc.visual.BarPlot(this);
+        this._addPlot(new pvc.visual.BarPlot(this));
 
         if(this.options.plot2) {
             // Line Plot
-            new pvc.visual.PointPlot(this, {
+            this._addPlot(new pvc.visual.PointPlot(this, {
                 name: 'plot2',
                 fixed: {
                     DataPart: '1'
@@ -27,7 +27,7 @@ def
                     ColorAxis:    2,
                     LinesVisible: true,
                     DotsVisible:  true
-                }});
+                }}));
         }
     },
     

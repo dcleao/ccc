@@ -15,6 +15,14 @@ def
     _trendable: true,
 
     /** @override */
+    _createPlotsInternal: function() {
+        this._addPlot(this._createPointPlot());
+    },
+
+    /** @abstract */
+    _createPointPlot: function() {},
+
+    /** @override */
     _createPlotTrend: function() {
         new pvc.visual.MetricPointPlot(this, {
             name: 'trend',
@@ -84,6 +92,8 @@ def
         // Legacy fields
         this.scatterChartPanel = this.plotPanels.scatter;
     },
+
+    
     
     defaults: {
         axisOriginIsZero: false,
@@ -98,7 +108,7 @@ def
 .type('pvc.MetricDotChart', pvc.MetricPointAbstract)
 .add({
     /** @override */
-    _createPlotsInternal: function() {
+    _createPointPlot: function() {
         return new pvc.visual.MetricPointPlot(this, {
             fixed: {DotsVisible: true}
         });
@@ -112,7 +122,7 @@ def
 .type('pvc.MetricLineChart', pvc.MetricPointAbstract)
 .add({
     /** @override */
-    _createPlotsInternal: function() {
+    _createPointPlot: function() {
         return new pvc.visual.MetricPointPlot(this, {
             fixed: {LinesVisible: true}
         });

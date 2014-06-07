@@ -58,6 +58,8 @@ def
     _createPlotsInternal: function() {
         var treemapPlot = new pvc.visual.TreemapPlot(this);
         
+        this._addPlot(treemapPlot);
+        
         if(this.options.legend == null) {
             // Only show the legend by default if color mode is byparent
             this.options.legend = treemapPlot.option('ColorMode') === 'byparent';

@@ -71,7 +71,7 @@ def
     },
     
     _createPlotsInternal: function() {
-        new pvc.visual.PiePlot(this);
+        this._addPlot(new pvc.visual.PiePlot(this));
     },
     
     _createVisibleData: function(baseData, ka) {

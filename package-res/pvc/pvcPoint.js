@@ -44,11 +44,11 @@ def
     /** @override */
     _createPlotsInternal: function() {
 
-        this._createPointPlot();
+        this._addPlot(this._createPointPlot());
 
         if(this.options.plot2) {
             // Line Plot
-            new pvc.visual.PointPlot(this, {
+            this._addPlot(new pvc.visual.PointPlot(this, {
                 name: 'plot2',
                 fixed: {
                     DataPart: '1'
@@ -57,7 +57,7 @@ def
                     ColorAxis:    2,
                     LinesVisible: true,
                     DotsVisible:  true
-                }});
+                }}));
         }
     },
 

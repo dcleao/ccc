@@ -38,7 +38,7 @@ def
     },
     
     _createPlotsInternal: function() {
-        new pvc.visual.NormalizedBarPlot(this);
+        this._addPlot(new pvc.visual.NormalizedBarPlot(this));
     },
     
     /* @override */
