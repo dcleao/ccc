@@ -186,10 +186,6 @@ def
         });
     },
     
-    _buildOptionId: function(){
-        return this.id + "Axis";
-    },
-    
     _getOptionsDefinition: function(){
         return colorAxis_optionsDef;
     },

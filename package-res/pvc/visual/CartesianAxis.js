@@ -250,10 +250,6 @@ def
         return cartAxis_optionsDef;
     },
 
-    _buildOptionId: function(){
-        return this.id + "Axis";
-    },
-
     _registerResolversNormal: function(rs, keyArgs){
         // II - By V1 Only Logic
         if(this.chart.compatVersion() <= 1){

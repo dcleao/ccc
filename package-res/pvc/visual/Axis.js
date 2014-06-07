@@ -32,6 +32,11 @@ def
 })
 .add(/** @lends pvc.visual.Axis# */{
 
+    /** @override */
+    _buildOptionId: function() {
+        return this.id + "Axis";
+    },
+    
     // should null values be converted to zero or to the minimum value in what scale is concerned?
     // 'null', 'zero', 'min'
     /** @virtual */scaleTreatsNullAs:   function() { return 'null'; },

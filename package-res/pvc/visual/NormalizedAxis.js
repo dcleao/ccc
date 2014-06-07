@@ -14,11 +14,6 @@ def
     this.base(chart, type, index, keyArgs);
 })
 .add(/** @lends pvc.visual.NormalizedAxis# */{
-    /** @override */
-    _buildOptionId: function() {
-        return this.id + "Axis";
-    },
-
     /** @override */scaleTreatsNullAs:  function() { return 'zero'; },
     /** @override */scaleUsesAbs:       def.retTrue,
     /** @override */scaleSumNormalized: def.retTrue,

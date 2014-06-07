@@ -28,7 +28,7 @@ def
     this.type  = type;
     this.index = index == null ? 0 : index;
     this.name  = def.get(keyArgs, 'name');
-    this.id    = this._buildId();
+    this.id    = pvc.buildIndexedId(this.type, this.index);
     this.optionId = this._buildOptionId();
     
     var rs = this._resolvers = [];
@@ -39,7 +39,7 @@ def
 })
 .add(/** @lends pvc.visual.OptionsBase# */{
     
-    _buildId:       function() { return pvc.buildIndexedId(this.type, this.index); },
+    _buildId:       function() { return  },
     _buildOptionId: function() { return this.id; },
     _chartOption:   function(name) { return this.chart.options[name]; },
     _getOptionsDefinition: def.method({isAbstract: true}),

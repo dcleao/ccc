@@ -23,10 +23,6 @@ def
     this.base(chart, type, index, keyArgs);
 })
 .add(/** @lends pvc.visual.SizeAxis# */{
-    _buildOptionId: function(){
-        return this.id + "Axis";
-    },
-
     /** @override */scaleTreatsNullAs: function() { return 'min'; },
     /** @override */scaleUsesAbs:      function() { return this.option('UseAbs'); },
     
