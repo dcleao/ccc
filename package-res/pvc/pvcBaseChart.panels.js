@@ -272,7 +272,6 @@ pvc.BaseChart
         });
     },
 
-
     /**
      * Override to create chart specific content panels here.
      * Default implementation method creates plot panels.

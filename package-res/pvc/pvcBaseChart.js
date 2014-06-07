@@ -31,17 +31,16 @@ def
 
     this.base();
     
-    if(pvc.debug >= 3){
+    if(pvc.debug >= 3)
         this._info("NEW CHART\n" + pvc.logSeparator.replace(/-/g, '=') + 
                 "\n  DebugLevel: " + pvc.debug);
-    }
     
     /* DEBUG options */
     if(pvc.debug >= 3 && !parent && originalOptions){
         this._info("OPTIONS:\n", originalOptions);
-        if(pvc.debug >= 5){
+        if(pvc.debug >= 5) {
             // Log also as text, for easy copy paste of options JSON
-            this._trace(pvc.stringify(options, {ownOnly: false, funs: true}));
+            this._trace(pvc.stringify(originalOptions, {ownOnly: false, funs: true}));
         }
     }
     

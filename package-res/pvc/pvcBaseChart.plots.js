@@ -120,14 +120,13 @@ pvc.BaseChart
         }
 
         if(!plot) {
-            plot = this._createPlot(name, type, plotDef);
+            plot = this._createPlotExternal(name, type, plotDef);
             this._addPlot(plot);
         }
-        
-        // Process extension points and publish options
-        //  with the plot's most specific prefix (its id: type+index).
+
+        // Process extension points and publish options with the plot's optionId prefix.
         var options = this.options;
-        this._processExtensionPointsIn(plotDef, plot.extensionPrefixes[0], function(optValue, optId, optName) {
+        this._processExtensionPointsIn(plotDef, plot.optionId, function(optValue, optId, optName) {
             // Not an extension point => it's an option
             switch(optName) {
                 // Already handled
@@ -137,7 +136,7 @@ pvc.BaseChart
         });
     },
 
-    _createPlot: function(name, type, plotDef) {
+    _createPlotExternal: function(name, type, plotDef) {
         if(!type) throw def.error.argumentInvalid("plots", "Plot 'type' option is required.");
         
         var PlotClass = pvc.visual.Plot.getClass(type);
@@ -145,13 +144,11 @@ pvc.BaseChart
             throw def.error.argumentInvalid("plots", "The plot type '{0}' is not defined.", [type]);
 
         var isFirst = !this.plotList.length,
-            useNakedOptName = (isFirst || !name || name === 'plot2' || name === 'trend'),
-            optName  = useNakedOptName ? name : (name + 'Plot'),
             dataPart = plotDef.dataPart != null ? plotDef.dataPart : isFirst ? '0' : '1';
 
         return new PlotClass(this, {
             name:       name,
-            optionName: optName,
+            isInternal: false,
             fixed: {
                 DataPart: dataPart
             },

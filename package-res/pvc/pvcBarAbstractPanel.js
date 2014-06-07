@@ -188,7 +188,7 @@ def
         var widthNeedsAntialias = barWidth <= 4 || barMarginWidth < 2;
 
         var pvBar = this.pvBar = new pvc.visual.Bar(me, me.pvBarPanel.item, {
-                extensionId: '', // with the prefix, it gets 'bar_'
+                extensionId: 'bar',
                 freePosition: true,
                 wrapper:      wrapper
             })

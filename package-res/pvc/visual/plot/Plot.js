@@ -14,36 +14,55 @@ var pvc_plotClassByType = {};
  * @name pvc.visual.Plot
  * @class Represents a plot.
  * @extends pvc.visual.OptionsBase
+ * @constructor
+ * @param {pvc.BaseChart} chart The associated chart.
+ * @param {object} [keyArgs] Keyword arguments. See the base class for more information.
+ * @param {string} [keyArgs.optionId] The option id to use.
+ *     Defaults to the <i>id</i>.
  */
 def
 .type('pvc.visual.Plot', pvc.visual.OptionsBase)
 .init(function(chart, keyArgs) {
     // Peek plot type-index
-    var typePlots = def.getPath(chart, ['plotsByType', this.type]);
-    var index = typePlots ? typePlots.length : 0;
+    var typePlots = def.getPath(chart, ['plotsByType', this.type]),
+        index = typePlots ? typePlots.length : 0,
     
-    // Elements of the first plot (of any type)
-    // can be accessed without prefix.
-    // Peek chart's plotList (globalIndex is only set afterwards in addPlot)
-    var globalIndex = chart.plotList.length;
-    keyArgs = def.set(keyArgs, 'byNaked', !globalIndex);
+        // Elements of the first plot (of any type) can be accessed without prefix.
+        // Peek chart's plotList (globalIndex is only set afterwards in addPlot).
+        globalIndex = chart.plotList.length,
+        internalPlot = def.get(keyArgs, 'isInternal', true);
+
+    keyArgs = def.setDefaults(keyArgs, 
+        'byNaked', !globalIndex,
+        'byName',  internalPlot,
+        'byV1',    internalPlot);
     
+    // ById - always.
+    // Yet, external plots get a random option id, to discourage its direct use.
+    if(!internalPlot) 
+        keyArgs.optionId = '_' + ((new Date()).getTime() + Math.floor(Math.random() * 100000));
+
     this.base(chart, this.type, index, keyArgs);
     
     // -------------
     
-    // Last prefix has more precedence.
+    // Last prefix has higher precedence.
     
-    // The plot id is a valid prefix (id=type+index)
-    var prefixes = this.extensionPrefixes = [this.id];
+    // The plot id is a valid prefix (id=type+index).
+    var prefixes = this.extensionPrefixes = [this.optionId];
     
-    // Elements of the first plot of the chart (the main plot) can be accessed without prefix.
-    if(!globalIndex) prefixes.push('');
-    
-    // The plot name is a valid prefix.
-    if(this.name) prefixes.push(this.name);
+    if(internalPlot) {
+        // Elements of the first plot of the chart (the main plot) can be accessed without prefix.
+        if(!globalIndex) prefixes.push('');
+        
+        // The plot name is a valid prefix.
+        if(this.name) prefixes.push(this.name);
+    }
 })
 .add({
+    /** @override */
+    _buildOptionId: function(keyArgs) { return def.get(keyArgs, 'optionId', this.id); },
+
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.Plot.optionsDef; },
     

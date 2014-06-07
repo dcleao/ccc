@@ -20,16 +20,21 @@
  * @param {number} [index=0] The index of the object within its type.
  * @param {object} [keyArgs] Keyword arguments.
  * @param {string} [keyArgs.name] The name of the object.
+ * @param {string} [keyArgs.byV1=true] Whether to resolve using V1 logic.
+ * @param {string} [keyArgs.byName=true] Whether to resolve by name.
+ * @param {string} [keyArgs.byId=true] Whether to resolve by option id.
+ * @param {string} [keyArgs.byNaked] Whether to resolve by naked option name.
+ *     Defaults to <tt>true</tt> if <i>index</i> is 0.
  */
 def
 .type('pvc.visual.OptionsBase')
-.init(function(chart, type, index, keyArgs){
+.init(function(chart, type, index, keyArgs) {
     this.chart = chart;
     this.type  = type;
     this.index = index == null ? 0 : index;
     this.name  = def.get(keyArgs, 'name');
     this.id    = pvc.buildIndexedId(this.type, this.index);
-    this.optionId = this._buildOptionId();
+    this.optionId = this._buildOptionId(keyArgs);
     
     var rs = this._resolvers = [];
     
@@ -38,10 +43,8 @@ def
     this.option = pvc.options(this._getOptionsDefinition(), this);
 })
 .add(/** @lends pvc.visual.OptionsBase# */{
-    
-    _buildId:       function() { return  },
-    _buildOptionId: function() { return this.id; },
-    _chartOption:   function(name) { return this.chart.options[name]; },
+    _buildOptionId:   function(keyArgs) { return this.id; },
+    _chartOption:     function(name) { return this.chart.options[name]; },
     _getOptionsDefinition: def.method({isAbstract: true}),
     
     _registerResolversFull: function(rs, keyArgs) {
@@ -65,31 +68,26 @@ def
     
     _registerResolversNormal: function(rs, keyArgs) {
         // II - By V1 Only Logic
-        if(def.get(keyArgs, 'byV1', true) && this.chart.compatVersion() <= 1)
+        if(def.get(keyArgs, 'byV1', 1) && this.chart.compatVersion() <= 1)
             rs.push(this._resolveByV1OnlyLogic);
         
         // III - By Name (ex: plot2, trend)
-        if(this.name)
-            rs.push(pvc.options.specify(function(optionInfo) {
-                //noinspection JSPotentiallyInvalidUsageOfThis
-                return this._chartOption(this.name + def.firstUpperCase(optionInfo.name));
-            }));
+        if(this.name && def.get(keyArgs, 'byName', 1)) rs.push(this._resolveByName);
         
         // IV - By OptionId
-        rs.push(this._resolveByOptionId);
+        if(def.get(keyArgs, 'byId', 1)) rs.push(this._resolveByOptionId);
         
-        // V - By Naked Id
-        if(def.get(keyArgs, 'byNaked', !this.index))
-            rs.push(this._resolveByNaked);
+        // V - By Naked option name
+        if(def.get(keyArgs, 'byNaked', !this.index)) rs.push(this._resolveByNaked);
     },
     
     // -------------
     
     _resolveFull: function(optionInfo) {
         var rs = this._resolvers;
-        for(var i = 0, L = rs.length ; i < L ; i++) {
-            if(rs[i].call(this, optionInfo)) return true;
-        }
+        for(var i = 0, L = rs.length ; i < L ; i++) 
+            if(rs[i].call(this, optionInfo)) 
+                return true;
         return false;
     },
     
@@ -103,10 +101,9 @@ def
         if(data && (resolverV1 = data.resolveV1))
             return resolverV1.call(this, optionInfo);
     },
-    
+
     _resolveByName: pvc.options.specify(function(optionInfo) {
-        if(this.name)
-            return this._chartOption(this.name + def.firstUpperCase(optionInfo.name));
+        if(this.name) return this._chartOption(this.name + def.firstUpperCase(optionInfo.name));
     }),
     
     _resolveByOptionId: pvc.options.specify(function(optionInfo) {
@@ -114,33 +111,29 @@ def
     }),
     
     _resolveByNaked: pvc.options.specify(function(optionInfo) {
-        // The first of the type receives options without any prefix.
-        if(!this.index)
-            return this._chartOption(def.firstLowerCase(optionInfo.name));
+        return this._chartOption(def.firstLowerCase(optionInfo.name));
     }),
     
-    _resolveDefault: function(optionInfo){
+    _resolveDefault: function(optionInfo) {
         // Dynamic default value?
         var data = optionInfo.data;
         var resolverDefault;
-        if(data && (resolverDefault = data.resolveDefault)){
-            if(resolverDefault.call(this, optionInfo)){
-                return true;
-            }
-        }
+        if(data && 
+           (resolverDefault = data.resolveDefault) && 
+           resolverDefault.call(this, optionInfo)) return true;
         
-        if(this._defaults){
+        if(this._defaults) {
             var value = this._defaults[optionInfo.name];
-            if(value !== undefined){
+            if(value !== undefined) {
                 optionInfo.defaultValue(value);
                 return true;
             }
         }
     },
     
-    _specifyChartOption: function(optionInfo, asName){
+    _specifyChartOption: function(optionInfo, asName) {
         var value = this._chartOption(asName);
-        if(value != null){
+        if(value != null) {
             optionInfo.specify(value);
             return true;
         }
