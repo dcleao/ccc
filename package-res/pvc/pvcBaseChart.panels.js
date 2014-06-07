@@ -86,43 +86,6 @@ pvc.BaseChart
     },
 
     /**
-     * Override to create chart specific content panels here.
-     * Default implementation method creates plot panels.
-     *
-     * @param {pvc.BasePanel} parentPanel parent panel for content.
-     * @param {object} contentOptions Object with content specific options. Can be modified.
-     * @param {pvc.Sides} [contentOptions.margins] The margins for the content panels.
-     * @param {pvc.Sides} [contentOptions.paddings] The paddings for the content panels.
-     * @virtual
-     */
-    _createContent: function(parentPanel, contentOptions) {
-        this.plotList.forEach(function(plot) {
-            this._createPlotPanel(plot, parentPanel, contentOptions);
-        }, this);
-    },
-
-    _createPlotPanel: function(plot, parentPanel, contentOptions) {
-        var PlotPanelClass = pvc.PlotPanel.getClass(plot.type);
-        if(!PlotPanelClass)
-            throw def.error.invalidOperation("There is no registered panel class for plot type '{0}'.", [plot.type]);
-
-        var panel = new PlotPanelClass(
-                this,
-                parentPanel,
-                plot,
-                Object.create(contentOptions));
-
-        var name = plot.name,
-            plotPanels = this.plotPanels;
-            
-        plotPanels[plot.id] = panel;
-        if(name) plotPanels[name] = panel;
-        if(!plot.globalIndex) plotPanels.main = panel;
-
-        this.plotPanelList.push(panel);
-    },
-
-    /**
      * Creates and initializes the base panel.
      */
     _initBasePanel: function() {
@@ -307,6 +270,44 @@ pvc.BaseChart
                 });
             }
         });
+    },
+
+
+    /**
+     * Override to create chart specific content panels here.
+     * Default implementation method creates plot panels.
+     *
+     * @param {pvc.BasePanel} parentPanel parent panel for content.
+     * @param {object} contentOptions Object with content specific options. Can be modified.
+     * @param {pvc.Sides} [contentOptions.margins] The margins for the content panels.
+     * @param {pvc.Sides} [contentOptions.paddings] The paddings for the content panels.
+     * @virtual
+     */
+    _createContent: function(parentPanel, contentOptions) {
+        this.plotList.forEach(function(plot) {
+            this._createPlotPanel(plot, parentPanel, contentOptions);
+        }, this);
+    },
+
+    _createPlotPanel: function(plot, parentPanel, contentOptions) {
+        var PlotPanelClass = pvc.PlotPanel.getClass(plot.type);
+        if(!PlotPanelClass)
+            throw def.error.invalidOperation("There is no registered panel class for plot type '{0}'.", [plot.type]);
+
+        var panel = new PlotPanelClass(
+                this,
+                parentPanel,
+                plot,
+                Object.create(contentOptions));
+
+        var name = plot.name,
+            plotPanels = this.plotPanels;
+            
+        plotPanels[plot.id] = panel;
+        if(name) plotPanels[name] = panel;
+        if(!plot.globalIndex) plotPanels.main = panel;
+
+        this.plotPanelList.push(panel);
     }
 });
 
