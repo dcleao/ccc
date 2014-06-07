@@ -14,18 +14,7 @@ def
 .add({
     type: 'bullet',
     
-    _getOptionsDefinition: function(){
-        return pvc.visual.BulletPlot.optionsDef;
-    },
-
-    /** @override */
-    createPanel: function(parentPanel, contentOptions) {
-        new pvc.BulletChartPanel(
-                parentPanel.chart,
-                parentPanel,
-                this,
-                Object.create(contentOptions));
-    }
+    _getOptionsDefinition: function() { return pvc.visual.BulletPlot.optionsDef; }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.BulletPlot);

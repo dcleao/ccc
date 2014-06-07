@@ -49,6 +49,8 @@ def
     }
 })
 .add({
+    plotType: 'scatter',
+
     // Override default mappings
     _v1DimRoleName: {
         //'series':   'series', // inherited
@@ -615,3 +617,5 @@ def
         return rootScene;
     }
 });
+
+pvc.PlotPanel.registerClass(pvc.MetricPointPanel);

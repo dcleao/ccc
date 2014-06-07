@@ -8,7 +8,11 @@
 def
 .type('pvc.NormalizedBarPanel', pvc.BarAbstractPanel)
 .add({
+    plotType: 'bar',
+
     _barVerticalMode: function(){
         return 'expand';
     }
 });
+
+// TODO: pvc.PlotPanel.registerClass(pvc.NormalizedBarPanel);

@@ -35,6 +35,8 @@ def
     this.nullShape = plot.option('NullShape');
 })
 .add({
+    plotType: 'heatGrid',
+
     defaultBorder:  1,
     nullBorder:     2,
     selectedBorder: 2,
@@ -415,3 +417,5 @@ def
         }
     }
 });
+
+pvc.PlotPanel.registerClass(pvc.HeatGridPanel);

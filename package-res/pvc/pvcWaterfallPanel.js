@@ -23,6 +23,8 @@
 def
 .type('pvc.WaterfallPanel', pvc.BarAbstractPanel)
 .add({
+    plotType: 'water',
+
     pvWaterfallLine: null,
     ruleData: null,
 
@@ -164,9 +166,9 @@ def
                     if(!scene.vars.category.group._isFlattenGroup) {
                         return pv.color(color).alpha(0.5);
                     }
-//                    else {
-//                        return pv.color(color).darker();
-//                    }
+                   // else {
+                   //     return pv.color(color).darker();
+                   // }
                 }
 
                 return color;
@@ -402,3 +404,5 @@ def
         }
     }
 });
+
+pvc.PlotPanel.registerClass(pvc.WaterfallPanel);

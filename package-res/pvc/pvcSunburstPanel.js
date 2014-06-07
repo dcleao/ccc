@@ -21,6 +21,8 @@ def
     this.emptySlicesLabel = this.emptySlicesVisible ? plot.option('EmptySlicesLabel') : "";
 })
 .add({
+    plotType: 'sunburst',
+
     _createCore: function(layoutInfo) {
         var labelFont = this._getConstantExtension('label', 'font');
         if(def.string.is(labelFont)) { this.valuesFont = labelFont; }
@@ -290,6 +292,7 @@ def
     }
 });
 
+pvc.PlotPanel.registerClass(pvc.SunburstPanel);
 
 def
 .type('pvc.visual.SunburstScene', pvc.visual.Scene)

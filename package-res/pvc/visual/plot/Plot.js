@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/** 
+ * Registry of plot classes by type.
+ * @type Object.<string, function>
+ */
 var pvc_plotClassByType = {};
 
 /**
@@ -13,7 +17,7 @@ var pvc_plotClassByType = {};
  */
 def
 .type('pvc.visual.Plot', pvc.visual.OptionsBase)
-.init(function(chart, keyArgs){
+.init(function(chart, keyArgs) {
     // Peek plot type-index
     var typePlots = def.getPath(chart, ['plotsByType', this.type]);
     var index = typePlots ? typePlots.length : 0;
@@ -33,32 +37,16 @@ def
     
     // Last prefix has more precedence.
     
-    // The plot id is always a valid prefix (type+index)
+    // The plot id is a valid prefix (id=type+index)
     var prefixes = this.extensionPrefixes = [this.id];
     
-    if(!this.globalIndex){
-        // Elements of the first plot (of any type)
-        // can be accessed without prefix
-        prefixes.push('');
-    }
+    // Elements of the first plot of the chart (the main plot) can be accessed without prefix.
+    if(!this.globalIndex) prefixes.push('');
     
-    // The plot name, if any is always a valid prefix (name)
-    if(this.name){
-        prefixes.push(this.name);
-    }
+    // The plot name is a valid prefix.
+    if(this.name) prefixes.push(this.name);
 })
 .add({
-    /**
-     * Override to create the plot's panel.
-     *
-     * @param {pvc.BasePanel} parentPanel parent panel.
-     * @param {object} contentOptions Object with content specific options. Can be modified.
-     * @abstract
-     */
-    createPanel: function(parentPanel, contentOptions) {
-        // override me
-    },
-
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.Plot.optionsDef; },
     

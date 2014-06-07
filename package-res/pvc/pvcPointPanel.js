@@ -38,6 +38,8 @@ def
     this.visualRoles.value = chart.visualRole(plot.option('OrthoRole'));
 })
 .add({
+    plotType: 'point',
+
     pvLine: null,
     pvArea: null,
     pvDot: null,
@@ -336,21 +338,21 @@ def
 
                 return color;
             })
-//            .override('interactiveColor', function(scene, color, type){
-//              return scene.isInterpolated && type === 'stroke' ?
-//                     color :
-//                     this.base(scene, color, type);
-//            })
-//            .optionalMark('lineCap', 'round')
-//            .intercept('strokeDasharray', function(scene){
-//                var dashArray = this.delegateExtension();
-//                if(dashArray === undefined){
-//                    // TODO: review interpolated style/visibility
-//                    dashArray = scene.isInterpolated ? '.' : null;
-//                }
-//
-//                return dashArray;
-//            })
+           // .override('interactiveColor', function(scene, color, type){
+           //   return scene.isInterpolated && type === 'stroke' ?
+           //          color :
+           //          this.base(scene, color, type);
+           // })
+           // .optionalMark('lineCap', 'round')
+           // .intercept('strokeDasharray', function(scene){
+           //     var dashArray = this.delegateExtension();
+           //     if(dashArray === undefined){
+           //         // TODO: review interpolated style/visibility
+           //         dashArray = scene.isInterpolated ? '.' : null;
+           //     }
+
+           //     return dashArray;
+           // })
             .override('defaultColor', function(scene, type) {
                 var color = this.base(scene, type);
                 if(!this._finished && darkerLineAndDotColor && color) { color = color.darker(0.6); }
@@ -702,9 +704,9 @@ def
                     // Align directly below the non-null from dot
                     interBasePosition = fromScene.basePosition;
                 }
-//                    else {
-//                        interBasePosition = (toScene.basePosition + fromScene.basePosition) / 2;
-//                    }
+                // else {
+                //     interBasePosition = (toScene.basePosition + fromScene.basePosition) / 2;
+                // }
             } else {
                 var fromValueVar = fromScene.vars.value,
                     toValueVar   = toScene.vars.value;
@@ -780,3 +782,5 @@ def
         }
     }
 });
+
+pvc.PlotPanel.registerClass(pvc.PointPanel);

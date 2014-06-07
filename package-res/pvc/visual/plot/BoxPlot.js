@@ -14,18 +14,7 @@ def
 .add({
     type: 'box',
     
-    _getOptionsDefinition: function() {
-        return pvc.visual.BoxPlot.optionsDef;
-    },
-
-    /** @override */
-    createPanel: function(parentPanel, contentOptions) {
-        new pvc.BoxplotPanel(
-                parentPanel.chart,
-                parentPanel,
-                this,
-                Object.create(contentOptions));
-    }
+    _getOptionsDefinition: function() { return pvc.visual.BoxPlot.optionsDef; }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.BoxPlot);

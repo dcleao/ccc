@@ -97,8 +97,29 @@ pvc.BaseChart
      */
     _createContent: function(parentPanel, contentOptions) {
         this.plotList.forEach(function(plot) {
-            plot.createPanel(parentPanel, contentOptions);
-        });
+            this._createPlotPanel(plot, parentPanel, contentOptions);
+        }, this);
+    },
+
+    _createPlotPanel: function(plot, parentPanel, contentOptions) {
+        var PlotPanelClass = pvc.PlotPanel.getClass(plot.type);
+        if(!PlotPanelClass)
+            throw def.error.invalidOperation("There is no registered panel class for plot type '{0}'.", [plot.type]);
+
+        var panel = new PlotPanelClass(
+                this,
+                parentPanel,
+                plot,
+                Object.create(contentOptions));
+
+        var name = plot.name,
+            plotPanels = this.plotPanels;
+            
+        plotPanels[plot.id] = panel;
+        if(name) plotPanels[name] = panel;
+        if(!plot.globalIndex) plotPanels.main = panel;
+
+        this.plotPanelList.push(panel);
     },
 
     /**

@@ -15,16 +15,7 @@ def
     type: 'water',
 
     /** @override */    
-    _getOptionsDefinition: function() { return pvc.visual.WaterfallPlot.optionsDef; },
-
-    /** @override */
-    createPanel: function(parentPanel, contentOptions) {
-        new pvc.WaterfallPanel(
-                parentPanel.chart,
-                parentPanel,
-                this,
-                Object.create(contentOptions));
-    }
+    _getOptionsDefinition: function() { return pvc.visual.WaterfallPlot.optionsDef; }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.WaterfallPlot);

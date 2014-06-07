@@ -17,6 +17,8 @@ def
     this.layoutMode = plot.option('LayoutMode');
 })
 .add({
+    plotType: 'treemap',
+
     _createCore: function(layoutInfo) {
         var me = this;
         var cs = layoutInfo.clientSize;
@@ -303,3 +305,5 @@ def
         return recursive(rootScene);
     }
 });
+
+pvc.PlotPanel.registerClass(pvc.TreemapPanel);

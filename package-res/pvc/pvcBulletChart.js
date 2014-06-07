@@ -167,10 +167,11 @@ def
  * <i>bulletSubtitle_</i> - for the main bar label
  */
 
-
 def
 .type('pvc.BulletChartPanel', pvc.PlotPanel)
 .add({
+    plotType: 'bullet',
+    
     pvBullets: null,
     pvBullet: null,
     data: null,
@@ -504,3 +505,5 @@ def
         return data;
     }
 });
+
+pvc.PlotPanel.registerClass(pvc.BulletChartPanel);

@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/** 
+ * Registry of plot panel classes by type.
+ * @type Object.<string, function>
+ */
+var pvc_plotPanelClassByType = {};
+
 def
 .type('pvc.PlotPanel', pvc.BasePanel)
 .init(function(chart, parent, plot, options) {
@@ -27,22 +33,15 @@ def
     
     var colorRoleName = plot.option('ColorRole');
     roles.color = colorRoleName ? chart.visualRole(colorRoleName) : null;
-    
-    this.chart._addPlotPanel(this);
 })
 .add({
     anchor:  'fill',
 
     visualRoles: null,
 
-    _getExtensionId: function(){
-        // chart is deprecated
-        var extensionIds = ['chart', 'plot'];
-        if(this.plotName){
-            extensionIds.push(this.plotName);
-        }
-        
-        return extensionIds;
+    _getExtensionId: function() {
+        // NOTE: 'chart' is deprecated. Use 'plot'.
+        return ['chart', 'plot'];
     },
     
     // For setting the renderer of a group scene.
@@ -65,5 +64,14 @@ def
     /* @override */
     isOrientationHorizontal: function(){
         return this.orientation === pvc.orientation.horizontal;
+    }
+})
+.addStatic({
+    registerClass: function(Class, type) {
+        pvc_plotPanelClassByType[type || Class.prototype.plotType] = Class;
+    },
+
+    getClass: function(type) {
+        return def.getOwn(pvc_plotPanelClassByType, type);
     }
 });

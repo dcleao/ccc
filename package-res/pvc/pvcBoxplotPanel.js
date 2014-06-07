@@ -14,10 +14,10 @@ def
     this.maxBoxSize   = plot.option('BoxSizeMax');
 })
 .add({
-    plotType: 'box',
-    
     anchor: 'fill',
     
+    plotType: 'box',
+
     // Override default mappings
     _v1DimRoleName: {
         //'series':   'series',
@@ -28,7 +28,7 @@ def
     /**
      * @override
      */
-    _createCore: function(){
+    _createCore: function() {
 
         this.base();
         
@@ -333,3 +333,5 @@ def
         }
     }
 });
+
+pvc.PlotPanel.registerClass(pvc.BoxplotPanel);

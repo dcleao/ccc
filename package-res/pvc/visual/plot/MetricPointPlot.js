@@ -31,17 +31,7 @@ def
         }
     },
     
-    _getOptionsDefinition: function() { return pvc.visual.MetricPointPlot.optionsDef; },
-
-
-    /** @override */
-    createPanel: function(parentPanel, contentOptions) {
-        new pvc.MetricPointPanel(
-                parentPanel.chart,
-                parentPanel,
-                this,
-                Object.create(contentOptions));
-    }
+    _getOptionsDefinition: function() { return pvc.visual.MetricPointPlot.optionsDef; }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.MetricPointPlot);

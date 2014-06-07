@@ -8,4 +8,7 @@
 def
 .type('pvc.BarPanel', pvc.BarAbstractPanel)
 .add({
+    plotType: 'bar'
 });
+
+pvc.PlotPanel.registerClass(pvc.BarPanel);

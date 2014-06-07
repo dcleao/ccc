@@ -40,15 +40,6 @@ def
     },
 
     /** @override */
-    createPanel: function(parentPanel, contentOptions) {
-        new pvc.PiePanel(
-                parentPanel.chart,
-                parentPanel,
-                this,
-                Object.create(contentOptions));
-    },
-
-    /** @override */
     _getOptionsDefinition: function() { return pvc.visual.PiePlot.optionsDef; }
 });
 

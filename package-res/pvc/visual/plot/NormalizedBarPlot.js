@@ -15,17 +15,7 @@ def
     type: 'bar',
 
     /** @override */
-    _getOptionsDefinition: function() { return pvc.visual.NormalizedBarPlot.optionsDef; },
-
-
-    /** @override */
-    createPanel: function(parentPanel, contentOptions) {
-        new pvc.NormalizedBarPanel(
-                parentPanel.chart,
-                parentPanel,
-                this,
-                Object.create(contentOptions));
-    }
+    _getOptionsDefinition: function() { return pvc.visual.NormalizedBarPlot.optionsDef; }
 });
 
 // TODO: pvc.visual.Plot.registerClass(pvc.visual.NormalizedBarPlot) cannot register under same name...

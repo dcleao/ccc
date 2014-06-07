@@ -32,15 +32,6 @@ def
                     sizeRoleName,
                     this.option('DataPart')));
         }
-    },
-
-    /** @override */
-    createPanel: function(parentPanel, contentOptions) {
-        new pvc.SunburstPanel(
-                parentPanel.chart,
-                parentPanel,
-                this,
-                Object.create(contentOptions));
     }
 });
 

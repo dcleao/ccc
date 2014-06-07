@@ -66,6 +66,8 @@ def
     }
 })
 .add({
+    plotType: 'pie',
+
     pvPie: null,
     pvPieLabel: null,
 
@@ -496,6 +498,8 @@ def
         return rootScene;
     }
 });
+
+pvc.PlotPanel.registerClass(pvc.PiePanel);
 
 def
 .type('pvc.visual.PieRootScene', pvc.visual.Scene)
