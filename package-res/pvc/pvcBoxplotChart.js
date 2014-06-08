@@ -17,7 +17,7 @@
 def
 .type('pvc.BoxplotChart', pvc.CategoricalAbstract)
 .add({
-    _processOptionsCore: function(options){
+    _processOptionsCore: function(options) {
         this.base.apply(this, arguments);
 
         // Not supported
@@ -28,16 +28,16 @@ def
      * Initializes each chart's specific roles.
      * @override
      */
-    _initVisualRoles: function(){
+    _initVisualRoles: function() {
 
         this.base();
 
         var roleSpecBase = {
-                isMeasure: true,
-                requireSingleDimension: true,
-                requireIsDiscrete: false,
-                valueType: Number
-            };
+            isMeasure: true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number
+        };
 
         [
             {name: 'median',       label: 'Median',        defaultDimension: 'median', isRequired: true},
@@ -45,12 +45,12 @@ def
             {name: 'upperQuartil', label: 'Upper Quartil', defaultDimension: 'upperQuartil'},
             {name: 'minimum',      label: 'Minimum',       defaultDimension: 'minimum' },
             {name: 'maximum',      label: 'Maximum',       defaultDimension: 'maximum'}
-        ].forEach(function(info){
+        ].forEach(function(info) {
             this._addVisualRole(info.name, def.create(roleSpecBase, info));
         }, this);
     },
     
-    _getTranslationClass: function(translOptions){
+    _getTranslationClass: function(translOptions) {
         return def
             .type(this.base(translOptions))
             .add(pvc.data.BoxplotChartTranslationOper);
@@ -60,7 +60,6 @@ def
         this._addPlot(new pvc.visual.BoxPlot(this));
 
         if(this.options.plot2) {
-            this._animatable = true;
             // Line Plot
             this._addPlot(new pvc.visual.PointPlot(this, {
                 name: 'plot2',
@@ -76,30 +75,15 @@ def
         }
     },
     
-    _initAxes: function(hasMultiRole){
+    _initAxes: function(hasMultiRole) {
         
         this.base(hasMultiRole);
         
         // Set defaults of Offset property
         var typeAxes = this.axesByType.ortho;
-        if(typeAxes){
-            typeAxes.forEach(function(axis){
-                axis.option.defaults({Offset: 0.02});
-            });
-        }
-    },
-    
-    /* @override */
-    _createContent: function(parentPanel, contentOptions) {
-        
-        this.base(parentPanel, contentOptions);
-        
-        // Legacy field
-        this.bpChartPanel = this.plotPanels.box;
-        
-        // TODO: HACK:
-        var plot2Panel = this.plotPanels.plot2;
-        if(plot2Panel) plot2Panel._v1DimRoleName.value = plot2Panel.plot.option('OrthoRole');
+        if(typeAxes) typeAxes.forEach(function(axis) {
+            axis.option.defaults({Offset: 0.02});
+        });
     },
     
     defaults: {

@@ -5,8 +5,6 @@
 def
 .type('pvc.TreemapChart', pvc.BaseChart)
 .add({
-    _animatable: false,
-
     _axisClassByType: {
         'size': pvc.visual.NormalizedAxis
     },

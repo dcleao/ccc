@@ -16,20 +16,19 @@ def
 .init(function(chart, parent, options) {
     
     this.chart = chart; // must be set before base() because of log init
-    
 
     this.base();
     
     this.axes = Object.create(chart.axes);
     
-    if(options){
-        if(options.scenes){
+    if(options) {
+        if(options.scenes) {
             this._sceneTypeExtensions = options.scenes;
             delete options.scenes;
         }
         
         var axes = options.axes;
-        if(axes){
+        if(axes) {
             def.copy(this.axes, axes);
             delete options.axes;
         }
@@ -38,9 +37,7 @@ def
     // TODO: Danger...
     $.extend(this, options); // clickAction and doubleClickAction are set here
 
-    if(!this.axes.color){
-        this.axes.color = chart.axes.color;
-    }
+    if(!this.axes.color) this.axes.color = chart.axes.color;
     
     this.position = {
         /*
@@ -52,7 +49,7 @@ def
     };
     
     var margins = options && options.margins;
-    if(!parent && margins === undefined){
+    if(!parent && margins === undefined) {
         // TODO: FIXME: Give a default margin on the root panel
         //  because otherwise borders of panels may be clipped..
         // Even now that the box model supports borders,
@@ -68,20 +65,17 @@ def
     this.size     = new pvc_Size (options && options.size    );
     this.sizeMax  = new pvc_Size (options && options.sizeMax );
     
+    this.parent = parent || null;
     if(!parent) {
-        this.parent    = null;
         this.root      = this;
         this.topRoot   = this;
         this.isRoot    = true;
         this.isTopRoot = true;
-        this._ibits    = chart._ibits;
     } else {
-        this.parent    = parent;
         this.isTopRoot = false;
         this.isRoot    = (parent.chart !== chart);
         this.root      = this.isRoot ? this : parent.root;
         this.topRoot   = parent.topRoot;
-        this._ibits    = parent._ibits;
         
         if(this.isRoot) {
             this.position.left = chart.left; 
@@ -90,8 +84,9 @@ def
         
         parent._addChild(this);
     }
-    
-    this.data = (this.isRoot ? chart : parent).data;
+
+    var above = parent || chart;
+    this.data = above.data;
 
     /* Root panels do not need layout */
     if(this.isRoot) {
@@ -107,14 +102,11 @@ def
         // * a PercentValue object
         var alignTo = this.alignTo;
         var side = this.anchor;
-        if(alignTo != null && alignTo !== '' && (side === 'left' || side === 'right')){
-            if(alignTo !== 'page-middle'){
-                if(!isNaN(+alignTo.charAt(0))){
-                    alignTo = pvc_PercentValue.parse(alignTo); // percent or number
-                } else {
-                    alignTo = pvc.parseAlign(side, alignTo);
-                }
-            }
+        if(alignTo != null && alignTo !== '' && (side === 'left' || side === 'right')) {
+            if(alignTo !== 'page-middle')
+                alignTo =  isNaN(+alignTo.charAt(0))
+                    ? pvc.parseAlign(side, alignTo)
+                    : pvc_PercentValue.parse(alignTo); // percent or number
         } else {
             alignTo = this.align;
         }
@@ -124,31 +116,38 @@ def
         this.offset = new pvc_Offset(this.offset);
     }
     
-    if(this.borderWidth == null){
+    if(this.borderWidth == null) {
         var borderWidth;
         var extensionId = this._getExtensionId();
-        if(extensionId){
+        if(extensionId) {
             var strokeStyle = this._getExtension(extensionId, 'strokeStyle');
-            if(strokeStyle != null){
+            if(strokeStyle != null) {
                 borderWidth = +this._getConstantExtension(extensionId, 'lineWidth'); 
-                if(isNaN(borderWidth) || !isFinite(borderWidth)){
-                    borderWidth = null;
-                }
+                if(isNaN(borderWidth) || !isFinite(borderWidth)) borderWidth = null;
             }
         }
         
         this.borderWidth = borderWidth == null ? 0 : 1.5;
     }
     
-    // Parent panel may not have a clickAction, 
+    // Start with inherited bits.
+    var ibits = above._ibits;
+    
+    // Parent panel may not have a clickAction,
     // and so, inheriting its clickable and doubleClickable doesn't work.
     var I = pvc.visual.Interactive;
-    var ibits = this._ibits;
     ibits = def.bit.set(ibits, I.Clickable,       (chart._ibits & I.Clickable      ) && !!this.clickAction      );
     ibits = def.bit.set(ibits, I.DoubleClickable, (chart._ibits & I.DoubleClickable) && !!this.doubleClickAction);
-    this._ibits = ibits;
+
+    // Animatible should not be inherited. Reset to chart's value.
+    ibits = def.bit.set(ibits, I.Animatable,      (chart._ibits & I.Animatable));
+
+    // Mask inherited bits with the Class capabilities.
+    this._ibits &= ibits;
 })
 .add({
+    _ibits: ~pvc.visual.Interactive.Animatable,
+
     chart: null,
     parent: null,
     _children: null,
@@ -253,13 +252,12 @@ def
     clickAction:       null,
     doubleClickAction: null,
     
-    compatVersion: function(options){
+    compatVersion: function(options) {
         return this.chart.compatVersion(options);
     },
     
-    _createLogInstanceId: function(){
-        return "" + 
-               this.constructor + this.chart._createLogChildSuffix();
+    _createLogInstanceId: function() {
+        return "" + this.constructor + this.chart._createLogChildSuffix();
     },
     
     // For adding legend groups dynamically.
@@ -270,7 +268,7 @@ def
     /**
      * Adds a panel as child.
      */
-    _addChild: function(child){
+    _addChild: function(child) {
         // <Debug>
         /*jshint expr:true */
         child.parent === this || def.assert("Child has a != parent.");
@@ -279,11 +277,10 @@ def
         (this._children || (this._children = [])).push(child);
     },
     
-    _addSign: function(sign){
+    _addSign: function(sign) {
         def.array.lazy(this, '_signs').push(sign);
-        if(sign.selectableByRubberband()){
+        if(sign.selectableByRubberband())
             def.array.lazy(this, '_rubberSelectableMarks').push(sign.pvMark);
-        }
     },
 
     visibleData: function(ka) { return this.chart.visibleData(this.dataPartValue, ka); },
@@ -313,13 +310,11 @@ def
      * the layout. Default to the panel's margins {@link #margins}.
      * @param {boolean} [ka.canChange=true] Whether this is a last time layout. 
      */
-    layout: function(availableSize, ka){
+    layout: function(availableSize, ka) {
         if(!this._layoutInfo || def.get(ka, 'force', false)) {
             
             var referenceSize = def.get(ka, 'referenceSize');
-            if(!referenceSize && availableSize){
-                referenceSize = def.copyOwn(availableSize);
-            }
+            if(!referenceSize && availableSize) referenceSize = def.copyOwn(availableSize);
             
             // Does this panel have a **desired** fixed size specified?
             
@@ -329,25 +324,20 @@ def
             var sizeMax     = this.sizeMax.resolve(referenceSize);
             
             if(!availableSize) {
-                if(desiredSize.width == null || desiredSize.height == null){
+                if(desiredSize.width == null || desiredSize.height == null)
                     throw def.error.operationInvalid("Panel layout without width or height set.");
-                }
                 
                 availableSize = def.copyOwn(desiredSize);
             }
             
-            if(!referenceSize && availableSize){
-                referenceSize = def.copyOwn(availableSize);
-            }
+            if(!referenceSize && availableSize) referenceSize = def.copyOwn(availableSize);
             
             // Apply max size to available size
-            if(sizeMax.width != null && availableSize.width > sizeMax.width){
+            if(sizeMax.width != null && availableSize.width > sizeMax.width)
                 availableSize.width = sizeMax.width;
-            }
             
-            if(sizeMax.height != null && availableSize.height > sizeMax.height){
+            if(sizeMax.height != null && availableSize.height > sizeMax.height)
                 availableSize.height = sizeMax.height;
-            }
             
             var halfBorder   = this.borderWidth / 2;
             var realMargins  = (def.get(ka, 'margins' ) || this.margins ).resolve(referenceSize);
@@ -360,18 +350,16 @@ def
             var spaceHeight = margins.height + paddings.height;
             
             var availableClientSize = new pvc_Size(
-                    Math.max(availableSize.width  - spaceWidth,  0),
-                    Math.max(availableSize.height - spaceHeight, 0)
-                );
+                Math.max(availableSize.width  - spaceWidth,  0),
+                Math.max(availableSize.height - spaceHeight, 0)
+            );
             
             var desiredClientSize = def.copyOwn(desiredSize);
-            if(desiredClientSize.width != null){
+            if(desiredClientSize.width != null)
                 desiredClientSize.width = Math.max(desiredClientSize.width - spaceWidth, 0);
-            }
             
-            if(desiredClientSize.height != null){
+            if(desiredClientSize.height != null)
                 desiredClientSize.height = Math.max(desiredClientSize.height - spaceHeight, 0);
-            }
             
             var prevLayoutInfo = this._layoutInfo || null;
             var canChange = def.get(ka, 'canChange', true);
@@ -396,7 +384,7 @@ def
                     previous:          prevLayoutInfo
                 };
             
-            if(prevLayoutInfo){
+            if(prevLayoutInfo) {
                 // Free old memory
                 delete prevLayoutInfo.previous;
                 delete prevLayoutInfo.pageClientSize;
@@ -405,7 +393,7 @@ def
             var clientSize = this._calcLayout(layoutInfo);
             
             var size;
-            if(!clientSize){
+            if(!clientSize) {
                 size = availableSize; // use all available size
                 clientSize = availableClientSize;
             } else {
@@ -423,9 +411,7 @@ def
             this.width  = size.width;
             this.height = size.height;
             
-            if(!canChange && prevLayoutInfo) {
-                delete layoutInfo.previous;
-            }
+            if(!canChange && prevLayoutInfo) delete layoutInfo.previous;
             
             if(pvc.debug >= 5) {
                 this._log("Size       = " + pvc.stringify(size));
@@ -439,9 +425,7 @@ def
     },
     
     _onLaidOut: function() {
-        if(this.isRoot) {
-            this.chart._onLaidOut();
-        }
+        if(this.isRoot) this.chart._onLaidOut();
     },
     
     /**
@@ -477,7 +461,7 @@ def
      * </p>
      * @virtual
      */
-    _calcLayout: function(layoutInfo){
+    _calcLayout: function(layoutInfo) {
         var clientSize;
         var me = this;
 
@@ -497,7 +481,7 @@ def
 
             me._children.forEach(function(child) {
                 var a = child.anchor;
-                if(a){ // requires layout
+                if(a) { // requires layout
                     if(a === 'fill') {
                         fillChildren.push(child);
                     } else {
@@ -515,15 +499,15 @@ def
             // a re-layout is performed.
             clientSize = def.copyOwn(layoutInfo.clientSize);
             var childKeyArgs = {
-                    force: true,
-                    referenceSize: clientSize
-                };
+                force: true,
+                referenceSize: clientSize
+            };
 
-            if(useLog){ me._group("CCC DOCK LAYOUT clientSize = " + pvc.stringify(clientSize)); }
-            try{
+            if(useLog) me._group("CCC DOCK LAYOUT clientSize = " + pvc.stringify(clientSize));
+            try {
                 doMaxTimes(5, layoutCycle, me);
             } finally {
-                if(useLog){ me._groupEnd(); }
+                if(useLog) me._groupEnd();
             }
         }
 
@@ -533,20 +517,17 @@ def
         // --------------------
         function doMaxTimes(maxTimes, fun, ctx){
             var index = 0;
-            while(maxTimes--){
+            while(maxTimes--) {
                 // remTimes = maxTimes
-                if(fun.call(ctx, maxTimes, index) === false){
-                    return true;
-                }
+                if(fun.call(ctx, maxTimes, index) === false) return true;
                 index++;
             }
-            
             return false;
         }
         
-        function layoutCycle(remTimes, iteration){
-            if(useLog){ me._group("LayoutCycle #" + (iteration + 1) + " (remaining: " + remTimes + ")"); }
-            try{
+        function layoutCycle(remTimes, iteration) {
+            if(useLog) me._group("LayoutCycle #" + (iteration + 1) + " (remaining: " + remTimes + ")");
+            try {
                var canResize = (remTimes > 0);
 
                 // Reset margins and remSize
@@ -558,15 +539,13 @@ def
                 var child;
                 var index = 0;
                 var count = sideChildren.length;
-                while(index < count){
+                while(index < count) {
                     child = sideChildren[index];
-                    if(useLog){ me._group("SIDE Child #" + (index + 1) + " at " + child.anchor); }
-                    try{
-                        if(layoutChild.call(this, child, canResize)){
-                            return true; // resized => break
-                        }
+                    if(useLog) me._group("SIDE Child #" + (index + 1) + " at " + child.anchor);
+                    try {
+                        if(layoutChild.call(this, child, canResize)) return true; // resized => break
                     } finally {
-                        if(useLog){ me._groupEnd(); }
+                        if(useLog) me._groupEnd();
                     }
                     index++;
                 }
@@ -574,22 +553,20 @@ def
                 // Lay out FILL child panels
                 index = 0;
                 count = fillChildren.length;
-                while(index < count){
+                while(index < count) {
                     child = fillChildren[index];
-                    if(useLog){ me._group("FILL Child #" + (index + 1)); }
-                    try{
-                        if(layoutChild.call(this, child, canResize)){
-                            return true; // resized => break
-                        }
+                    if(useLog) me._group("FILL Child #" + (index + 1));
+                    try {
+                        if(layoutChild.call(this, child, canResize)) return true; // resized => break
                     } finally {
-                        if(useLog){ me._groupEnd(); }
+                        if(useLog) me._groupEnd();
                     }
                     index++;
                 }
 
                 return false; // !resized
             } finally {
-                if(useLog){ me._groupEnd(); }
+                if(useLog) me._groupEnd();
             }
         }
         
@@ -599,34 +576,30 @@ def
             
             childKeyArgs.canChange = canResize;
             
-            doMaxTimes(3, function(remTimes, iteration){
-                if(useLog){ me._group("Attempt #" + (iteration + 1)); }
-                try{
+            doMaxTimes(3, function(remTimes, iteration) {
+                if(useLog) me._group("Attempt #" + (iteration + 1));
+                try {
 
                     childKeyArgs.paddings  = paddings;
                     childKeyArgs.canChange = remTimes > 0;
 
                     child.layout(new pvc_Size(remSize), childKeyArgs);
-                    if(child.isVisible){
+                    if(child.isVisible) {
                         resized = checkChildResize.call(this, child, canResize);
-                        if(resized){
-                            return false; // stop
-                        }
+                        if(resized) return false; // stop
 
                         var requestPaddings = child._layoutInfo.requestPaddings;
-                        if(checkPaddingsChanged(paddings, requestPaddings)){
+                        if(checkPaddingsChanged(paddings, requestPaddings)) {
                             paddings = requestPaddings;
 
                             // Child wants to repeat its layout with != paddings
-                            if(remTimes > 0){
+                            if(remTimes > 0) {
                                 paddings = new pvc_Sides(paddings);
-                                if(useLog){ this._log("Child requested paddings change: " + pvc.stringify(paddings)); }
+                                if(useLog) this._log("Child requested paddings change: " + pvc.stringify(paddings));
                                 return true; // again
                             }
 
-                            if(pvc.debug >= 2){
-                                this._warn("Child requests paddings change but iterations limit has been reached.");
-                            }
+                            if(pvc.debug >= 2) this._warn("Child requests paddings change but iterations limit has been reached.");
                             // ignore overflow
                         }
 
@@ -634,48 +607,37 @@ def
 
                         positionChild.call(this, child);
 
-                        if(child.anchor !== 'fill'){
-                            updateSide.call(this, child);
-                        }
+                        if(child.anchor !== 'fill') updateSide.call(this, child);
                     }
 
                     return false; // stop
                 } finally {
-                    if(useLog){ me._groupEnd(); }
+                    if(useLog) me._groupEnd();
                 }
             }, this);
             
             return resized;
         }
 
-        function checkPaddingsChanged(paddings, newPaddings){
-            if(!newPaddings){
-                return false;
-            }
+        function checkPaddingsChanged(paddings, newPaddings) {
+            if(!newPaddings) return false;
             
             // true if stopped, false otherwise
-            return def.query(pvc_Sides.names).each(function(side){
+            return def.query(pvc_Sides.names).each(function(side) {
                 var curPad = (paddings && paddings[side]) || 0;
                 var newPad = (newPaddings && newPaddings[side]) || 0;
-                 if(Math.abs(newPad - curPad) >= 0.1){
-                     // Stop iteration
-                     return false;
-                 }
+                 if(Math.abs(newPad - curPad) >= 0.1) return false; // Stop iteration
             });
         }
 
-        function checkChildResize(child, canResize){
+        function checkChildResize(child, canResize) {
             var resized = false;
             var addWidth = child.width - remSize.width;
-            if(addWidth > 0){
-                if(pvc.debug >= 3){
-                    this._log("Child added width = " + addWidth);
-                }
+            if(addWidth > 0) {
+                if(pvc.debug >= 3) this._log("Child added width = " + addWidth);
                 
-                if(!canResize){
-                    if(pvc.debug >= 2){
-                        this._warn("Child wanted more width, but layout iterations limit has been reached.");
-                    }
+                if(!canResize) {
+                    if(pvc.debug >= 2) this._warn("Child wanted more width, but layout iterations limit has been reached.");
                 } else {
                     resized = true;
                     
@@ -685,15 +647,11 @@ def
             }
             
             var addHeight = child.height - remSize.height;
-            if(addHeight > 0){
-                if(pvc.debug >= 3){
-                    this._log("Child added height =" + addHeight);
-                }
+            if(addHeight > 0) {
+                if(pvc.debug >= 3) this._log("Child added height =" + addHeight);
                 
-                if(!canResize){
-                    if(pvc.debug >= 2){
-                        this._warn("Child wanted more height, but layout iterations limit has been reached.");
-                    }
+                if(!canResize) {
+                    if(pvc.debug >= 2) this._warn("Child wanted more height, but layout iterations limit has been reached.");
                 } else {
                     resized = true;
                     
@@ -710,7 +668,7 @@ def
             var align = child.align;
             var alignTo = child.alignTo;
             var sidePos;
-            if(side === 'fill'){
+            if(side === 'fill') {
                 side = 'left';
                 sidePos = margins.left + remSize.width / 2 - (child.width / 2);
                 align = alignTo = 'middle';
@@ -742,7 +700,7 @@ def
             
             var sideOPosParentOffset;
             var sideOTo;
-            switch(alignTo){
+            switch(alignTo) {
                 case 'top':
                 case 'bottom':
                 case 'left':
@@ -769,21 +727,15 @@ def
             }
             
             var sideOPos = margins[sideOTo] + sideOPosParentOffset + sideOPosChildOffset;
-            
             var resolvedOffset = child.offset.resolve(remSize);
-            if(resolvedOffset){
+            if(resolvedOffset) {
                 sidePos  += resolvedOffset[aofMap[side ]] || 0;
                 sideOPos += resolvedOffset[aofMap[sideo]] || 0;
             }
             
-            if(child.keepInBounds){
-                if(sidePos < 0){
-                    sidePos = 0;
-                }
-                
-                if(sideOPos < 0){
-                    sideOPos = 0;
-                }
+            if(child.keepInBounds) {
+                if(sidePos  < 0) sidePos  = 0;
+                if(sideOPos < 0) sideOPos = 0;
             }
             
             child.setPosition(
@@ -806,11 +758,7 @@ def
     invalidateLayout: function() {
         this._layoutInfo = null;
         
-        if(this._children) {
-            this._children.forEach(function(child) {
-                child.invalidateLayout();
-            });
-        }
+        if(this._children) this._children.forEach(function(c) { c.invalidateLayout(); });
     },
     
     /** 
@@ -827,7 +775,7 @@ def
             delete this._invalidDataError;
 
             this.pvPanel = null;
-            if(this.pvRootPanel) { this.pvRootPanel = null; }
+            if(this.pvRootPanel) this.pvRootPanel = null;
 
             delete this._signs;
             
@@ -835,22 +783,19 @@ def
             try {
                 this.layout();
             } catch(ex) {
-                if(ex instanceof InvalidDataException) {
+                if(ex instanceof InvalidDataException)
                     this._invalidDataError = invalidDataError = ex;
-                } else {
+                else
                     throw ex;
-                }
             }
             
-            if(this.isTopRoot && this.chart._isMultiChartOverflowClip) {
-                // Must repeat chart._create
-                // In principle, no invalidDataError will have been thrown
-                return;
-            }
+            // Must repeat chart._create
+            // In principle, no invalidDataError will have been thrown
+            if(this.isTopRoot && this.chart._isMultiChartOverflowClip) return;
 
-            if(!this.isVisible) { return; }
+            if(!this.isVisible) return;
             
-            if(this.isRoot) { this._creating(); }
+            if(this.isRoot) this._creating();
             
             var margins  = this._layoutInfo.margins;
             var paddings = this._layoutInfo.paddings;
@@ -901,37 +846,28 @@ def
                     .bottom(this.position.bottom != null ? this.position.bottom : null)
                     .strokeStyle('orange')
                     .lineWidth(1)
-                    .strokeDasharray('- .')
-                    ;
+                    .strokeDasharray('- .');
             }
 
             // Set panel positions
             var hasPositions = {};
-            def.eachOwn(this.position, function(v, side){
+            def.eachOwn(this.position, function(v, side) {
                 pvBorderPanel[side](v + margins[side]);
                 hasPositions[this.anchorLength(side)] = true;
             }, this);
             
-            if(!hasPositions.width){
-                if(margins.left > 0){
-                    pvBorderPanel.left(margins.left);
-                }
-                if(margins.right > 0){
-                    pvBorderPanel.right(margins.right);
-                }
+            if(!hasPositions.width) {
+                if(margins.left  > 0) pvBorderPanel.left (margins.left );
+                if(margins.right > 0) pvBorderPanel.right(margins.right);
             }
             
-            if(!hasPositions.height){
-                if(margins.top > 0){
-                    pvBorderPanel.top(margins.top);
-                }
-                if(margins.bottom > 0){
-                    pvBorderPanel.bottom(margins.bottom);
-                }
+            if(!hasPositions.height) {
+                if(margins.top    > 0) pvBorderPanel.top   (margins.top   );
+                if(margins.bottom > 0) pvBorderPanel.bottom(margins.bottom);
             }
             
             // Check padding
-            if(paddings.width > 0 || paddings.height > 0){
+            if(paddings.width > 0 || paddings.height > 0) {
                 // We create separate border (outer) and inner (padding) panels
                 this.pvPanel = pvBorderPanel.add(pv.Panel)
                     .width (width  - paddings.width )
@@ -953,7 +889,7 @@ def
                     .lineWidth(1)
                     .strokeDasharray('- ');
 
-                if(this.pvPanel !== pvBorderPanel){
+                if(this.pvPanel !== pvBorderPanel) {
                     // Border Box
                     pvBorderPanel
                         .strokeStyle('blue')
@@ -963,26 +899,24 @@ def
             }
             
             var extensionId = this._getExtensionId();
-//            if(extensionId != null){ // '' is allowed cause this is relative to #_getExtensionPrefix
+            // if(extensionId != null){ // '' is allowed cause this is relative to #_getExtensionPrefix
             // Wrap the panel that is extended with a Panel sign
             new pvc.visual.Panel(this, null, {
                 panel:       pvBorderPanel,
                 extensionId: extensionId
             });
-//            }
+            // }
             
-            /* Protovis marks that are pvc Panel specific,
-             * and/or create child panels.
-             */
+            // Protovis marks that are pvc Panel specific,
+            // and/or create child panels.
             if(!invalidDataError) {
                 try {
                     this._createCore(this._layoutInfo);
                 } catch(ex) {
-                    if(ex instanceof InvalidDataException) {
+                    if(ex instanceof InvalidDataException)
                         this._invalidDataError = invalidDataError = ex;
-                    } else {
+                    else
                         throw ex;
-                    }
                 }
             }
 
@@ -997,9 +931,7 @@ def
             
             if(this.isTopRoot) { 
                 /* Multi-chart overflow & clip */
-                if(this.chart._multiChartOverflowClipped) {
-                    this._addMultichartOverflowClipMarker();
-                }
+                if(this.chart._multiChartOverflowClipped) this._addMultichartOverflowClipMarker();
 
                 /* Selection */
                 this._initSelection(); 
@@ -1030,9 +962,7 @@ def
     },
 
     _creating: function() {
-        if(this._children) {
-            this._children.forEach(function(child) { child._creating(); });
-        }
+        if(this._children) this._children.forEach(function(c) { c._creating(); });
     },
     
     /**
@@ -1045,10 +975,8 @@ def
      * 
      * @virtual
      */
-    _createCore: function(layoutInfo){
-        if(this._children) {
-            this._children.forEach(function(child) { child._create(); });
-        }
+    _createCore: function(layoutInfo) {
+        if(this._children) this._children.forEach(function(c) { c._create(); });
     },
     
     /** 
@@ -1071,17 +999,13 @@ def
      * @param {boolean} [ka.recreate=false] Indicates that the panel and its descendants should be recreated.
      */
     render: function(ka) {
-        
-        if(!this.isTopRoot) { return this.topRoot.render(ka); }
+        if(!this.isTopRoot) return this.topRoot.render(ka);
         
         this._create(def.get(ka, 'recreate', false));
         
-        if(this.isTopRoot && this.chart._isMultiChartOverflowClip) {
-            // Must repeat chart._create
-            return;
-        }
+        if(this.isTopRoot && this.chart._isMultiChartOverflowClip) return; // Must repeat chart._create
 
-        if(!this.isVisible) { return; }
+        if(!this.isVisible) return;
         
         var pvPanel = this.pvRootPanel;
 
@@ -1100,7 +1024,7 @@ def
         //  before leaving the pvPanel.render() call.
         // See the callback below.
         var prevAnimating = this._animating;
-        var animate = this.chart.animatable();
+        var animate = this.animatable();
         this._animating = animate && !def.get(ka, 'bypassAnimation', false) ? 1 : 0;
         try {
             // When animating, renders the animation's 'start' point
@@ -1131,10 +1055,10 @@ def
         }
     },
     
-    _onRender: function(){
+    _onRender: function() {
         var renderCallback = this.chart.options.renderCallback;
-        if (renderCallback) {
-            if(this.compatVersion() <= 1){
+        if(renderCallback) {
+            if(this.compatVersion() <= 1) {
                 renderCallback.call(this.chart);
             } else {
                 var context = this.context();
@@ -1152,12 +1076,8 @@ def
      * #_onRenderEnd method.
      * @virtual
      */
-    _onRenderEnd: function(animated){
-        if(this._children){
-            this._children.forEach(function(child){
-                child._onRenderEnd(animated);
-            });
-        }
+    _onRenderEnd: function(animated) {
+        if(this._children) this._children.forEach(function(c) { c._onRenderEnd(animated); });
     },
     
     /**
@@ -1170,21 +1090,17 @@ def
      * 
      * @virtual
      */
-    renderInteractive: function(){
-        if(this.isVisible){
+    renderInteractive: function() {
+        if(this.isVisible) {
             var pvMarks = this._getSelectableMarks();
-            if(pvMarks && pvMarks.length){
+            if(pvMarks && pvMarks.length) {
                 pvMarks.forEach(function(pvMark){ pvMark.render(); });
             } else if(!this._children) {
                 this.pvPanel.render();
                 return;
             }
             
-            if(this._children){
-                this._children.forEach(function(child){
-                    child.renderInteractive();
-                });
-            }
+            if(this._children) this._children.forEach(function(c) { c.renderInteractive(); });
         }
     },
 
@@ -1192,13 +1108,19 @@ def
      * Returns an array of marks whose instances are associated to a datum, or null.
      * @virtual
      */
-    _getSelectableMarks: function(){
+    _getSelectableMarks: function() {
         return this._rubberSelectableMarks;
     },
     
     
     /* ANIMATION */
-    
+
+    /** @override Interactive */
+    animatable: function() {
+        return this.base() ||
+            (!!this._children && this._children.some(function(c) { return c.animatable(); }));
+    },
+
     animate: function(start, end) {
         return (this.topRoot._animating === 1) ? start : end;
     },
@@ -1227,27 +1149,24 @@ def
     animating: function() { return (this.topRoot._animating > 0); },
     
     /* SIZE & POSITION */
-    setPosition: function(position){
-        for(var side in position){
-            if(def.hasOwn(pvc_Sides.namesSet, side)){
-                var s = position[side]; 
+    setPosition: function(position) {
+        for(var side in position) {
+            if(def.hasOwn(pvc_Sides.namesSet, side)) {
+                var s = position[side];
                 if(s === null) {
                     delete this.position[side];
                 } else {
                     s = +s; // -> to number
-                    if(!isNaN(s) && isFinite(s)){
-                        this.position[side] = s;
-                    }
+                    if(!isNaN(s) && isFinite(s)) this.position[side] = s;
                 }
             }
         }
     },
     
-    createAnchoredSize: function(anchorLength, size){
-        if (this.isAnchorTopOrBottom()) {
-            return new pvc_Size(size.width, Math.min(size.height, anchorLength));
-        } 
-        return new pvc_Size(Math.min(size.width, anchorLength), size.height);
+    createAnchoredSize: function(anchorLength, size) {
+        return this.isAnchorTopOrBottom()
+            ? new pvc_Size(size.width, Math.min(size.height, anchorLength))
+            : new pvc_Size(Math.min(size.width, anchorLength), size.height);
     },
     
     /* EXTENSION */
@@ -1256,12 +1175,8 @@ def
      * Override to apply specific extensions points.
      * @virtual
      */
-    applyExtensions: function(){
-        if (this._signs) {
-            this._signs.forEach(function(sign){
-                sign.applyExtensions();
-            });
-        }
+    applyExtensions: function() {
+        if(this._signs) this._signs.forEach(function(s) { s.applyExtensions(); });
     },
 
     /**
@@ -1280,20 +1195,16 @@ def
         this.chart.extend(mark, absId, ka);
     },
     
-    _extendSceneType: function(typeKey, type, names){
+    _extendSceneType: function(typeKey, type, names) {
         var typeExts = def.get(this._sceneTypeExtensions, typeKey);
-        if(typeExts) {
-            pvc.extendType(type, typeExts, names);
-        }
+        if(typeExts) pvc.extendType(type, typeExts, names);
     },
     
     _absBaseExtId: {abs: 'base'},
     _absSmallBaseExtId: {abs: 'smallBase'},
     
-    _getExtensionId: function(){
-        if (this.isRoot) {
-            return !this.chart.parent ? this._absBaseExtId : this._absSmallBaseExtId;
-        }
+    _getExtensionId: function() {
+        if (this.isRoot) return !this.chart.parent ? this._absBaseExtId : this._absSmallBaseExtId;
     },
     
     _getExtensionPrefix: function() { return this._extensionPrefix; },
@@ -1326,24 +1237,19 @@ def
      */
     getPvPanel: function(layer) {
         var mainPvPanel = this.pvPanel;
-        if(!layer) { return mainPvPanel; }
+        if(!layer) return mainPvPanel;
 
-        if(!this.parent){
-            throw def.error.operationInvalid("Layers are not possible in a root panel.");
-        }
+        if(!this.parent) throw def.error.operationInvalid("Layers are not possible in a root panel.");
 
-        if(!mainPvPanel){
-            throw def.error.operationInvalid(
+        if(!mainPvPanel) throw def.error.operationInvalid(
                "Cannot access layer panels without having created the main panel.");
-        }
 
         var pvPanel = null;
-        if(!this._layers) {
+        if(!this._layers)
             this._layers = {};
-        } else {
+        else
             pvPanel = this._layers[layer];
-        }
-
+        
         if(!pvPanel) {
             var pvParentPanel = this.parent.pvPanel;
             
@@ -1352,10 +1258,9 @@ def
             
             var pvBorderPanel = pvPanel;
 
-            if(mainPvPanel !== mainPvPanel.borderPanel) {
+            if(mainPvPanel !== mainPvPanel.borderPanel)
                 pvPanel = pvBorderPanel.add(pv.Panel)
                                        .extend(mainPvPanel);
-            }
             
             pvBorderPanel.borderPanel  = pvBorderPanel;
             pvBorderPanel.paddingPanel = pvPanel;
@@ -1417,7 +1322,7 @@ def
     },
     
     /* TOOLTIP */ 
-    _isTooltipEnabled: function(){
+    _isTooltipEnabled: function() {
         return !this.selectingByRubberband() && !this.animating();
     },
     
@@ -1427,7 +1332,7 @@ def
         
         var tooltipFormat = tipOptions.format;
         if(!tooltipFormat) {
-            if(!isV1Compat){ return this._summaryTooltipFormatter; }
+            if(!isV1Compat) { return this._summaryTooltipFormatter; }
             
             tooltipFormat = this.chart.options.v1StyleTooltipFormat;
             if(!tooltipFormat) { return; }
@@ -1863,9 +1768,7 @@ def
         this._getOwnDatumsOnRect(datumMap, rect, ka);
         
         var cs = this._children;
-        if(cs) {
-            cs.forEach(function(c) { c._getDatumsOnRect(datumMap, rect, ka); });
-        }
+        if(cs) cs.forEach(function(c) { c._getDatumsOnRect(datumMap, rect, ka); });
     },
     
     _getOwnDatumsOnRect: function(datumMap, rect, ka) {

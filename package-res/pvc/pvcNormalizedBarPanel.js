@@ -7,6 +7,13 @@
  */
 def
 .type('pvc.NormalizedBarPanel', pvc.BarAbstractPanel)
+.init(function(chart, parent, plot, options) {
+    
+    this.base(chart, parent, plot, options);
+    
+    // Legacy field
+    if(!chart.barChartPanel) chart.barChartPanel = this;
+})
 .add({
     plotType: 'bar',
 

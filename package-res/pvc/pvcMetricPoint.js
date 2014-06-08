@@ -84,17 +84,6 @@ def
             .add(pvc.data.MetricPointChartTranslationOper);
     },
     
-     /** @override */
-    _createContent: function(parentPanel, contentOptions) {
-        
-        this.base(parentPanel, contentOptions);
-        
-        // Legacy fields
-        this.scatterChartPanel = this.plotPanels.scatter;
-    },
-
-    
-    
     defaults: {
         axisOriginIsZero: false,
         tooltipOffset: 10

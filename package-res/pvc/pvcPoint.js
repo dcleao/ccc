@@ -9,11 +9,10 @@
 def
 .type('pvc.PointAbstract', pvc.CategoricalAbstract)
 .add({
-    _animatable: true,
     _trendable:  true,
 
     /** @override */
-    _processOptionsCore: function(options){
+    _processOptionsCore: function(options) {
         // Has no meaning in this chart type
         options.panelSizeRatio = 1;
         
@@ -21,24 +20,24 @@ def
     },
     
     /** @override */
-    _hasDataPartRole: function(){
+    _hasDataPartRole: function() {
         return true;
     },
     
     /** @override */
-    _initVisualRoles: function(){
+    _initVisualRoles: function() {
         
         this.base();
         
         this._addVisualRole('value', { 
-                isMeasure: true, 
-                isRequired: true, 
-                isPercent: this.options.stacked,
-                requireSingleDimension: true, 
-                requireIsDiscrete: false, 
-                valueType: Number, 
-                defaultDimension: 'value' 
-            });
+            isMeasure: true, 
+            isRequired: true, 
+            isPercent: this.options.stacked,
+            requireSingleDimension: true, 
+            requireIsDiscrete: false, 
+            valueType: Number, 
+            defaultDimension: 'value' 
+        });
     },
     
     /** @override */
@@ -86,34 +85,19 @@ def
         
         // Set defaults of Offset property
         var typeAxes = this.axesByType.base;
-        if(typeAxes){
-            typeAxes.forEach(function(axis){
-                var isDiscrete = axis.scaleType === 'discrete';
-                if(!isDiscrete){
-                    axis.option.defaults({Offset: 0.01});
-                }
-            });
-        }
+        if(typeAxes) typeAxes.forEach(function(axis) {
+            var isDiscrete = axis.scaleType === 'discrete';
+            if(!isDiscrete) axis.option.defaults({Offset: 0.01});
+        });
         
         typeAxes = this.axesByType.ortho;
-        if(typeAxes){
-            typeAxes.forEach(function(axis){
-                axis.option.defaults({Offset: 0.04});
-            });
-        }
+        if(typeAxes) typeAxes.forEach(function(axis) {
+            axis.option.defaults({Offset: 0.04});
+        });
     },
     
     /** @abstract */
     //_createPointPlot: function() {},
-    
-    /** @override */
-    _createContent: function(parentPanel, contentOptions) {
-        
-        this.base(parentPanel, contentOptions);
-        
-        // Legacy fields
-        this.scatterChartPanel = this.plotPanels.point;
-    },
     
     defaults: {
         tooltipOffset: 10
@@ -126,7 +110,7 @@ def
 def
 .type('pvc.DotChart', pvc.PointAbstract)
 .add({
-    _createPointPlot: function(){
+    _createPointPlot: function() {
         return new pvc.visual.PointPlot(this, {
             fixed: {DotsVisible: true}
         });
@@ -139,7 +123,7 @@ def
 def
 .type('pvc.LineChart', pvc.PointAbstract)
 .add({
-    _createPointPlot: function(){
+    _createPointPlot: function() {
         return new pvc.visual.PointPlot(this, {
             fixed: {LinesVisible: true}
         });
@@ -152,7 +136,7 @@ def
 def
 .type('pvc.AreaChart', pvc.PointAbstract)
 .add({
-    _createPointPlot: function(){
+    _createPointPlot: function() {
         return new pvc.visual.PointPlot(this, {
             fixed: {AreasVisible: true}
         });
@@ -166,7 +150,7 @@ pvc.mStackedLineChart = // V1 compatibility
 def
 .type('pvc.StackedLineChart', pvc.PointAbstract)
 .add({
-    _createPointPlot: function(){
+    _createPointPlot: function() {
         return new pvc.visual.PointPlot(this, {
             fixed: {LinesVisible: true, Stacked: true}
         });
@@ -179,7 +163,7 @@ def
 def
 .type('pvc.StackedDotChart', pvc.PointAbstract)
 .add({
-    _createPointPlot: function(){
+    _createPointPlot: function() {
         return new pvc.visual.PointPlot(this, {
             fixed: {DotsVisible: true, Stacked: true}
         });
@@ -193,7 +177,7 @@ pvc.mStackedAreaChart = // V1 compatibility
 def
 .type('pvc.StackedAreaChart', pvc.PointAbstract)
 .add({
-    _createPointPlot: function(){
+    _createPointPlot: function() {
         return new pvc.visual.PointPlot(this, {
             fixed:    {AreasVisible: true, Stacked: true},
             defaults: {LinesVisible: true}

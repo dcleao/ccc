@@ -8,7 +8,6 @@
 def
 .type('pvc.BarChart', pvc.BarAbstract)
 .add({
-    _animatable: true,
     _trendable:  true,
     _allowV1SecondAxis: true, 
     
@@ -60,7 +59,7 @@ def
         this.base(parentPanel, contentOptions);
 
         // Legacy fields
-        var barPanel = this.barChartPanel = this.plotPanels.bar;
+        var barPanel = this.plotPanels.bar;
 
         var plot2Panel = this.plotPanels.plot2;
         if(plot2Panel && plot2Panel.plot.type === 'point') {

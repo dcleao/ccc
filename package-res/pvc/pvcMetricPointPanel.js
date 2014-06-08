@@ -47,6 +47,9 @@ def
     if(!this.offsetPaddings) {
         this.offsetPaddings = new pvc_Sides(0.01);
     }
+
+    // Legacy field
+    if(!chart.scatterChartPanel) chart.scatterChartPanel = this;
 })
 .add({
     plotType: 'scatter',

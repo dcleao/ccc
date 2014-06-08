@@ -10,8 +10,6 @@
 def
 .type('pvc.PieChart', pvc.BaseChart)
 .add({
-    _animatable: true,
-    
     _axisClassByType: {
         'category': pvc.visual.Axis, // Type gets set dynamically in the Axis to this object's property 'category'.
         'angle':    pvc.visual.NormalizedAxis

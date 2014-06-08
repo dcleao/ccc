@@ -12,6 +12,9 @@ def
     
     this.boxSizeRatio = plot.option('BoxSizeRatio');
     this.maxBoxSize   = plot.option('BoxSizeMax');
+
+    // Legacy field
+    if(!chart.bpChartPanel) chart.bpChartPanel = this;
 })
 .add({
     anchor: 'fill',

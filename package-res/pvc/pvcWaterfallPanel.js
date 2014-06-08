@@ -22,8 +22,16 @@
  */
 def
 .type('pvc.WaterfallPanel', pvc.BarAbstractPanel)
+.init(function(chart, parent, plot, options) {
+      
+    this.base(chart, parent, plot, options);
+    
+    // Legacy field
+    if(!chart.wfChartPanel) chart.wfChartPanel = this;
+})
 .add({
     plotType: 'water',
+    _ibits: -1, // reset
 
     pvWaterfallLine: null,
     ruleData: null,

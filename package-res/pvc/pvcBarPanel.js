@@ -8,7 +8,8 @@
 def
 .type('pvc.BarPanel', pvc.BarAbstractPanel)
 .add({
-    plotType: 'bar'
+    plotType: 'bar',
+    _ibits: -1 // reset
 });
 
 pvc.PlotPanel.registerClass(pvc.BarPanel);

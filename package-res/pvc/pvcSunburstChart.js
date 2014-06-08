@@ -7,8 +7,6 @@
 def
 .type('pvc.SunburstChart', pvc.BaseChart)
 .add({
-    _animatable: false,
-
     _axisClassByType: {
         'size': pvc.visual.NormalizedAxis
     },

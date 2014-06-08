@@ -33,8 +33,6 @@ def
     }
 })
 .add({
-    _animatable: true,
-    
     _isFalling: true,
     _ruleInfos: null,
     _waterColor: pv.color("#1f77b4").darker(),
@@ -176,14 +174,5 @@ def
         });
         
         return result;
-    },
-    
-    /** @override */
-    _createContent: function(parentPanel, contentOptions) {
-        
-        this.base(parentPanel, contentOptions);
-       
-        // Legacy fields
-        this.wfChartPanel = this.plotPanels.water;
     }
 });

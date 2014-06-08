@@ -67,6 +67,7 @@ def
 })
 .add({
     plotType: 'pie',
+    _ibits: -1, // reset
 
     pvPie: null,
     pvPieLabel: null,

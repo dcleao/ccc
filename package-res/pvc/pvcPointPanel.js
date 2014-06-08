@@ -35,10 +35,18 @@ def
         plot.option.specify({'LinesVisible': true});
     }
 
-    this.visualRoles.value = chart.visualRole(plot.option('OrthoRole'));
+    var valueRoleName = plot.option('OrthoRole');
+    this.visualRoles.value = chart.visualRole(valueRoleName);
+    
+    // V1 support
+    this._v1DimRoleName = def.create(this._v1DimRoleName, {value: valueRoleName});
+
+    // Legacy fields
+    if(!chart.scatterChartPanel) chart.scatterChartPanel = this;
 })
 .add({
     plotType: 'point',
+    _ibits: -1, // reset
 
     pvLine: null,
     pvArea: null,

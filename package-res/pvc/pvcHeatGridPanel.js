@@ -33,6 +33,9 @@ def
     this.useShapes = plot.option('UseShapes');
     this.shape     = plot.option('Shape');
     this.nullShape = plot.option('NullShape');
+
+    // Legacy field
+    if(!chart.heatGridChartPanel) chart.heatGridChartPanel = this;
 })
 .add({
     plotType: 'heatGrid',

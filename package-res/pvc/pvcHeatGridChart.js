@@ -84,7 +84,7 @@ def
      * Initializes each chart's specific roles.
      * @override
      */
-    _initVisualRoles: function(){
+    _initVisualRoles: function() {
         
         this.base();
         
@@ -100,15 +100,6 @@ def
     /* @override */
     _createPlotsInternal: function() {
         this._addPlot(new pvc.visual.HeatGridPlot(this));
-    },
-    
-    /* @override */
-    _createContent: function(parentPanel, contentOptions) {
-        
-        this.base(parentPanel, contentOptions);
-
-        // Legacy fields
-        this.heatGridChartPanel = this.plotPanels.heatGrid;
     },
     
     defaults: {

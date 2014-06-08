@@ -39,14 +39,5 @@ def
     
     _createPlotsInternal: function() {
         this._addPlot(new pvc.visual.NormalizedBarPlot(this));
-    },
-    
-    /* @override */
-    _createContent: function(parentPanel, contentOptions) {
-        
-        this.base(parentPanel, contentOptions);
-        
-        // Legacy fields
-        this.barChartPanel = this.plotPanels.bar;
     }
 });

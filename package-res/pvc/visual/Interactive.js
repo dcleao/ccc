@@ -36,7 +36,7 @@ def.scope(function() {
         SelectableAny: I.Selectable | I.SelectableByClick | I.SelectableByRubberband | I.SelectableByFocusWindow 
     })
     
-    .add({ _ibits: -1 }) // all ones instance field
+    .add({_ibits: -1}) // all ones instance field
     
     // methods showsActivity, showsSelection, ...
     .add(def.query(def.ownKeys(I))

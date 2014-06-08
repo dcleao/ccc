@@ -55,8 +55,6 @@ def
      */
     _disposed: false,
 
-    _animatable: false,
-
     /**
      * The chart's parent chart.
      * 
@@ -687,11 +685,6 @@ def
      */
     animatingStart: function() { return this.basePanel.animatingStart(); },
 
-    /* @override Interactive */
-    animatable: function() {
-        return this._animatable && this.base();
-    },
-
     isOrientationVertical: function(orientation) {
         return (orientation || this.options.orientation) === pvc.orientation.vertical;
     },
@@ -703,8 +696,8 @@ def
     /**
      * Disposes the chart, any of its panels and child charts.
      */
-    dispose: function(){
-        if(!this._disposed){
+    dispose: function() {
+        if(!this._disposed) {
 
             // TODO: implement chart dispose
 
