@@ -38,7 +38,6 @@ pvc.BaseChart
      */
     metadata: [],
 
-    _trendable: false,
     _interpolatable: false,
 
     _constructData: function(options) {
@@ -566,7 +565,7 @@ pvc.BaseChart
 
     _generateTrends: function(hasMultiRole) {
         var dataPartDimName = this._getDataPartDimName();
-        if(!this._trendable || !dataPartDimName) return;
+        if(!dataPartDimName || !this.plots.trend) return;
         
         var dataCells = def.query(this.axesList)
             .selectMany(def.propGet('dataCells'))

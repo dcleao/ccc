@@ -8,7 +8,6 @@
 def
 .type('pvc.BarChart', pvc.BarAbstract)
 .add({
-    _trendable:  true,
     _allowV1SecondAxis: true, 
     
     /** @override */
@@ -32,7 +31,7 @@ def
     
     /** @override */
     _createPlotTrend: function() {
-        new pvc.visual.PointPlot(this, {
+        this._addPlot(new pvc.visual.PointPlot(this, {
             name: 'trend',
             fixed: {
                 DataPart:  'trend',
@@ -45,7 +44,7 @@ def
                 LinesVisible: true,
                 DotsVisible:  false
             }
-        });
+        }));
     },
 
     /** @override */

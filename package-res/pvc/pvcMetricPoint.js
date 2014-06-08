@@ -12,8 +12,6 @@ def
         'size': pvc.visual.MetricPointSizeAxis
     },
     
-    _trendable: true,
-
     /** @override */
     _createPlotsInternal: function() {
         this._addPlot(this._createPointPlot());
@@ -24,7 +22,7 @@ def
 
     /** @override */
     _createPlotTrend: function() {
-        new pvc.visual.MetricPointPlot(this, {
+        this._addPlot(new pvc.visual.MetricPointPlot(this, {
             name: 'trend',
             fixed: {
                 DataPart: 'trend',
@@ -40,7 +38,7 @@ def
                 LinesVisible: true,
                 DotsVisible:  false
             }
-        });
+        }));
     },
     
     // Required because of trends

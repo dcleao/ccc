@@ -9,8 +9,6 @@
 def
 .type('pvc.PointAbstract', pvc.CategoricalAbstract)
 .add({
-    _trendable:  true,
-
     /** @override */
     _processOptionsCore: function(options) {
         // Has no meaning in this chart type
@@ -62,7 +60,7 @@ def
 
     /** @override */
     _createPlotTrend: function() {
-        new pvc.visual.PointPlot(this, {
+        this._addPlot(new pvc.visual.PointPlot(this, {
             name: 'trend',
             fixed: {
                 DataPart: 'trend',
@@ -75,7 +73,7 @@ def
                 LinesVisible: true,
                 DotsVisible:  false
             }
-        });
+        }));
     },
     
     /** @override */

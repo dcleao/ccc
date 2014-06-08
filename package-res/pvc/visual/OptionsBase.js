@@ -113,7 +113,7 @@ def
     _resolveByNaked: pvc.options.specify(function(optionInfo) {
         return this._chartOption(def.firstLowerCase(optionInfo.name));
     }),
-    
+
     _resolveDefault: function(optionInfo) {
         // Dynamic default value?
         var data = optionInfo.data;

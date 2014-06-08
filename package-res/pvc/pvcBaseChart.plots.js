@@ -10,13 +10,14 @@ pvc.BaseChart
         
         var parent = this.parent;
         if(!parent) {
+            this._needsTrendPlot = false;
             this.plots = {};
             this.plotList = [];
             this.plotsByType = {};
             
             this._createPlotsInternal();
             var trendPlotDefExt = this._defPlotsExternal();
-            if(this._trendable) this._initPlotTrend(trendPlotDefExt);
+            this._initPlotTrend(trendPlotDefExt);
         } else {
             this.plots = parent.plots;
             this.plotList = parent.plotList;
@@ -49,18 +50,8 @@ pvc.BaseChart
     },
 
     _initPlotTrend: function(trendPlotDefExt) {
-        // Check if at least one plot has the Trend option activated.
-        // There's a single plot showing trends for all series
-        // of plots marked for trending.
-        function plotWantsTrend(plot) {
-            return plot.option.isDefined('Trend') && !!plot.option('Trend');
-        }
-
-        // NOTE: this only works the first time, 
-        // which is OK because this should only run once for the root chart.
-        if((this._trendable = def.query(this.plotList).any(plotWantsTrend))) {
+        if(this._needsTrendPlot) {
             this._createPlotTrend();
-
             if(trendPlotDefExt && this.plots.trend) this._defPlotExternal('trend', trendPlotDefExt);
         }
     },
@@ -106,7 +97,6 @@ pvc.BaseChart
 
         // Convert names to first lower case.
         // "main" is an alias name for referring to the main plot.
-
         if(name) {
             name = def.firstLowerCase(name);
             plot = this.plots && this.plots[name];
@@ -119,12 +109,11 @@ pvc.BaseChart
                     [name, plot.type]);
         }
 
-        if(!plot) {
-            plot = this._createPlotExternal(name, type, plotDef);
-            this._addPlot(plot);
-        }
+        var isNew = !plot;
+        if(isNew) plot = this._createPlotExternal(name, type, plotDef);
 
         // Process extension points and publish options with the plot's optionId prefix.
+        // Must define options before _addPlot, because it reads option 'Trend'.
         var options = this.options;
         this._processExtensionPointsIn(plotDef, plot.optionId, function(optValue, optId, optName) {
             // Not an extension point => it's an option
@@ -134,6 +123,8 @@ pvc.BaseChart
                 default: options[optId] = optValue; break;
             }
         });
+
+        if(isNew) this._addPlot(plot);
     },
 
     _createPlotExternal: function(name, type, plotDef) {
@@ -188,6 +179,9 @@ pvc.BaseChart
         plots[id] = plot;
         if(name) plots[name] = plot;
         if(!plot.globalIndex) plots.main = plot;
+
+        this._needsTrendPlot = this._needsTrendPlot ||
+            (plot.option.isDefined('Trend') && !!plot.option('Trend'));
     },
     
     _collectPlotAxesDataCells: function(plot, dataCellsByAxisTypeThenIndex) {

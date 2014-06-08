@@ -66,13 +66,6 @@ def
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.Plot.optionsDef; },
     
-    /** @override */
-    _resolveByNaked: pvc.options.specify(function(optionInfo){
-        if(!this.globalIndex) {
-            return this._chartOption(def.firstLowerCase(optionInfo.name));
-        }
-    }),
-    
     collectDataCells: function(dataCells) {
         var dataCell = this._getColorDataCell();
         if(dataCell) {
