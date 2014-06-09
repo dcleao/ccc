@@ -49,7 +49,7 @@ def
     },
 
     _generateTrendsDataCell: function(newDatums, dataCell, baseData) {
-        var serRole = this._serRole;
+        var serRole = this.visualRoles.series;
         var xRole   = this.visualRoles.x;
         var yRole   = dataCell.role;
         var trendOptions = dataCell.trend;

@@ -308,7 +308,7 @@ def
 
     _buildWaterGroupScene: function() {
         var chart = this.chart;
-        var rootCatData = chart._catRole.select(
+        var rootCatData = this.visualRoles.category.select(
                             chart.partData(this.dataPartValue),
                             {visible: true});
 

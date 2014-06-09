@@ -7,24 +7,15 @@
  */
 def
 .type('pvc.CategoricalAbstract', pvc.CartesianAbstract)
-.init(function(options) {
-
-    this.base(options);
-
-    var parent = this.parent;
-    if(parent) { this._catRole = parent._catRole; }
-})
 .add({
     _interpolatable: true,
 
-    /**
-     * Initializes each chart's specific roles.
-     * @override
-     */
+    /** @override */
     _initVisualRoles: function() {
+        
         this.base();
 
-        this._catRole = this._addVisualRole('category', this._getCategoryRoleSpec());
+        this._addVisualRole('category', this._getCategoryRoleSpec());
     },
 
     _getCategoryRoleSpec: function() {
@@ -35,11 +26,12 @@ def
         };
     },
 
-
     /** @override */
     _createVisibleData: function(baseData, ka) {
-        var serGrouping  = this._serRole && this._serRole.flattenedGrouping();
-        var catGrouping  = this._catRole.flattenedGrouping();
+        var serRole = this.visualRoles.series,
+            serGrouping = serRole && serRole.flattenedGrouping(),
+            catGrouping = this.visualRoles.category.flattenedGrouping();
+
         return serGrouping 
             // <=> One multi-dimensional, two-levels data grouping
             ? baseData.groupBy(def.get(ka, 'inverted', false) 
@@ -62,8 +54,8 @@ def
                     baseData,
                     partData,
                     visibleData,
-                    this._catRole,
-                    this._serRole,
+                    this.visualRoles.category,
+                    this.visualRoles.series,
                     /*valRole*/dataCell.role,
                     /*stretchEnds*/true) // dataCell.isStacked
                 .interpolate();
@@ -82,8 +74,8 @@ def
 
     /** @override */
     _generateTrendsDataCell: function(newDatums, dataCell, baseData) {
-        var serRole = this._serRole;
-        var xRole   = this._catRole;
+        var serRole = this.visualRoles.series;
+        var xRole   = this.visualRoles.category;
         var yRole   = dataCell.role;
         var trendOptions = dataCell.trend;
         var trendInfo = trendOptions.info;

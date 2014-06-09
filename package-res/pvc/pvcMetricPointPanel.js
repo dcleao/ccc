@@ -31,7 +31,7 @@ def
     var sizeRoleName = plot.option('SizeRole'); // assumed to be always defined
     this.visualRoles.size = sizeRoleName ? chart.visualRole(sizeRoleName) : null;
 
-    if(sizeRoleName) {
+    if(sizeAxis) {
         this.sizeAxisRatio = sizeAxis.option('Ratio');
         this.sizeAxisRatioTo = sizeAxis.option('RatioTo');
         this.autoPaddingByDotSize = plot.option('AutoPaddingByDotSize');
@@ -39,14 +39,12 @@ def
 
     this.linesVisible = plot.option('LinesVisible');
     this.dotsVisible  = plot.option('DotsVisible' );
-    if(!this.linesVisible && !this.dotsVisible){
+    if(!this.linesVisible && !this.dotsVisible) {
         this.linesVisible = true;
         plot.option.specify({'LinesVisible': true});
     }
 
-    if(!this.offsetPaddings) {
-        this.offsetPaddings = new pvc_Sides(0.01);
-    }
+    if(!this.offsetPaddings) this.offsetPaddings = new pvc_Sides(0.01);
 
     // Legacy field
     if(!chart.scatterChartPanel) chart.scatterChartPanel = this;

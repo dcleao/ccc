@@ -12,9 +12,6 @@ pvc.BaseChart
     visualRoles: null,
     visualRoleList: null,
     
-    _serRole: null,
-    _dataPartRole: null,
-    
     /**
      * An array of the {@link pvc.visual.Role} that are measures.
      * 
@@ -52,13 +49,6 @@ pvc.BaseChart
             this.visualRoles = parent.visualRoles;
             this.visualRoleList = parent.visualRoleList;
             this._measureVisualRoles = parent._measureVisualRoles;
-            
-            ['_multiChartRole', '_serRole', '_colorRole', '_dataPartRole']
-            .forEach(function(p) {
-                var parentRole = parent[p];
-                if(parentRole) { this[p] = parentRole; }
-            }, this);
-            
         } else {
             this.visualRoles = {};
             this.visualRoleList = [];
@@ -86,26 +76,21 @@ pvc.BaseChart
      * @virtual
      */
     _initVisualRoles: function() {
-        this._multiChartRole = this._addVisualRole(
-            'multiChart', 
-            {defaultDimension: 'multiChart*', requireIsDiscrete: true});
+        this._addVisualRole('multiChart', {defaultDimension: 'multiChart*', requireIsDiscrete: true});
 
-        if(this._hasDataPartRole()) {
-            this._dataPartRole = this._addVisualRole(
-                'dataPart', 
-                {
-                    defaultDimension: 'dataPart',
-                    requireSingleDimension: true,
-                    requireIsDiscrete: true,
-                    dimensionDefaults: {isHidden: true, comparer: def.compare}
-                });
-        }
+        if(this._hasDataPartRole())
+            this._addVisualRole('dataPart', {
+                defaultDimension: 'dataPart',
+                requireSingleDimension: true,
+                requireIsDiscrete: true,
+                dimensionDefaults: {isHidden: true, comparer: def.compare}
+            });
 
         var serRoleSpec = this._getSeriesRoleSpec();
-        if(serRoleSpec  ) { this._serRole = this._addVisualRole('series', serRoleSpec); }
+        if(serRoleSpec) this._addVisualRole('series', serRoleSpec);
         
         var colorRoleSpec = this._getColorRoleSpec();
-        if(colorRoleSpec) { this._colorRole = this._addVisualRole('color', colorRoleSpec); }
+        if(colorRoleSpec) this._addVisualRole('color', colorRoleSpec);
     },
 
     _assertUnboundRoleIsOptional: function(role) {
@@ -436,12 +421,12 @@ pvc.BaseChart
     },
     
     _getDataPartDimName: function() {
-        var role = this._dataPartRole;
+        var role = this.visualRoles.dataPart;
         if(role) {
-            if(role.isBound()) { return role.firstDimensionName(); } 
+            if(role.isBound()) return role.firstDimensionName();
             
             var preGrouping = role.preBoundGrouping();
-            if(preGrouping) { return preGrouping.firstDimensionName(); }
+            if(preGrouping) return preGrouping.firstDimensionName();
             
             return role.defaultDimensionName;
         }

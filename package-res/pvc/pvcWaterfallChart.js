@@ -62,10 +62,11 @@ def
 
         this._isFalling = waterPlot.option('Direction') === 'down';
         
+        var catRole = this.visualRoles.category;
+
         var travProp = this._isFalling ? 'FlattenDfsPre' : 'FlattenDfsPost';
-        this._catRole.setTraversalMode(pvc.visual.TraversalMode[travProp]);
-        
-        this._catRole.setRootLabel(waterPlot.option('AllCategoryLabel'));
+        catRole.setTraversalMode(pvc.visual.TraversalMode[travProp]);
+        catRole.setRootLabel(waterPlot.option('AllCategoryLabel'));
     },
     
     _initLegendScenes: function(legendPanel){

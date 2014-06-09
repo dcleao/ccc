@@ -26,24 +26,21 @@ def
     yScale: null,
     xScale: null,
     
-    _getSeriesRoleSpec: function(){
-        return { isRequired: true, defaultDimension: 'series*', autoCreateDimension: true, requireIsDiscrete: true };
+    _getSeriesRoleSpec: function() {
+        return {isRequired: true, defaultDimension: 'series*', autoCreateDimension: true, requireIsDiscrete: true};
     },
     
-    _getColorRoleSpec: function(){
-        return { isRequired: true, defaultDimension: 'color*', defaultSourceRole: 'series', requireIsDiscrete: true };
+    _getColorRoleSpec: function() {
+        return {isRequired: true, defaultDimension: 'color*', defaultSourceRole: 'series', requireIsDiscrete: true};
     },
     
     _addAxis: function(axis) {
         this.base(axis);
         
         switch(axis.type) {
-            case 'base':
-            case 'ortho':
+            case 'base': case 'ortho':
                 this.axes[axis.orientedId] = axis;
-                if(axis.v1SecondOrientedId) {
-                    this.axes[axis.v1SecondOrientedId] = axis;
-                }
+                if(axis.v1SecondOrientedId) this.axes[axis.v1SecondOrientedId] = axis;
                 break;
         }
         
@@ -58,17 +55,17 @@ def
      * @param {number} chartLevel The chart level.
      */
     _setAxisScale: function(axis, chartLevel) {
+
         this.base(axis, chartLevel);
         
         var isOrtho = axis.type === 'ortho';
         var isCart  = isOrtho || axis.type === 'base';
-        if(isCart){
+        if(isCart) {
             /* V1 fields xScale, yScale, secondScale */
-            if(isOrtho && axis.index === 1) {
+            if(isOrtho && axis.index === 1)
                 this.secondScale = axis.scale;
-            } else if(!axis.index) {
+            else if(!axis.index)
                 this[axis.orientation + 'Scale'] = axis.scale;
-            }
         }
     },
     
@@ -86,15 +83,9 @@ def
         // The order is relevant because of docking order.
         ['base', 'ortho'].forEach(function(type) {
             var typeAxes = this.axesByType[type];
-            if(typeAxes){
-                def
-                .query(typeAxes)
+            if(typeAxes) def.query(typeAxes)
                 .reverse()
-                .each(function(axis){
-                    this._createAxisPanel(axis);
-                }, this)
-                ;
-            }
+                .each(function(axis) { this._createAxisPanel(axis); }, this);
         }, this);
         
         // Create plot content panels inside the grid docking panel
@@ -104,26 +95,22 @@ def
         });
     },
     
-    _createFocusWindow: function(){
-        if(this.selectableByFocusWindow()){
+    _createFocusWindow: function() {
+        if(this.selectableByFocusWindow()) {
             // In case we're being re-rendered,
             // capture the axes' focusWindow, if any.
             // and set it as the next focusWindow.
             var fwData;
             var fw = this.focusWindow;
-            if(fw){
-                fwData = fw._exportData();
-            }
+            if(fw) fwData = fw._exportData();
             
             fw = this.focusWindow = new pvc.visual.CartesianFocusWindow(this);
             
-            if(fwData){
-                fw._importData(fwData);
-            }
+            if(fwData) fw._importData(fwData);
             
             fw._initFromOptions();
             
-        } else if(this.focusWindow){
+        } else if(this.focusWindow) {
             delete this.focusWindow;
         }
     },
@@ -133,11 +120,12 @@ def
      * @param {pvc.visual.CartesianAxis} axis The cartesian axis.
      * @type pvc.AxisPanel
      */
-    _createAxisPanel: function(axis){
+    _createAxisPanel: function(axis) {
         if(axis.option('Visible')) {
-            var titlePanel;
-            var title = axis.option('Title');
-            if (!def.empty(title)) {
+            var titlePanel,
+                title = axis.option('Title');
+
+            if(!def.empty(title)) {
                 titlePanel = new pvc.AxisTitlePanel(this, this._gridDockPanel, axis, {
                     title:        title,
                     font:         axis.option('TitleFont') || axis.option('Font'),
@@ -168,30 +156,25 @@ def
                 showMinorTicks:    axis.option('MinorTicks')
             });
             
-            if(titlePanel){
-                panel.titlePanel = titlePanel;
-            }
+            if(titlePanel) panel.titlePanel = titlePanel;
             
             this.axesPanels[axis.id] = panel;
             this.axesPanels[axis.orientedId] = panel;
             
             // V1 fields
-            if(axis.index <= 1 && axis.v1SecondOrientedId) {
+            if(axis.index <= 1 && axis.v1SecondOrientedId)
                 this[axis.v1SecondOrientedId + 'AxisPanel'] = panel;
-            }
             
             return panel;
         }
     },
     
-    _onLaidOut: function(){
-        if(this.plotPanelList && this.plotPanelList[0]){ // not the root of a multi chart
+    _onLaidOut: function() {
+        if(this.plotPanelList && this.plotPanelList[0]) { // not the root of a multi chart
             /* Set scale ranges, after layout */
-            ['base', 'ortho'].forEach(function(type){
+            ['base', 'ortho'].forEach(function(type) {
                 var axes = this.axesByType[type];
-                if(axes){
-                    axes.forEach(this._setCartAxisScaleRange, this);
-                }
+                if(axes) axes.forEach(this._setCartAxisScaleRange, this);
             }, this);
         }
     },
@@ -208,22 +191,20 @@ def
         return axis.scale;
     },
         
-    _getAxesRoundingPaddings: function(){
+    _getAxesRoundingPaddings: function() {
         var axesPaddings = {};
         
         var axesByType = this.axesByType;
-        ['base', 'ortho'].forEach(function(type){
+        ['base', 'ortho'].forEach(function(type) {
             var typeAxes = axesByType[type];
-            if(typeAxes){
-                typeAxes.forEach(processAxis);
-            }
+            if(typeAxes) typeAxes.forEach(processAxis);
         });
         
         return axesPaddings;
         
-        function setSide(side, pct, locked){
+        function setSide(side, pct, locked) {
             var value = axesPaddings[side];
-            if(value == null || pct > value){
+            if(value == null || pct > value) {
                 axesPaddings[side] = pct;
                 axesPaddings[side + 'Locked'] = locked;
             } else if(locked) {
@@ -231,11 +212,11 @@ def
             }
         }
         
-        function processAxis(axis){
-            if(axis){
+        function processAxis(axis) {
+            if(axis) {
                 // {begin: , end: , beginLocked: , endLocked: }
                 var tickRoundPads = axis.getScaleRoundingPaddings();
-                if(tickRoundPads){
+                if(tickRoundPads) {
                     var isX = axis.orientation === 'x';
                     setSide(isX ? 'left'  : 'bottom', tickRoundPads.begin, tickRoundPads.beginLocked);
                     setSide(isX ? 'right' : 'top'   , tickRoundPads.end,   tickRoundPads.endLocked);
@@ -295,9 +276,7 @@ def
             var availableSize = alignRight ? (baseEndPos - basePos) : basePos;
             
             var labelSize = pv.Text.measureWidth(pseudoAtom.label, o.font);
-            if (availableSize < labelSize) {
-                ha = alignRight ? "left" : "right";
-            }
+            if(availableSize < labelSize) ha = alignRight ? "left" : "right";
         }
         
         var topPos = o.verticalAnchor === "top" ? o.verticalOffset : (h - o.verticalOffset);
@@ -311,13 +290,12 @@ def
             .strokeStyle(o.strokeStyle);
 
         line.anchor(ha)
-            .visible(function(){ return !this.index; })
+            .visible(function() { return !this.index; })
             .top(topPos)
             .add(pv.Label)
             .font(o.font)
             .text(pseudoAtom.label)
-            .textStyle(o.textStyle)
-            ;
+            .textStyle(o.textStyle);
         
         return me;
     },

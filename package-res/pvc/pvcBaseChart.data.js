@@ -284,7 +284,7 @@ pvc.BaseChart
             if(this._allowV1SecondAxis && (this.compatVersion() <= 1)) {
                 plot2DataSeriesIndexes = options.secondAxisIdx;
             } else {
-                plot2Series = (this._serRole != null) &&
+                plot2Series = (this.visualRoles.series != null) &&
                               options.plot2Series &&
                               def.array.as(options.plot2Series);
 
@@ -328,7 +328,7 @@ pvc.BaseChart
         if(this.compatVersion() <= 1) { return; }
 
         var options = this.options;
-        var serRole = this._serRole;
+        var serRole = this.visualRoles.series;
         var plot2Series = (serRole != null) &&
                           options.plot2 &&
                           options.plot2Series &&
@@ -383,7 +383,7 @@ pvc.BaseChart
         if(this.parent) { return this.root.partData(dataPartValues, baseData); }
 
         // Is the visual role undefined or unbound?
-        var partRole = this._dataPartRole;
+        var partRole = this.visualRoles.dataPart;
         if(!partRole || !partRole.isBound()) {
             // Ignore dataPartValues. It should be empty, but in some cases it comes with ['0'], due to shared code.
             return baseData;
@@ -477,7 +477,7 @@ pvc.BaseChart
      * @virtual
      */
     _createVisibleData: function(baseData, ka) {
-        var serRole = this._serRole;
+        var serRole = this.visualRoles.series;
         return serRole && serRole.isBound() 
             ? serRole.flatten(baseData, ka) 
             : baseData.where(null, ka); // Used?
