@@ -68,9 +68,9 @@ pvc.BaseChart
 
         // Is multi-chart root?
         var isMultichartRoot = hasMultiRole && !this.parent;
-        if(isMultichartRoot) { this._initMultiChartPanel(); }
+        if(isMultichartRoot) this._initMultiChartPanel();
 
-        if(legendPanel) { this._initLegendScenes(legendPanel); }
+        if(legendPanel) this._initLegendScenes(legendPanel);
 
         if(!isMultichartRoot) {
             var o = this.options;
@@ -187,6 +187,11 @@ pvc.BaseChart
 
     _coordinateSmallChartsLayout: function(/*scopesByType*/) {},
 
+    // TODO: this should be done using an events facade.
+    _registerInitLegendScenes: function(handler) {
+        def.array.lazy(this, '_initLegendScenesHandlers').push(handler);
+    },
+
     /**
      * Creates the legend group scenes of a chart.
      *
@@ -196,10 +201,13 @@ pvc.BaseChart
      * One legend item per domain data value of each data cell.
      */
     _initLegendScenes: function(legendPanel) {
+        if(this._initLegendScenesHandlers)
+            this._initLegendScenesHandlers.forEach(function(f) { f(legendPanel); });
+
         // A legend group is created for each data cell of color axes that
         //  are bound, discrete and visible.
         var colorAxes = this.axesByType.color;
-        if(!colorAxes) { return; }
+        if(!colorAxes) return;
 
         var _dataPartAtom, _dataPartDimName, _rootScene;
 
@@ -215,13 +223,11 @@ pvc.BaseChart
             if(axis.option('LegendClickMode') === 'togglevisible') {
                 if(_dataPartAtom === undefined) {
                     _dataPartAtom = me._getTrendDataPartAtom() || null;
-                    if(_dataPartAtom) { _dataPartDimName = _dataPartAtom.dimension.name; }
+                    if(_dataPartAtom) _dataPartDimName = _dataPartAtom.dimension.name;
                 }
 
-                if(_dataPartAtom &&
-                   (cellData.firstAtoms()[_dataPartDimName] === _dataPartAtom)) {
+                if(_dataPartAtom && (cellData.firstAtoms()[_dataPartDimName] === _dataPartAtom))
                     return 'none';
-                }
             }
         };
 
@@ -232,9 +238,7 @@ pvc.BaseChart
         def
         .query(colorAxes)
         .where(function(axis) {
-            return axis.option('LegendVisible') &&
-               axis.isBound() &&
-               axis.isDiscrete();
+            return axis.option('LegendVisible') && axis.isBound() && axis.isDiscrete();
         })
         .each(function(axis) {
 

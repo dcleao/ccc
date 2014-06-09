@@ -119,7 +119,7 @@ pvc.BaseChart
             // Not an extension point => it's an option
             switch(optName) {
                 // Already handled
-                case 'dataPart': case 'name': case 'type': break;
+                case 'name': case 'type': break;
                 default: options[optId] = optValue; break;
             }
         });
@@ -134,15 +134,11 @@ pvc.BaseChart
         if(!PlotClass)
             throw def.error.argumentInvalid("plots", "The plot type '{0}' is not defined.", [type]);
 
-        var isFirst = !this.plotList.length,
-            dataPart = plotDef.dataPart != null ? plotDef.dataPart : isFirst ? '0' : '1';
+        var isFirst = !this.plotList.length;
 
         return new PlotClass(this, {
             name:       name,
             isInternal: false,
-            fixed: {
-                DataPart: dataPart
-            },
             defaults: {
                 ColorAxis: isFirst ? 1 : 2
             }
@@ -182,6 +178,8 @@ pvc.BaseChart
 
         this._needsTrendPlot = this._needsTrendPlot ||
             (plot.option.isDefined('Trend') && !!plot.option('Trend'));
+
+        plot.onAdded();
     },
     
     _collectPlotAxesDataCells: function(plot, dataCellsByAxisTypeThenIndex) {

@@ -48,11 +48,6 @@ def
     },
 
     /** @override */
-    _hasDataPartRole: function() {
-        return true;
-    },
-    
-    /** @override */
     _createContent: function(parentPanel, contentOptions) {
         
         this.base(parentPanel, contentOptions);

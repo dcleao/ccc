@@ -71,6 +71,12 @@ def
         if(dataCell) dataCells.push(dataCell);
     },
 
+    /** 
+     * Called when added to the chart. 
+     * @virtual
+     */
+    onAdded: function() {},
+
     /**
      * Creates the plots's visible data, based on a given base data,
      * and grouped according to the plot's "main grouping".
@@ -90,6 +96,48 @@ def
             : baseData.where(null, ka); // Used?
     },
     
+    /**
+     * Gets the extent of the values of the specified role
+     * over all datums of the visible data of this plot on the specfied chart.
+     * 
+     * @param {pvc.visual.BaseChart} chart The chart requesting the cell extent.
+     * @param {pvc.visual.Axis} valueAxis The value axis.
+     * @param {pvc.visual.Role} valueDataCell The data cell.
+     * @type object
+     *
+     * @virtual
+     */
+    getContinuousVisibleCellExtent: function(chart, valueAxis, valueDataCell) {
+        if(valueDataCell.plot !== this) throw def.error.operationInvalid("Datacell not of this plot.");
+        
+        var valueRole = valueDataCell.role;
+
+        chart._warnSingleContinuousValueRole(valueRole);
+
+        // not supported/implemented?
+        if(valueRole.name === 'series') throw def.error.notImplemented();
+
+        var isSumNorm = valueAxis.scaleSumNormalized();
+        var data    = chart.visiblePlotData(this, valueDataCell.dataPartValue); // [ignoreNulls=true]
+        var dimName = valueRole.firstDimensionName();
+        if(isSumNorm) {
+            var sum = data.dimensionsSumAbs(dimName);
+            if(sum) return {min: 0, max: sum};
+        } else {
+            var useAbs = valueAxis.scaleUsesAbs();
+            var extent = data.dimensions(dimName).extent({abs: useAbs});
+            if(extent) {
+                // TODO: aren't these Math.abs repeating work??
+                var minValue = extent.min.value;
+                var maxValue = extent.max.value;
+                return {
+                    min: (useAbs ? Math.abs(minValue) : minValue),
+                    max: (useAbs ? Math.abs(maxValue) : maxValue)
+                };
+            }
+        }
+    },
+
     _getColorDataCell: function() {
         var colorRoleName = this.option('ColorRole');
         if(colorRoleName) {
@@ -176,9 +224,9 @@ pvc.visual.Plot.optionsDef = {
     },
 
     DataPart: {
-        resolve: '_resolveFixed',
-        cast: String,
-        value:   '0'
+        resolve: '_resolveFull',
+        cast:  String,
+        value: '0'
     },
     
     // ---------------

@@ -18,11 +18,6 @@ def
     },
     
     /** @override */
-    _hasDataPartRole: function() {
-        return true;
-    },
-    
-    /** @override */
     _initVisualRoles: function() {
         
         this.base();

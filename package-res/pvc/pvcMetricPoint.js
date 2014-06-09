@@ -41,12 +41,6 @@ def
         }));
     },
     
-    // Required because of trends
-    /** @override */
-    _hasDataPartRole: function() {
-        return true;
-    },
-    
     /** @override */
     _getColorRoleSpec: function() {
         return {

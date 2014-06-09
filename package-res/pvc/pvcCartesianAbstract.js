@@ -25,7 +25,10 @@ def
     secondYAxisPanel: null,
     yScale: null,
     xScale: null,
-    
+
+    /** @override */    
+    _hasDataPartRole: def.retTrue,
+
     _getSeriesRoleSpec: function() {
         return {isRequired: true, defaultDimension: 'series*', autoCreateDimension: true, requireIsDiscrete: true};
     },

@@ -56,7 +56,7 @@ pvc.BaseChart
         }
     },
     
-    _hasDataPartRole:   def.fun.constant(false),
+    _hasDataPartRole:   def.retFalse,
     _getSeriesRoleSpec: def.fun.constant(null),
     _getColorRoleSpec:  def.fun.constant(null),
     
@@ -67,7 +67,7 @@ pvc.BaseChart
         
         this.visualRoleList.push(role);
         this.visualRoles[name] = role;
-        if(role.isMeasure) { this._measureVisualRoles.push(role); }
+        if(role.isMeasure) this._measureVisualRoles.push(role);
         return role;
     },
     

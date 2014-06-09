@@ -58,7 +58,10 @@ def
         this._colorDimName = colorDimName;
         this._sizeDimName  = sizeDimName ;
     },
-    
+
+    /** @override */    
+    _hasDataPartRole: def.retFalse,
+
     /* @override */
     _getCategoryRoleSpec: function() {
         var catRoleSpec = this.base();

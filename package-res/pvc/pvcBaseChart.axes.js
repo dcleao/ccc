@@ -473,8 +473,10 @@ pvc.BaseChart
         var dataCells = valueAxis.dataCells;
 
         // Most common case. Faster this way.
-        if(dataCells.length === 1)
-            return this._getContinuousVisibleCellExtent(valueAxis, dataCells[0]);
+        if(dataCells.length === 1) {
+            var valueDataCell = dataCells[0];
+            return valueDataCell.plot.getContinuousVisibleCellExtent(this, valueAxis, valueDataCell);
+        }
 
         // This implementation takes the union of
         // the extents of each data cell.
@@ -482,7 +484,7 @@ pvc.BaseChart
         // it is evaluated as a whole.
         return def.query(dataCells)
             .select(function(dataCell) {
-                return this._getContinuousVisibleCellExtent(valueAxis, dataCell);
+                return dataCell.plot.getContinuousVisibleCellExtent(this, valueAxis, dataCell);
             }, this)
             .reduce(pvc.unionExtents, null);
     },
@@ -506,10 +508,10 @@ pvc.BaseChart
         // not supported/implemented?
         if(valueRole.name === 'series') throw def.error.notImplemented();
 
-        var sumNorm = valueAxis.scaleSumNormalized();
+        var isSumNorm = valueAxis.scaleSumNormalized();
         var data    = this.visiblePlotData(valueDataCell.plot, valueDataCell.dataPartValue); // [ignoreNulls=true]
         var dimName = valueRole.firstDimensionName();
-        if(sumNorm) {
+        if(isSumNorm) {
             var sum = data.dimensionsSumAbs(dimName);
             if(sum) return {min: 0, max: sum};
         } else {

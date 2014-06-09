@@ -11,11 +11,136 @@
  */
 def
 .type('pvc.visual.WaterfallPlot', pvc.visual.BarPlotAbstract)
+.init(function(chart, keyArgs) {
+    
+    this.base(chart, keyArgs);
+
+    // Here?
+    var extAbsId    = pvc.makeExtensionAbsId('line', this.extensionPrefixes);
+    var strokeStyle = chart._getConstantExtension(extAbsId, 'strokeStyle');
+    if(strokeStyle) this._waterColor = pv.color(strokeStyle);
+
+    chart._registerInitLegendScenes(this._initLegendScenes.bind(this));
+})
 .add({
     type: 'water',
 
+    _waterColor: pv.color("#1f77b4").darker(),
+
+    /** @override */
+    onAdded: function() {
+        // TODO: while visual roles are shared, this messes up visual roles of other plot types :-)
+        var catRole  = this.chart.visualRoles.category,
+            travProp = this.isFalling() ? 'FlattenDfsPre' : 'FlattenDfsPost';
+
+        catRole.setTraversalMode(pvc.visual.TraversalMode[travProp]);
+        catRole.setRootLabel(this.option('AllCategoryLabel'));
+    },
+
+    isFalling: function() {
+        return this.option('Direction') === 'down';
+    },
+
     /** @override */    
-    _getOptionsDefinition: function() { return pvc.visual.WaterfallPlot.optionsDef; }
+    _getOptionsDefinition: function() { return pvc.visual.WaterfallPlot.optionsDef; },
+
+    /**
+     * Reduce operation of category ranges, into a global range.
+     *
+     * Propagates the total value.
+     *
+     * Also creates the array of rule information {@link #_ruleInfos}
+     * used by the waterfall panel to draw the rules.
+     *
+     * Supports {@link #_getContinuousVisibleExtent}.
+     */
+    _reduceStackedCategoryValueExtent: function(chart, result, catRange, catGroup) {
+        /*
+         * That min + max are the variation of this category
+         * relies on the concrete base._getStackedCategoryValueExtent() implementation...
+         * Max always contains the sum of positives, if any, or 0
+         * Min always contains the sum of negatives, if any, or 0
+         * max >= 0
+         * min <= 0
+         */
+        /*
+         * When falling, the first category is surely *the* global total.
+         * When falling, the first category must set the initial offset
+         * and, unlike every other category group such that _isFlattenGroup===true,
+         * it does contribute to the offset, and positively.
+         * The offset property accumulates the values.
+         */
+        
+        // previous offset
+        var offsetPrev  = result ? result.offset : 0;
+        var offsetDelta = catRange.min + catRange.max;
+        var offsetNext;
+        if(!result) {
+            if(catRange) {
+                offsetNext = offsetPrev + offsetDelta;
+                chart._ruleInfos = [{
+                    offset: offsetNext,
+                    group:  catGroup,
+                    range:  catRange
+                }];
+
+                // Copy the range object
+                return {
+                    min:    catRange.min,
+                    max:    catRange.max,
+                    offset: offsetNext
+                };
+            }
+
+            return null;
+        }
+        
+        var isFalling = this.isFalling();
+        var isProperGroup = catGroup._isFlattenGroup && !catGroup._isDegenerateFlattenGroup;
+        if(!isProperGroup) {
+            // offset, min, max may be affected
+            var dir = isFalling ? -1 : 1;
+            offsetNext = result.offset = offsetPrev + dir * offsetDelta;
+            
+            if(offsetNext > result.max) { result.max = offsetNext; }
+            else 
+            if(offsetNext < result.min) { result.min = offsetNext; }
+            
+        } else {
+            // offset not affected
+            // min, max may be affected
+            var deltaUp = -catRange.min; // positive
+            if(deltaUp > 0) {
+                var top = offsetPrev + deltaUp;
+                if(top > result.max) { result.max = top; }
+            }
+            
+            var deltaDown = -catRange.max; // negative
+            if(deltaDown < 0) {
+                var bottom = offsetPrev + deltaDown;
+                if(bottom < result.min) { result.min = bottom; }
+            }
+        }
+
+        chart._ruleInfos.push({
+            offset: isFalling ? offsetPrev : result.offset,
+            group:  catGroup,
+            range:  catRange
+        });
+        
+        return result;
+    },
+
+    _initLegendScenes: function(legendPanel) {
+        
+        var rootScene = legendPanel._getBulletRootScene();
+        
+        new pvc.visual.legend.WaterfallBulletGroupScene(rootScene, {
+            extensionPrefix: pvc.buildIndexedId('', 1),
+            label: this.option('TotalLineLabel'),
+            color: this._waterColor
+        });
+    }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.WaterfallPlot);

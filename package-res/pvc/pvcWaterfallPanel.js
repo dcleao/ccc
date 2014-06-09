@@ -44,7 +44,7 @@ def
      * @virtual
      */
     _barDifferentialControl: function() {
-        var isFalling = this.chart._isFalling;
+        var isFalling = this.plot.isFalling();
         /*
          * From protovis help:
          *
@@ -122,8 +122,8 @@ def
             barWidth2 = this.barWidth/2,
             barWidth = this.barWidth,
             barStepWidth = this.barStepWidth,
-            isFalling = chart._isFalling,
-            waterColor = chart._waterColor;
+            isFalling = this.plot.isFalling(),
+            waterColor = this.plot._waterColor;
 
         if(this.plot.option('AreasVisible')) {
             var panelColors = pv.Colors.category10();
@@ -269,7 +269,7 @@ def
             // When falling,
             // traversing from the end to the beginning
             // makes us be climbing...
-            isClimbing = !this.chart._isFalling;
+            isClimbing = !this.plot.isFalling();
 
             if(!isClimbing) { q = q.reverse(); }
 
@@ -309,8 +309,8 @@ def
     _buildWaterGroupScene: function() {
         var chart = this.chart;
         var rootCatData = this.visualRoles.category.select(
-                            chart.partData(this.dataPartValue),
-                            {visible: true});
+                chart.partData(this.dataPartValue),
+                {visible: true});
 
         var rootScene = new pvc.visual.Scene(null, {panel: this, source: rootCatData});
 
@@ -318,7 +318,7 @@ def
         var ris = chart._ruleInfos;
         if(ris) {
             ruleInfoByCategKey = def.query(ris).object({name: function(ri) { return ri.group.absKey; }});
-            isFalling = chart._isFalling;
+            isFalling = this.plot.isFalling();
 
             createRectangleSceneRecursive(rootCatData, 0);
         }
