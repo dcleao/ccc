@@ -16,14 +16,12 @@ def
 
     var axes = this.axes;
 
-    function addAxis(axis){
+    function addAxis(axis) {
         axes[axis.type] = axis;
 
         // TODO: are these really needed??
         axes[axis.orientedId] = axis;
-        if(axis.v1SecondOrientedId){
-            axes[axis.v1SecondOrientedId] = axis;
-        }
+        if(axis.v1SecondOrientedId) axes[axis.v1SecondOrientedId] = axis;
     }
 
     addAxis(chart._getAxis('base',  plot.option('BaseAxis' ) - 1));
@@ -36,18 +34,18 @@ def
     var pctPaddings = {};
     var hasAny = false;
 
-    function setSide(side, pct){
+    function setSide(side, pct) {
         var value = pctPaddings[side];
-        if(value == null || pct > value){
+        if(value == null || pct > value) {
             hasAny = true;
             pctPaddings[side] = pct;
         }
     }
 
-    function processAxis(axis){
+    function processAxis(axis) {
         var offset = axis && axis.option('Offset');
         if(offset != null && offset > 0 && offset < 1) {
-            if(axis.orientation === 'x'){
+            if(axis.orientation === 'x') {
                 setSide('left',  offset);
                 setSide('right', offset);
             } else {
@@ -59,16 +57,12 @@ def
 
     var chartAxes = chart.axesByType;
 
-    ['base', 'ortho'].forEach(function(type){
+    ['base', 'ortho'].forEach(function(type) {
         var typeAxes = chartAxes[type];
-        if(typeAxes){
-            typeAxes.forEach(processAxis);
-        }
+        if(typeAxes) typeAxes.forEach(processAxis);
     });
 
-    if(hasAny){
-        this.offsetPaddings = pctPaddings;
-    }
+    if(hasAny) this.offsetPaddings = pctPaddings;
 })
 .add({
 

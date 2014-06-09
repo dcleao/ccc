@@ -91,7 +91,7 @@ pvc.BaseChart
         if(!this.parent) {
             dataCellsByAxisTypeThenIndex = {};
 
-            this.plotList.forEach(function(plot){
+            this.plotList.forEach(function(plot) {
                 this._collectPlotAxesDataCells(plot, dataCellsByAxisTypeThenIndex);
             }, this);
 
@@ -117,30 +117,23 @@ pvc.BaseChart
                 if(dataCellsByAxisIndex) {
 
                     AxisClass = this._axisClassByType[type];
-                    if(AxisClass) {
-                        dataCellsByAxisIndex.forEach(function(dataCells, axisIndex){
-
+                    if(AxisClass)
+                        dataCellsByAxisIndex.forEach(function(dataCells, axisIndex) {
                             new AxisClass(this, type, axisIndex);
-
                         }, this);
-                    }
+                    
                 } else if(this._axisCreateIfUnbound[type]) {
                     AxisClass = this._axisClassByType[type];
-                    if(AxisClass) {
-                        new AxisClass(this, type, 0);
-                    }
+                    if(AxisClass) new AxisClass(this, type, 0);
                 }
             }
         }, this);
 
-        if(this.parent) {
-            // Copy axes that exist in root and not here
-            this.root.axesList.forEach(function(axis){
-                if(!def.hasOwn(this.axes, axis.id)) {
-                    this._addAxis(axis);
-                }
+        // Copy axes that exist in root and not here
+        if(this.parent)
+            this.root.axesList.forEach(function(axis) {
+                if(!def.hasOwn(this.axes, axis.id)) this._addAxis(axis);
             }, this);
-        }
 
         // Bind
         // Bind all axes with dataCells registered in dataCellsByAxisTypeThenIndex
@@ -152,7 +145,7 @@ pvc.BaseChart
                 if((this._axisCreateChartLevel[type] & chartLevel)) {
                     dataCellsByAxisIndex.forEach(function(dataCells, index) {
                         var axis = this.axes[pvc.buildIndexedId(type, index)];
-                        if(!axis.isBound()) { axis.bind(dataCells); }
+                        if(!axis.isBound()) axis.bind(dataCells);
                     }, this);
                 }
             },
@@ -168,7 +161,7 @@ pvc.BaseChart
      */
     _addAxis: function(axis) {
         this.axes[axis.id] = axis;
-        if(axis.chart === this) { axis.axisIndex = this.axesList.length; }
+        if(axis.chart === this) axis.axisIndex = this.axesList.length;
 
         this.axesList.push(axis);
 
@@ -176,22 +169,18 @@ pvc.BaseChart
         var typeIndex = typeAxes.count || 0;
         axis.typeIndex = typeIndex;
         typeAxes[axis.index] = axis;
-        if(!typeIndex) { typeAxes.first = axis; }
+        if(!typeIndex) typeAxes.first = axis;
         typeAxes.count = typeIndex + 1;
 
         // For child charts, that simply copy color axes.
-        if(axis.type === 'color' && axis.isBound()) {
-            this._onColorAxisScaleSet(axis);
-        }
+        if(axis.type === 'color' && axis.isBound()) this._onColorAxisScaleSet(axis);
 
         return this;
     },
 
     _getAxis: function(type, index) {
         var typeAxes = this.axesByType[type];
-        if(typeAxes && index != null && (+index >= 0)) {
-            return typeAxes[index];
-        }
+        if(typeAxes && index != null && (+index >= 0)) return typeAxes[index];
     },
 
     _setAxesScales: function(chartLevel) {
@@ -325,10 +314,7 @@ pvc.BaseChart
      * @virtual
      */
     _setNumericAxisScale: function(axis) {
-        if(axis.type === 'color') {
-            this._setNumericColorAxisScale(axis);
-            return;
-        }
+        if(axis.type === 'color') return this._setNumericColorAxisScale(axis);
 
         /* DOMAIN */
         var extent = this._getContinuousVisibleExtentConstrained(axis);
@@ -422,9 +408,7 @@ pvc.BaseChart
             this._warn(def.format("The single dimension of role '{0}' should be continuous.", [valueRole.name]));
     },
 
-    /**
-     * @virtual
-     */
+    /** @virtual */
     _getContinuousVisibleExtentConstrained: function(axis, min, max) {
         var dim;
         var getDim = function() {
@@ -486,19 +470,17 @@ pvc.BaseChart
      * @virtual
      */
     _getContinuousVisibleExtent: function(valueAxis) {
-
         var dataCells = valueAxis.dataCells;
-        if(dataCells.length === 1) {
-            // Most common case. Faster this way.
+
+        // Most common case. Faster this way.
+        if(dataCells.length === 1)
             return this._getContinuousVisibleCellExtent(valueAxis, dataCells[0]);
-        }
 
         // This implementation takes the union of
         // the extents of each data cell.
         // Even when a data cell has multiple data parts,
         // it is evaluated as a whole.
-        return def
-            .query(dataCells)
+        return def.query(dataCells)
             .select(function(dataCell) {
                 return this._getContinuousVisibleCellExtent(valueAxis, dataCell);
             }, this)
@@ -521,17 +503,15 @@ pvc.BaseChart
 
         this._warnSingleContinuousValueRole(valueRole);
 
-        if(valueRole.name === 'series') {
-            /* not supported/implemented? */
-            throw def.error.notImplemented();
-        }
+        // not supported/implemented?
+        if(valueRole.name === 'series') throw def.error.notImplemented();
 
         var sumNorm = valueAxis.scaleSumNormalized();
         var data    = this.visibleData(valueDataCell.dataPartValue); // [ignoreNulls=true]
         var dimName = valueRole.firstDimensionName();
         if(sumNorm) {
             var sum = data.dimensionsSumAbs(dimName);
-            if(sum) { return {min: 0, max: sum}; }
+            if(sum) return {min: 0, max: sum};
         } else {
             var useAbs = valueAxis.scaleUsesAbs();
             var extent = data.dimensions(dimName).extent({abs: useAbs});
@@ -599,15 +579,8 @@ pvc.BaseChart
 
     _onColorAxisScaleSet: function(axis) {
         switch(axis.index) {
-            case 0:
-                this.colors = axis.scheme();
-                break;
-
-            case 1:
-                if(this._allowV1SecondAxis) {
-                    this.secondAxisColor = axis.scheme();
-                }
-                break;
+            case 0: this.colors = axis.scheme(); break;
+            case 1: if(this._allowV1SecondAxis) this.secondAxisColor = axis.scheme(); break;
         }
     },
 
@@ -621,18 +594,19 @@ pvc.BaseChart
      * Each color-role has a different unified color-scale,
      * so that the color keys are of the same types.
      */
-    _getRoleColorScale: function(roleName){
+    _getRoleColorScale: function(roleName) {
         return def.lazy(
-            def.lazy(this, '_rolesColorScale'),
-            roleName,
-            this._createRoleColorScale, this);
+            def.lazy(this, '_rolesColorScale'), 
+            roleName, 
+            this._createRoleColorScale, 
+            this);
     },
 
     _createRoleColorScale: function(roleName) {
         var firstScale, scale;
         var valueToColorMap = {};
 
-        this.axesByType.color.forEach(function(axis){
+        this.axesByType.color.forEach(function(axis) {
             // Only use color axes with specified Colors
             var axisRole = axis.role;
             var isRoleCompatible =
@@ -642,33 +616,27 @@ pvc.BaseChart
             if(isRoleCompatible &&
                axis.scale &&
                (axis.index === 0 ||
-               axis.option.isSpecified('Colors') ||
-               axis.option.isSpecified('Map'))){
+                axis.option.isSpecified('Colors') ||
+                axis.option.isSpecified('Map'))) {
 
                 scale = axis.scale;
-                if(!firstScale){ firstScale = scale; }
+                if(!firstScale) firstScale = scale;
 
                 axis.domainValues().forEach(addDomainValue);
             }
         }, this);
 
-        function addDomainValue(value){
+        function addDomainValue(value) {
             // First color wins
             var key = '' + value;
-            if(!def.hasOwnProp.call(valueToColorMap, key)){
-                valueToColorMap[key] = scale(value);
-            }
+            if(!def.hasOwnProp.call(valueToColorMap, key)) valueToColorMap[key] = scale(value);
         }
 
-        if(!firstScale){
-            return pvc.createColorScheme()();
-        }
+        if(!firstScale) return pvc.createColorScheme()();
 
-        scale = function(value){
+        scale = function(value) {
             var key = '' + value;
-            if(def.hasOwnProp.call(valueToColorMap, key)){
-                return valueToColorMap[key];
-            }
+            if(def.hasOwnProp.call(valueToColorMap, key)) return valueToColorMap[key];
 
             // creates a new entry...
             var color = firstScale(value);
@@ -681,7 +649,7 @@ pvc.BaseChart
         return scale;
     },
 
-    _onLaidOut: function(){
+    _onLaidOut: function() {
         // NOOP
     }
 });

@@ -56,9 +56,8 @@ def
     this.orientedId = pvc_CartesianAxis.getOrientedId(this.orientation, index);
 
     // secondX, secondY
-    if(chart._allowV1SecondAxis &&  index === 1) {
+    if(chart._allowV1SecondAxis && index === 1)
         this.v1SecondOrientedId = 'second' + this.orientation.toUpperCase();
-    }
 
     // id
     // base, ortho, base2, ortho2, ...
@@ -71,6 +70,9 @@ def
 
     this.base(chart, type, index, keyArgs);
 
+    chart.axes[this.orientedId] = this;
+    if(this.v1SecondOrientedId) chart.axes[this.v1SecondOrientedId] = this;
+
     // For now scale type is left off,
     // cause it is yet unknown.
     // In bind, prefixes are recalculated (see _syncExtensionPrefixes)
@@ -79,9 +81,7 @@ def
         this.orientedId + 'Axis'
     ];
 
-    if(this.v1SecondOrientedId) {
-        extensions.push(this.v1SecondOrientedId + 'Axis');
-    }
+    if(this.v1SecondOrientedId) extensions.push(this.v1SecondOrientedId + 'Axis');
 
     this._extPrefAxisPosition = extensions.length;
 

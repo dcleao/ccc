@@ -34,19 +34,6 @@ def
         return {isRequired: true, defaultDimension: 'color*', defaultSourceRole: 'series', requireIsDiscrete: true};
     },
     
-    _addAxis: function(axis) {
-        this.base(axis);
-        
-        switch(axis.type) {
-            case 'base': case 'ortho':
-                this.axes[axis.orientedId] = axis;
-                if(axis.v1SecondOrientedId) this.axes[axis.v1SecondOrientedId] = axis;
-                break;
-        }
-        
-        return this;
-    },
-    
     /**
      * Creates a scale for a given axis, with domain applied, but no range yet,
      * assigns it to the axis and assigns the scale to special v1 chart instance fields.
@@ -161,9 +148,8 @@ def
             this.axesPanels[axis.id] = panel;
             this.axesPanels[axis.orientedId] = panel;
             
-            // V1 fields
-            if(axis.index <= 1 && axis.v1SecondOrientedId)
-                this[axis.v1SecondOrientedId + 'AxisPanel'] = panel;
+            // Legacy fields
+            if(axis.v1SecondOrientedId) this[axis.v1SecondOrientedId + 'AxisPanel'] = panel;
             
             return panel;
         }
@@ -179,12 +165,10 @@ def
         }
     },
     
-    _setCartAxisScaleRange: function(axis){
+    _setCartAxisScaleRange: function(axis) {
         var info   = this.plotPanelList[0]._layoutInfo;
         var size   = info.clientSize;
-        var length = (axis.orientation === 'x') ?
-                     size.width :
-                     size.height;
+        var length = (axis.orientation === 'x') ? size.width : size.height;
         
         axis.setScaleRange(length);
 

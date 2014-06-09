@@ -237,7 +237,7 @@ def
             /* Obtain the value extent of each category */
             .select(function(catGroup) {
                 var range = this._getStackedCategoryValueExtent(catGroup, valueDimName, useAbs);
-                if(range) { return {range: range, group: catGroup}; }
+                if(range) return {range: range, group: catGroup};
             }, this)
             .where(def.notNully)
 
@@ -299,6 +299,7 @@ def
         return pvc.unionExtents(result, catRange);
     },
 
+    // TODO: why isn't this in CartesianAbstract ?
     _coordinateSmallChartsLayout: function(scopesByType) {
         // TODO: optimize the case were
         // the title panels have a fixed size and
@@ -325,19 +326,17 @@ def
             var size;
             var panel = childChart.titlePanel;
             if(panel) {
-                if(!titleOrthoLen) { titleOrthoLen = panel.anchorOrthoLength(); }
+                if(!titleOrthoLen) titleOrthoLen = panel.anchorOrthoLength();
 
                 size = panel[titleOrthoLen];
-                if(size > titleSizeMax) { titleSizeMax = size; }
+                if(size > titleSizeMax) titleSizeMax = size;
             }
 
             // ------
 
             var axesPanels = childChart.axesPanels;
             if(!axisIds) {
-                axisIds =
-                    def
-                    .query(def.ownKeys(axesPanels))
+                axisIds = def.query(def.ownKeys(axesPanels))
                     .where(function(alias) { return alias === axesPanels[alias].axis.id; })
                     .select(function(id) {
                         // side effect
@@ -358,9 +357,7 @@ def
                 var titlePanel = axisPanel.titlePanel;
                 if(titlePanel) {
                     size = titlePanel[ol];
-                    if(size > sizes.title){
-                        sizes.title = size;
-                    }
+                    if(size > sizes.title) sizes.title = size;
                 }
             });
         }, this);
@@ -384,9 +381,7 @@ def
                 axisPanel.size = axisPanel.size.clone().set(ol, sizes.axis);
 
                 var titlePanel = axisPanel.titlePanel;
-                if(titlePanel) {
-                    titlePanel.size = titlePanel.size.clone().set(ol, sizes.title);
-                }
+                if(titlePanel) titlePanel.size = titlePanel.size.clone().set(ol, sizes.title);
             });
 
             // Invalidate their previous layout
