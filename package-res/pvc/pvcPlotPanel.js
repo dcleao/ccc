@@ -39,6 +39,9 @@ def
 
     visualRoles: null,
 
+    /** @override */
+    visibleData: function(ka) { return this.chart.visiblePlotData(this.plot, this.dataPartValue, ka); },
+
     _getExtensionId: function() {
         // NOTE: 'chart' is deprecated. Use 'plot'.
         return ['chart', 'plot'];

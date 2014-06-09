@@ -12,6 +12,21 @@
 def
 .type('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot)
 .add({
+    /** @override */
+    createVisibleData: function(baseData, ka) {
+        var serRole = this.chart.visualRoles.series,
+            serGrouping = serRole && serRole.flattenedGrouping(),
+            catGrouping = this.chart.visualRoles.category.flattenedGrouping();
+
+        return serGrouping 
+            // <=> One multi-dimensional, two-levels data grouping
+            ? baseData.groupBy(def.get(ka, 'inverted', false) 
+                    ? [serGrouping, catGrouping] 
+                    : [catGrouping, serGrouping], 
+                    ka)
+            : baseData.groupBy(catGrouping, ka);
+    },
+
     _getOptionsDefinition: function(){
         return pvc.visual.CategoricalPlot.optionsDef;
     }

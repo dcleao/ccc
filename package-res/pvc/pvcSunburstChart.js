@@ -78,9 +78,5 @@ def
         this._axisClassByType.color = pvc.visual.SunburstDiscreteColorAxis;
 
         return this.base(hasMultiRole);
-    },
-    
-    _createVisibleData: function(baseData, ka) {
-        return this.visualRoles.category.select(baseData, ka);
     }
 });

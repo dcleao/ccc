@@ -27,28 +27,13 @@ def
     },
 
     /** @override */
-    _createVisibleData: function(baseData, ka) {
-        var serRole = this.visualRoles.series,
-            serGrouping = serRole && serRole.flattenedGrouping(),
-            catGrouping = this.visualRoles.category.flattenedGrouping();
-
-        return serGrouping 
-            // <=> One multi-dimensional, two-levels data grouping
-            ? baseData.groupBy(def.get(ka, 'inverted', false) 
-                    ? [serGrouping, catGrouping] 
-                    : [catGrouping, serGrouping], 
-                    ka)
-            : baseData.groupBy(catGrouping, ka);
-    },
-    
-    /** @override */
     _interpolateDataCell: function(dataCell, baseData) {
         var InterpType = this._getNullInterpolationOperType(dataCell.nullInterpolationMode);
         if(InterpType) {
             this._warnSingleContinuousValueRole(dataCell.role);
-            var partValue   = dataCell.dataPartValue;
-            var partData    = this.partData(partValue, baseData);
-            var visibleData = this.visibleData(partValue, {baseData: baseData});// [ignoreNulls=true]
+            var partValue   = dataCell.dataPartValue,
+                partData    = this.partData(partValue, baseData),
+                visibleData = this.visiblePlotData(dataCell.plot, partValue, {baseData: baseData});// [ignoreNulls=true]
             if(visibleData.childCount() > 0) {
                 new InterpType(
                     baseData,
@@ -92,7 +77,7 @@ def
         var partData = this.partData(dataCell.dataPartValue, baseData);
 
         // Visible data grouped by category and then series
-        var data = this.visibleData(dataCell.dataPartValue, {baseData: baseData}); // [ignoreNulls=true]
+        var data = this.visiblePlotData(dataCell.plot, dataCell.dataPartValue, {baseData: baseData}); // [ignoreNulls=true]
 
         var dataPartAtom = this._getTrendDataPartAtom();
         var dataPartDimName = dataPartAtom.dimension.name;
@@ -217,7 +202,7 @@ def
 
         var dataPartValue = valueDataCell.dataPartValue;
         var valueDimName = valueRole.firstDimensionName();
-        var data = this.visibleData(dataPartValue); // [ignoreNulls=true]
+        var data = this.visiblePlotData(valueDataCell.plot, dataPartValue); // [ignoreNulls=true]
         var useAbs = valueAxis.scaleUsesAbs();
 
         if(valueAxis.type !== 'ortho' || !valueDataCell.isStacked) {

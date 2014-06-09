@@ -423,6 +423,8 @@ pvc.BaseChart
      * Obtains the chart's visible data
      * grouped according to the charts "main grouping".
      *
+     * The chart's main grouping is that of its main plot.
+     *
      * @param {string|string[]} [dataPartValue=null] The desired data part value or values.
      * @param {object} [ka=null] Optional keyword arguments object.
      * @param {boolean} [ka.ignoreNulls=true] Indicates that null datums should be ignored.
@@ -433,12 +435,20 @@ pvc.BaseChart
      * @type pvc.data.Data
      */
     visibleData: function(dataPartValue, ka) {
-        var baseData = def.get(ka, 'baseData') || this.data;
+        var mainPlot = this.plots.main || 
+            def.fail.operationInvalid("There is no main plot defined.");
 
+        return this.visiblePlotData(mainPlot, dataPartValue, ka);
+    },
+
+    visiblePlotData: function(plot, dataPartValue, ka) {
+        var baseData = def.get(ka, 'baseData') || this.data;
         if(this.parent) { 
+
+            // Caching is done at the root chart.
             ka = ka ? Object.create(ka) : {};
             ka.baseData = baseData;
-            return this.root.visibleData(dataPartValue, ka);
+            return this.root.visiblePlotData(plot, dataPartValue, ka);
         }
 
         // Normalize values for the cache key.
@@ -446,41 +456,19 @@ pvc.BaseChart
         var ignoreNulls = !!(this.options.ignoreNulls || def.get(ka, 'ignoreNulls', true));
 
         // dataPartValue: relying on Array#toString, when an array
-        var key = '\0' + baseData.id + '|' + inverted + '|' + ignoreNulls + '|' + 
-            (dataPartValue != null ? dataPartValue : null);
-
-        var cache = def.lazy(this, '_visibleDataCache');
-        var data  = cache[key];
+        var key = [plot.id, baseData.id, inverted, ignoreNulls, dataPartValue != null ? dataPartValue : null]
+                .join("|"),
+            cache = def.lazy(this, '_visibleDataCache'),
+            data  = cache[key];
         if(!data) {
             var partData = this.partData(dataPartValue, baseData);
 
             ka = ka ? Object.create(ka) : {};
             ka.visible = true;
             ka.isNull  = ignoreNulls ? false : null;
-            data = cache[key] = this._createVisibleData(partData, ka);
+            data = cache[key] = plot.createVisibleData(partData, ka);
         }
-        return data;
-    },
-
-    /*
-     * Creates the chart's visible data
-     * grouped according to the charts "main grouping".
-     *
-     * <p>
-     * The default implementation groups data by series visual role.
-     * </p>
-     *
-     * @param {pvc.data.Data} [baseData=null] The base data.
-     *
-     * @type pvc.data.Data
-     * @protected
-     * @virtual
-     */
-    _createVisibleData: function(baseData, ka) {
-        var serRole = this.visualRoles.series;
-        return serRole && serRole.isBound() 
-            ? serRole.flatten(baseData, ka) 
-            : baseData.where(null, ka); // Used?
+        return data;  
     },
 
     // --------------------

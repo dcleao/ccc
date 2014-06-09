@@ -228,7 +228,7 @@ def
          * (must be done AFTER processing options
          *  because of width, height properties and noData extension point...) 
          */
-        if(!this.parent) { this._checkNoDataI(); }
+        if(!this.parent) this._checkNoDataI();
         
         /* Initialize root visual roles.
          * The Complex Type gets defined on the first load of data.
@@ -247,7 +247,7 @@ def
         this._initData(keyArgs);
 
         /* When data is excluded, there may be no data after all */
-        if(!this.parent) { this._checkNoDataII(); }
+        if(!this.parent) this._checkNoDataII();
         
         var hasMultiRole = this.visualRoles.multiChart.isBound();
         

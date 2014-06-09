@@ -18,6 +18,11 @@ def
     _getOptionsDefinition: function() { return pvc.visual.SunburstPlot.optionsDef; },
 
     /** @override */
+    createVisibleData: function(baseData, ka) {
+        return this.chart.visualRoles.category.select(baseData, ka);
+    },
+
+    /** @override */
     collectDataCells: function(dataCells) {
 
         this.base(dataCells);

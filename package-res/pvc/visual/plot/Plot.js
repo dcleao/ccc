@@ -68,9 +68,26 @@ def
     
     collectDataCells: function(dataCells) {
         var dataCell = this._getColorDataCell();
-        if(dataCell) {
-            dataCells.push(dataCell);
-        }
+        if(dataCell) dataCells.push(dataCell);
+    },
+
+    /**
+     * Creates the plots's visible data, based on a given base data,
+     * and grouped according to the plot's "main grouping".
+     *
+     * <p>The default implementation groups data by series visual role.</p>
+     *
+     * @param {pvc.data.Data} [baseData=null] The base data.
+     * @param {object} [ka] Keyword arguments.
+     *
+     * @return {pvc.data.Data} The visible data.
+     * @virtual
+     */
+    createVisibleData: function(baseData, ka) {
+        var serRole = this.chart.visualRoles.series;
+        return serRole && serRole.isBound() 
+            ? serRole.flatten(baseData, ka) 
+            : baseData.where(null, ka); // Used?
     },
     
     _getColorDataCell: function() {

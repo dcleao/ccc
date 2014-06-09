@@ -16,7 +16,12 @@ def
     
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.TreemapPlot.optionsDef; },
-    
+   
+    /** @override */
+    createVisibleData: function(baseData, ka) {
+        return this.chart.visualRoles.category.select(baseData, ka);
+    },
+
     /** @override */
     collectDataCells: function(dataCells) {
         

@@ -85,10 +85,6 @@ def
         return this.base(hasMultiRole);
     },
     
-    _createVisibleData: function(baseData, ka) {
-        return this.visualRoles.category.select(baseData, ka);
-    },
-    
     defaults: {
         legend: null  // dynamic default, when nully
     }

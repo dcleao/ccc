@@ -61,7 +61,7 @@ def
         var yDimName = yRole.firstDimensionName();
 
         // Visible part data, possibly grouped by series (if series is bound)
-        var data = this.visibleData(dataCell.dataPartValue, {baseData: baseData}); // [ignoreNulls=true]
+        var data = this.visiblePlotData(dataCell.plot, dataCell.dataPartValue, {baseData: baseData}); // [ignoreNulls=true]
 
         var dataPartAtom = this._getTrendDataPartAtom();
         var dataPartDimName = dataPartAtom.dimension.name;

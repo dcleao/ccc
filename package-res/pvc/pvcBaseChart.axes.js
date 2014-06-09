@@ -400,7 +400,7 @@ pvc.BaseChart
         axis.setScale(scale);
     },
 
-    _warnSingleContinuousValueRole: function(valueRole){
+    _warnSingleContinuousValueRole: function(valueRole) {
         if(!valueRole.grouping.isSingleDimension)
             this._warn("A linear scale can only be obtained for a single dimension role.");
 
@@ -507,7 +507,7 @@ pvc.BaseChart
         if(valueRole.name === 'series') throw def.error.notImplemented();
 
         var sumNorm = valueAxis.scaleSumNormalized();
-        var data    = this.visibleData(valueDataCell.dataPartValue); // [ignoreNulls=true]
+        var data    = this.visiblePlotData(valueDataCell.plot, valueDataCell.dataPartValue); // [ignoreNulls=true]
         var dimName = valueRole.firstDimensionName();
         if(sumNorm) {
             var sum = data.dimensionsSumAbs(dimName);
@@ -552,7 +552,7 @@ pvc.BaseChart
         // -> Any isNull
         this._warnSingleContinuousValueRole(axis.role);
 
-        var visibleDomainData = this.visibleData(axis.dataCell.dataPartValue); // [ignoreNulls=true]
+        var visibleDomainData = this.visiblePlotData(axis.dataCell.plot, axis.dataCell.dataPartValue); // [ignoreNulls=true]
         var normByCateg = axis.option('NormByCategory');
         var scaleOptions = {
             type:        axis.option('ScaleType'),

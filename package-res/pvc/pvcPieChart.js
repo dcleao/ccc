@@ -72,10 +72,6 @@ def
         this._addPlot(new pvc.visual.PiePlot(this));
     },
     
-    _createVisibleData: function(baseData, ka) {
-        return this.visualRoles.category.flatten(baseData, ka);
-    },
-
     _setAxisScale: function(axis, chartLevel) {
 
         this.base(axis, chartLevel);
