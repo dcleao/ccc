@@ -413,7 +413,7 @@ pvc.BaseChart
         var dim;
         var getDim = function() {
             return dim ||
-                   (dim = this.data.owner.dimensions(axis.role.grouping.firstDimensionName()));
+                   (dim = this.data.owner.dimensions(axis.role.grouping.lastDimensionName()));
         };
 
         var minLocked = false;
@@ -508,19 +508,19 @@ pvc.BaseChart
         // not supported/implemented?
         if(valueRole.name === 'series') throw def.error.notImplemented();
 
-        var isSumNorm = valueAxis.scaleSumNormalized();
-        var data    = this.visiblePlotData(valueDataCell.plot, valueDataCell.dataPartValue); // [ignoreNulls=true]
-        var dimName = valueRole.firstDimensionName();
+        var isSumNorm = valueAxis.scaleSumNormalized(),
+            data    = this.visiblePlotData(valueDataCell.plot, valueDataCell.dataPartValue), // [ignoreNulls=true]
+            dimName = valueRole.lastDimensionName();
         if(isSumNorm) {
             var sum = data.dimensionsSumAbs(dimName);
             if(sum) return {min: 0, max: sum};
         } else {
-            var useAbs = valueAxis.scaleUsesAbs();
-            var extent = data.dimensions(dimName).extent({abs: useAbs});
+            var useAbs = valueAxis.scaleUsesAbs(),
+                extent = data.dimensions(dimName).extent({abs: useAbs});
             if(extent) {
                 // TODO: aren't these Math.abs repeating work??
-                var minValue = extent.min.value;
-                var maxValue = extent.max.value;
+                var minValue = extent.min.value,
+                    maxValue = extent.max.value;
                 return {
                     min: (useAbs ? Math.abs(minValue) : minValue),
                     max: (useAbs ? Math.abs(maxValue) : maxValue)
@@ -564,7 +564,7 @@ pvc.BaseChart
             colorMax:    axis.option('Max'),
             colorMissing:axis.option('Missing'), // TODO: already handled by the axis wrapping
             data:        visibleDomainData,
-            colorDimension: axis.role.firstDimensionName(),
+            colorDimension: axis.role.lastDimensionName(),
             normPerBaseCategory: normByCateg
         };
 

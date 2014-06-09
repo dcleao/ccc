@@ -64,7 +64,7 @@ function(dimension, value, label, rawValue, key) {
     this.id = (value == null ? -def.nextId() : def.nextId()); // Ensure null sorts first, when sorted by id
     this.value = value;
     this.label = label;
-    if(rawValue !== undefined){
+    if(rawValue !== undefined) {
         this.rawValue = rawValue;
     }
     this.key = key;

@@ -472,15 +472,15 @@ def
      */
 
     _buildScene: function(data, axisCategDatas, isBaseDiscrete) {
-        var rootScene  = new pvc.visual.Scene(null, {panel: this, source: data});
-        var chart     = this.chart;
-        var serRole   = this.visualRoles.series;
-        var valueRole = this.visualRoles.value;
-        var isStacked = this.stacked;
-        var valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, valueRole, {roleVar: 'value', hasPercentSubVar: isStacked});
-        var colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, this.visualRoles.color, {roleVar: 'color'});
-        var valueDimName  = valueRole.firstDimensionName();
-        var valueDim = data.owner.dimensions(valueDimName);
+        var rootScene  = new pvc.visual.Scene(null, {panel: this, source: data}),
+            chart     = this.chart,
+            serRole   = this.visualRoles.series,
+            valueRole = this.visualRoles.value,
+            isStacked = this.stacked,
+            valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, valueRole, {roleVar: 'value', hasPercentSubVar: isStacked}),
+            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, this.visualRoles.color, {roleVar: 'color'}),
+            valueDimName  = valueRole.lastDimensionName(),
+            valueDim = data.owner.dimensions(valueDimName);
 
         // TODO: There's no series axis...so something like what an axis would select must be repeated here.
         // Maintaining order requires basing the operation on a data with nulls still in it.
@@ -491,22 +491,20 @@ def
                 {visible: true, isNull: chart.options.ignoreNulls ? false : null})
             : null;
 
-        var orthoScale = this.axes.ortho.scale;
-        var orthoNullValue = def.scope(function() {
+        var orthoScale = this.axes.ortho.scale,
+            orthoNullValue = def.scope(function() {
                 // If the data does not cross the origin,
                 // Choose the value that's closer to 0.
                 var domain = orthoScale.domain(),
                     dmin = domain[0],
                     dmax = domain[1];
-                if(dmin * dmax >= 0) {
+                return (dmin * dmax >= 0)
                     // Both positive or both negative or either is zero
-                    return dmin >= 0 ? dmin : dmax;
-                }
-
-                return 0;
-            });
-        var orthoZero = orthoScale(orthoNullValue/*0*/);
-        var sceneBaseScale = this.axes.base.sceneScale({sceneVarName: 'category'});
+                    ? (dmin >= 0 ? dmin : dmax)
+                    : 0;
+            }),
+            orthoZero = orthoScale(orthoNullValue/*0*/),
+            sceneBaseScale = this.axes.base.sceneScale({sceneVarName: 'category'});
 
         // ----------------------------------
         // I   - Create series scenes array.
@@ -522,8 +520,8 @@ def
 
             /* Create series-categ scene */
             axisCategDatas.forEach(function(axisCategData, categIndex) {
-                var categData = data.child(axisCategData.key);
-                var group = categData;
+                var categData = data.child(axisCategData.key),
+                    group = categData;
                 if(group && axisSeriesData) { group = group.child(axisSeriesData.key); }
 
                 var serCatScene = new pvc.visual.Scene(seriesScene, {source: group});
@@ -538,8 +536,8 @@ def
 
                 valueVarHelper.onNewScene(serCatScene, /* isLeaf */ true);
 
-                var valueVar = serCatScene.vars.value;
-                var value    = valueVar.value;
+                var valueVar = serCatScene.vars.value,
+                    value    = valueVar.value;
 
                 // accumulated value, for stacked
                 valueVar.accValue = value != null ? value : orthoNullValue;
@@ -623,9 +621,9 @@ def
                         /* belowScene */
                         belowSeriesScenes2 && belowSeriesScenes2[c2]);
 
-                if(toScene.isAlone && !firstAloneScene) { firstAloneScene = toScene; }
+                if(toScene.isAlone && !firstAloneScene) firstAloneScene = toScene;
 
-                if(!toScene.isNull) { notNullCount++; }
+                if(!toScene.isNull) notNullCount++;
 
                 /* Possibly create intermediate scene
                  * (between fromScene and toScene)
@@ -650,11 +648,10 @@ def
                 fromScene = toScene;
             }
 
-            if(notNullCount === 1 && firstAloneScene && categCount === 1) {
+            if(notNullCount === 1 && firstAloneScene && categCount === 1)
                 firstAloneScene.isSingle = true;
-            }
 
-            if(isStacked) { belowSeriesScenes2 = seriesScenes2; }
+            if(isStacked) belowSeriesScenes2 = seriesScenes2;
         }
 
         function completeMainScene(fromScene, toScene, belowScene) {
@@ -662,8 +659,8 @@ def
             var toAccValue = toScene.vars.value.accValue;
 
             if(belowScene) {
-                if(toScene.isNull && !isBaseDiscrete) { toAccValue = orthoNullValue; }
-                else { toAccValue += belowScene.vars.value.accValue; }
+                if(toScene.isNull && !isBaseDiscrete) toAccValue = orthoNullValue;
+                else toAccValue += belowScene.vars.value.accValue;
 
                 toScene.vars.value.accValue = toAccValue;
             }
@@ -677,7 +674,7 @@ def
             if(isAlone) {
                 // Confirm, looking ahead
                 var nextScene = toScene.nextSibling;
-                isAlone  = !nextScene || nextScene.isNull;
+                isAlone = !nextScene || nextScene.isNull;
             }
 
             toScene.isAlone  = isAlone;
@@ -687,7 +684,7 @@ def
         function createIntermediateScene(seriesScene, fromScene, toScene, toChildIndex, belowScene) {
 
             var interIsNull = fromScene.isNull || toScene.isNull;
-            if(interIsNull && !this.areasVisible) { return null; }
+            if(interIsNull && !this.areasVisible) return null;
 
             var interValue, interAccValue, interBasePosition;
 
@@ -771,7 +768,7 @@ def
 
                 // Don't remove the intermediate dot before the 1st non-null dot
                 siblingScene = scene.nextSibling;
-                if(siblingScene && !siblingScene.isNull) { break; }
+                if(siblingScene && !siblingScene.isNull) break;
 
                 seriesScene.removeAt(0);
                 L--;
@@ -782,7 +779,7 @@ def
 
                 // Don't remove the intermediate dot after the last non-null dot
                 siblingScene = scene.previousSibling;
-                if(siblingScene && !siblingScene.isNull) { break; }
+                if(siblingScene && !siblingScene.isNull) break;
 
                 seriesScene.removeAt(L - 1);
                 L--;

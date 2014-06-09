@@ -57,8 +57,8 @@ def
 
         this._warnSingleContinuousValueRole(yRole);
 
-        var xDimName = xRole.firstDimensionName();
-        var yDimName = yRole.firstDimensionName();
+        var xDimName = xRole.lastDimensionName();
+        var yDimName = yRole.lastDimensionName();
 
         // Visible part data, possibly grouped by series (if series is bound)
         var data = this.visiblePlotData(dataCell.plot, dataCell.dataPartValue, {baseData: baseData}); // [ignoreNulls=true]

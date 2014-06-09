@@ -14,7 +14,7 @@ def
      * @override
      */
     _processOptionsCore: function(options){
-        // Still affects default data cell settings
+        // Still affects visual role isPercent
         options.stacked = true;
 
         this.base(options);
@@ -22,7 +22,7 @@ def
 
     /** @override */
     _getContinuousVisibleExtentConstrained: function(axis, min, max) {
-        if(axis.type === 'ortho') {
+        if(axis.type === 'ortho')
             /* 
              * Forces showing 0-100 in the axis.
              * Note that the bars are stretched automatically by the band layout,
@@ -32,7 +32,6 @@ def
              * that would satisfy all the bars...
              */
             return {min: 0, max: 100, minLocked: true, maxLocked: true};
-        }
 
         return this.base(axis, min, max);
     },

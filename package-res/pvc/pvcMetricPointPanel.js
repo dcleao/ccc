@@ -447,37 +447,32 @@ def
      * Renders this.pvScatterPanel - the parent of the marks that are affected by interaction changes.
      * @override
      */
-    renderInteractive: function(){
+    renderInteractive: function() {
         this.pvScatterPanel.render();
     },
 
     _buildScene: function(){
-        var data = this.visibleData({ignoreNulls: false});
-        var rootScene = new pvc.visual.Scene(null, {panel: this, source: data});
-
-        var roles = this.visualRoles;
-        var colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.color, {roleVar: 'color'});
-        var sizeVarHelper  = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size' });
-
-        var xDim = data.owner.dimensions(roles.x.firstDimensionName());
-        var yDim = data.owner.dimensions(roles.y.firstDimensionName());
+        var data = this.visibleData({ignoreNulls: false}),
+            rootScene = new pvc.visual.Scene(null, {panel: this, source: data}),
+            roles = this.visualRoles,
+            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.color, {roleVar: 'color'}),
+            sizeVarHelper  = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size' }),
+            xDim = data.owner.dimensions(roles.x.lastDimensionName()),
+            yDim = data.owner.dimensions(roles.y.lastDimensionName());
 
         // --------------
 
-        data.children()
-            .each(createSeriesScene, this);
+        data.children().each(createSeriesScene, this);
 
         /**
          * Update the scene tree to include intermediate leaf-scenes,
          * to add in the creation of lines and areas.
          */
-        rootScene
-            .children()
-            .each(completeSeriesScenes, this);
+        rootScene.children().each(completeSeriesScenes, this);
 
         return rootScene;
 
-        function createSeriesScene(seriesGroup){
+        function createSeriesScene(seriesGroup) {
             /* Create series scene */
             var seriesScene = new pvc.visual.Scene(rootScene, {source: seriesGroup});
 
@@ -488,16 +483,12 @@ def
 
             seriesGroup
             .datums()
-            .each(function(datum, dataIndex){
+            .each(function(datum, dataIndex) {
                 var xAtom = datum.atoms[xDim.name];
-                if(xAtom.value == null){
-                    return;
-                }
+                if(xAtom.value == null) return;
 
                 var yAtom = datum.atoms[yDim.name];
-                if(yAtom.value == null){
-                    return;
-                }
+                if(yAtom.value == null) return;
 
                 /* Create leaf scene */
                 var scene = new pvc.visual.Scene(seriesScene, {source: datum});
@@ -542,9 +533,7 @@ def
                             toScene,
                             toChildIndex);
 
-                    if(interScene){
-                        toChildIndex++;
-                    }
+                    if(interScene) toChildIndex++;
                 }
 
                 // --------
@@ -557,24 +546,19 @@ def
                      seriesScene,
                      fromScene,
                      toScene,
-                     toChildIndex){
+                     toChildIndex) {
 
-            /* Code for single, continuous and date/numeric dimensions
-             * Calls corresponding dimension's cast to ensure we have a date object,
-             * when that's the dimension value type.
-             */
-            var yToSceneAux = (+toScene.vars.y.value),
+            // Code for single, continuous and date/numeric dimensions
+            // Calls corresponding dimension's cast to ensure we have a date object,
+            // when that's the dimension value type.
+            var yToSceneAux   = (+toScene  .vars.y.value),
                 yFromSceneAux = (+fromScene.vars.y.value),
-                xToSceneAux = (+toScene.vars.x.value),
-                xFromSceneAux = (+fromScene.vars.x.value);
-
-            var interYValue = yDim.type.cast.call(null, (yToSceneAux + yFromSceneAux) / 2);
-            var interXValue = xDim.type.cast.call(null, (xToSceneAux + xFromSceneAux) / 2);
-
-            //----------------
-
-            var interScene = new pvc.visual.Scene(seriesScene, {
-                    /* insert immediately before toScene */
+                xToSceneAux   = (+toScene  .vars.x.value),
+                xFromSceneAux = (+fromScene.vars.x.value),
+                interYValue   = yDim.type.cast.call(null, (yToSceneAux + yFromSceneAux) / 2),
+                interXValue   = xDim.type.cast.call(null, (xToSceneAux + xFromSceneAux) / 2),
+                interScene = new pvc.visual.Scene(seriesScene, {
+                    //insert immediately before toScene
                     index:  toChildIndex,
                     source: toScene.datum
                 });
@@ -602,15 +586,15 @@ def
         }
     },
 
-    _finalizeScene: function(rootScene){
+    _finalizeScene: function(rootScene) {
         var axes = this.axes,
-            sceneBaseScale  = axes.base.sceneScale ({sceneVarName: 'x'}),
+            sceneBaseScale  = axes.base .sceneScale({sceneVarName: 'x'}),
             sceneOrthoScale = axes.ortho.sceneScale({sceneVarName: 'y'});
 
         rootScene
             .children()
-            .selectMany(function(seriesScene){ return seriesScene.childNodes; })
-            .each(function(leafScene){
+            .selectMany(function(seriesScene) { return seriesScene.childNodes; })
+            .each(function(leafScene) {
                 leafScene.basePosition  = sceneBaseScale (leafScene);
                 leafScene.orthoPosition = sceneOrthoScale(leafScene);
             });

@@ -75,10 +75,10 @@ def
 
         chart._warnSingleContinuousValueRole(valueRole);
 
-        var dataPartValue = valueDataCell.dataPartValue;
-        var valueDimName = valueRole.firstDimensionName();
-        var data = chart.visiblePlotData(this, dataPartValue); // [ignoreNulls=true]
-        var useAbs = valueAxis.scaleUsesAbs();
+        var dataPartValue = valueDataCell.dataPartValue,
+            valueDimName = valueRole.lastDimensionName(),
+            data = chart.visiblePlotData(this, dataPartValue), // [ignoreNulls=true]
+            useAbs = valueAxis.scaleUsesAbs();
 
         if(valueAxis.type !== 'ortho' || !valueDataCell.isStacked)
             return data.leafs()
@@ -88,19 +88,17 @@ def
                 })
                .range();
 
-        /*
-         * data is grouped by category and then by series
-         * So direct children of data are category groups
-         */
+        // Data is grouped by category and then by series,
+        // so direct children of data are category groups.
         return data.children()
-            /* Obtain the value extent of each category */
+            // Obtain the value extent of each category
             .select(function(catGroup) {
                 var range = this._getStackedCategoryValueExtent(catGroup, valueDimName, useAbs);
                 if(range) return {range: range, group: catGroup};
             }, this)
             .where(def.notNully)
 
-            /* Combine the value extents of all categories */
+            // Combine the value extents of all categories
             .reduce(function(result, rangeInfo) {
                 return this._reduceStackedCategoryValueExtent(
                             chart, 
@@ -130,21 +128,21 @@ def
 
         catGroup
             .children()
-            /* Sum all datum's values on the same leaf */
+            // Sum all datum's values on the same leaf
             .select(function(serGroup) {
                 var value = serGroup.dimensions(valueDimName).value();
                 return useAbs && value < 0 ? -value : value;
             })
-            /* Add to positive or negative totals */
+            // Add to positive or negative totals
             .each(function(value) {
                 // Note: +null === 0
                 if(value != null) {
-                    if(value >= 0) { posSum += value; }
-                    else           { negSum += value; }
+                    if(value >= 0) posSum += value;
+                    else           negSum += value;
                 }
             });
 
-        if(posSum == null && negSum == null){ return null; }
+        if(posSum == null && negSum == null) return null;
 
         return {max: posSum || 0, min: negSum || 0};
     },

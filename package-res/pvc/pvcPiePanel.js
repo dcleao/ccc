@@ -512,7 +512,7 @@ def
 
     var colorVarHelper = new pvc.visual.RoleVarHelper(this, panel.visualRoles.color, {roleVar: 'color'});
 
-    var valueDimName = panel.visualRoles[panel.valueRoleName].firstDimensionName();
+    var valueDimName = panel.visualRoles[panel.valueRoleName].lastDimensionName();
     var valueDim     = categRootData.dimensions(valueDimName);
 
     var pctValueFormat = panel.chart.options.percentValueFormat;

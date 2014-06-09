@@ -67,12 +67,12 @@ def
 
         this._warnSingleContinuousValueRole(yRole);
 
-        var yDimName = yRole.firstDimensionName();
+        var yDimName = yRole.lastDimensionName();
         var xDimName;
         var isXDiscrete = xRole.isDiscrete();
-        if(!isXDiscrete) { xDimName = xRole.firstDimensionName(); }
+        if(!isXDiscrete) xDimName = xRole.lastDimensionName();
 
-        var sumKeyArgs = {zeroIfNone: false}; 
+        var sumKeyArgs = {zeroIfNone: false};
 
         var partData = this.partData(dataCell.dataPartValue, baseData);
 

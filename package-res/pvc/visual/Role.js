@@ -76,42 +76,28 @@ def
  */
 def
 .type('pvc.visual.Role')
-.init(function(name, keyArgs){
+.init(function(name, keyArgs) {
     this.name  = name;
     this.label = def.get(keyArgs, 'label') || pvc.buildTitleFromName(name);
     this.index = def.get(keyArgs, 'index') || 0;
     
     this.dimensionDefaults = def.get(keyArgs, 'dimensionDefaults') || {};
     
-    if(def.get(keyArgs, 'isRequired', false)) {
-        this.isRequired = true;
-    }
-    
-    if(def.get(keyArgs, 'autoCreateDimension', false)) {
-        this.autoCreateDimension = true;
-    }
+    if(def.get(keyArgs, 'isRequired', false)) this.isRequired = true;
+    if(def.get(keyArgs, 'autoCreateDimension', false)) this.autoCreateDimension = true;
     
     var defaultSourceRoleName = def.get(keyArgs, 'defaultSourceRole');
-    if(defaultSourceRoleName) {
-        this.defaultSourceRoleName = defaultSourceRoleName;
-    }
+    if(defaultSourceRoleName) this.defaultSourceRoleName = defaultSourceRoleName;
     
     var defaultDimensionName = def.get(keyArgs, 'defaultDimension');
-    if(defaultDimensionName) {
-        this.defaultDimensionName = defaultDimensionName;
-    }
+    if(defaultDimensionName) this.defaultDimensionName = defaultDimensionName;
 
-    if(!defaultDimensionName && this.autoCreateDimension){
+    if(!defaultDimensionName && this.autoCreateDimension) 
         throw def.error.argumentRequired('defaultDimension');
-    }
     
     var requireSingleDimension;
     var requireIsDiscrete = def.get(keyArgs, 'requireIsDiscrete'); // isSingleDiscrete
-    if(requireIsDiscrete != null) {
-        if(!requireIsDiscrete) {
-            requireSingleDimension = true;
-        }
-    }
+    if(requireIsDiscrete != null && !requireIsDiscrete) requireSingleDimension = true;
     
     if(requireSingleDimension != null) {
         requireSingleDimension = def.get(keyArgs, 'requireSingleDimension', false);
@@ -119,9 +105,7 @@ def
             if(def.get(keyArgs, 'isMeasure', false)) {
                 this.isMeasure = true;
                 
-                if(def.get(keyArgs, 'isPercent', false)) {
-                    this.isPercent = true;
-                }
+                if(def.get(keyArgs, 'isPercent', false)) this.isPercent = true;
             }
             
             var valueType = def.get(keyArgs, 'valueType', null);
@@ -132,9 +116,8 @@ def
         }
     }
     
-    if(requireSingleDimension !== this.requireSingleDimension) {
+    if(requireSingleDimension !== this.requireSingleDimension)
         this.requireSingleDimension = requireSingleDimension;
-    }
     
     if(requireIsDiscrete != this.requireIsDiscrete) {
         this.requireIsDiscrete = !!requireIsDiscrete;
@@ -142,9 +125,8 @@ def
     }
 
     var traversalMode = def.get(keyArgs, 'traversalMode');
-    if(traversalMode != null && traversalMode !== this.traversalMode) {
+    if(traversalMode != null && traversalMode !== this.traversalMode)
         this.traversalMode = traversalMode;
-    }
 })
 .add(/** @lends pvc.visual.Role# */{
     isRequired: false,
@@ -189,6 +171,33 @@ def
     firstDimensionValueType: function() {
         var g = this.grouping;
         return g && g.firstDimensionValueType();
+    },
+
+    /** 
+     * Obtains the last dimension type that is bound to the role.
+     * @type pvc.data.DimensionType
+     */
+    lastDimensionType: function() {
+        var g = this.grouping;
+        return g && g.lastDimensionType();
+    },
+    
+    /** 
+     * Obtains the name of the last dimension type that is bound to the role.
+     * @type string 
+     */
+    lastDimensionName: function() {
+        var g = this.grouping;
+        return g && g.lastDimensionName();
+    },
+    
+    /** 
+     * Obtains the value type of the last dimension type that is bound to the role.
+     * @type function
+     */
+    lastDimensionValueType: function() {
+        var g = this.grouping;
+        return g && g.lastDimensionValueType();
     },
 
     isDiscrete: function() {

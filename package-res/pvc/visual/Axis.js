@@ -95,9 +95,7 @@ def
 
     domainCellData: function(cellIndex) {
         var dataCells = this.dataCells;
-        if(dataCells.length === 1) {
-            return this.domainData();
-        }
+        if(dataCells.length === 1) return this.domainData();
 
         var dataCell = dataCells[cellIndex];
         var partData = this.chart.partData(dataCell.dataPartValue);
@@ -218,14 +216,14 @@ def
             grouping = this.role.grouping;
 
         // TODO: isn't this redundant with the code in _wrapScale??
-        if(grouping.isSingleDimension && grouping.firstDimensionValueType() === Number) {
+        if(grouping.lastDimensionValueType() === Number) {
             var scale = this.scale,
                 nullToZero = def.get(keyArgs, 'nullToZero', true);
 
             var by = function(scene) {
                 var value = scene.vars[varName].value;
                 if(value == null) {
-                    if(!nullToZero) { return value; }
+                    if(!nullToZero) return value;
                     value = 0;
                 }
                 return scale(value);
@@ -249,20 +247,17 @@ def
             if(this.scaleType === 'discrete') {
                 for(i = 1; i < L ; i++) {
                     otherGrouping = this._getBoundRoleGrouping(this.dataCells[i].role);
-                    if(grouping.id !== otherGrouping.id) {
+                    if(grouping.id !== otherGrouping.id)
                         throw def.error.operationInvalid("Discrete roles on the same axis must have equal groupings.");
-                    }
                 }
             } else {
-                if(!grouping.firstDimensionType().isComparable) {
+                if(!grouping.lastDimensionType().isComparable)
                     throw def.error.operationInvalid("Continuous roles on the same axis must have 'comparable' groupings.");
-                }
 
                 for(i = 1; i < L ; i++) {
                     otherGrouping = this._getBoundRoleGrouping(this.dataCells[i].role);
-                    if(this.scaleType !== axis_groupingScaleType(otherGrouping)) {
+                    if(this.scaleType !== axis_groupingScaleType(otherGrouping))
                         throw def.error.operationInvalid("Continuous roles on the same axis must have scales of the same type.");
-                    }
                 }
             }
         }
@@ -270,7 +265,7 @@ def
 
     _getBoundRoleGrouping: function(role) {
         var grouping = role.grouping;
-        if(!grouping) { throw def.error.operationInvalid("Axis' role '" + role.name + "' is unbound."); }
+        if(!grouping) throw def.error.operationInvalid("Axis' role '" + role.name + "' is unbound.");
         return grouping;
     },
 
@@ -314,11 +309,9 @@ def
 });
 
 function axis_groupingScaleType(grouping) {
-    return grouping.isDiscrete() ?
-                'discrete' :
-                (grouping.firstDimensionValueType() === Date ?
-                'timeSeries' :
-                'numeric');
+    return grouping.isDiscrete()                      ? 'discrete'   :
+           grouping.lastDimensionValueType() === Date ? 'timeSeries' : 
+           'numeric';
 }
 
 var axis_optionsDef = {

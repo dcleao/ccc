@@ -197,18 +197,16 @@ def
      * Renders this.pvScatterPanel - the parent of the marks that are affected by interaction changes.
      * @override
      */
-    renderInteractive: function(){
+    renderInteractive: function() {
         this.pvBoxPanel.render();
     },
 
-    _buildScene: function(){
+    _buildScene: function() {
         var chart = this.chart,
-            measureRolesDimNames = 
-                def
-                .query(chart.measureVisualRoles())
+            measureRolesDimNames = def.query(chart.measureVisualRoles())
                 .object({
                     name:  function(role) { return role.name; },
-                    value: function(role) { return role.firstDimensionName(); }
+                    value: function(role) { return role.lastDimensionName(); }
                 }),
             visibleKeyArgs = {visible: true, zeroIfNone: false},
             data       = this.visibleData({ignoreNulls: false}),
@@ -227,7 +225,7 @@ def
 
         return rootScene;
         
-        function createCategScene(categData){
+        function createCategScene(categData) {
             var categScene = new pvc.visual.Scene(rootScene, {source: categData});
             var vars = categScene.vars;
             

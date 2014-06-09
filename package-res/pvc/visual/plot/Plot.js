@@ -117,19 +117,19 @@ def
         // not supported/implemented?
         if(valueRole.name === 'series') throw def.error.notImplemented();
 
-        var isSumNorm = valueAxis.scaleSumNormalized();
-        var data    = chart.visiblePlotData(this, valueDataCell.dataPartValue); // [ignoreNulls=true]
-        var dimName = valueRole.firstDimensionName();
+        var isSumNorm = valueAxis.scaleSumNormalized(),
+            data    = chart.visiblePlotData(this, valueDataCell.dataPartValue), // [ignoreNulls=true]
+            dimName = valueRole.lastDimensionName();
         if(isSumNorm) {
             var sum = data.dimensionsSumAbs(dimName);
             if(sum) return {min: 0, max: sum};
         } else {
-            var useAbs = valueAxis.scaleUsesAbs();
-            var extent = data.dimensions(dimName).extent({abs: useAbs});
+            var useAbs = valueAxis.scaleUsesAbs(),
+                extent = data.dimensions(dimName).extent({abs: useAbs});
             if(extent) {
                 // TODO: aren't these Math.abs repeating work??
-                var minValue = extent.min.value;
-                var maxValue = extent.max.value;
+                var minValue = extent.min.value,
+                    maxValue = extent.max.value;
                 return {
                     min: (useAbs ? Math.abs(minValue) : minValue),
                     max: (useAbs ? Math.abs(maxValue) : maxValue)
@@ -140,14 +140,13 @@ def
 
     _getColorDataCell: function() {
         var colorRoleName = this.option('ColorRole');
-        if(colorRoleName) {
+        if(colorRoleName)
             return new pvc.visual.ColorDataCell(
                     this,
                     /*axisType*/ 'color',
                     this.option('ColorAxis') - 1, 
                     colorRoleName, 
                     this.option('DataPart'));
-        }
     }
 })
 .addStatic({

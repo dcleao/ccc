@@ -169,9 +169,9 @@ def
     },
     
     _setCartAxisScaleRange: function(axis) {
-        var info   = this.plotPanelList[0]._layoutInfo;
-        var size   = info.clientSize;
-        var length = (axis.orientation === 'x') ? size.width : size.height;
+        var info   = this.plotPanelList[0]._layoutInfo,
+            size   = info.clientSize,
+            length = (axis.orientation === 'x') ? size.width : size.height;
         
         axis.setScaleRange(length);
 
@@ -227,42 +227,39 @@ def
     // TODO: chart orientation 
     // TODO: horizontal lines 
     // TODO: discrete scales
-    markEvent: function(sourceValue, label, options){
-        var me = this;
-        var baseAxis  = me.axes.base;
-        var orthoAxis = me.axes.ortho;
-        var baseRole  = baseAxis.role;
-        var baseScale = baseAxis.scale;
-        var baseDim   = me.data.owner.dimensions(baseRole.grouping.firstDimensionName());
+    markEvent: function(sourceValue, label, options) {
+        var me = this,
+            baseAxis  = me.axes.base,
+            orthoAxis = me.axes.ortho,
+            baseRole  = baseAxis.role,
+            baseScale = baseAxis.scale,
+            baseDim   = me.data.owner.dimensions(baseRole.grouping.lastDimensionName());
 
         if(baseAxis.isDiscrete()) {
             me._warn("Can only mark events in charts with a continuous base scale.");
             return me;
         }
 
-        var o = $.extend({}, me.markEventDefaults, options);
-        
-        var pseudoAtom = baseDim.read(sourceValue, label);
-        var basePos    = baseScale(pseudoAtom.value);
-        var baseRange  = baseScale.range();
-        var baseEndPos = baseRange[1];
+        var o = $.extend({}, me.markEventDefaults, options),
+            pseudoAtom = baseDim.read(sourceValue, label),
+            basePos    = baseScale(pseudoAtom.value),
+            baseRange  = baseScale.range(),
+            baseEndPos = baseRange[1];
         if(basePos < baseRange[0] || basePos > baseEndPos) {
-            this._warn("Cannot mark event because it is outside the base scale's domain.");
-            return this;
+            me._warn("Cannot mark event because it is outside the base scale's domain.");
+            return me;
         }
         
         // Chart's main plot
-        var pvPanel = this.plotPanelList[0].pvPanel;
-        
-        var h = orthoAxis.scale.range()[1];
+        var pvPanel = this.plotPanelList[0].pvPanel,
+            h = orthoAxis.scale.range()[1];
 
         // Detect where to place the label
         var ha = o.horizontalAnchor;
         if(!o.forceHorizontalAnchor) {
-            var alignRight    = ha === "right";
-            var availableSize = alignRight ? (baseEndPos - basePos) : basePos;
-            
-            var labelSize = pv.Text.measureWidth(pseudoAtom.label, o.font);
+            var alignRight    = ha === "right",
+                availableSize = alignRight ? (baseEndPos - basePos) : basePos,
+                labelSize = pv.Text.measureWidth(pseudoAtom.label, o.font);
             if(availableSize < labelSize) ha = alignRight ? "left" : "right";
         }
         

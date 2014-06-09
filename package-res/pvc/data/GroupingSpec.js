@@ -37,6 +37,7 @@ def
  * @property {pvc.data.ComplexType} type The complex type against which dimension names were resolved.
  * @property {pvc.data.GroupingLevelSpec} levels An array of level specifications.
  * @property {pvc.data.DimensionType} firstDimension The first dimension type, if any.
+ * @property {pvc.data.DimensionType} lastDimension The last dimension type, if any.
  * @property {pvc.data.FlatteningMode} flatteningMode The flattening mode.
  * @property {string} rootLabel The label of the resulting root node.
  *
@@ -48,7 +49,7 @@ def
  * @param {string} [ka.rootLabel=''] The label of the root node.
  */
 def.type('pvc.data.GroupingSpec')
-.init(function(levelSpecs, type, ka){
+.init(function(levelSpecs, type, ka) {
     this.type = type || null;
     
     var ids = [];
@@ -58,15 +59,14 @@ def.type('pvc.data.GroupingSpec')
     var dimNames = []; // accumulated dimension names
     
     this.levels = def.query(levelSpecs || undefined) // -> null query
-        .where(function(levelSpec){ return levelSpec.dimensions.length > 0; })
-        .select(function(levelSpec){
+        .where(function(levelSpec) { return levelSpec.dimensions.length > 0; })
+        .select(function(levelSpec) {
             ids.push(levelSpec.id);
             
             def.array.append(dimNames, levelSpec.dimensionNames());
             
-            if(!this.hasCompositeLevels && levelSpec.dimensions.length > 1) {
+            if(!this.hasCompositeLevels && levelSpec.dimensions.length > 1)
                 this.hasCompositeLevels = true;
-            }
             
             levelSpec._setAccDimNames(dimNames.slice(0));
             
@@ -80,8 +80,10 @@ def.type('pvc.data.GroupingSpec')
     this.depth             = this.levels.length;
     this.isSingleLevel     = this.depth === 1;
     this.isSingleDimension = this.isSingleLevel && !this.hasCompositeLevels;
-    this.firstDimension    = this.depth > 0 ? this.levels[0].dimensions[0] : null;
-    
+
+    this.firstDimension = this.depth > 0 ? this.levels[0].dimensions[0] : null;
+    this.lastDimension  = this.depth > 0 ? this.levels[this.depth - 1].lastDimension() : null;
+
     this.rootLabel = def.get(ka, 'rootLabel') || "";
     this.flatteningMode = def.get(ka, 'flatteningMode') || pvc.data.FlatteningMode.None;
     
@@ -124,7 +126,7 @@ def.type('pvc.data.GroupingSpec')
     isDiscrete: function() {
         var d;
         return !this.isSingleDimension || 
-               (!!(d = this.firstDimension) && d.type.isDiscrete);
+               (!!(d = this.lastDimension) && d.type.isDiscrete);
     },
     
     /**
@@ -151,6 +153,33 @@ def.type('pvc.data.GroupingSpec')
      */
     firstDimensionValueType: function() {
         var dt = this.firstDimensionType();
+        return dt && dt.valueType;
+    },
+
+    /**
+     * Obtains the dimension type of the last dimension spec., if any.
+     * @type pvc.visual.DimensionType
+     */
+    lastDimensionType: function() {
+        var d = this.lastDimension;
+        return d && d.type;
+    },
+    
+    /**
+     * Obtains the dimension name of the last dimension spec., if any.
+     * @type string
+     */
+    lastDimensionName: function() {
+        var dt = this.lastDimensionType();
+        return dt && dt.name;
+    },
+    
+    /**
+     * Obtains the dimension value type of the last dimension spec., if any.
+     * @type string
+     */
+    lastDimensionValueType: function() {
+        var dt = this.lastDimensionType();
         return dt && dt.valueType;
     },
     
@@ -180,7 +209,7 @@ def.type('pvc.data.GroupingSpec')
             if(cacheKey !== this._cacheKey) {
                 var cache = def.lazy(this, '_groupingCache');
                 result = def.getOwn(cache, cacheKey);
-                if(!result) { result = cache[cacheKey] = this._ensure(ka); }
+                if(!result) result = cache[cacheKey] = this._ensure(ka);
             }
         }
         
@@ -305,6 +334,8 @@ def.type('pvc.data.GroupingLevelSpec')
     
     dimensionNames: function() { return this._dimNames; },
     
+    lastDimension: function() { return this.dimensions[this.depth - 1]; },
+
     bind: function(type) {
         this._sortDimensions(type);
         

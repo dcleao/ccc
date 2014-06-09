@@ -408,7 +408,7 @@ pvc.BaseChart
         //  and that ends changing the order of datums, to follow
         //  the group operation.
         // Changing order at this level is not acceptable.
-        var dataPartDimName = partRole.firstDimensionName();
+        var dataPartDimName = partRole.lastDimensionName();
         var dataPartAtoms   = baseData.dimensions(dataPartDimName)
             .getDistinctAtoms(def.array.to(dataPartValues));
 

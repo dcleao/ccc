@@ -17,7 +17,7 @@ def
 .add({
     plotType: 'bar',
 
-    _barVerticalMode: function(){
+    _barVerticalMode: function() {
         return 'expand';
     }
 });

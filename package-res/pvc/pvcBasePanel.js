@@ -1288,7 +1288,7 @@ def
         var dimName  = dimNames[v1Dim];
         if(dimName == null) {
             var role = this.chart.visualRoles[this._v1DimRoleName[v1Dim]];
-            dimName = role ? role.firstDimensionName() : '';
+            dimName = role ? role.lastDimensionName() : '';
             dimNames[v1Dim] = dimName;
         }
         

@@ -252,12 +252,11 @@ def
     },
 
     _buildRuleScene: function() {
-        var rootScene = new pvc.visual.Scene(null, {panel: this, source: this.visibleData({ignoreNulls: false})});
-        var prevValue, isClimbing;
-        var valueDim;
-        var ris = this.chart._ruleInfos;
+        var rootScene = new pvc.visual.Scene(null, {panel: this, source: this.visibleData({ignoreNulls: false})}),
+            ris = this.chart._ruleInfos,
+            prevValue, isClimbing, valueDim;
         if(ris) {
-            valueDim = this.chart.data.dimensions(this.visualRoles.value.firstDimensionName());
+            valueDim = this.chart.data.dimensions(this.visualRoles.value.lastDimensionName());
 
             // Create scenes in order
             ris.forEach(createCategScene, this);

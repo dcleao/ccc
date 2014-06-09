@@ -38,7 +38,7 @@ pvc.BaseChart
 
     measureDimensionsNames: function() {
         return def.query(this._measureVisualRoles)
-           .select(function(role) { return role.firstDimensionName(); })
+           .select(function(role) { return role.lastDimensionName(); })
            .where(def.notNully)
            .array();
     },
@@ -421,15 +421,11 @@ pvc.BaseChart
     },
     
     _getDataPartDimName: function() {
-        var role = this.visualRoles.dataPart;
-        if(role) {
-            if(role.isBound()) return role.firstDimensionName();
-            
-            var preGrouping = role.preBoundGrouping();
-            if(preGrouping) return preGrouping.firstDimensionName();
-            
-            return role.defaultDimensionName;
-        }
+        var role = this.visualRoles.dataPart, preGrouping;
+        if(role)
+            return role.isBound()                          ? role.lastDimensionName()       : 
+                   (preGrouping = role.preBoundGrouping()) ? preGrouping.lastDimensionName() :
+                   role.defaultDimensionName;
     }
 });
 

@@ -209,8 +209,8 @@ def
         var roleName = hasColor ? 'color' :
                        hasSize  ? 'size'  :
                        null;
-        if(roleName){
-            var valueDimName = roles[roleName].firstDimensionName();
+        if(roleName) {
+            var valueDimName = roles[roleName].lastDimensionName();
             return "{#" + valueDimName + "}";
         }
     },

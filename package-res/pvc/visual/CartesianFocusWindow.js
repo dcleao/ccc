@@ -104,7 +104,7 @@ def
         var axis       = me.axis;
         var scale      = axis.scale;
         var isDiscrete = me.isDiscrete;
-        var contCast   = !isDiscrete ? axis.role.firstDimensionType().cast : null;
+        var contCast   = !isDiscrete ? axis.role.lastDimensionType().cast : null;
         var domain     = scale.domain();
 
         var a, L;
@@ -423,7 +423,7 @@ def
                 oper.point = index * S;
             }
         } else if((constraint = me.option('Constraint'))){
-            var contCast = axis.role.firstDimensionType().cast;
+            var contCast = axis.role.lastDimensionType().cast;
             var v = contCast(scale.invert(oper.point));
 
             var sign    = oper.target === 'begin' ? 1 : -1;
@@ -578,7 +578,7 @@ def
         } else {
             domainData = partData;
 
-            var dimName = role.firstDimensionName();
+            var dimName = role.lastDimensionName();
             selectDatums = def
                 .query(partData._datums)
                 .where(datum_isVisibleT)
