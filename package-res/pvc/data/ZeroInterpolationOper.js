@@ -13,27 +13,24 @@ def
     // dataCell(s) span "all" data parts.
     // Shouldn't this just use the baseAxis's dataPartValues?
     // Need categories of hidden and/or null datums as well.
-    var qAllCatDatas = catRole.flatten(baseData).children();
-
-    var serDatas1 = serRole.isBound()
-        ? serRole.flatten(partData, {visible: true, isNull: false}).children().array()
-        : [null]; // null series
+    var qAllCatDatas = catRole.flatten(baseData).children(),
+        serDatas1 = serRole.isBound()
+            ? serRole.flatten(partData, {visible: true, isNull: false}).children().array()
+            : [null], // null series
+        valDim = this._valDim = baseData.owner.dimensions(valRole.lastDimensionName()),
+        visibleKeyArgs = {visible: true, zeroIfNone: false};
 
     this._isCatDiscrete = catRole.grouping.isDiscrete();
     this._stretchEnds   = stretchEnds;
-    var valDim = this._valDim = baseData.owner.dimensions(valRole.lastDimensionName());
-
-    var visibleKeyArgs = {visible: true, zeroIfNone: false};
-
     this._catInfos = qAllCatDatas.select(function(allCatData, catIndex) {
-        var catData = visibleData.child(allCatData.key);
-        var catInfo = {
-            data:           catData || allCatData, // may be null?
-            value:          allCatData.value,
-            isInterpolated: false,
-            serInfos:       null,
-            index:          catIndex
-        };
+        var catData = visibleData.child(allCatData.key),
+            catInfo = {
+                data:           catData || allCatData, // may be null?
+                value:          allCatData.value,
+                isInterpolated: false,
+                serInfos:       null,
+                index:          catIndex
+            };
 
         catInfo.serInfos = serDatas1.map(function(serData1) {
             var group = catData;
@@ -57,42 +54,32 @@ def
     .array();
 
     this._serCount  = serDatas1.length;
-    this._serStates =
-        def
-        .range(0, this._serCount)
-        .select(function(serIndex) {
-            return new pvc.data.ZeroInterpolationOperSeriesState(this, serIndex);
-        }, this)
+    this._serStates = def.range(0, this._serCount)
+        .select(function(serIndex) { return new pvc.data.ZeroInterpolationOperSeriesState(this, serIndex); }, this)
         .array();
 })
 .add({
-    interpolate: function(){
+    interpolate: function() {
         var catInfo;
-        while((catInfo = this._catInfos.shift())){
-            catInfo.serInfos.forEach(this._visitSeries, this);
-        }
+        while((catInfo = this._catInfos.shift())) catInfo.serInfos.forEach(this._visitSeries, this);
 
         // Add datums created during interpolation
         var newDatums = this._newDatums;
-        if(newDatums.length){
-            this._data.owner.add(newDatums);
-        }
+        if(newDatums.length) this._data.owner.add(newDatums);
     },
 
-    _visitSeries: function(catSerInfo, serIndex){
+    _visitSeries: function(catSerInfo, serIndex) {
         this._serStates[serIndex].visit(catSerInfo);
     },
 
-    nextUnprocessedNonNullCategOfSeries: function(serIndex){
+    nextUnprocessedNonNullCategOfSeries: function(serIndex) {
         var catIndex = 0,
             catCount = this._catInfos.length;
 
-        while(catIndex < catCount){
-            var catInfo = this._catInfos[catIndex++];
-            var catSerInfo = catInfo.serInfos[serIndex];
-            if(!catSerInfo.isNull){
-                return catSerInfo;
-            }
+        while(catIndex < catCount) {
+            var catInfo = this._catInfos[catIndex++],
+                catSerInfo = catInfo.serInfos[serIndex];
+            if(!catSerInfo.isNull) return catSerInfo;
         }
     }
 });

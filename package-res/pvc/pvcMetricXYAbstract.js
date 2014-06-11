@@ -49,22 +49,21 @@ def
     },
 
     _generateTrendsDataCell: function(newDatums, dataCell, baseData) {
-        var serRole = this.visualRoles.series;
-        var xRole   = this.visualRoles.x;
-        var yRole   = dataCell.role;
-        var trendOptions = dataCell.trend;
-        var trendInfo = trendOptions.info;
+        var serRole = this.visualRoles.series,
+            xRole   = this.visualRoles.x,
+            yRole   = dataCell.role,
+            trendOptions = dataCell.trend,
+            trendInfo = trendOptions.info;
 
         this._warnSingleContinuousValueRole(yRole);
 
-        var xDimName = xRole.lastDimensionName();
-        var yDimName = yRole.lastDimensionName();
+        var xDimName = xRole.lastDimensionName(),
+            yDimName = yRole.lastDimensionName(),
 
-        // Visible part data, possibly grouped by series (if series is bound)
-        var data = this.visiblePlotData(dataCell.plot, dataCell.dataPartValue, {baseData: baseData}); // [ignoreNulls=true]
-
-        var dataPartAtom = this._getTrendDataPartAtom();
-        var dataPartDimName = dataPartAtom.dimension.name;
+            // Visible part data, possibly grouped by series (if series is bound)
+            data = this.visiblePlotData(dataCell.plot, dataCell.dataPartValue, {baseData: baseData}), // [ignoreNulls=true]
+            dataPartAtom = this._getTrendDataPartAtom(),
+            dataPartDimName = dataPartAtom.dimension.name;
 
         // For each series...
         // Or data already only contains visible data
@@ -73,27 +72,24 @@ def
         .each(genSeriesTrend, this);
 
         function genSeriesTrend(serData) {
-            var funX    = function(datum) { return datum.atoms[xDimName].value; };
-            var funY    = function(datum) { return datum.atoms[yDimName].value; };
-            var datums  = serData.datums().sort(null, /* by */funX).array();
-            var options = def.create(trendOptions, {rows: def.query(datums), x: funX, y: funY});
+            var funX    = function(datum) { return datum.atoms[xDimName].value; },
+                funY    = function(datum) { return datum.atoms[yDimName].value; },
+                datums  = serData.datums().sort(null, /* by */funX).array(),
+                options = def.create(trendOptions, {rows: def.query(datums), x: funX, y: funY}),
+                trendModel = trendInfo.model(options);
 
-            var trendModel = trendInfo.model(options);
             if(trendModel) {
                 datums.forEach(function(datum, index) {
-                    var trendX = funX(datum);
-                    if(trendX) {
-                        var trendY = trendModel.sample(trendX, funY(datum), index);
-                        if(trendY != null) {
-                            var atoms =
-                                def.set(
-                                    Object.create(serData.atoms), // just common atoms
-                                    xDimName, trendX,
-                                    yDimName, trendY,
-                                    dataPartDimName, dataPartAtom);
+                    var trendX = funX(datum), trendY;
+                    if(trendX && (trendY = trendModel.sample(trendX, funY(datum), index)) != null) {
+                        var atoms =
+                            def.set(
+                                Object.create(serData.atoms), // just common atoms
+                                xDimName, trendX,
+                                yDimName, trendY,
+                                dataPartDimName, dataPartAtom);
 
-                            newDatums.push(new pvc.data.TrendDatum(data.owner, atoms, trendOptions));
-                        }
+                        newDatums.push(new pvc.data.TrendDatum(data.owner, atoms, trendOptions));
                     }
                 });
             }

@@ -6,7 +6,7 @@
 
 def
 .type('pvc.SunburstPanel', pvc.PlotPanel)
-.init(function(chart, parent, plot, options){
+.init(function(chart, parent, plot, options) {
 
     this.base(chart, parent, plot, options);
 
@@ -23,66 +23,61 @@ def
 .add({
     plotType: 'sunburst',
 
-    _createCore: function(layoutInfo) {
+    _createCore: function() {
         var labelFont = this._getConstantExtension('label', 'font');
-        if(def.string.is(labelFont)) { this.valuesFont = labelFont; }
+        if(def.string.is(labelFont)) this.valuesFont = labelFont;
 
-        var me = this;
-        var rootScene = me._buildScene();
+        var me = this,
+            rootScene = me._buildScene();
 
         // Every datum is hidden
-        if(!rootScene) { return; }
+        if(!rootScene) return;
 
         // Not possible to represent a sunburst if rootScene.vars.size.value = 0.
         // If this is a small chart, don't show message, which results in a blank plot.
-        if(!rootScene.childNodes.length && !this.visualRoles.multiChart.isBound()) {
+        if(!rootScene.childNodes.length && !this.visualRoles.multiChart.isBound())
            throw new InvalidDataException("Unable to create a sunburst chart, please check the data values.");
-        }
 
-        var sizeProp = me.visualRoles.size.isBound() ?
-                       // Does not use sceneScale on purpose because of the 'nullToZero'
-                       // code not calling the base scale when null.
-                       // The base scale already handles the null case,
-                       // translating it to the minimum value.
-                       me.axes.size.scale.by1(function(scene) { return scene.vars.size.value; }) :
-                       def.fun.constant(100);
+        // Does not use sceneScale on purpose because of the 'nullToZero'
+        // code not calling the base scale when null.
+        // The base scale already handles the null case, translating it to the minimum value.
+        var sizeProp = me.visualRoles.size.isBound()
+                ? me.axes.size.scale.by1(function(scene) { return scene.vars.size.value; })
+                : def.fun.constant(100),
 
-        var panel = me.pvSunburstPanel = new pvc.visual.Panel(me, me.pvPanel, {
-                panelType:   pv.Layout.Partition.Fill,
-                extensionId: 'panel'
-            })
-            .pvMark
+            panel = me.pvSunburstPanel = new pvc.visual.Panel(me, me.pvPanel, {
+                    panelType:   pv.Layout.Partition.Fill,
+                    extensionId: 'panel'
+                })
+                .pvMark
                 .lock('visible', true)
                 .lock('nodes',   rootScene.nodes())
                 .lock('size',    sizeProp)
-                .lock('orient',  'radial');
+                .lock('orient',  'radial'),
 
-        var slice = new pvc.visual.SunburstSlice(this, panel.node, {
-            extensionId : 'slice',
-            tooltipArgs: {
-                options: {
-                    useCorners: true,
-                    gravity: function() {
-                        var ma = this.midAngle();
-                        var isRightPlane = Math.cos(ma) >= 0;
-                        var isTopPlane   = Math.sin(ma) >= 0;
-                        return  isRightPlane ?
-                                (isTopPlane ? 'nw' : 'sw') :
-                                (isTopPlane ? 'ne' : 'se');
+            slice = new pvc.visual.SunburstSlice(this, panel.node, {
+                    extensionId : 'slice',
+                    tooltipArgs: {
+                        options: {
+                            useCorners: true,
+                            gravity: function() {
+                                var ma = this.midAngle(),
+                                    isRightPlane = Math.cos(ma) >= 0,
+                                    isTopPlane   = Math.sin(ma) >= 0;
+                                return  isRightPlane ?
+                                        (isTopPlane ? 'nw' : 'sw') :
+                                        (isTopPlane ? 'ne' : 'se');
+                            }
+                        }
                     }
-                }
-            }
-        });
+                }),
 
-        var label = pvc.visual.ValueLabel.maybeCreate(me, panel.label, {noAnchor: true});
+            label = pvc.visual.ValueLabel.maybeCreate(me, panel.label, {noAnchor: true});
+
         if(label) {
             label
                 .override('defaultText', function(scene) {
-                    if(scene.isRoot()) {
-                        return "";
-                    }
-
-                    return this.base(scene);
+                    return scene.isRoot() ? "" : this.base(scene);
                 })
                 .override('calcTextFitInfo', function(scene, text) {
                     // We only know how to handle certain cases:
@@ -96,7 +91,6 @@ def
                         tm = pvLabel.textMargin();
 
                     if(tm < -1e-6) return;
-
                     if(pvLabel.textAlign() !== 'center') return;
                     if(!text) return;
 
@@ -163,7 +157,7 @@ def
         }
     },
 
-    _getExtensionId: function(){
+    _getExtensionId: function() {
         // 'content' coincides, visually, with 'plot', in this chart type
         // Actually it shares the same panel...
 
@@ -171,40 +165,36 @@ def
         return extensionIds.concat(this.base());
     },
 
-    renderInteractive: function(){
+    renderInteractive: function() {
         this.pvSunburstPanel.render();
     },
 
     _buildScene: function() {
         // Hierarchical data, by categ1 (level1) , categ2 (level2), categ3 (level3),...
-        var data = this.visibleData({ignoreNulls: false});
-        var emptySlicesVisible = this.emptySlicesVisible;
-        var emptySlicesLabel   = this.emptySlicesLabel;
+        var data = this.visibleData({ignoreNulls: false}),
+            emptySlicesVisible = this.emptySlicesVisible,
+            emptySlicesLabel   = this.emptySlicesLabel;
 
         // Everything hidden?
-        if(!data.childCount()) { return null; }
+        if(!data.childCount()) return null;
 
-        var roles = this.visualRoles;
-        var rootScene = new pvc.visual.SunburstScene(null, {panel: this, source: data});
-        var sizeIsBound = roles.size.isBound();
-        var sizeVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size',  allowNestedVars: true, hasPercentSubVar: true});
-        var colorGrouping = roles.color && roles.color.grouping;
-        var colorAxis = this.axes.color;
-        var colorBrightnessFactor = colorAxis.option('SliceBrightnessFactor');
+        var roles = this.visualRoles,
+            rootScene = new pvc.visual.SunburstScene(null, {panel: this, source: data}),
+            sizeIsBound = roles.size.isBound(),
+            sizeVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size',  allowNestedVars: true, hasPercentSubVar: true}),
+            colorGrouping = roles.color && roles.color.grouping,
+            colorAxis = this.axes.color,
+            colorBrightnessFactor = colorAxis.option('SliceBrightnessFactor'),
+            colorScale =  roles.color.isBound()
+                ? colorAxis.sceneScale({sceneVarName: 'color'})
+                : def.fun.constant(colorAxis.option('Unbound'));
 
-        var colorScale;
-        if(roles.color.isBound()) {
-            colorScale = colorAxis.sceneScale({sceneVarName: 'color'});
-        } else {
-            colorScale = def.fun.constant(colorAxis.option('Unbound'));
-        }
+        function recursive(scene) {
+            var group = scene.group,
+                catVar = scene.vars.category = pvc_ValueLabelVar.fromComplex(group);
 
-        var recursive = function(scene) {
-            var group = scene.group;
-            var catVar = scene.vars.category = pvc_ValueLabelVar.fromComplex(group);
-            if(emptySlicesLabel && catVar.value == null) { // same as group.value
+            if(emptySlicesLabel && catVar.value == null) // same as group.value
                 catVar.value = emptySlicesLabel;
-            }
 
             // All nodes are considered leafs, for what the var helpers are concerned
             //  so that the size variable is created in every level.
@@ -213,16 +203,15 @@ def
                 // 0-valued branch, retreat
                 // Remove from parent, if not the root itself.
                 // Return the scene anyway (required for the rootScene).
-                if(scene.parentNode) { scene.parentNode.removeChild(scene); }
+                if(scene.parentNode) scene.parentNode.removeChild(scene);
                 return scene;
             }
 
             var children = group.children();
 
             // Ignore degenerate childs?
-            if(!emptySlicesVisible) {
+            if(!emptySlicesVisible)
                 children = children.where(function(childData) { return childData.value != null; });
-            }
                 
             if(!colorGrouping) {
                 scene.vars.color = new pvc_ValueLabelVar(null, "");
@@ -238,12 +227,10 @@ def
             });
 
             return scene;
-        };
+        }
 
-        var calculateColor = function(scene, index, siblingsSize) {
-            var baseColor = null;
-
-            var parent = scene.parent;
+        function calculateColor(scene, index, siblingsSize) {
+            var baseColor = null, parent = scene.parent;
             if(parent) {
                 // Returning a nully color means to derive the color from the parent.
                 // Hopefully, there's a parent that is not the root.
@@ -260,12 +247,12 @@ def
             scene.color = baseColor;
 
             // Recursive Call
-            var children = scene.childNodes;
-            var childrenSize = children.length;
+            var children = scene.childNodes, childrenSize = children.length;
+
             children.forEach(function(childScene, index) {
                 calculateColor(childScene, index, childrenSize);
             });
-        };
+        }
 
         // Build Scene
         recursive(rootScene);

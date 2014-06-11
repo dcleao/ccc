@@ -20,13 +20,11 @@ def
 
 pvc.visual.Plot.registerClass(pvc.visual.PointPlot);
 
-function pvcPoint_buildVisibleOption(type, dv){
+function pvcPoint_buildVisibleOption(type, dv) {
     return {
         resolveV1: function(optionInfo) {
             if(this.globalIndex === 0) {
-                if(!this._specifyChartOption(optionInfo, 'show' + type)) {
-                    optionInfo.defaultValue(dv);
-                }
+                if(!this._specifyChartOption(optionInfo, 'show' + type)) optionInfo.defaultValue(dv);
                 return true;
             }
         }

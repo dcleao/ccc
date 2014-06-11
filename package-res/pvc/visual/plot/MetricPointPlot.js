@@ -39,8 +39,7 @@ pvc.visual.Plot.registerClass(pvc.visual.MetricPointPlot);
 function pvcMetricPoint_buildVisibleOption(type) {
     return {
         resolveV1: function(optionInfo) {
-            this._specifyChartOption(optionInfo, 'show' + type);
-            return true;
+            return this._specifyChartOption(optionInfo, 'show' + type), true;
         }
     };
 }

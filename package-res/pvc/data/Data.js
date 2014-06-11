@@ -70,7 +70,7 @@
  * @param {number} [index=null] The index at which to insert the child in its parent or linked parent.
  */
 def.type('pvc.data.Data', pvc.data.Complex)
-.init(function(keyArgs){
+.init(function(keyArgs) {
     /* NOTE: this function is a hot spot and as such is performance critical */
     
     /*jshint expr:true*/
@@ -90,8 +90,8 @@ def.type('pvc.data.Data', pvc.data.Complex)
         this.root  = parent.root;
         this.depth = parent.depth + 1;
         this.type  = parent.type;
+
         datums     = keyArgs.datums || def.fail.argumentRequired('datums');
-        
         owner = parent.owner;
         atoms     = keyArgs.atoms   || def.fail.argumentRequired('atoms');
         atomsDimNames  = keyArgs.atomsDimNames|| def.fail.argumentRequired('atomsDimNames');
@@ -104,7 +104,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
         atomsDimNames = [];
         
         var linkParent = keyArgs.linkParent || null;
-        if(linkParent){
+        if(linkParent) {
             // A root that is not topmost - owned, linked
             owner = linkParent.owner;
             //atoms = pv.values(linkParent.atoms); // is atomsBase, below
@@ -130,8 +130,8 @@ def.type('pvc.data.Data', pvc.data.Complex)
             //atoms = null
             atomsBase = {};
             
-            if(keyArgs.labelSep) { this.labelSep = keyArgs.labelSep; }
-            if(keyArgs.keySep  ) { this.keySep   = keyArgs.keySep;   }
+            if(keyArgs.labelSep) this.labelSep = keyArgs.labelSep;
+            if(keyArgs.keySep  ) this.keySep   = keyArgs.keySep;
             
             this.type = keyArgs.type || def.fail.argumentRequired('type');
             
@@ -141,7 +141,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
     }
     
     /*global data_setDatums:true */
-    if(datums) { data_setDatums.call(this, datums); }
+    if(datums) data_setDatums.call(this, datums);
     
     // Must anticipate setting this (and not wait for the base constructor)
     // because otherwise new Dimension( ... ) fails.
@@ -161,22 +161,18 @@ def.type('pvc.data.Data', pvc.data.Complex)
     
     // Build absolute label and key
     // The absolute key is relative to the root data (not the owner - the topmost root)
-    if(parent){
+    if(parent) {
         index = def.get(keyArgs, 'index', null);
         
         data_addChild.call(parent, this, index);
-        
-        if(parent.absLabel){
-            this.absLabel = def.string.join(owner.labelSep, parent.absLabel, this.label);
-        } else {
-            this.absLabel = this.label;
-        }
-        
-        if(parent.absKey){
-            this.absKey = def.string.join(owner.keySep, parent.absKey, this.key);
-        } else {
-            this.absKey = this.key;
-        }
+
+        this.absLabel = parent.absLabel
+            ? def.string.join(owner.labelSep, parent.absLabel, this.label)
+            : this.label;
+
+        this.absKey = parent.absKey
+            ? def.string.join(owner.keySep, parent.absKey, this.key)
+            : this.key;
     } else {
         this.absLabel = this.label;
         this.absKey   = this.key;
@@ -379,13 +375,12 @@ def.type('pvc.data.Data', pvc.data.Complex)
      * 
      * @type pvc.data.Dimension
      */
-    dimensions: function(name, keyArgs){
+    dimensions: function(name, keyArgs) {
         if(name == null) { return this._dimensions; }
         
         var dim = def.getOwn(this._dimensions, name);
-        if(!dim && def.get(keyArgs, 'assertExists', true)) {
-            throw def.error.argumentInvalid('name', "Undefined dimension '{0}'.", [name]); 
-        }
+        if(!dim && def.get(keyArgs, 'assertExists', true))
+            throw def.error.argumentInvalid('name', "Undefined dimension '{0}'.", [name]);
          
         return dim;
     },
@@ -494,7 +489,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
             me._visibleNotNullDatums.clear();
             
             v = me._dimensionsList;
-            for(var i = 0, L = v.length ; i < L ; i++) { v[i].dispose(); }
+            for(var i = 0, L = v.length ; i < L ; i++) v[i].dispose();
             me._dimensions = null;
             me._dimensionsLIst = null;
 
@@ -503,10 +498,9 @@ def.type('pvc.data.Data', pvc.data.Complex)
                 me.parent = null;
             }
             
-            if((v = me.linkParent)) {
+            if((v = me.linkParent))
                 /*global data_removeLinkChild:true */
                 data_removeLinkChild.call(v, me);
-            }
             
             me._disposed = true;
         }

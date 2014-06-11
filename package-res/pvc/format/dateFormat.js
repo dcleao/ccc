@@ -62,7 +62,7 @@ var dateForm = pvc.dateFormat = function() {
          */
         mask: {
             cast:   String,
-            change: function () { formatter = null; }
+            change: function() { formatter = null; }
         }
     });
 

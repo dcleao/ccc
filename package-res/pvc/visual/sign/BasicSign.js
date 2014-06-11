@@ -28,9 +28,7 @@ pv_Mark.prototype.preBuildInstance = function(s) {
 
      /*global scene_renderId:true */
     var scene = s.data;
-    if(scene instanceof pvc.visual.Scene) {
-        scene_renderId.call(scene, this.renderId());
-    }
+    if(scene instanceof pvc.visual.Scene) scene_renderId.call(scene, this.renderId());
 };
 
 // Used to wrap a mark, dynamically, 
@@ -52,8 +50,7 @@ def
 
     // Defines a local property on the underlying protovis mark
     localProperty: function(name, type) {
-        this.pvMark.localProperty(name, type);
-        return this;
+        return this.pvMark.localProperty(name, type), this;
     },
     
     lock: function(pvName, value) {
@@ -86,7 +83,7 @@ def
     hasDelegate: function(tag) { return this.pvMark.hasDelegate(tag); },
     
     // Using it is a smell...
-//    hasExtension: function(){
+//    hasExtension: function() {
 //        return this.pvMark.hasDelegate(pvc.extensionTag);
 //    },
     
@@ -99,11 +96,9 @@ def
             
             // Was function inherited by a pv.Mark without a sign?
             var sign = this.sign;
-            if(!sign || sign !== me) {
-                return me._getPvSceneProp(pvName, /*defaultIndex*/this.index);
-            }
-            
-            return fun.apply(me, arguments);
+            return (!sign || sign !== me)
+                ? me._getPvSceneProp(pvName, /*defaultIndex*/this.index)
+                : fun.apply(me, arguments);
         };
     },
     
@@ -111,17 +106,16 @@ def
         // TODO: Why is pvMark.instance(defaultIndex) is not used???
 
         // Property method was inherited via pv proto(s)
-        var pvMark   = this.pvMark;
-        var pvScenes = pvMark.scene;
+        var pvMark   = this.pvMark,
+            pvScenes = pvMark.scene;
         if(pvScenes) {
             // Have a scenes object, but which index should be used?
             var index = pvMark.hasOwnProperty('index') ? 
-                pvMark.index : 
-                Math.min(defaultIndex, pvScenes.length - 1);
+                    pvMark.index :
+                    Math.min(defaultIndex, pvScenes.length - 1);
             
-           if(index != null) { return pvScenes[index][prop]; }
+           if(index != null) return pvScenes[index][prop];
         }
-        
         throw def.error.operationInvalid("Cannot evaluate inherited property.");
     },
     
@@ -153,8 +147,8 @@ def
     },
 
     scene: function() {
-        var instance = this.pvMark.instance();
-        var scene = instance && instance.data;
+        var instance = this.pvMark.instance(),
+            scene = instance && instance.data;
         return scene instanceof pvc.visual.Scene ? scene : null;
     },
 
@@ -164,7 +158,7 @@ def
     context: function(scene, createIndep) {
         // This is a hot function
         var state;
-        if(createIndep || !(state = this.instanceState())) { return this._createContext(scene); }
+        if(createIndep || !(state = this.instanceState())) return this._createContext(scene);
         
         return state.cccContext || (state.cccContext = this._createContext(scene));
     },

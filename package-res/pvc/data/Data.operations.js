@@ -27,19 +27,17 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
         /*global data_assertIsOwner:true */
         data_assertIsOwner.call(this);
 
-        var whereFun  = def.get(keyArgs, 'where');
-        var isNullFun = def.get(keyArgs, 'isNull');
-        var datums =
-            def
-            .query(atomz)
-            .select(function(atoms) {
-                var datum = new pvc.data.Datum(this, atoms);
+        var whereFun  = def.get(keyArgs, 'where'),
+            isNullFun = def.get(keyArgs, 'isNull'),
+            datums = def.query(atomz)
+                .select(function(atoms) {
+                    var datum = new pvc.data.Datum(this, atoms);
 
-                if(isNullFun && isNullFun(datum)) { datum.isNull = true; }
-                if(whereFun  && !whereFun(datum)) { return null; }
+                    if(isNullFun && isNullFun(datum)) datum.isNull = true;
+                    if(whereFun  && !whereFun(datum)) return null;
 
-                return datum;
-            }, this);
+                    return datum;
+                }, this);
 
         data_setDatums.call(this, datums, {isAdditive: false, doAtomGC: true});
     },
@@ -50,26 +48,25 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
         if(datums) {
             this._sumAbsCache = null;
 
-            var visDatums = this._visibleNotNullDatums;
-            var selDatums = this._selectedNotNullDatums;
-            var datumsByKey = this._datumsByKey;
-            var datumsById  = this._datumsById;
-
-            var i = 0;
-            var L = datums.length;
-            var removed;
+            var visDatums   = this._visibleNotNullDatums,
+                selDatums   = this._selectedNotNullDatums,
+                datumsByKey = this._datumsByKey,
+                datumsById  = this._datumsById,
+                i = 0,
+                L = datums.length,
+                removed;
             while(i < L) {
                 var datum = datums[i];
                 if(datum.isVirtual) {
-                    var id  = datum.id;
-                    var key = datum.key;
+                    var id  = datum.id,
+                        key = datum.key;
 
                     datums.splice(i, 1);
                     delete datumsById [id ];
                     delete datumsByKey[key];
                     
-                    if(selDatums && datum.isSelected) { selDatums.rem(id); }
-                    if(datum.isVisible) { visDatums.rem(id); }
+                    if(selDatums && datum.isSelected) selDatums.rem(id);
+                    if(datum.isVisible) visDatums.rem(id);
 
                     L--;
                     removed = true;
@@ -79,11 +76,8 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
             }
 
             if(removed) {
-                if(!datums.length && this.parent) {
-                    // "Me is a group"
-                    this.dispose();
-                    return;
-                }
+                // "Me is a group"
+                if(!datums.length && this.parent) return void this.dispose();
 
                 var children = this.childNodes;
                 if(children) {
@@ -92,20 +86,17 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
                     while(i < L) {
                         var childData = children[i];
                         childData.clearVirtuals();
-                        if(!childData.parent) {
+                        if(!childData.parent)
                             // Child group was empty and removed itself
                             L--;
-                        } else {
+                        else
                             i++;
-                        }
                     }
                 }
 
-                if(this._linkChildren) {
-                    this._linkChildren.forEach(function(linkChildData) {
-                        linkChildData.clearVirtuals();
-                    });
-                }
+                if(this._linkChildren) this._linkChildren.forEach(function(linkChildData) {
+                    linkChildData.clearVirtuals();
+                });
             }
         }
 
@@ -176,15 +167,11 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
         }
 
         if(!data) {
-            if(pvc.debug >= 7) {
-                pvc.log("[GroupBy] " + (cacheKey ? ("Cache key not found: '" + cacheKey + "'") : "No Cache key"));
-            }
+            if(pvc.debug >= 7) pvc.log("[GroupBy] " + (cacheKey ? ("Cache key not found: '" + cacheKey + "'") : "No Cache key"));
 
             data = groupOper.execute();
 
-            if(cacheKey) {
-                (groupByCache || (this._groupByCache = {}))[cacheKey] = data;
-            }
+            if(cacheKey) (groupByCache || (this._groupByCache = {}))[cacheKey] = data;
         } else if(pvc.debug >= 7) {
             pvc.log("[GroupBy] Cache key hit '" + cacheKey + "'");
         }
@@ -221,7 +208,8 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
         //var datums = this.datums(whereSpec, keyArgs);
         var datums;
         if(!whereSpec) {
-            if(!keyArgs) { return def.query(this._datums); }
+            if(!keyArgs) return def.query(this._datums);
+
             datums = data_whereState(def.query(this._datums), keyArgs);
         } else {
             whereSpec = data_processWhereSpec.call(this, whereSpec, keyArgs);
@@ -309,7 +297,7 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
      */
     datums: function(whereSpec, keyArgs) {
         if(!whereSpec) {
-            if(!keyArgs) { return def.query(this._datums); }
+            if(!keyArgs) return def.query(this._datums);
 
             return data_whereState(def.query(this._datums), keyArgs);
         }
@@ -358,7 +346,7 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
      *
      * @type number
      */
-    dimensionsSumAbs: function(dimName, keyArgs){
+    dimensionsSumAbs: function(dimName, keyArgs) {
         /*global dim_buildDatumsFilterKey:true */
         var key = dimName + ":" + dim_buildDatumsFilterKey(keyArgs),
             sum = def.getOwn(this._sumAbsCache, key);
@@ -366,8 +354,8 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
         if(sum == null) {
             sum = this.children()
                     /* non-degenerate flattened parent groups would account for the same values more than once */
-                    .where(function(childData){ return !childData._isFlattenGroup || childData._isDegenerateFlattenGroup; })
-                    .select(function(childData){
+                    .where(function(childData) { return !childData._isFlattenGroup || childData._isDegenerateFlattenGroup; })
+                    .select(function(childData) {
                         return childData.dimensions(dimName).valueAbs(keyArgs) || 0;
                     }, this)
                     .reduce(def.add, 0);
@@ -417,29 +405,29 @@ function data_setDatums(addDatums, keyArgs) {
     /*jshint expr:true */
     addDatums || def.fail.argumentRequired('addDatums');
 
-    var i, L;
-    var doAtomGC   = def.get(keyArgs, 'doAtomGC',   false);
-    var isAdditive = def.get(keyArgs, 'isAdditive', false);
-    
-    // When creating a linked data, datums are set when dimensions aren't yet created.
-    // Cannot intern without dimensions...
-    var internNewAtoms = !!this._dimensions;
-    
-    var visDatums = this._visibleNotNullDatums;
-    var selDatums = this._selectedNotNullDatums;
+    var i, L,
+        doAtomGC   = def.get(keyArgs, 'doAtomGC',   false),
+        isAdditive = def.get(keyArgs, 'isAdditive', false),
+        // When creating a linked data, datums are set when dimensions aren't yet created.
+        // Cannot intern without dimensions...
+        internNewAtoms = !!this._dimensions,
+        visDatums = this._visibleNotNullDatums,
+        selDatums = this._selectedNotNullDatums,
 
-    // When adding:
-    //  * _datums, _datumsByKey and _datumsById can be maintained.
-    //  * If an existing datum comes up in addDatums, 
-    //    the original datum is kept, as well as its order.
-    //  * Caches still need to be cleared.
-    // When replacing:
-    //  * Different {new,old}DatumsBy{Key,Id} must be defined for the operation.
-    //  * Same-key datums are maintained, anyway.
-    //  * All child-data and link-child-data are disposed of.
+        // When adding:
+        //  * _datums, _datumsByKey and _datumsById can be maintained.
+        //  * If an existing datum comes up in addDatums,
+        //    the original datum is kept, as well as its order.
+        //  * Caches still need to be cleared.
+        // When replacing:
+        //  * Different {new,old}DatumsBy{Key,Id} must be defined for the operation.
+        //  * Same-key datums are maintained, anyway.
+        //  * All child-data and link-child-data are disposed of.
 
-    var oldDatumsByKey, oldDatumsById;
-    var oldDatums = this._datums;
+        oldDatumsByKey, oldDatumsById,
+        oldDatums = this._datums,
+        newDatums, datums, datumsByKey, datumsById;
+
     if(!oldDatums) {
         // => !additive
         isAdditive = false;
@@ -466,8 +454,6 @@ function data_setDatums(addDatums, keyArgs) {
         }
     }
 
-    var newDatums;
-    var datums, datumsByKey, datumsById;
     if(isAdditive) {
         newDatums   = [];
 
@@ -495,7 +481,7 @@ function data_setDatums(addDatums, keyArgs) {
     if(def.array.is(addDatums)) {
         i = 0;
         L = addDatums.length;
-        while(i < L) { maybeAddDatum.call(this, addDatums[i++]); }
+        while(i < L) maybeAddDatum.call(this, addDatums[i++]);
     } else if(addDatums instanceof def.Query) {
         addDatums.each(maybeAddDatum, this);
     } else {
@@ -508,7 +494,7 @@ function data_setDatums(addDatums, keyArgs) {
         var dims = this._dimensionsList;
         i = 0;
         L = dims.length;
-        while(i < L) { dim_uninternUnvisitedAtoms.call(dims[i++]); }
+        while(i < L) dim_uninternUnvisitedAtoms.call(dims[i++]);
     }
 
     // TODO: not distributing to child lists of this data?
@@ -524,13 +510,13 @@ function data_setDatums(addDatums, keyArgs) {
         if(linkChildren) {
             i = 0;
             L = linkChildren.length;
-            while(i < L) { data_addDatumsSimple.call(linkChildren[i++], newDatums); }
+            while(i < L) data_addDatumsSimple.call(linkChildren[i++], newDatums);
         }
     }
 
     function maybeAddDatum(newDatum) { 
          // Ignore.
-        if(!newDatum) { return; }
+        if(!newDatum) return;
 
         // Use already existing same-key datum, if any.
         var key = newDatum.key;
@@ -540,12 +526,11 @@ function data_setDatums(addDatums, keyArgs) {
         // When isAdditive, datumsByKey = oldDatumsByKey,
         //  so the following also tests for duplicates with old datums,
         //  in which case we keep the old and discard the new one.
-        if(def.hasOwnProp.call(datumsByKey, key)) { return; }
+        if(def.hasOwnProp.call(datumsByKey, key)) return;
 
-        if(!isAdditive && oldDatumsByKey && def.hasOwnProp.call(oldDatumsByKey, key)) {
+        if(!isAdditive && oldDatumsByKey && def.hasOwnProp.call(oldDatumsByKey, key))
             // Still preferable to keep/_re-add_ the old and discard the new one.
             newDatum = oldDatumsByKey[key];
-        }
 
         var id = newDatum.id;
 
@@ -553,7 +538,7 @@ function data_setDatums(addDatums, keyArgs) {
         datumsByKey[key] = newDatum;
         datumsById [id ] = newDatum;
         
-        if(/*isAdditive && */newDatums) { newDatums.push(newDatum); }
+        if(/*isAdditive && */newDatums) newDatums.push(newDatum);
 
         data_processDatumAtoms.call(
                 this,
@@ -563,8 +548,8 @@ function data_setDatums(addDatums, keyArgs) {
 
         // TODO: make this lazy?
         if(!newDatum.isNull) {
-            if(selDatums && newDatum.isSelected) { selDatums.set(id, newDatum); }
-            if(newDatum.isVisible) { visDatums.set(id, newDatum); }
+            if(selDatums && newDatum.isSelected) selDatums.set(id, newDatum);
+            if(newDatum.isVisible) visDatums.set(id, newDatum);
         }
     }
 }
@@ -583,24 +568,24 @@ function data_setDatums(addDatums, keyArgs) {
  * @type undefined
  * @internal
  */
-function data_processDatumAtoms(datum, intern, markVisited){
+function data_processDatumAtoms(datum, intern, markVisited) {
     // Avoid using for(var dimName in datum.atoms), 
     // cause it needs to traverse the whole, long scope chain
 
     var dims = this._dimensionsList;
     // data is still initializing and dimensions are not yet created ?
-    if(!dims) { intern = false; }
+    if(!dims) intern = false;
 
     if(intern || markVisited) {
-        var datoms = datum.atoms;
-        var i = 0;
-        var L, atom, dim;
+        var datoms = datum.atoms,
+            i = 0,
+            L, atom, dim;
         if(!dims) { // => markVisited
             var dimNames = this.type.dimensionsNames();
             L = dimNames.length;
             while(i < L) {
                 atom = datoms[dimNames[i++]];
-                if(atom) { atom.visited = true; }
+                if(atom) atom.visited = true;
             }
         } else {
             L = dims.length;
@@ -609,10 +594,10 @@ function data_processDatumAtoms(datum, intern, markVisited){
                 atom = datoms[dim.name];
                 if(atom) {
                     /*global dim_internAtom:true */
-                    if(intern) { dim_internAtom.call(dim, atom); }
+                    if(intern) dim_internAtom.call(dim, atom);
 
                     // Mark atom as visited
-                    if(markVisited) { atom.visited = true; }
+                    if(markVisited) atom.visited = true;
                 }
             }
         }
@@ -633,35 +618,30 @@ function data_addDatumsSimple(newDatums) {
         newDatums = groupOper.executeAdd(this, newDatums);
     } else {
         var wherePred = this._wherePred;
-        if(wherePred) { newDatums = newDatums.filter(wherePred); }
+        if(wherePred) newDatums = newDatums.filter(wherePred);
 
         data_addDatumsLocal.call(this, newDatums);
     }
 
     // Distribute added datums by linked children
-    var list = this._linkChildren;
-    var L = list && list.length;
-    if(L) {
-        for(var i = 0 ; i < L ; i++) {
-            data_addDatumsSimple.call(list[i], newDatums);
-        }
-    }
+    var list = this._linkChildren,
+        L = list && list.length;
+    if(L) for(var i = 0 ; i < L ; i++) data_addDatumsSimple.call(list[i], newDatums);
 }
 
 function data_addDatumsLocal(newDatums) {
-    var me = this;
-    
+    var me = this,
+        ds  = me._datums,
+        vds = me._visibleNotNullDatums,
+        sds = me._selectedNotNullDatums,
+        dsById = me._datumsById;
+
     // Clear caches
     me._sumAbsCache = null;
 
-    var ds  = me._datums;
-    var vds = me._visibleNotNullDatums;
-    var sds = me._selectedNotNullDatums;
-    var dsById = me._datumsById;
-
     for(var i = 0, L = newDatums.length ; i < L ; i++) {
-        var newDatum = newDatums[i];
-        var id = newDatum.id;
+        var newDatum = newDatums[i],
+            id = newDatum.id;
 
         dsById[id] = newDatum;
 
@@ -673,8 +653,8 @@ function data_addDatumsLocal(newDatums) {
 
         // TODO: make this lazy?
         if(!newDatum.isNull) {
-            if(sds && newDatum.isSelected) { sds.set(id, newDatum); }
-            if(       newDatum.isVisible ) { vds.set(id, newDatum); }
+            if(sds && newDatum.isSelected) sds.set(id, newDatum);
+            if(       newDatum.isVisible ) vds.set(id, newDatum);
         }
 
         ds.push(newDatum);
@@ -722,7 +702,7 @@ function data_processWhereSpec(whereSpec) {
     var whereProcSpec = [];
 
     whereSpec = def.array.as(whereSpec);
-    if(whereSpec) { whereSpec.forEach(processDatumFilter, this); }
+    if(whereSpec) whereSpec.forEach(processDatumFilter, this);
 
     return whereProcSpec;
 
@@ -744,7 +724,7 @@ function data_processWhereSpec(whereSpec) {
                 }
             }
 
-            if(any) { whereProcSpec.push(datumProcFilter); }
+            if(any) whereProcSpec.push(datumProcFilter);
         }
     }
 }
@@ -770,10 +750,10 @@ function data_whereState(q, keyArgs) {
         selected = def.get(keyArgs, 'selected'),
         where    = def.get(keyArgs, 'where');
 
-    if(visible  != null) { q = q.where(visible  ? datum_isVisibleT  : datum_isVisibleF ); }
-    if(isNull   != null) { q = q.where(isNull   ? datum_isNullT     : datum_isNullF    ); }
-    if(selected != null) { q = q.where(selected ? datum_isSelectedT : datum_isSelectedF); }
-    if(where           ) { q = q.where(where); }
+    if(visible  != null) q = q.where(visible  ? datum_isVisibleT  : datum_isVisibleF );
+    if(isNull   != null) q = q.where(isNull   ? datum_isNullT     : datum_isNullF    );
+    if(selected != null) q = q.where(selected ? datum_isSelectedT : datum_isSelectedF);
+    if(where           ) q = q.where(where);
 
     return q;
 }
@@ -785,15 +765,15 @@ function data_wherePredicate(whereSpec, keyArgs) {
         where    = def.get(keyArgs, 'where'   ),
         ps       = [];
 
-    if(visible  != null) { ps.unshift(visible  ? datum_isVisibleT  : datum_isVisibleF ); }
-    if(isNull   != null) { ps.unshift(isNull   ? datum_isNullT     : datum_isNullF    ); }
-    if(selected != null) { ps.unshift(selected ? datum_isSelectedT : datum_isSelectedF); }
-    if(where           ) { ps.unshift(where); }
-    if(whereSpec       ) { ps.unshift(data_whereSpecPredicate(whereSpec)); }
+    if(visible  != null) ps.unshift(visible  ? datum_isVisibleT  : datum_isVisibleF );
+    if(isNull   != null) ps.unshift(isNull   ? datum_isNullT     : datum_isNullF    );
+    if(selected != null) ps.unshift(selected ? datum_isSelectedT : datum_isSelectedF);
+    if(where           ) ps.unshift(where);
+    if(whereSpec       ) ps.unshift(data_whereSpecPredicate(whereSpec));
 
     var P = ps.length;
     if(P) {
-        if(P === 1) { return ps[0]; }
+        if(P === 1) return ps[0];
 
         var wherePredicate = function(d) {
             // AND
@@ -812,13 +792,9 @@ function data_whereSpecPredicate(whereSpec) {
     return datumWhereSpecPredicate;
 
     function datumWhereSpecPredicate(d) {
-        var datoms = d.atoms;
         // OR
-        for(var i = 0 ; i < L ; i++) {
-            if(datumFilterPredicate(datoms, whereSpec[i])) {
-                return true;
-            }
-        }
+        var datoms = d.atoms;
+        for(var i = 0 ; i < L ; i++) if(datumFilterPredicate(datoms, whereSpec[i])) return true;
         return false;
     }
 
@@ -826,9 +802,7 @@ function data_whereSpecPredicate(whereSpec) {
         // AND
         for(var dimName in datumFilter) {
             // OR
-            if(datumFilter[dimName].indexOf(datoms[dimName]) < 0) {
-                return false;
-            }
+            if(datumFilter[dimName].indexOf(datoms[dimName]) < 0) return false;
         }
         return true;
     }
@@ -857,11 +831,10 @@ function data_whereSpecPredicate(whereSpec) {
 function data_where(whereSpec, keyArgs) {
 
     var orderBys = def.array.as(def.get(keyArgs, 'orderBy')),
-        datumKeyArgs = def.create(keyArgs || {}, {orderBy: null});
-
-    var query = def.query(whereSpec)
-                   .selectMany(function(datumFilter, index){
-                      if(orderBys) { datumKeyArgs.orderBy = orderBys[index]; }
+        datumKeyArgs = def.create(keyArgs || {}, {orderBy: null}),
+        query = def.query(whereSpec)
+                   .selectMany(function(datumFilter, index) {
+                      if(orderBys) datumKeyArgs.orderBy = orderBys[index];
 
                       return data_whereDatumFilter.call(this, datumFilter, datumKeyArgs);
                    }, this);
@@ -870,12 +843,12 @@ function data_where(whereSpec, keyArgs) {
 
     /*
     // NOTE: this is the brute force / unguided algorithm - no indexes are used
-    function whereDatumFilter(datumFilter, index){
+    function whereDatumFilter(datumFilter, index) {
         // datumFilter = {dimName1: [atom1, OR atom2, OR ...], AND ...}
 
         return def.query(this._datums).where(datumPredicate, this);
 
-        function datumPredicate(datum){
+        function datumPredicate(datum) {
             if((selected === null || datum.isSelected === selected) &&
                (visible  === null || datum.isVisible  === visible)) {
                 var atoms = datum.atoms;
@@ -917,9 +890,8 @@ function data_whereDatumFilter(datumFilter, keyArgs) {
          // A sort on dimension names can yield good cache reuse.
          groupingSpecText = Object.keys(datumFilter).sort().join(',');
      } else {
-         if(groupingSpecText.indexOf("|") >= 0) {
+         if(groupingSpecText.indexOf("|") >= 0)
              throw def.error.argumentInvalid('keyArgs.orderBy', "Multi-dimension order by is not supported.");
-         }
 
          // TODO: not validating that groupingSpecText actually contains the same dimensions referred in datumFilter...
      }
@@ -939,7 +911,7 @@ function data_whereDatumFilter(datumFilter, keyArgs) {
             }
 
             var dimName = parentData._groupLevelSpec.dimensions[0].name;
-            datumFilter[dimName].forEach(function(atom){
+            datumFilter[dimName].forEach(function(atom) {
                 var childData = parentData.child(atom.globalKey);
                 if(childData) {
                     recursive(childData, h + 1);
@@ -1027,7 +999,7 @@ function data_whereDatumFilter(datumFilter, keyArgs) {
              } // while(atomsOrQuery)
 
              // No more OR atoms in this _data
-             if(!depth) { return 0; } // finished
+             if(!depth) return 0; // finished
 
              // Pop parent data
              state = stateStack.pop();

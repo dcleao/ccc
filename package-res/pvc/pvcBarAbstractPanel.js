@@ -31,14 +31,14 @@ def
     pvSecondLine: null,
     pvSecondDot: null,
 
-    _creating: function(){
+    _creating: function() {
         // Register BULLET legend prototype marks
         var groupScene = this.defaultLegendGroupScene();
-        if(groupScene && !groupScene.hasRenderer()){
+        if(groupScene && !groupScene.hasRenderer()) {
             var colorAxis  = groupScene.colorAxis;
             var drawLine   = colorAxis.option('LegendDrawLine');
             var drawMarker = !drawLine || colorAxis.option('LegendDrawMarker');
-            if(drawMarker){
+            if(drawMarker) {
                 var keyArgs = {
                     drawMarker:    true,
                     markerShape:   colorAxis.option('LegendShape'),
@@ -57,7 +57,7 @@ def
     /**
      * @override
      */
-    _createCore: function(){
+    _createCore: function() {
         this.base();
         var me = this,
             chart = me.chart,
@@ -101,7 +101,7 @@ def
             reverseSeries = isVertical === isStacked, // (V && S) || (!V && !S)
             seriesCount;
 
-        if(isStacked){
+        if(isStacked) {
             barWidth = bandWidth;
         } else {
             seriesCount = axisSeriesDatas.length;
@@ -111,7 +111,7 @@ def
                        (barSizeRatio * bandWidth / seriesCount);
         }
 
-        if (barWidth > barSizeMax) { barWidth = barSizeMax;}
+        if(barWidth > barSizeMax) { barWidth = barSizeMax; }
 
         me.barWidth     = barWidth;
         me.barStepWidth = barStepWidth;
@@ -130,16 +130,15 @@ def
              * var visibleSerIndex = this.stacked ? mark.parent.index : index,
              *     visibleCatIndex = this.stacked ? index : mark.parent.index;
              */
-            wrapper = function(v1f){
-                return function(scene){
-                    var markParent = Object.create(this.parent);
-                    var mark = Object.create(this);
+            wrapper = function(v1f) {
+                return function(scene) {
+                    var markParent = Object.create(this.parent),
+                        mark = Object.create(this);
                     mark.parent = markParent;
 
-                    var serIndex = scene.parent.childIndex();
-                    var catIndex = scene.childIndex();
-
-                    if(isStacked){
+                    var serIndex = scene.parent.childIndex(),
+                        catIndex = scene.childIndex();
+                    if(isStacked) {
                         markParent.index = serIndex;
                         mark.index = catIndex;
                     } else {
@@ -157,7 +156,7 @@ def
                 extensionId: 'panel'
             })
             .lock('layers', rootScene.childNodes) // series -> categories
-            .lockMark('values', function(seriesScene){ return seriesScene.childNodes; })
+            .lockMark('values', function(seriesScene) { return seriesScene.childNodes; })
             .lockMark('orient', isVertical ? 'bottom-left' : 'left-bottom')
             .lockMark('layout', isStacked  ? 'stacked' : 'grouped')
             .lockMark('verticalMode', me._barVerticalMode())
@@ -172,7 +171,7 @@ def
                 // Stacked Vertical bar charts show series from
                 // top to bottom (according to the legend)
                 .order(reverseSeries ? "reverse" : null)
-                .h(function(scene){
+                .h(function(scene) {
                     /* May be negative */
                     var y = sceneOrthoScale(scene);
                     return y != null ? chart.animate(0, y - orthoZero) : null;
@@ -198,8 +197,8 @@ def
                 if(widthNeedsAntialias) return true;
 
                 // Height needs antialias?
-                var y = sceneOrthoScale(scene);
-                var h = y == null ? 0 : Math.abs(y - orthoZero);
+                var y = sceneOrthoScale(scene),
+                    h = y == null ? 0 : Math.abs(y - orthoZero);
                 return h < 1e-8;
             });
 
@@ -285,13 +284,10 @@ def
                             // c) sinAngle <  0 and (text-left with bar-bottom or text-right with bar-top   )
                             isInside = isVaCenter;
                             if(!isInside && !isTaCenter) {
-                                if(sinAngle >= 1e-6) {
-                                    // 90 degrees
+                                if(sinAngle >= 1e-6) // 90 degrees
                                     isInside = ta === 'left' ? va === 'top'    : va === 'bottom';
-                                } else {
-                                    // -90 degrees
+                                else // -90 degrees
                                     isInside = ta === 'left' ? va === 'bottom' : va === 'top';
-                                }
                             }
 
                             // When "inside", clip in both directions.
@@ -358,7 +354,7 @@ def
      * that function will be called once.
      * @virtual
      */
-    _barVerticalMode: function(){
+    _barVerticalMode: function() {
         return null;
     },
 
@@ -369,14 +365,14 @@ def
      * on the first series.
      * @virtual
      */
-    _barDifferentialControl: function(){
+    _barDifferentialControl: function() {
         return null;
     },
 
-    _getV1Datum: function(scene){
+    _getV1Datum: function(scene) {
         // Ensure V1 tooltip function compatibility
         var datum = scene.datum;
-        if(datum){
+        if(datum) {
             var datumEx = Object.create(datum);
             datumEx.percent = scene.vars.value.percent;
             datum = datumEx;
@@ -385,18 +381,16 @@ def
         return datum;
     },
 
-    _addOverflowMarkers: function(wrapper){
+    _addOverflowMarkers: function(wrapper) {
         var orthoAxis = this.axes.ortho;
-        if(orthoAxis.option('FixedMax') != null){
+        if(orthoAxis.option('FixedMax') != null)
             this.pvOverflowMarker = this._addOverflowMarker(false, orthoAxis.scale, wrapper);
-        }
 
-        if(orthoAxis.option('FixedMin') != null){
+        if(orthoAxis.option('FixedMin') != null)
             this.pvUnderflowMarker = this._addOverflowMarker(true, orthoAxis.scale, wrapper);
-        }
     },
 
-    _addOverflowMarker: function(isMin, orthoScale, wrapper){
+    _addOverflowMarker: function(isMin, orthoScale, wrapper) {
         /* NOTE: pv.Bar is not a panel,
          * and as such markers will be children of bar's parent,
          * yet have bar's anchor as a prototype.
@@ -417,7 +411,7 @@ def
         //  /\
         // /__\
         //
-        if(!isMin){
+        if(!isMin) {
             angle = isVertical ? Math.PI: -Math.PI/2;
         } else {
             angle = isVertical ? 0: Math.PI/2;
@@ -436,21 +430,20 @@ def
                 extensionId:   isMin ? 'underflowMarker' : 'overflowMarker',
                 wrapper:       wrapper
             })
-            .intercept('visible', function(scene){
+            .intercept('visible', function(scene) {
                 var visible = this.delegateExtension();
-                if(visible !== undefined && !visible) { return false; }
+                if(visible !== undefined && !visible) return false;
 
                 var value = scene.vars.value.value;
-                if(value == null) { return false; }
+                if(value == null) return false;
 
-                var targetInstance = this.pvMark.scene.target[this.pvMark.index];
+                var targetInstance = this.pvMark.scene.target[this.pvMark.index],
 
-                // Where is the position of the max of the bar?
-                var orthoMaxPos = targetInstance[a_bottom] +
+                    // Where is the position of the max of the bar?
+                    orthoMaxPos = targetInstance[a_bottom] +
                                   (value > 0 ? targetInstance[a_height] : 0);
-                return isMin ?
-                        (orthoMaxPos < rOrthoBound) :
-                        (orthoMaxPos > rOrthoBound);
+
+                return isMin ? (orthoMaxPos < rOrthoBound) : (orthoMaxPos > rOrthoBound);
             })
             .lock(a_top, null)
             .lock('shapeSize')
@@ -476,20 +469,17 @@ def
      * Renders this.pvPanel - the parent of the marks that are affected by selection changes.
      * @override
      */
-    renderInteractive: function(){
+    renderInteractive: function() {
         this.pvPanel.render();
     },
 
     _buildScene: function(data, axisSeriesDatas, axisCategDatas) {
-        var rootScene  = new pvc.visual.Scene(null, {panel: this, source: data});
+        var rootScene  = new pvc.visual.Scene(null, {panel: this, source: data}),
+            roles = this.visualRoles,
+            valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.value, {roleVar: 'value', hasPercentSubVar: this.stacked}),
+            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.color, {roleVar: 'color'});
 
-        var roles = this.visualRoles;
-        var valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.value, {roleVar: 'value', hasPercentSubVar: this.stacked});
-        var colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.color, {roleVar: 'color'});
-
-        /**
-         * Create starting scene tree
-         */
+        // Create starting scene tree
         axisSeriesDatas.forEach(createSeriesScene);
 
         return rootScene;

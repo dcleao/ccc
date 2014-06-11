@@ -15,7 +15,7 @@
 def
 .type('pvc.visual.SunburstDiscreteColorAxis', pvc.visual.ColorAxis)
 .add(/** @lends pvc.visual.SunburstDiscreteColorAxis# */{
-    _getOptionsDefinition: function(){
+    _getOptionsDefinition: function() {
         return sunburstColorAxis_optionsDef;
     },
 
@@ -36,9 +36,7 @@ def
 
         return candidates
             .where(function(itemData) {
-                if(!itemData.parent) {
-                    return false;
-                }
+                if(!itemData.parent) return false;
 
                 // Is a non-degenerate node having at least one child.
                 return isNotDegenerate(itemData) && !itemData.parent.parent;

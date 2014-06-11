@@ -28,9 +28,7 @@ pvc.BaseChart
      */
     visualRole: function(roleName) {
         var role = def.getOwn(this.visualRoles, roleName);
-        if(!role) { 
-            throw def.error.operationInvalid('roleName', "There is no visual role with name '{0}'.", [roleName]);
-        }
+        if(!role) throw def.error.operationInvalid('roleName', "There is no visual role with name '{0}'.", [roleName]);
         return role;
     },
 
@@ -94,9 +92,7 @@ pvc.BaseChart
     },
 
     _assertUnboundRoleIsOptional: function(role) {
-        if(role.isRequired) {
-            throw def.error.operationInvalid("Chart type requires unassigned role '{0}'.", [role.name]);
-        }
+        if(role.isRequired) throw def.error.operationInvalid("Chart type requires unassigned role '{0}'.", [role.name]);
     },
         
     /**
@@ -120,18 +116,17 @@ pvc.BaseChart
         // A chart definition must behave the same 
         // in every environment, independently of the order in which
         // object properties are enumerated.
-        var options = this.options;
-        var roleOptions = options.visualRoles;
+        var options = this.options,
+            roleOptions = options.visualRoles;
         
         // Accept visual roles directly in the options
         // as <roleName>Role: 
         this.visualRoleList.forEach(function(role) {
-            var name = role.name;
-            var roleSpec = options[name + 'Role'];
+            var name = role.name,
+                roleSpec = options[name + 'Role'];
             if(roleSpec !== undefined) {
-                if(!roleOptions) { roleOptions = options.visualRoles = {}; }
-                
-                if(roleOptions[name] === undefined) { roleOptions[name] = roleSpec; }
+                if(!roleOptions) roleOptions = options.visualRoles = {};
+                if(roleOptions[name] === undefined) roleOptions[name] = roleSpec;
             }
         });
         
@@ -147,15 +142,15 @@ pvc.BaseChart
                 
             /* Process options.visualRoles */
             rolesWithOptions.forEach(function(role) {
-                var name     = role.name;
-                var roleSpec = roleOptions[name];
+                var name     = role.name,
+                    roleSpec = roleOptions[name];
                 
                 // Process the visual role specification
                 // * a string with the grouping dimensions, or
                 // * {dimensions: "product", isReversed:true, from: "series" }
                 var groupingSpec, sourceRoleName;
                 if(def.object.is(roleSpec)) {
-                    if(def.nullyTo(roleSpec.isReversed, false)) { role.setIsReversed(true); }
+                    if(def.nullyTo(roleSpec.isReversed, false)) role.setIsReversed(true);
                     
                     sourceRoleName = roleSpec.from;
                     if(sourceRoleName && (sourceRoleName !== name)) {
@@ -177,7 +172,7 @@ pvc.BaseChart
                 // but, in between, prevents translators from 
                 // reading to dimensions that would bind into those roles...
                 if(groupingSpec !== undefined) {
-                    if(!groupingSpec) { this._assertUnboundRoleIsOptional(role); } // throws if required
+                    if(!groupingSpec) this._assertUnboundRoleIsOptional(role); // throws if required
                     
                     var grouping = pvc.data.GroupingSpec.parse(groupingSpec);
     
@@ -185,16 +180,14 @@ pvc.BaseChart
     
                     /* Collect dimension names bound to a *single* role */
                     grouping.dimensions().each(function(groupDimSpec) {
-                        if(def.hasOwn(dimsBoundToSingleRole, groupDimSpec.name)) {
+                        if(def.hasOwn(dimsBoundToSingleRole, groupDimSpec.name))
                             // two roles => no defaults at all
                             delete dimsBoundToSingleRole[groupDimSpec.name];
-                        } else {
+                        else
                             dimsBoundToSingleRole[groupDimSpec.name] = role;
-                        }
                     });
                 }
             }, this);
-    
         }
 
         this._sourcedRoles = sourcedRoles;
@@ -234,11 +227,10 @@ pvc.BaseChart
         // In those cases, sourcing only effectively happens in the post phase.
         sourcedRoles.forEach(function(role) {
             var sourceRole = role.sourceRole;
-            if(sourceRole.isReversed) { role.setIsReversed(!role.isReversed); }
+            if(sourceRole.isReversed) role.setIsReversed(!role.isReversed);
             
-            if(!role.defaultDimensionName && sourceRole.isPreBound()) {
+            if(!role.defaultDimensionName && sourceRole.isPreBound())
                 role.preBind(sourceRole.preBoundGrouping());
-            }
         });
     },
     
@@ -246,15 +238,12 @@ pvc.BaseChart
         this._complexTypeProj.setDimDefaults(dimName, role.dimensionDefaults);
     },
     
-    _bindVisualRolesPostI: function(){
-        var me = this;
-        
-        var complexTypeProj = me._complexTypeProj;
-        
-        // Dimension names to roles bound to it
-        var boundDimTypes = {};
-        
-        var unboundSourcedRoles = [];
+    _bindVisualRolesPostI: function() {
+        var me = this,
+            complexTypeProj = me._complexTypeProj,
+            // Dimension names to roles bound to it
+            boundDimTypes = {},
+            unboundSourcedRoles = [];
         
         def
         .query(me.visualRoleList)
@@ -294,20 +283,19 @@ pvc.BaseChart
         function dimIsDefined(dimName) { return complexTypeProj.hasDim(dimName); }
         
         function preBindRoleTo(role, dimNames) {
-            if(def.array.is(dimNames)) {
+            if(def.array.is(dimNames))
                 dimNames.forEach(function(dimName) { markDimBoundTo(dimName, role); });
-            } else {
+            else
                 markDimBoundTo(dimNames, role);
-            }
-            
+
             role.setSourceRole(null); // if any
             role.preBind(pvc.data.GroupingSpec.parse(dimNames));
         }
         
         function preBindRoleToGroupDims(role, groupDimNames) {
             if(groupDimNames.length) {
-                if(role.requireSingleDimension) { preBindRoleTo(role, groupDimNames[0]); } 
-                else                            { preBindRoleTo(role, groupDimNames);    }
+                if(role.requireSingleDimension) preBindRoleTo(role, groupDimNames[0]);
+                else                            preBindRoleTo(role, groupDimNames);
             }
         }
         
@@ -333,19 +321,12 @@ pvc.BaseChart
         function autoBindUnboundRole(role) {
             // !role.isPreBound()
             
-            if(role.sourceRole && !role.isDefaultSourceRole) {
-                unboundSourcedRoles.push(role);
-                return;
-            }
+            if(role.sourceRole && !role.isDefaultSourceRole) return unboundSourcedRoles.push(role);
             
             // Try to bind automatically, to defaultDimensionName
             var dimName = role.defaultDimensionName;
-            if(!dimName) {
-                if(role.sourceRole) { unboundSourcedRoles.push(role); } 
-                else                { roleIsUnbound(role);            }
-                return;
-            }
-                
+            if(!dimName) return role.sourceRole ? unboundSourcedRoles.push(role) : roleIsUnbound(role);
+
             /* An asterisk at the end of the name indicates
              * that any dimension of that group is allowed.
              * If the role allows multiple dimensions,
@@ -355,34 +336,24 @@ pvc.BaseChart
              *   "product*"
              */
             var match = dimName.match(/^(.*?)(\*)?$/) ||
-                        def.fail.argumentInvalid('defaultDimensionName');
-            
-            var defaultName =  match[1];
-            var greedy = /*!!*/match[2];
+                        def.fail.argumentInvalid('defaultDimensionName'),
+                defaultName =  match[1],
+                greedy = /*!!*/match[2];
             if(greedy) {
                 // TODO: does not respect any index explicitly specified
                 // before the *. Could mean >=...
                 var groupDimNames = complexTypeProj.groupDimensionsNames(defaultName);
-                if(groupDimNames) {
-                    // Default dimension(s) is defined
-                    preBindRoleToGroupDims(role, groupDimNames);
-                    return;
-                }
+                if(groupDimNames) return preBindRoleToGroupDims(role, groupDimNames); // Default dimension(s) is defined
                 
                 // Follow to auto create dimension
                 
             } else if(dimIsDefined(defaultName)) { // defaultName === dimName
-                preBindRoleTo(role, defaultName);
-                return;
+                return preBindRoleTo(role, defaultName);
             }
 
-            if(role.autoCreateDimension) {
-                preBindRoleToNewDim(role, defaultName);
-                return;
-            }
-            
-            if(role.sourceRole) { unboundSourcedRoles.push(role); } 
-            else                { roleIsUnbound(role);            }
+            if(role.autoCreateDimension) return preBindRoleToNewDim(role, defaultName);
+
+            role.sourceRole ? unboundSourcedRoles.push(role) : roleIsUnbound(role);
         }
     
         function tryPreBindSourcedRole(role) {
@@ -403,15 +374,15 @@ pvc.BaseChart
     },
 
     _logVisualRoles: function() {
-        var names  = def.ownKeys(this.visualRoles);
-        var maxLen = Math.max(10, def.query(names).select(function(s){ return s.length; }).max());
-        var header = def.string.padRight("VisualRole", maxLen) + " < Dimension(s)";
-        var out = [
-            "VISUAL ROLES MAP SUMMARY", 
-            pvc.logSeparator, 
-            header, 
-            def.string.padRight('', maxLen + 1, '-') + '+--------------'
-        ];
+        var names  = def.ownKeys(this.visualRoles),
+            maxLen = Math.max(10, def.query(names).select(function(s) { return s.length; }).max()),
+            header = def.string.padRight("VisualRole", maxLen) + " < Dimension(s)",
+            out = [
+                "VISUAL ROLES MAP SUMMARY",
+                pvc.logSeparator,
+                header,
+                def.string.padRight('', maxLen + 1, '-') + '+--------------'
+            ];
         
         def.eachOwn(this.visualRoles, function(role, name) {
             out.push(def.string.padRight(name, maxLen) + ' | ' + (role.grouping || '-'));
@@ -423,7 +394,7 @@ pvc.BaseChart
     _getDataPartDimName: function() {
         var role = this.visualRoles.dataPart, preGrouping;
         if(role)
-            return role.isBound()                          ? role.lastDimensionName()       : 
+            return role.isBound()                          ? role.lastDimensionName()        :
                    (preGrouping = role.preBoundGrouping()) ? preGrouping.lastDimensionName() :
                    role.defaultDimensionName;
     }

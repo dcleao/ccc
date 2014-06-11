@@ -72,9 +72,9 @@ def
         // Switch to custom Sunburst color-axis class
         //  that handles derived colors calculation.
         // Class shared object. Take care to inherit from it before changing.
-        if(!def.hasOwnProp.call(this, '_axisClassByType')) {
+        if(!def.hasOwnProp.call(this, '_axisClassByType'))
             this._axisClassByType = Object.create(this._axisClassByType);
-        }
+
         this._axisClassByType.color = pvc.visual.SunburstDiscreteColorAxis;
 
         return this.base(hasMultiRole);

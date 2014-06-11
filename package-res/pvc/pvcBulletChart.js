@@ -7,7 +7,7 @@
  */
 def
 .type('pvc.BulletChart', pvc.BaseChart)
-.init(function(options){
+.init(function(options) {
     
     options = options || {};
 
@@ -15,12 +15,12 @@ def
     // This only helps in default bindings...
     var dimGroups = options.dimensionGroups || (options.dimensionGroups = {});
     var rangeDimGroup = dimGroups.range  || (dimGroups.range  = {});
-    if(rangeDimGroup.valueType === undefined){
+    if(rangeDimGroup.valueType === undefined) {
         rangeDimGroup.valueType = Number;
     }
 
     var markerDimGroup = dimGroups.marker || (dimGroups.marker = {});
-    if(markerDimGroup.valueType === undefined){
+    if(markerDimGroup.valueType === undefined) {
         markerDimGroup.valueType = Number;
     }
 
@@ -34,7 +34,7 @@ def
     /**
      * @override 
      */
-    _processOptionsCore: function(options){
+    _processOptionsCore: function(options) {
         
         options.legend     = false;
         options.selectable = false; // not supported yet
@@ -46,7 +46,7 @@ def
      * Initializes each chart's specific roles.
      * @override
      */
-    _initVisualRoles: function(){
+    _initVisualRoles: function() {
 
         this.base();
 
@@ -73,7 +73,7 @@ def
             });
     },
 
-    _createTranslation: function(translOptions){
+    _createTranslation: function(translOptions) {
         
         var translation = this.base(translOptions),
             /*
@@ -91,8 +91,8 @@ def
          */
         // TODO: respect user reader definitions (names and indexes)
         // TODO: create a translator class for this, like with the boxplot?
-        if(size){
-            switch(size){
+        if(size) {
+            switch(size) {
                 case 1:
                     translation.defReader({names: 'value'});
                     break;
@@ -107,7 +107,7 @@ def
 
                 default:
                     translation.defReader({names: ['title', 'subTitle', 'value', 'marker']});
-                    if(size > 4){
+                    if(size > 4) {
                         // 4, 5, 6, ...
                         translation.defReader({names: 'range', indexes: pv.range(4, size)});
                     }
@@ -188,7 +188,7 @@ def
         var anchor = options.orientation=="horizontal"?"left":"bottom";
         var size, angle, align, titleLeftOffset, titleTopOffset, ruleAnchor, leftPos, topPos, titleSpace;
     
-        if(options.orientation=="horizontal"){
+        if(options.orientation=="horizontal") {
             size = layoutInfo.clientSize.width - this.chart.options.bulletMargin - 20;
             angle=0;
             switch (options.bulletTitlePosition) {
@@ -224,7 +224,7 @@ def
                 titleSpace = 0;
             }
             ruleAnchor = "bottom";
-            topPos = function(){
+            topPos = function() {
                 // TODO: 10
                 return (this.index * (options.bulletSize + options.bulletSpacing)) + titleSpace;
             };
@@ -267,7 +267,7 @@ def
                     topPos = undefined;
             }
             ruleAnchor = "right";
-            leftPos = function(){
+            leftPos = function() {
                 return options.bulletMargin + this.index * (options.bulletSize + options.bulletSpacing);
             };
 
@@ -284,16 +284,16 @@ def
 
         this.pvBullet = this.pvBullets.add(pv.Layout.Bullet)
             .orient  (anchor)
-            .ranges  (function(d){ return d.ranges;   })
-            .measures(function(d){ return d.measures; })
-            .markers (function(d){ return d.markers;  });
+            .ranges  (function(d) { return d.ranges;   })
+            .measures(function(d) { return d.measures; })
+            .markers (function(d) { return d.markers;  });
     
-        if (chart.clickable() && this.clickAction){
+        if(chart.clickable() && this.clickAction) {
             var me = this;
       
             this.pvBullet
                 .cursor("pointer")
-                .event("click",function(d){
+                .event("click",function(d) {
                     var s = d.title;
                     var c = d.subtitle;
                     var ev = pv.event;
@@ -304,14 +304,14 @@ def
         this.pvBulletRange = this.pvBullet.range.add(pv.Bar);
         
         this.pvBulletMeasure = this.pvBullet.measure.add(pv.Bar)
-            .text(function(v, d){
+            .text(function(v, d) {
                 return d.formattedMeasures[this.index];
             });
 
         this.pvBulletMarker = this.pvBullet.marker.add(pv.Dot)
             .shape("square")
             .fillStyle("white")
-            .text(function(v, d){
+            .text(function(v, d) {
                 return d.formattedMarkers[this.index];
             });
 
@@ -321,7 +321,7 @@ def
             var myself = this;
             this.pvBulletMeasure
                 .localProperty('tooltip')
-                .tooltip(function(v, d){
+                .tooltip(function(v, d) {
                     var s = d.title;
                     var c = d.subtitle;
                     return chart.options.tooltipFormat.call(myself,s,c,v);
@@ -330,7 +330,7 @@ def
 
             this.pvBulletMarker
                 .localProperty('tooltip')
-                .tooltip(function(v, d){
+                .tooltip(function(v, d) {
                     var s = d.title;
                     var c = d.subtitle;
                     return chart.options.tooltipFormat.call(myself,s,c,v);
@@ -354,7 +354,7 @@ def
             .textBaseline("bottom")
             .left(titleLeftOffset)
             .top(titleTopOffset)
-            .text(function(d){
+            .text(function(d) {
                 return d.formattedTitle;
             });
 
@@ -365,7 +365,7 @@ def
             .textBaseline("top")
             .left(titleLeftOffset)
             .top(titleTopOffset)
-            .text(function(d){
+            .text(function(d) {
                 return d.formattedSubtitle;
             });
 
@@ -376,25 +376,25 @@ def
     
                     } : null;
     
-        if (chart.doubleClickable() && doubleClickAction) {
+        if(chart.doubleClickable() && doubleClickAction) {
             this.pvBulletTitle
                 .cursor("pointer")
                 .events('all')  //labels don't have events by default
-                .event("dblclick", function(d){
+                .event("dblclick", function(d) {
                     doubleClickAction(d, arguments[arguments.length-1]);
                 });
 
             this.pvBulletSubtitle
                 .cursor("pointer")
                 .events('all')  //labels don't have events by default
-                .event("dblclick", function(d){
+                .event("dblclick", function(d) {
                     doubleClickAction(d, arguments[arguments.length-1]);
                 });
 
         }
     },
    
-    applyExtensions: function(){
+    applyExtensions: function() {
       
         this.base();
       
@@ -409,7 +409,7 @@ def
         this.extend(this.pvBulletSubtitle,"bulletSubtitle");
     },
     
-    _getExtensionId: function(){
+    _getExtensionId: function() {
         // content coincides, visually in this chart type
         return [{abs: 'content'}].concat(this.base());
     },
@@ -417,7 +417,7 @@ def
     /*
      * Data array to back up bullet charts.
      */
-    buildData: function(){
+    buildData: function() {
         var data,
             chart = this.chart,
             options = chart.options,
@@ -459,39 +459,39 @@ def
            !titleGrouping    &&
            !markerGrouping   &&
            !subTitleGrouping &&
-           !rangeGrouping){
+           !rangeGrouping) {
 
             data = [defaultData];
        } else {
-            data = chart.data.datums().select(function(datum){
+            data = chart.data.datums().select(function(datum) {
                 var d = Object.create(defaultData),
                     view;
 
-                if(valueGrouping){
+                if(valueGrouping) {
                     view = valueGrouping.view(datum);
                     d.measures = view.values();
                     d.formattedMeasures = view.labels();
                 }
 
-                if(titleGrouping){
+                if(titleGrouping) {
                     view = titleGrouping.view(datum);
                     d.title = view.value;
                     d.formattedTitle = view.label;
                 }
 
-                if(subTitleGrouping){
+                if(subTitleGrouping) {
                     view = subTitleGrouping.view(datum);
                     d.subtitle = view.value;
                     d.formattedSubtitle = view.label;
                 }
 
-                if(markerGrouping){
+                if(markerGrouping) {
                     view = markerGrouping.view(datum);
                     d.markers = view.values();
                     d.formattedMarkers = view.labels();
                 }
 
-                if(rangeGrouping){
+                if(rangeGrouping) {
                     view = rangeGrouping.view(datum);
                     d.ranges = view.values();
                     d.formattedRanges = view.labels();

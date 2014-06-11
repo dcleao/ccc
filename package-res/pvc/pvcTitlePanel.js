@@ -4,18 +4,14 @@
 
 def
 .type('pvc.TitlePanel', pvc.TitlePanelAbstract)
-.init(function(chart, parent, options){
+.init(function(chart, parent, options) {
     
-    if(!options){
-        options = {};
-    }
+    if(!options) options = {};
     
     var isV1Compat = chart.compatVersion() <= 1;
-    if(isV1Compat){
+    if(isV1Compat) {
         var size = options.titleSize;
-        if(size == null){
-            options.titleSize = 25;
-        }
+        if(size == null) options.titleSize = 25;
     }
     
     // Must be done before calling base, cause it uses _getExtension

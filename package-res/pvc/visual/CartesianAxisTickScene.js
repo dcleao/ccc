@@ -27,9 +27,7 @@ def
             def.get(keyArgs, 'tickLabel'),
             def.get(keyArgs, 'tickRaw'));
     
-    if(def.get(keyArgs, 'isHidden')) {
-        this.isHidden = true;
-    }
+    if(def.get(keyArgs, 'isHidden')) this.isHidden = true;
 })
 .add({
     // True when the scene contains excluded data(s)

@@ -12,7 +12,7 @@
 def
 .type('pvc.visual.BarPlotAbstract', pvc.visual.CategoricalPlot)
 .add({
-    _getOptionsDefinition: function(){
+    _getOptionsDefinition: function() {
         return pvc.visual.BarPlotAbstract.optionsDef;
     }
 });
@@ -22,17 +22,13 @@ pvc.visual.BarPlotAbstract.optionsDef = def.create(
 
     BarSizeRatio: { // for grouped bars
         resolve: '_resolveFull',
-        cast: function(value){
+        cast: function(value) {
             value = pvc.castNumber(value);
-            if(value == null){
-                value = 1;
-            } else if(value < 0.05){
-                value = 0.05;
-            } else if(value > 1){
-                value = 1;
-            }
 
-            return value;
+            return value == null ? 1    :
+                   value <  0.05 ? 0.05 :
+                   value >  1    ? 1    :
+                   value;
         },
         value: 0.9
     },
@@ -40,21 +36,17 @@ pvc.visual.BarPlotAbstract.optionsDef = def.create(
     BarSizeMax: {
         resolve: '_resolveFull',
         data: {
-            resolveV1: function(optionInfo){
+            resolveV1: function(optionInfo) {
                 // default to v1 option
-                this._specifyChartOption(optionInfo, 'maxBarSize');
-                return true;
+                return this._specifyChartOption(optionInfo, 'maxBarSize'), true;
             }
         },
-        cast: function(value){
+        cast: function(value) {
             value = pvc.castNumber(value);
-            if(value == null){
-                value = Infinity;
-            } else if(value < 1){
-                value = 1;
-            }
 
-            return value;
+            return value == null ? Infinity :
+                   value <  1    ? 1        :
+                   value;
         },
         value: 2000
     },
@@ -67,13 +59,10 @@ pvc.visual.BarPlotAbstract.optionsDef = def.create(
 
     BarStackedMargin: { // for stacked bars
         resolve: '_resolveFull',
-        cast: function(value){
+        cast: function(value) {
             value = pvc.castNumber(value);
-            if(value != null && value < 0){
-                value = 0;
-            }
 
-            return value;
+            return (value != null && value < 0) ? 0 : value;
         },
         value: 0
     },

@@ -66,20 +66,17 @@ def
          */
         return function(scene) {
             // this instanceof pv.Mark
-            
-            if(isFalling && !this.index) {
-                // First falling bar is the main total
-                // Must be accounted up and update the offset
-                return 1;
-            }
 
-            var group = scene.vars.category.group;
-            var isProperGroup = group._isFlattenGroup && !group._isDegenerateFlattenGroup;
-            if(isProperGroup) {
-                // Groups don't update the offset
-                // Groups always go down (except for the first when falling)
-                return -2;
-            }
+            // First falling bar is the main total
+            // Must be accounted up and update the offset
+            if(isFalling && !this.index) return 1;
+
+            var group = scene.vars.category.group,
+                isProperGroup = group._isFlattenGroup && !group._isDegenerateFlattenGroup;
+
+            // Groups don't update the offset
+            // Groups always go down (except for the first when falling)
+            if(isProperGroup) return -2;
 
             return isFalling ? -1 : 1;
         };
@@ -90,22 +87,22 @@ def
         var rootScene = this._getLegendBulletRootScene();
         if(rootScene) {
             var waterfallGroupScene = rootScene.firstChild;
-            if(waterfallGroupScene && !waterfallGroupScene.hasRenderer()){
+            if(waterfallGroupScene && !waterfallGroupScene.hasRenderer()) {
                 var keyArgs = {
-                        drawRule:      true,
-                        drawMarker:    false,
-                        rulePvProto:   new pv_Mark()
+                        drawRule:    true,
+                        drawMarker:  false,
+                        rulePvProto: new pv_Mark()
                     };
 
                 this.extend(keyArgs.rulePvProto, 'line', {constOnly: true});
 
                 waterfallGroupScene.renderer(
-                        new pvc.visual.legend.BulletItemDefaultRenderer(keyArgs));
+                    new pvc.visual.legend.BulletItemDefaultRenderer(keyArgs));
             }
         }
     },
 
-    _createCore: function(){
+    _createCore: function() {
 
         this.base();
 
@@ -126,11 +123,10 @@ def
             waterColor = this.plot._waterColor;
 
         if(this.plot.option('AreasVisible')) {
-            var panelColors = pv.Colors.category10();
-            var waterGroupRootScene = this._buildWaterGroupScene();
-
-            var orthoRange = orthoScale.range();
-            var orthoPanelMargin = 0.04 * (orthoRange[1] - orthoRange[0]);
+            var panelColors = pv.Colors.category10(),
+                waterGroupRootScene = this._buildWaterGroupScene(),
+                orthoRange = orthoScale.range(),
+                orthoPanelMargin = 0.04 * (orthoRange[1] - orthoRange[0]);
 
             this.pvWaterfallGroupPanel = new pvc.visual.Panel(this, this.pvPanel, {
                     extensionId: 'group'
@@ -146,39 +142,33 @@ def
                     return baseScale(c.valueLeft) - barStepWidth / 2;
                 })
                 [this.anchorLength(anchor)](function(scene) {
-                    var c = scene.vars.category;
-                    var len = Math.abs(baseScale(c.valueRight) - baseScale(c.valueLeft ));
+                    var c = scene.vars.category,
+                        len = Math.abs(baseScale(c.valueRight) - baseScale(c.valueLeft ));
 
                     return len + barStepWidth;
                 })
                 [anchor](function(scene) { // bottom
                     // animate: zero -> bottom
-                    var v = scene.vars.value;
-                    var b = orthoScale(v.valueBottom) - orthoPanelMargin/2;
+                    var v = scene.vars.value,
+                        b = orthoScale(v.valueBottom) - orthoPanelMargin/2;
                     return chart.animate(orthoZero, b);
                 })
-                [this.anchorOrthoLength(anchor)](function(scene){ // height
+                [this.anchorOrthoLength(anchor)](function(scene) { // height
                     // animate: 0 -> height
-                    var v = scene.vars.value;
-                    var h = orthoScale(v.valueTop) - orthoScale(v.valueBottom) + orthoPanelMargin;
+                    var v = scene.vars.value,
+                        h = orthoScale(v.valueTop) - orthoScale(v.valueBottom) + orthoPanelMargin;
                     return chart.animate(0, h);
-                })
-                ;
+                });
         }
 
         this.pvBar
             .sign
-            .override('baseColor', function(scene, type){
+            .override('baseColor', function(scene, type) {
                 var color = this.base(scene, type);
-                if(type === 'fill'){
-                    if(!scene.vars.category.group._isFlattenGroup) {
-                        return pv.color(color).alpha(0.5);
-                    }
-                   // else {
-                   //     return pv.color(color).darker();
-                   // }
+                if(type === 'fill') {
+                    if(!scene.vars.category.group._isFlattenGroup) return pv.color(color).alpha(0.5);
+                    //return pv.color(color).darker();
                 }
-
                 return color;
             });
 
@@ -225,29 +215,28 @@ def
                     extensionId: 'lineLabel'
                 })
                 .intercept('visible', function(scene) {
-                    if(scene.vars.category.group._isFlattenGroup) { return false; }
-
-                    return isFalling || !!scene.nextSibling;
+                    return !scene.vars.category.group._isFlattenGroup &&
+                        (isFalling || !!scene.nextSibling);
                 })
                 .pvMark
-                [anchor](function(scene){
+                [anchor](function(scene) {
                     return orthoZero + chart.animate(0, sceneOrthoScale(scene) - orthoZero);
                 })
                 [this.anchorOrtho(anchor)](sceneBaseScale)
                 .textAlign(isVertical ? 'center' : 'left')
                 .textBaseline(function(categScene) {
                     // Rules are drawn on the starting y position.
-                    if(!isVertical) { return 'middle'; }
+                    if(!isVertical) return 'middle';
 
                     var direction = categScene.vars.direction;
-                    if(direction == null) { return 'bottom'; }
+                    if(direction == null) return 'bottom';
 
                     var isRising = !isFalling;
                     return isRising === (direction === 'up') ? 'bottom' : 'top';
                 })
                 .textStyle(pv.Color.names.darkgray.darker(2))
                 .textMargin(5)
-                .text(function(scene){ return scene.vars.value.label; });
+                .text(function(scene) { return scene.vars.value.label; });
         }
     },
 
@@ -270,7 +259,7 @@ def
             // makes us be climbing...
             isClimbing = !this.plot.isFalling();
 
-            if(!isClimbing) { q = q.reverse(); }
+            if(!isClimbing) q = q.reverse();
 
             q.each(completeCategScene, this);
         }
@@ -278,18 +267,12 @@ def
         return rootScene;
 
         function createCategScene(ruleInfo) {
-            var categData1 = ruleInfo.group;
-
-            var categScene = new pvc.visual.Scene(rootScene, {source: categData1});
-
-            var categVar =
-                categScene.vars.category =
-                pvc_ValueLabelVar.fromComplex(categData1);
+            var categData1 = ruleInfo.group,
+                categScene = new pvc.visual.Scene(rootScene, {source: categData1}),
+                categVar = categScene.vars.category = pvc_ValueLabelVar.fromComplex(categData1),
+                value = ruleInfo.offset;
 
             categVar.group = categData1;
-
-            var value = ruleInfo.offset;
-
             categScene.vars.value = new pvc_ValueLabelVar(value, valueDim.format(value));
         }
 
@@ -306,15 +289,12 @@ def
     },
 
     _buildWaterGroupScene: function() {
-        var chart = this.chart;
-        var rootCatData = this.visualRoles.category.select(
-                chart.partData(this.dataPartValue),
-                {visible: true});
+        var chart = this.chart,
+            ris = chart._ruleInfos,
+            rootCatData = this.visualRoles.category.select(chart.partData(this.dataPartValue), {visible: true}),
+            rootScene = new pvc.visual.Scene(null, {panel: this, source: rootCatData}),
+            ruleInfoByCategKey, isFalling;
 
-        var rootScene = new pvc.visual.Scene(null, {panel: this, source: rootCatData});
-
-        var ruleInfoByCategKey, isFalling;
-        var ris = chart._ruleInfos;
         if(ris) {
             ruleInfoByCategKey = def.query(ris).object({name: function(ri) { return ri.group.absKey; }});
             isFalling = this.plot.isFalling();
@@ -332,7 +312,7 @@ def
 
                 // All parent categories, except the root category,
                 // draw a rectangle around their descendants.
-                if(level) { createRectangleScene(catData, level); }
+                if(level) createRectangleScene(catData, level);
 
                 level++;
                 do { createRectangleSceneRecursive(q.item, level); } while(q.next());
@@ -341,36 +321,33 @@ def
 
         function createRectangleScene(catData, level) {
             // Rectangle scenes are all direct children of rootScene
-            var rectScene = new pvc.visual.Scene(rootScene, {source: catData});
-
-            var categVar = rectScene.vars.category = pvc_ValueLabelVar.fromComplex(catData);
+            var rectScene = new pvc.visual.Scene(rootScene, {source: catData}),
+                categVar = rectScene.vars.category = pvc_ValueLabelVar.fromComplex(catData);
 
             categVar.group = catData;
             categVar.level = level;
 
-            var valueVar = rectScene.vars.value = {}; // TODO: Not A Var
+            var valueVar = rectScene.vars.value = {}, // TODO: Not A Var
+                ri = ruleInfoByCategKey[catData.absKey],
 
-            var ri = ruleInfoByCategKey[catData.absKey];
+                // At which offset value this parent category starts
+                offset = ri.offset,
 
-            // At which offset value this parent category starts
-            var offset = ri.offset;
+                // Maximum value-height of all descendants
+                range  = ri.range,
+                height = -range.min + range.max;
 
-            // Maximum value-height of all descendants
-            var range  = ri.range;
-            var height = -range.min + range.max;
+            // Find the rectangle value coordinates
+            //
+            //  When falling
+            //    catData
+            //  lc  x----------------+
+            //      |                |
+            //      |                |
+            //  rc  +----------------x
+            //                    lastLeafData
+            //     lc                rc
 
-            /* Find the rectangle value coordinates
-             *
-             *  When falling
-             *    catData
-             *  lc  x----------------+
-             *      |                |
-             *      |                |
-             *  rc  +----------------x
-             *                    lastLeafData
-             *     lc                rc
-             *
-             */
             var leafData, leafRuleInfo, lc, rc, bv;
             if(isFalling) {
                 leafData = lastLeaf(catData);
@@ -392,21 +369,20 @@ def
 
             categVar.valueLeft   = lc;
             categVar.valueRight  = rc;
-
             valueVar.valueHeight = height;
             valueVar.valueBottom = bv;
             valueVar.valueTop    = bv + height;
         }
 
         function firstLeaf(data) {
-            var children = data.childNodes;
-            var first = children && children[0];
+            var children = data.childNodes,
+                first = children && children[0];
             return first ? firstLeaf(first) : data;
         }
 
         function lastLeaf(data) {
-            var children = data.childNodes;
-            var last = children && children[children.length - 1];
+            var children = data.childNodes,
+                last = children && children[children.length - 1];
             return last ? lastLeaf(last) : data;
         }
     }

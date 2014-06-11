@@ -59,61 +59,53 @@ def
 
     /** @override */
     _generateTrendsDataCell: function(newDatums, dataCell, baseData) {
-        var serRole = this.visualRoles.series;
-        var xRole   = this.visualRoles.category;
-        var yRole   = dataCell.role;
-        var trendOptions = dataCell.trend;
-        var trendInfo = trendOptions.info;
+        var serRole = this.visualRoles.series,
+            xRole   = this.visualRoles.category,
+            yRole   = dataCell.role,
+            trendOptions = dataCell.trend,
+            trendInfo = trendOptions.info;
 
         this._warnSingleContinuousValueRole(yRole);
 
-        var yDimName = yRole.lastDimensionName();
-        var xDimName;
-        var isXDiscrete = xRole.isDiscrete();
+        var yDimName = yRole.lastDimensionName(),
+            xDimName,
+            isXDiscrete = xRole.isDiscrete();
         if(!isXDiscrete) xDimName = xRole.lastDimensionName();
 
-        var sumKeyArgs = {zeroIfNone: false};
-
-        var partData = this.partData(dataCell.dataPartValue, baseData);
-
-        // Visible data grouped by category and then series
-        var data = this.visiblePlotData(dataCell.plot, dataCell.dataPartValue, {baseData: baseData}); // [ignoreNulls=true]
-
-        var dataPartAtom = this._getTrendDataPartAtom();
-        var dataPartDimName = dataPartAtom.dimension.name;
-
-        // TODO: It is usually the case, but not certain, that the base axis'
-        // dataCell(s) span "all" data parts.
-        var allCatDatas = xRole.flatten(baseData, {visible: true}).childNodes;
-        
-        var qVisibleSeries = serRole && serRole.isBound()
-            ? serRole.flatten(partData, {visible: true}).children()
-            : def.query([null]); // null series
+        var sumKeyArgs = {zeroIfNone: false},
+            partData = this.partData(dataCell.dataPartValue, baseData),
+            // Visible data grouped by category and then series
+            data = this.visiblePlotData(dataCell.plot, dataCell.dataPartValue, {baseData: baseData}), // [ignoreNulls=true]
+            dataPartAtom = this._getTrendDataPartAtom(),
+            dataPartDimName = dataPartAtom.dimension.name,
+            // TODO: It is usually the case, but not certain, that the base axis'
+            // dataCell(s) span "all" data parts.
+            allCatDatas = xRole.flatten(baseData, {visible: true}).childNodes,
+            qVisibleSeries = serRole && serRole.isBound()
+                    ? serRole.flatten(partData, {visible: true}).children()
+                    : def.query([null]); // null series
 
         qVisibleSeries.each(genSeriesTrend, this);
 
         function genSeriesTrend(serData1) {
-            var funX = isXDiscrete ?
-                       null : // means: "use *index* as X value"
-                       function(allCatData) { return allCatData.atoms[xDimName].value; };
+            var funX = isXDiscrete
+                    ? null  // means: "use *index* as X value"
+                    : function(allCatData) { return allCatData.atoms[xDimName].value;},
 
-            var funY = function(allCatData) {
-                var group = data.child(allCatData.key);
-                if(group && serData1) {
-                    group = group.child(serData1.key);
-                }
+                funY = function(allCatData) {
+                        var group = data.child(allCatData.key);
+                        if(group && serData1) group = group.child(serData1.key);
+                        // When null, the data point ends up being ignored
+                        return group ? group.dimensions(yDimName).value(sumKeyArgs) : null;
+                    },
 
-                // When null, the data point ends up being ignored
-                return group ? group.dimensions(yDimName).value(sumKeyArgs) : null;
-            };
+                options = def.create(trendOptions, {
+                    rows: def.query(allCatDatas),
+                    x: funX,
+                    y: funY
+                }),
+                trendModel = trendInfo.model(options);
 
-            var options = def.create(trendOptions, {
-                rows: def.query(allCatDatas),
-                x: funX,
-                y: funY
-            });
-
-            var trendModel = trendInfo.model(options);
             if(trendModel) {
                 // At least one point...
                 // Sample the line on each x and create a datum for it
@@ -121,18 +113,15 @@ def
                 allCatDatas.forEach(function(allCatData, index) {
                     var trendX = isXDiscrete ?
                                  index :
-                                 allCatData.atoms[xDimName].value;
+                                 allCatData.atoms[xDimName].value,
+                        trendY = trendModel.sample(trendX, funY(allCatData), index);
 
-                    var trendY = trendModel.sample(trendX, funY(allCatData), index);
                     if(trendY != null) {
-                        var catData   = data.child(allCatData.key);
-                        var efCatData = catData || allCatData;
-
-                        var atoms;
+                        var catData   = data.child(allCatData.key),
+                            efCatData = catData || allCatData,
+                            atoms;
                         if(serData1) {
-                            var catSerData = catData &&
-                                             catData.child(serData1.key);
-
+                            var catSerData = catData && catData.child(serData1.key);
                             if(catSerData) {
                                 atoms = Object.create(catSerData._datums[0].atoms);
                             } else {
@@ -170,19 +159,17 @@ def
         // * title panel
         // * y panel if column or global scope (column scope coordinates x scales, but then the other axis' size also affects the layout...)
         // * x panel if row    or global scope
-        var titleSizeMax  = 0;
-        var titleOrthoLen;
-
-        var axisIds = null;
-        var sizesMaxByAxisId = {}; // {id:  {axis: axisSizeMax, title: titleSizeMax} }
+        var titleSizeMax  = 0,
+            titleOrthoLen,
+            axisIds = null,
+            sizesMaxByAxisId = {}; // {id:  {axis: axisSizeMax, title: titleSizeMax} }
 
         // Calculate maximum sizes
         this.children.forEach(function(childChart) {
 
             childChart.basePanel.layout();
 
-            var size;
-            var panel = childChart.titlePanel;
+            var size, panel = childChart.titlePanel;
             if(panel) {
                 if(!titleOrthoLen) titleOrthoLen = panel.anchorOrthoLength();
 
@@ -205,12 +192,11 @@ def
             }
 
             axisIds.forEach(function(id) {
-                var axisPanel = axesPanels[id];
-                var sizes = sizesMaxByAxisId[id];
-
-                var ol = axisPanel.axis.orientation === 'x' ? 'height' : 'width';
+                var axisPanel = axesPanels[id],
+                    sizes = sizesMaxByAxisId[id],
+                    ol = axisPanel.axis.orientation === 'x' ? 'height' : 'width';
                 size = axisPanel[ol];
-                if(size > sizes.axis) { sizes.axis = size; }
+                if(size > sizes.axis) sizes.axis = size;
 
                 var titlePanel = axisPanel.titlePanel;
                 if(titlePanel) {
@@ -232,10 +218,10 @@ def
 
             var axesPanels = childChart.axesPanels;
             axisIds.forEach(function(id) {
-                var axisPanel = axesPanels[id];
-                var sizes = sizesMaxByAxisId[id];
+                var axisPanel = axesPanels[id],
+                    sizes = sizesMaxByAxisId[id],
+                    ol = axisPanel.axis.orientation === 'x' ? 'height' : 'width';
 
-                var ol = axisPanel.axis.orientation === 'x' ? 'height' : 'width';
                 axisPanel.size = axisPanel.size.clone().set(ol, sizes.axis);
 
                 var titlePanel = axisPanel.titlePanel;

@@ -12,8 +12,8 @@ def
 })
 .add({
     visit: function(catSeriesInfo) {
-        if(catSeriesInfo.isNull) { this._interpolate(catSeriesInfo); } 
-        else                     { this._lastNonNull(catSeriesInfo); }
+        if(catSeriesInfo.isNull) this._interpolate(catSeriesInfo);
+        else                     this._lastNonNull(catSeriesInfo);
     },
     
     _lastNonNull: function(catSerInfo) {
@@ -47,25 +47,22 @@ def
         // surrounded by non-null dots.
         
         // The start of a new segment?
-        if(this.__nextNonNull !== undefined) { return; }
+        if(this.__nextNonNull !== undefined) return;
         
         // Will be null if the series starts 
         //  with null categories:
         // S: 0 - 0 - x
-        var last = this.__lastNonNull;
-        
-        // Make sure not to store undefined to distinguish from uninitialized.
-        // When "last" is null, a non-null "next" is used in 
-        //  {@link #_interpolate } to "extend" the beginning of the series.
-        var next = this.__nextNonNull = 
-           this.interpolation
-               .nextUnprocessedNonNullCategOfSeries(this.index) || 
-           null;
+        var last = this.__lastNonNull,
+
+            // Make sure not to store undefined to distinguish from uninitialized.
+            // When "last" is null, a non-null "next" is used in
+            //  {@link #_interpolate } to "extend" the beginning of the series.
+            next = this.__nextNonNull = this.interpolation.nextUnprocessedNonNullCategOfSeries(this.index) || null;
                                 
         if(next && last) {
-            var fromValue  = last.value;
-            var toValue    = next.value;
-            var deltaValue = toValue - fromValue;
+            var fromValue  = last.value,
+                toValue    = next.value,
+                deltaValue = toValue - fromValue;
             
             if(this.interpolation._isCatDiscrete) {
                 var stepCount = next.catInfo.index - last.catInfo.index;
@@ -78,18 +75,13 @@ def
                 var dotCount = (stepCount - 1);
                 this._isOdd  = (dotCount % 2) > 0;
             } else {
-                var fromCat  = +last.catInfo.value;
-                var toCat    = +next.catInfo.value;
-                var deltaCat = toCat - fromCat;
+                var fromCat  = +last.catInfo.value,
+                    toCat    = +next.catInfo.value,
+                    deltaCat = toCat - fromCat;
                 
                 this._steep = deltaValue / deltaCat; // should not be infinite, cause categories are different
                 
                 this._middleCat = (toCat + fromCat) / 2;
-                
-                // NOTE: This was only needed when selection needed to
-                // divide in half between the last and next.
-                // (Maybe) add a category
-                //this.interpolation._setCategory(this._middleCat);
             }
         }
     },
@@ -98,41 +90,38 @@ def
         
         this._initInterpData();
         
-        var next = this.__nextNonNull;
-        var last = this.__lastNonNull;
-        var one  = next || last;
-        if(!one) { return; }
+        var next = this.__nextNonNull,
+            last = this.__lastNonNull,
+            one  = next || last;
+        if(!one) return;
         
-        var value, group;
-        var interpolation = this.interpolation;
-        var catInfo = catSerInfo.catInfo;
+        var value, group,
+            interpolation = this.interpolation,
+            catInfo = catSerInfo.catInfo;
         
         if(next && last) {
             if(interpolation._isCatDiscrete) {
                 var groupIndex = (catInfo.index - last.catInfo.index);
                 value = last.value + this._stepValue * groupIndex;
                 
-                if(this._isOdd) {
+                if(this._isOdd)
                     group = groupIndex < this._middleIndex ? last.group : next.group;
-                } else {
+                else
                     group = groupIndex <= this._middleIndex ? last.group : next.group;
-                }
                 
             } else {
-                var cat = +catInfo.value;
-                var lastCat = +last.catInfo.value;
+                var cat     = +catInfo.value,
+                    lastCat = +last.catInfo.value;
                 
                 value = last.value + this._steep * (cat - lastCat);
                 group = cat < this._middleCat ? last.group : next.group;
-                //isInterpolatedMiddle = cat === this._middleCat;
             }
         } else {
             // Only "stretch" ends on stacked visualization
-            if(!interpolation._stretchEnds) { return; }
+            if(!interpolation._stretchEnds) return;
             
             value = one.value;
             group = one.group;
-            //isInterpolatedMiddle = false;
         }
         
         // -----------
@@ -148,7 +137,6 @@ def
         atoms[valueAtom.dimension.name] = valueAtom;
         
         // Create datum with collected atoms
-        interpolation._newDatums
-            .push(new pvc.data.InterpolationDatum(group.owner, atoms, 'linear'));
+        interpolation._newDatums.push(new pvc.data.InterpolationDatum(group.owner, atoms, 'linear'));
     }
 });

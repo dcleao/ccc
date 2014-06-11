@@ -80,24 +80,15 @@ pvc.visual.PiePlot.optionsDef = def.create(
         },
         
         ValuesLabelStyle: {
-            resolve: function(optionInfo){
-                var isV1Compat = this.chart.compatVersion() <= 1;
-                if(isV1Compat){
-                    optionInfo.specify('inside');
-                    return true;
-                }
-                
-                return this._resolveFull(optionInfo);
+            resolve: function(optionInfo) {
+                return this.chart.compatVersion() > 1
+                    ? this._resolveFull(optionInfo)
+                    : (optionInfo.specify('inside'), true);
             },
             cast: function(value) {
-                switch(value){
-                    case 'inside':
-                    case 'linked': return value;
-                }
+                switch(value) { case 'inside': case 'linked': return value; }
                 
-                if(pvc.debug >= 2){
-                    pvc.log("[Warning] Invalid 'ValuesLabelStyle' value: '" + value + "'.");
-                }
+                if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'ValuesLabelStyle' value: '" + value + "'.");
                 
                 return 'linked';
             },
@@ -113,7 +104,7 @@ pvc.visual.PiePlot.optionsDef = def.create(
         ValuesMask: { // OVERRIDE
             resolve: '_resolveFull',
             data: {
-                resolveDefault: function(optionInfo){
+                resolveDefault: function(optionInfo) {
                     optionInfo.defaultValue(
                             this.option('ValuesLabelStyle') === 'linked' ? 
                             "{value} ({value.percent})" : 

@@ -18,14 +18,11 @@ def
     this.trimOverflowed = !this.hideOverflowed && this.valuesOverflow === 'trim';
     this.hideOrTrimOverflowed = this.hideOverflowed || this.trimOverflowed;
 
-    var protoMark;
-    if(!def.get(keyArgs, 'noAnchor', false)) {
-        protoMark = anchorMark.anchor(panel.valuesAnchor);
-    } else {
-        protoMark = anchorMark;
-    }
-    
-    if(keyArgs && keyArgs.extensionId == null) { keyArgs.extensionId = 'label'; }
+    var protoMark = def.get(keyArgs, 'noAnchor', false)
+        ? anchorMark
+        : anchorMark.anchor(panel.valuesAnchor);
+
+    if(keyArgs && keyArgs.extensionId == null) keyArgs.extensionId = 'label';
 
     this.base(panel, protoMark, keyArgs);
 
@@ -41,9 +38,9 @@ def
 .constructor
 .addStatic({
     maybeCreate: function(panel, anchorMark, keyArgs) {
-        return panel.valuesVisible && panel.valuesMask ?
-               new pvc.visual.ValueLabel(panel, anchorMark, keyArgs) :
-               null;
+        return panel.valuesVisible && panel.valuesMask
+            ? new pvc.visual.ValueLabel(panel, anchorMark, keyArgs)
+            : null;
     },
 
     isNeeded: function(panel) { return panel.valuesVisible && panel.valuesMask; }
@@ -171,22 +168,20 @@ def
     // property, lazy properties would need to exist.
     backgroundColor: function(scene, type) {
         var state = this.instanceState();
-        if(!state) { return this.calcBackgroundColor(scene, type); }
+        if(!state) return this.calcBackgroundColor(scene, type);
+
         var cache = def.lazy(state, 'cccBgColorCache');
-        var color = def.getOwn(cache, type);
-        if(!color) { color = cache[type] = this.calcBackgroundColor(scene, type); }
-        return color;
+        return def.getOwn(cache, type) ||
+            (cache[type] = this.calcBackgroundColor(scene, type));
     },
 
     calcBackgroundColor: function(scene, type) {
         var anchoredToMark = this.getAnchoredToMark();
         if(anchoredToMark) {
             var fillColor = anchoredToMark.fillStyle();
-            if(fillColor && fillColor !== DEFAULT_BG_COLOR && this.isAnchoredInside(scene, anchoredToMark)) {
+            if(fillColor && fillColor !== DEFAULT_BG_COLOR && this.isAnchoredInside(scene, anchoredToMark))
                 return fillColor;
-            }
         }
-
         return DEFAULT_BG_COLOR;
     },
 
@@ -195,9 +190,7 @@ def
     },
 
     isAnchoredInside: function(scene, anchoredToMark) {
-        if(!anchoredToMark && !(anchoredToMark  = this.getAnchoredToMark())) {
-            return false;
-        }
+        if(!anchoredToMark && !(anchoredToMark  = this.getAnchoredToMark())) return false;
 
         // NOTE: the reason we're not using the label's getShape method directly
         // is that the later reads properties directly from the instance,
@@ -257,10 +250,8 @@ def
     },
     
     interactiveColor: function(scene, color, type) {
-        if(!this.mayShowActive(scene) && this.mayShowNotAmongSelected(scene)) {
-            return this.dimColor(color, type);
-        }
-        
-        return this.maybeOptimizeColorLegibility(scene, color, type);
+        return !this.mayShowActive(scene) && this.mayShowNotAmongSelected(scene)
+            ? this.dimColor(color, type)
+            : this.maybeOptimizeColorLegibility(scene, color, type);
     }
 });

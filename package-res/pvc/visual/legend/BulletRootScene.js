@@ -17,7 +17,7 @@
 /*global pvc_Sides:true, pvc_Size:true */
 def
 .type('pvc.visual.legend.BulletRootScene', pvc.visual.Scene)
-.init(function(parent, keyArgs){
+.init(function(parent, keyArgs) {
     
     this.base(parent, keyArgs);
     
@@ -34,69 +34,59 @@ def
         'textMargin',  (def.get(keyArgs, 'textMargin', 6) - 3));
 })
 .add(/** @lends pvc.visual.legend.BulletRootScene# */{
-    layout: function(layoutInfo){
+    layout: function(layoutInfo) {
         // Any size available?
         var clientSize = layoutInfo.clientSize;
-        if(!(clientSize.width > 0 && clientSize.height > 0)) {
-            return new pvc_Size(0,0);
-        }
+        if(!(clientSize.width > 0 && clientSize.height > 0)) return new pvc_Size(0,0);
 
-        var desiredClientSize = layoutInfo.desiredClientSize;
-        
-        // The size of the biggest cell
+        var desiredClientSize = layoutInfo.desiredClientSize,
 
-        var itemPadding = this._unresolvedItemPadding.resolve(clientSize);
+            // The size of the biggest cell
+            itemPadding = this._unresolvedItemPadding.resolve(clientSize),
 
-        // This facilitates making the calculations for the margins of border items
-        //  to not be included.
-        var extClientSize = {
-            width:  clientSize.width  + itemPadding.width,
-            height: clientSize.height + itemPadding.height
-        };
+            // This facilitates making the calculations for the margins of border items
+            //  to not be included.
+            extClientSize = {
+                width:  clientSize.width  + itemPadding.width,
+                height: clientSize.height + itemPadding.height
+            },
 
-        // may come with both width/height to null
-        var desiredItemSize = this._unresolvedItemSize.resolve(extClientSize);
+            // May come with both width/height to null
+            desiredItemSize = this._unresolvedItemSize.resolve(extClientSize),
+            desiredItemClientSize = {
+                width:  desiredItemSize.width  && Math.max(0, desiredItemSize.width  - itemPadding.width ),
+                height: desiredItemSize.height && Math.max(0, desiredItemSize.height - itemPadding.height)
+            },
 
-        var desiredItemClientSize = {
-            width:  desiredItemSize.width  && Math.max(0, desiredItemSize.width  - itemPadding.width ),
-            height: desiredItemSize.height && Math.max(0, desiredItemSize.height - itemPadding.height)
-        };
-
-        var markerDiam = this._unresolvedMarkerDiam || desiredItemClientSize.height || 15;
+            markerDiam = this._unresolvedMarkerDiam || desiredItemClientSize.height || 15;
         
         this.vars.itemPadding           = itemPadding;
         this.vars.desiredItemSize       = desiredItemSize;
         this.vars.desiredItemClientSize = desiredItemClientSize;
         this.vars.markerSize            = markerDiam;
         
-        var textLeft      = markerDiam + this.vars.textMargin;
-        var labelWidthMax = Math.max(0,
+        var textLeft      = markerDiam + this.vars.textMargin,
+            labelWidthMax = Math.max(0,
                 Math.min(
                     (desiredItemClientSize.width || Infinity),
                     (desiredClientSize.width     || Infinity), 
                     clientSize.width) - 
-                textLeft);
+                textLeft),
+            // Names are for legend items when laid out in sections
+            a_width  = this.vars.horizontal ? 'width' : 'height',
+            a_height = pvc.BasePanel.oppositeLength[a_width], // height or width
+            section,
+            sections = [],
+            contentSize = {width: 0, height: 0},
+            $maxSectionWidth = desiredClientSize[a_width];
 
-        // Names are for legend items when laid out in sections
-        var a_width  = this.vars.horizontal ? 'width' : 'height';
-        var a_height = pvc.BasePanel.oppositeLength[a_width]; // height or width
-        
-        var $maxSectionWidth = desiredClientSize[a_width];
-        if(!$maxSectionWidth || $maxSectionWidth < 0) {
-            $maxSectionWidth = clientSize[a_width]; // row or col
-        }
-        
-        var section;
-        var sections = [];
-        var contentSize = {width: 0, height: 0};
+        if(!$maxSectionWidth || $maxSectionWidth < 0) $maxSectionWidth = clientSize[a_width]; // row or col
 
-        this.childNodes.forEach(function(groupScene){
-            groupScene.childNodes.forEach(layoutItem, this);
-        }, this);
+        this.childNodes.forEach(function(groupScene) { groupScene.childNodes.forEach(layoutItem, this); }, this);
         
         // If there's no pending section to commit, there are no sections...
         // No items or just items with no text -> hide
-        if(!section) { return new pvc_Size(0,0); }
+        if(!section) return new pvc_Size(0,0);
         
         commitSection(/* isLast */ true);
         
@@ -105,47 +95,43 @@ def
             'contentSize',   contentSize,
             'labelWidthMax', labelWidthMax);
         
-        var isV1Compat = this.compatVersion() <= 1;
-        
-        // Request used width / all available width (V1)
-        var $w = isV1Compat ? $maxSectionWidth : contentSize[a_width];
-        var $h = desiredClientSize[a_height];
-        if(!$h || $h < 0) { $h = contentSize[a_height]; }
-        
-        var requestSize = this.vars.size = def.set({},
-            a_width,  Math.min($w, clientSize[a_width ]),
-            a_height, Math.min($h, clientSize[a_height]));
+        var isV1Compat = this.compatVersion() <= 1,
+            // Request used width / all available width (V1)
+            $w = isV1Compat ? $maxSectionWidth : contentSize[a_width],
+            $h = desiredClientSize[a_height];
 
-        return requestSize;
+        if(!$h || $h < 0) $h = contentSize[a_height];
+
+        // requestSize
+        return (this.vars.size = def.set({},
+            a_width,  Math.min($w, clientSize[a_width ]),
+            a_height, Math.min($h, clientSize[a_height])));
         
         function layoutItem(itemScene) {
             // The names of props  of textSize and itemClientSize 
             // are to be taken literally.
             // This is because items, themselves, are always laid out horizontally...
-            var textSize = itemScene.labelTextSize();
-            
-            var hidden = !textSize || !textSize.width || !textSize.height;
+            var textSize = itemScene.labelTextSize(),
+                hidden = !textSize || !textSize.width || !textSize.height;
+
             itemScene.isHidden = hidden;
-            if(hidden) { return; }
+
+            if(hidden) return;
             
             var itemContentSize = {
-                width:  textLeft + textSize.width,
-                height: Math.max(textSize.height, markerDiam)
-            };
+                    width:  textLeft + textSize.width,
+                    height: Math.max(textSize.height, markerDiam)
+                },
+                itemSize = {
+                    width:  desiredItemSize.width  || (itemPadding.width  + itemContentSize.width ),
+                    height: desiredItemSize.height || (itemPadding.height + itemContentSize.height)
+                },
+                itemClientSize = {
+                    width:  Math.max(0, itemSize.width  - itemPadding.width ),
+                    height: Math.max(0, itemSize.height - itemPadding.height)
+                },
+                isFirstInSection;
 
-            var itemSize = {
-                width:  desiredItemSize.width  || (itemPadding.width  + itemContentSize.width ),
-                height: desiredItemSize.height || (itemPadding.height + itemContentSize.height)
-            };
-
-            var itemClientSize = {
-                width:  Math.max(0, itemSize.width  - itemPadding.width ),
-                height: Math.max(0, itemSize.height - itemPadding.height)
-            };
-
-            // -------------
-            
-            var isFirstInSection;
             if(!section) {
                 section = new pvc.visual.legend.BulletItemSceneSection(0);
                 isFirstInSection = true;
@@ -154,9 +140,7 @@ def
             }
             
             var $newSectionWidth = section.size[a_width] + itemClientSize[a_width]; // or bottom
-            if(!isFirstInSection) {
-                $newSectionWidth += itemPadding[a_width]; // separate from previous item
-            }
+            if(!isFirstInSection) $newSectionWidth += itemPadding[a_width]; // separate from previous item
             
             // If not the first item of a section and it does not fit
             if(!isFirstInSection && ($newSectionWidth > $maxSectionWidth)) {
@@ -185,24 +169,21 @@ def
         function commitSection(isLast) {
             var sectionSize = section.size;
             contentSize[a_height] += sectionSize[a_height];
-            if(sections.length) {
-                // Separate sections
-                contentSize[a_height] += itemPadding[a_height];
-            }
+
+            // Separate sections
+            if(sections.length) contentSize[a_height] += itemPadding[a_height];
             
             contentSize[a_width] = Math.max(contentSize[a_width], sectionSize[a_width]);
             sections.push(section);
             
             // New section
-            if(!isLast) {
-                section = new pvc.visual.legend.BulletItemSceneSection(sections.length);
-            }
+            if(!isLast) section = new pvc.visual.legend.BulletItemSceneSection(sections.length);
         }
     },
     
-    defaultGroupSceneType: function(){
+    defaultGroupSceneType: function() {
         var GroupType = this._bulletGroupType;
-        if(!GroupType){
+        if(!GroupType) {
             GroupType = def.type(pvc.visual.legend.BulletGroupScene);
             
             // Apply legend group scene extensions
@@ -214,7 +195,7 @@ def
         return GroupType;
     },
     
-    createGroup: function(keyArgs){
+    createGroup: function(keyArgs) {
         var GroupType = this.defaultGroupSceneType();
         return new GroupType(this, keyArgs);
     }
@@ -222,7 +203,7 @@ def
 
 def
 .type('pvc.visual.legend.BulletItemSceneSection')
-.init(function(index){
+.init(function(index) {
     this.index = index;
     this.items = [];
     this.size  = {width: 0, height: 0};

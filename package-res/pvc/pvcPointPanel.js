@@ -30,7 +30,7 @@ def
     this.linesVisible  = plot.option('LinesVisible'); // TODO
     this.dotsVisible   = plot.option('DotsVisible' ); // TODO
     this.areasVisible  = plot.option('AreasVisible'); // TODO
-    if(!this.linesVisible && !this.dotsVisible && !this.areasVisible){
+    if(!this.linesVisible && !this.dotsVisible && !this.areasVisible) {
         this.linesVisible = true;
         plot.option.specify({'LinesVisible': true});
     }
@@ -54,23 +54,21 @@ def
     pvLabel: null,
     pvScatterPanel: null,
 
-    _creating: function(){
+    _creating: function() {
         // Register BULLET legend prototype marks
         var groupScene = this.defaultLegendGroupScene();
-        if(groupScene && !groupScene.hasRenderer()){
-            var colorAxis = groupScene.colorAxis;
-            var drawMarker = def.nullyTo(colorAxis.option('LegendDrawMarker', /*no default*/ true), this.dotsVisible || this.areasVisible);
-            var drawRule   = !drawMarker ||
+        if(groupScene && !groupScene.hasRenderer()) {
+            var colorAxis  = groupScene.colorAxis,
+                drawMarker = def.nullyTo(colorAxis.option('LegendDrawMarker', /*no default*/ true), this.dotsVisible || this.areasVisible),
+                drawRule   = !drawMarker ||
                              def.nullyTo(colorAxis.option('LegendDrawLine',   /*no default*/ true), this.linesVisible && !this.areasVisible);
-            if(drawMarker || drawRule){
+            if(drawMarker || drawRule) {
                 var keyArgs = {drawMarker: drawMarker, drawRule: drawRule};
-                if(drawMarker){
+                if(drawMarker) {
                     var markerShape = colorAxis.option('LegendShape', true);
 
-                    if(this.dotsVisible){
-                        if(!markerShape){
-                            markerShape = 'circle'; // Dot's default shape
-                        }
+                    if(this.dotsVisible) {
+                        if(!markerShape) markerShape = 'circle'; // Dot's default shape
 
                         keyArgs.markerPvProto = new pv.Dot()
                                 .lineWidth(1.5, pvc.extensionTag) // act as if it were a user extension
@@ -81,24 +79,23 @@ def
 
                     keyArgs.markerShape = markerShape;
 
-                    if(this._applyV1BarSecondExtensions){
+                    if(this._applyV1BarSecondExtensions)
                         this.chart.extend(keyArgs.markerPvProto, 'barSecondDot', {constOnly: true});
-                    }
+
                     this.extend(keyArgs.markerPvProto, 'dot', {constOnly: true});
                 }
 
-                if(drawRule){
+                if(drawRule) {
                     keyArgs.rulePvProto = new pv.Line()
                            .lineWidth(1.5, pvc.extensionTag);
 
-                    if(this._applyV1BarSecondExtensions){
+                    if(this._applyV1BarSecondExtensions)
                         this.chart.extend(keyArgs.rulePvProto, 'barSecondLine', {constOnly: true});
-                    }
+
                     this.extend(keyArgs.rulePvProto, 'line', {constOnly: true});
                 }
 
-                groupScene.renderer(
-                    new pvc.visual.legend.BulletItemDefaultRenderer(keyArgs));
+                groupScene.renderer(new pvc.visual.legend.BulletItemDefaultRenderer(keyArgs));
             }
         }
     },
@@ -109,36 +106,32 @@ def
     _createCore: function() {
         this.base();
 
-        var myself = this;
-        var chart = this.chart;
-        var isStacked = this.stacked;
-        var dotsVisible  = this.dotsVisible;
-        var areasVisible = this.areasVisible;
-        var linesVisible = this.linesVisible;
-        var anchor = this.isOrientationVertical() ? "bottom" : "left";
+        var me = this,
+            chart = this.chart,
+            isStacked = this.stacked,
+            dotsVisible  = this.dotsVisible,
+            areasVisible = this.areasVisible,
+            linesVisible = this.linesVisible,
+            anchor = this.isOrientationVertical() ? "bottom" : "left",
 
-        // ------------------
-        // DATA
-        var baseAxis = this.axes.base;
-        // Need to use the order that the axis uses.
-        // Note that the axis may show data from multiple plots,
-        //  and thus consider null datums inexistent in `data`,
-        //  and thus have a different categories order.
-        var axisCategDatas = baseAxis.domainItems();
-        var isBaseDiscrete = baseAxis.role.grouping.isDiscrete();
-
-        var data = this.visibleData({ignoreNulls: false}); // shared "categ then series" grouped data
-        var rootScene = this._buildScene(data, axisCategDatas, isBaseDiscrete);
+            // ------------------
+            // DATA
+            baseAxis = this.axes.base,
+            // Need to use the order that the axis uses.
+            // Note that the axis may show data from multiple plots,
+            //  and thus consider null datums inexistent in `data`,
+            //  and thus have a different categories order.
+            axisCategDatas = baseAxis.domainItems(),
+            isBaseDiscrete = baseAxis.role.grouping.isDiscrete(),
+            data = this.visibleData({ignoreNulls: false}), // shared "categ then series" grouped data
+            rootScene = this._buildScene(data, axisCategDatas, isBaseDiscrete),
+            wrapper;
 
         // ---------------
         // BUILD
-        if(areasVisible) {
-            // Areas don't look good above the axes
-            this.pvPanel.zOrder(-7);
-        } else {
-            // // Above axes
-            this.pvPanel.zOrder(1);
-        }
+        // -7 : when areas visible, this don't look good above the axes.
+        // 1 : Above axes
+        this.pvPanel.zOrder(areasVisible ? -7 : 1);
 
         this.pvScatterPanel = new pvc.visual.Panel(this, this.pvPanel, {extensionId: 'panel'})
             .lock('data', rootScene.childNodes)
@@ -147,36 +140,33 @@ def
         // -- AREA --
         var areaFillColorAlpha = areasVisible && linesVisible && !isStacked ? 0.5 : null;
 
-        var wrapper;
         if(this.compatVersion() <= 1) {
-            if(isStacked) {
-                wrapper = function(v1f) {
-                    return function(dotScene) {
-                        return v1f.call(this, dotScene.vars.value.rawValue);
-                    };
-                };
-            } else {
-                wrapper = function(v1f) {
-                    return function(dotScene) {
-                        var d = {
+            wrapper = isStacked
+                ? function(v1f) {
+                      return function(dotScene) {
+                          return v1f.call(this, dotScene.vars.value.rawValue);
+                      };
+                  }
+                : function(v1f) {
+                      return function(dotScene) {
+                          var d = {
                                 category: dotScene.vars.category.rawValue,
                                 value:    dotScene.vars.value.rawValue
-                            };
+                            },
+                            // Compensate for the effect of intermediate scenes on mark's index
+                            pseudo = Object.create(this);
 
-                        // Compensate for the effect of intermediate scenes on mark's index
-                        var pseudo = Object.create(this);
-                        pseudo.index = dotScene.dataIndex;
-                        return v1f.call(pseudo, d);
-                    };
-                };
-            }
+                          pseudo.index = dotScene.dataIndex;
+                          return v1f.call(pseudo, d);
+                      };
+                  };
         }
 
-        var lineAreaVisibleProp = isBaseDiscrete && isStacked ?
-                function(scene) { return !scene.isNull || scene.isIntermediate; } :
-                function(scene) { return !scene.isNull; };
+        var lineAreaVisibleProp = isBaseDiscrete && isStacked
+                ? function(scene) { return !scene.isNull || scene.isIntermediate; }
+                : function(scene) { return !scene.isNull;},
 
-        var isLineAreaNoSelect = /*dotsVisible && */chart.selectableByFocusWindow();
+            isLineAreaNoSelect = /*dotsVisible && */chart.selectableByFocusWindow();
 
         this.pvArea = new pvc.visual.Area(this, this.pvScatterPanel, {
                 extensionId: 'area',
@@ -186,65 +176,59 @@ def
                 noRubberSelect: true, // Line is better for selection
                 showsSelection: !isLineAreaNoSelect
             })
-            /* Data */
-            .lockMark('data',   function(seriesScene) { return seriesScene.childNodes; }) // TODO
+            // Data
+            .lockMark('data', function(seriesScene) { return seriesScene.childNodes; }) // TODO
 
             // TODO: If it were allowed to hide the area, the anchored line would fail to evaluate
             // Do not use anchors to connect Area -> Line -> Dot ...
             .lockMark('visible', lineAreaVisibleProp)
 
-            /* Position & size */
+            // Position & size
             .override('x',  function(scene) { return scene.basePosition;  }) // left
             .override('y',  function(scene) { return scene.orthoPosition; }) // bottom
             .override('dy', function(scene) { return chart.animate(0, scene.orthoLength); }) // height
 
-            /* Color & Line */
+            // Color & Line
             .override('color', function(scene, type) { return areasVisible ? this.base(scene, type) : null; })
             .override('baseColor', function(scene, type) {
                 var color = this.base(scene, type);
-                if(!this._finished && color && areaFillColorAlpha != null) {
-                    color = color.alpha(areaFillColorAlpha);
-                }
-                return color;
+                return (!this._finished && color && areaFillColorAlpha != null)
+                    ? color.alpha(areaFillColorAlpha)
+                    : color;
             })
             .override('dimColor', function(color, type) {
-                return isStacked ?
-                    pvc.toGrayScale(color, 1, null, null).brighter() :
-                    this.base(color, type);
+                return isStacked
+                    ? pvc.toGrayScale(color, 1, null, null).brighter()
+                    : this.base(color, type);
             })
             .lock('events', areasVisible ? 'painted' : 'none')
             .pvMark;
 
         // -- LINE --
-        var dotsVisibleOnly = dotsVisible && !linesVisible && !areasVisible;
+        var dotsVisibleOnly = dotsVisible && !linesVisible && !areasVisible,
+            // When areas are shown with no alpha (stacked),
+            // make dots darker so they get distinguished from areas.
+            darkerLineAndDotColor = isStacked && areasVisible,
+            extensionIds = ['line'];
 
-        /* When areas are shown with no alpha (stacked),
-         * make dots darker so they get
-         * distinguished from areas.
-         */
-        var darkerLineAndDotColor = isStacked && areasVisible;
+        if(this._applyV1BarSecondExtensions) extensionIds.push({abs: 'barSecondLine'});
 
-        var extensionIds = ['line'];
-        if(this._applyV1BarSecondExtensions) { extensionIds.push({abs: 'barSecondLine'}); }
+        // Line.visible =
+        // a) linesVisible
+        //    or
+        // b) (!linesVisible and) areasVisible
+        //    and
+        // b.1) discrete base and stacked
+        //    and
+        // b.1.1) not null or is an intermediate null
+        // b.2) not null
 
-        /*
-         * Line.visible =
-         *  a) linesVisible
-         *     or
-         *  b) (!linesVisible and) areasVisible
-         *      and
-         *  b.1) discrete base and stacked
-         *       and
-         *       b.1.1) not null or is an intermediate null
-         *  b.2) not null
-         */
         // NOTE: false or a function
-        var lineVisibleProp = !dotsVisibleOnly && lineAreaVisibleProp;
-
-        // When areasVisible && !linesVisible, lines are shown when active/activeSeries
-        // and hidden if not. If lines that show/hide would react to events
-        // they would steal events to the area and generate strange flicker-like effects.
-        var noLineInteraction = areasVisible && !linesVisible;
+        var lineVisibleProp = !dotsVisibleOnly && lineAreaVisibleProp,
+            // When areasVisible && !linesVisible, lines are shown when active/activeSeries
+            // and hidden if not. If lines that show/hide would react to events
+            // they would steal events to the area and generate strange flicker-like effects.
+            noLineInteraction = areasVisible && !linesVisible;
 
         this.pvLine = new pvc.visual.Line(
             this,
@@ -264,24 +248,22 @@ def
             .lockMark('visible', lineVisibleProp)
             .override('defaultColor', function(scene, type) {
                 var color = this.base(scene, type);
-                if(!this._finished && darkerLineAndDotColor && color) { color = color.darker(0.6); }
-                return color;
+                return (!this._finished && darkerLineAndDotColor && color)
+                    ? color.darker(0.6)
+                    : color;
             })
             .override('normalColor', function(scene, color/*, type*/) {
                 return linesVisible ? color : null;
             })
             .override('interactiveColor', function(scene, color, type) {
-                // When !linesVisible,
-                // keep them hidden if nothing is selected and it is not active
-                if(!linesVisible && !this.mayShowAnySelected(scene) && !this.mayShowActive(scene)) {
-                    return null;
-                }
-
-                return this.base(scene, color, type);
+                // When !linesVisible, keep them hidden if nothing is selected and it is not active
+                return (!linesVisible && !this.mayShowAnySelected(scene) && !this.mayShowActive(scene))
+                    ? null
+                    : this.base(scene, color, type);
             })
             .override('baseStrokeWidth', function(scene) {
                 var strokeWidth;
-                if(linesVisible) { strokeWidth = this.base(scene); }
+                if(linesVisible) strokeWidth = this.base(scene);
                 return strokeWidth == null ? 1.5 : strokeWidth;
             })
             .intercept('strokeDasharray', function(scene) {
@@ -296,10 +278,8 @@ def
                             useDash = previous  && scene.isIntermediate && previous.isInterpolated;
                         }
                     }
-
                     dashArray = useDash ? '. ' : null;
                 }
-
                 return dashArray;
             })
             .pvMark;
@@ -308,7 +288,8 @@ def
         var showAloneDots = !(areasVisible && isBaseDiscrete && isStacked);
 
         extensionIds = ['dot'];
-        if(this._applyV1BarSecondExtensions) { extensionIds.push({abs: 'barSecondDot'}); }
+
+        if(this._applyV1BarSecondExtensions) extensionIds.push({abs: 'barSecondDot'});
 
         this.pvDot = new pvc.visual.Dot(this, this.pvLine, {
                 extensionId:  extensionIds,
@@ -320,41 +301,36 @@ def
                        this.delegateExtension(true);
             })
             .override('color', function(scene, type) {
-                /*
-                 * Handle dotsVisible
-                 * -----------------
-                 * Despite !dotsVisible,
-                 * show a dot anyway when:
-                 * 1) it is active, or
-                 * 2) it is single  (the only dot in its series and there's only one category) (and in areas+discreteCateg+stacked case)
-                 * 3) it is alone   (surrounded by null dots) (and not in areas+discreteCateg+stacked case)
-                 */
+                // Handle dotsVisible
+                // Despite !dotsVisible,
+                // show a dot anyway when:
+                // 1) it is active, or
+                // 2) it is single  (the only dot in its series and there's only one category) (and in areas+discreteCateg+stacked case)
+                // 3) it is alone   (surrounded by null dots) (and not in areas+discreteCateg+stacked case)
                 if(!dotsVisible) {
                     var visible = scene.isActive ||
                                   (!showAloneDots && scene.isSingle) ||
                                   (showAloneDots && scene.isAlone);
-                    if(!visible) { return pvc.invisibleFill; }
+                    if(!visible) return pvc.invisibleFill;
                 }
 
                 // Normal logic
                 var color = this.base(scene, type);
 
                 // TODO: review interpolated style/visibility
-                if(scene.isInterpolated && type === 'fill') {
-                    return color && pv.color(color).brighter(0.5);
-                }
-
-                return color;
+                return (scene.isInterpolated && type === 'fill')
+                    ? (color && pv.color(color).brighter(0.5))
+                    : color;
             })
-           // .override('interactiveColor', function(scene, color, type){
+           // .override('interactiveColor', function(scene, color, type) {
            //   return scene.isInterpolated && type === 'stroke' ?
            //          color :
            //          this.base(scene, color, type);
            // })
            // .optionalMark('lineCap', 'round')
-           // .intercept('strokeDasharray', function(scene){
+           // .intercept('strokeDasharray', function(scene) {
            //     var dashArray = this.delegateExtension();
-           //     if(dashArray === undefined){
+           //     if(dashArray === undefined) {
            //         // TODO: review interpolated style/visibility
            //         dashArray = scene.isInterpolated ? '.' : null;
            //     }
@@ -363,8 +339,9 @@ def
            // })
             .override('defaultColor', function(scene, type) {
                 var color = this.base(scene, type);
-                if(!this._finished && darkerLineAndDotColor && color) { color = color.darker(0.6); }
-                return color;
+                return (!this._finished && darkerLineAndDotColor && color)
+                    ? color.darker(0.6)
+                    : color;
             })
             .override('baseSize', function(scene) {
                 /* When not showing dots,
@@ -381,22 +358,19 @@ def
 
                     if(visible && !scene.isActive) {
                         // Obtain the line Width of the "sibling" line
-                        var lineWidth = Math.max(myself.pvLine.lineWidth(), 0.2) / 2;
+                        var lineWidth = Math.max(me.pvLine.lineWidth(), 0.2) / 2;
                         return def.sqr(lineWidth);
                     }
                 }
 
                 // TODO: review interpolated style/visibility
-                if(scene.isInterpolated) { return 0.8 * this.base(scene); }
-
-                return this.base(scene);
+                var v = this.base(scene);
+                return scene.isInterpolated ? (0.8 * v) : v;
             })
             .pvMark;
 
         var label = pvc.visual.ValueLabel.maybeCreate(this, this.pvDot, {wrapper: wrapper});
-        if(label) {
-            this.pvLabel = label.pvMark;
-        }
+        if(label) this.pvLabel = label.pvMark;
     },
 
     /**
@@ -480,29 +454,28 @@ def
             valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, valueRole, {roleVar: 'value', hasPercentSubVar: isStacked}),
             colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, this.visualRoles.color, {roleVar: 'color'}),
             valueDimName  = valueRole.lastDimensionName(),
-            valueDim = data.owner.dimensions(valueDimName);
+            valueDim = data.owner.dimensions(valueDimName),
 
-        // TODO: There's no series axis...so something like what an axis would select must be repeated here.
-        // Maintaining order requires basing the operation on a data with nulls still in it.
-        // `data` may not have nulls anymore.
-        var axisSeriesData = serRole.isBound()
-            ? serRole.flatten(
-                this.partData(),
-                {visible: true, isNull: chart.options.ignoreNulls ? false : null})
-            : null;
-
-        var orthoScale = this.axes.ortho.scale,
+            // TODO: There's no series axis...so something like what an axis would select must be repeated here.
+            // Maintaining order requires basing the operation on a data with nulls still in it.
+            // `data` may not have nulls anymore.
+            axisSeriesData = serRole.isBound()
+                ? serRole.flatten(
+                    this.partData(),
+                    {visible: true, isNull: chart.options.ignoreNulls ? false : null})
+                : null,
+            orthoScale = this.axes.ortho.scale,
             orthoNullValue = def.scope(function() {
-                // If the data does not cross the origin,
-                // Choose the value that's closer to 0.
-                var domain = orthoScale.domain(),
-                    dmin = domain[0],
-                    dmax = domain[1];
-                return (dmin * dmax >= 0)
-                    // Both positive or both negative or either is zero
-                    ? (dmin >= 0 ? dmin : dmax)
-                    : 0;
-            }),
+                    // If the data does not cross the origin,
+                    // Choose the value that's closer to 0.
+                    var domain = orthoScale.domain(),
+                        dmin = domain[0],
+                        dmax = domain[1];
+                    return (dmin * dmax >= 0)
+                        // Both positive or both negative or either is zero
+                        ? (dmin >= 0 ? dmin : dmax)
+                        : 0;
+                }),
             orthoZero = orthoScale(orthoNullValue/*0*/),
             sceneBaseScale = this.axes.base.sceneScale({sceneVarName: 'category'});
 
@@ -518,18 +491,18 @@ def
 
             colorVarHelper.onNewScene(seriesScene, /* isLeaf */ false);
 
-            /* Create series-categ scene */
+            // Create series-categ scene
             axisCategDatas.forEach(function(axisCategData, categIndex) {
                 var categData = data.child(axisCategData.key),
                     group = categData;
-                if(group && axisSeriesData) { group = group.child(axisSeriesData.key); }
+
+                if(group && axisSeriesData) group = group.child(axisSeriesData.key);
 
                 var serCatScene = new pvc.visual.Scene(seriesScene, {source: group});
 
                 // -------------
 
                 serCatScene.dataIndex = categIndex;
-
                 serCatScene.vars.category = pvc_ValueLabelVar.fromComplex(categData);
 
                 // -------------
@@ -558,7 +531,7 @@ def
                 //serCatScene.isInterpolatedMiddle = isInterpolatedMiddle;
 
                 // TODO: selection, owner Scene ?
-                //if(scene.isInterpolated){
+                //if(scene.isInterpolated) {
                 //    scene.ownerScene = toScene;
                 //}
 
@@ -572,18 +545,14 @@ def
 
         // reversed so that "below == before" w.r.t. stacked offset calculation
         // See {@link belowSeriesScenes2} variable.
-        var reversedSeriesScenes = rootScene.children().reverse().array();
+        var reversedSeriesScenes = rootScene.children().reverse().array(),
+            belowSeriesScenes2; // used below, by completeSeriesScenes
 
-        /**
-         * Update the scene tree to include intermediate leaf-scenes,
-         * to help in the creation of lines and areas.
-         */
-        var belowSeriesScenes2; // used below, by completeSeriesScenes
+        // Update the scene tree to include intermediate leaf-scenes,
+        // to help in the creation of lines and areas.
         reversedSeriesScenes.forEach(completeSeriesScenes, this);
 
-        /**
-         * Trim leading and trailing null scenes.
-         */
+        // Trim leading and trailing null scenes.
         reversedSeriesScenes.forEach(trimNullSeriesScenes, this);
 
         return rootScene;
@@ -595,13 +564,12 @@ def
                 notNullCount = 0,
                 firstAloneScene = null;
 
-            /* As intermediate nodes are added,
-             * seriesScene.childNodes array is changed.
-             *
-             * The var 'toChildIndex' takes inserts into account;
-             * its value is always the index of 'toScene' in
-             * seriesScene.childNodes.
-             */
+            // As intermediate nodes are added,
+            // seriesScene.childNodes array is changed.
+            //
+            // The var 'toChildIndex' takes inserts into account;
+            // its value is always the index of 'toScene' in
+            // seriesScene.childNodes.
             for(var c = 0, /* category index */
                     toChildIndex = 0,
                     categCount = seriesScenes.length ;
@@ -622,12 +590,9 @@ def
                         belowSeriesScenes2 && belowSeriesScenes2[c2]);
 
                 if(toScene.isAlone && !firstAloneScene) firstAloneScene = toScene;
-
                 if(!toScene.isNull) notNullCount++;
 
-                /* Possibly create intermediate scene
-                 * (between fromScene and toScene)
-                 */
+                // Possibly create intermediate scene (between fromScene and toScene)
                 if(fromScene) {
                     var interScene = createIntermediateScene.call(this,
                             seriesScene,

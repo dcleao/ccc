@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pvc.text = {
-    getFitInfo: function(w, h, text, font, diagMargin){
-        if(text === '') { return {h: true, v: true, d: true}; }
+    getFitInfo: function(w, h, text, font, diagMargin) {
+        if(text === '') return {h: true, v: true, d: true};
         
         var len = pv.Text.measureWidth(text, font);
         return {
@@ -15,22 +15,21 @@ pvc.text = {
     },
 
     trimToWidthB: function(len, text, font, trimTerminator, before) {
-        var terminLen = pv.Text.measureWidth(trimTerminator, font);
-        var clipLen   = 3/2 * terminLen;
+        var terminLen = pv.Text.measureWidth(trimTerminator, font),
+            clipLen   = 3/2 * terminLen;
         return pvc.text.trimToWidth(len, text, font, trimTerminator, before, clipLen);
     },
     
     trimToWidth: function(len, text, font, trimTerminator, before, clipLen) {
-        if(text === '') { return text; }
+        if(text === '') return text;
   
         var textLen = pv.Text.measureWidth(text, font);
-        if(textLen <= len) { return text; }
+        if(textLen <= len) return text;
         
         // ----------------
         // Trim needed
-        if(textLen > len * 1.5) { // threshold for using other algorithm
+        if(textLen > len * 1.5) // threshold for using other algorithm
             return pvc.text.trimToWidthBin(len, text, font, trimTerminator, before, clipLen);
-        }
         
         len -= pv.Text.measureWidth(trimTerminator, font);
 
@@ -42,7 +41,7 @@ pvc.text = {
         // "A.."" -> ""
         // "AB.." -> "AB.."
         // "ABC.." -> "AB.."
-        if(clipLen && textLen <= clipLen) { return ""; }
+        if(clipLen && textLen <= clipLen) return "";
 
         return before ? (trimTerminator + text) : (text + trimTerminator);
     },
@@ -68,37 +67,35 @@ pvc.text = {
             } else if(pv.Text.measureWidth(before ? text.slice(ilen - mid - 1) : text.slice(0, mid + 1), font) < len) {
                 low = mid + 1;
             } else {
-                if(clipLen && textLen <= clipLen) { return ""; }
+                if(clipLen && textLen <= clipLen) return "";
                 return before ? (trimTerminator + textMid) : (textMid + trimTerminator);
             }
         }
 
         text = before ? text.slice(ilen - high) : text.slice(0, high);
         textLen = text.length;
-        if(clipLen && textLen <= clipLen) { return ""; }
+        if(clipLen && textLen <= clipLen) return "";
         return before ? (trimTerminator + text) : (text + trimTerminator);
     },
     
     justify: function(text, lineWidth, font) {
         var lines = [];
-        
-        if(lineWidth < pv.Text.measureWidth('a', font)) {
-            // Not even one letter fits...
-            return lines;
-        } 
+
+        // Not even one letter fits...
+        if(lineWidth < pv.Text.measureWidth('a', font)) return lines;
         
         var words = (text || '').split(/\s+/);
         
         var line = "";
         while(words.length) {
             var word = words.shift();
-            if(word){
+            if(word) {
                 var nextLine = line ? (line + " " + word) : word;
                 if(pv.Text.measureWidth(nextLine, font) > lineWidth) {
                     // The word by itself may overflow the line width
                     
                     // Start new line
-                    if(line) { lines.push(line); }
+                    if(line) lines.push(line);
                     
                     line = word;
                 } else {
@@ -107,7 +104,7 @@ pvc.text = {
             }
         }
         
-        if(line) { lines.push(line); }
+        if(line) lines.push(line);
         
         return lines;
     },

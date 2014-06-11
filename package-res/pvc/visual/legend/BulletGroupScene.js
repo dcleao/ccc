@@ -26,9 +26,7 @@ def
 
     this.colorAxis = def.get(keyArgs, 'colorAxis');
     this.clickMode = def.get(keyArgs, 'clickMode');
-    if(!this.clickMode && this.colorAxis) {
-        this.clickMode = this.colorAxis.option('LegendClickMode');
-    }
+    if(!this.clickMode && this.colorAxis) this.clickMode = this.colorAxis.option('LegendClickMode');
 })
 .add(/** @lends pvc.visual.legend.BulletGroupScene# */{
     hasRenderer: function() { return !!this._renderer; },
@@ -39,8 +37,8 @@ def
         } else {
             renderer = this._renderer;
             if(!renderer) {
-                var keyArgs;
-                var colorAxis = this.colorAxis;
+                var keyArgs,
+                    colorAxis = this.colorAxis;
                 if(colorAxis) {
                     keyArgs = {
                         drawRule:    colorAxis.option('LegendDrawLine'  ),
@@ -89,9 +87,7 @@ def
                     legendPanel._getExtensionPrefix());
 
             var impl = legendPanel.chart._getExtension(itemSceneExtIds, 'value');
-            if(impl !== undefined) {
-                ItemType.prototype.variable('value', impl);
-            }
+            if(impl !== undefined) ItemType.prototype.variable('value', impl);
 
             this._itemSceneType = ItemType;
         }

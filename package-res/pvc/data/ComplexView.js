@@ -17,7 +17,7 @@
  * @param {string[]} viewDimNames The dimensions that should be revealed by the view.
  */
 def.type('pvc.data.ComplexView', pvc.data.Complex)
-.init(function(source, viewDimNames){
+.init(function(source, viewDimNames) {
 
     this.source = source;
     
@@ -27,10 +27,10 @@ def.type('pvc.data.ComplexView', pvc.data.Complex)
     this.base(source, source.atoms, viewDimNames, source.owner.atoms, /* wantLabel */ true);
 })
 .add({
-    values: function(){
+    values: function() {
         return pvc.data.Complex.values(this, this.viewDimNames);
     },
-    labels: function(){
+    labels: function() {
         return pvc.data.Complex.labels(this, this.viewDimNames);
     }
 });

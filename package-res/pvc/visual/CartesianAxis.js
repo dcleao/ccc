@@ -45,7 +45,7 @@
 var pvc_CartesianAxis =
 def
 .type('pvc.visual.CartesianAxis', pvc_Axis)
-.init(function(chart, type, index, keyArgs){
+.init(function(chart, type, index, keyArgs) {
 
     var options = chart.options;
 
@@ -89,7 +89,7 @@ def
 })
 .add(/** @lends pvc.visual.CartesianAxis# */{
 
-    bind: function(dataCells){
+    bind: function(dataCells) {
 
         this.base(dataCells);
 
@@ -98,18 +98,16 @@ def
         return this;
     },
 
-    _syncExtensionPrefixes: function(){
+    _syncExtensionPrefixes: function() {
         var extensions = this.extensionPrefixes;
 
         // remove until 'axis' (inclusive)
         extensions.length = this._extPrefAxisPosition;
 
         var st = this.scaleType;
-        if(st){
+        if(st) {
             extensions.push(st + 'Axis'); // specific
-            if(st !== 'discrete'){
-                extensions.push('continuousAxis'); // generic
-            }
+            if(st !== 'discrete') extensions.push('continuousAxis'); // generic
         }
 
         // Common
@@ -136,17 +134,17 @@ def
                 this.domain.maxLocked = !!scale.maxLocked;
 
                 var roundMode = this.option('DomainRoundMode');
-                if(roundMode === 'nice') { scale.nice(); }
+                if(roundMode === 'nice') scale.nice();
 
                 var tickFormatter = this.option('TickFormatter');
-                if(tickFormatter) { scale.tickFormatter(tickFormatter); }
+                if(tickFormatter) scale.tickFormatter(tickFormatter);
             }
         }
 
         return this;
     },
 
-    setTicks: function(ticks){
+    setTicks: function(ticks) {
         var scale = this.scale;
 
         /*jshint expr:true */
@@ -154,22 +152,21 @@ def
 
         this.ticks = ticks;
 
-        if(scale.type !== 'discrete' && this.option('DomainRoundMode') === 'tick'){
+        if(scale.type !== 'discrete' && this.option('DomainRoundMode') === 'tick') {
 
             delete this._roundingPaddings;
 
             // Commit calculated ticks to scale's domain
             var tickCount = ticks && ticks.length;
-            if(tickCount){
+            if(tickCount)
                 this.scale.domain(ticks[0], ticks[tickCount - 1]);
-            } else {
+            else
                 // Reset scale domain
                 this.scale.domain(this.domain[0], this.domain[1]);
-            }
         }
     },
 
-    setScaleRange: function(size){
+    setScaleRange: function(size) {
         var scale  = this.scale;
         scale.min  = 0;
         scale.max  = size;
@@ -177,8 +174,8 @@ def
 
         // -------------
 
-        if(scale.type === 'discrete'){
-            if(scale.domain().length > 0){ // Has domain? At least one point is required to split.
+        if(scale.type === 'discrete') {
+            if(scale.domain().length > 0) { // Has domain? At least one point is required to split.
                 var bandRatio = this.chart.options.panelSizeRatio || 0.8;
                 scale.splitBandedCenter(scale.min, scale.max, bandRatio);
             }
@@ -189,9 +186,9 @@ def
         return scale;
     },
 
-    getScaleRoundingPaddings: function(){
+    getScaleRoundingPaddings: function() {
         var roundingPaddings = this._roundingPaddings;
-        if(!roundingPaddings){
+        if(!roundingPaddings) {
             roundingPaddings = {
                 begin: 0,
                 end:   0,
@@ -200,28 +197,24 @@ def
             };
 
             var scale = this.scale;
-            if(scale && !scale.isNull && scale.type !== 'discrete'){
+            if(scale && !scale.isNull && scale.type !== 'discrete') {
                 var originalDomain = this.domain;
 
                 roundingPaddings.beginLocked = originalDomain.minLocked;
                 roundingPaddings.endLocked   = originalDomain.maxLocked;
 
-                if(scale.type === 'numeric' && this.option('DomainRoundMode') !== 'none'){
-                    var currDomain = scale.domain();
-                    var origDomain = this.domain || def.assert("Original domain must be set");
-                    var currLength = currDomain[1] - currDomain[0];
-                    if(currLength){
+                if(scale.type === 'numeric' && this.option('DomainRoundMode') !== 'none') {
+                    var currDomain = scale.domain(),
+                        origDomain = this.domain || def.assert("Original domain must be set"),
+                        currLength = currDomain[1] - currDomain[0];
+                    if(currLength) {
                         // begin diff
                         var diff = origDomain[0] - currDomain[0];
-                        if(diff > 0){
-                            roundingPaddings.begin = diff / currLength;
-                        }
+                        if(diff > 0) roundingPaddings.begin = diff / currLength;
 
                         // end diff
                         diff = currDomain[1] - origDomain[1];
-                        if(diff > 0){
-                            roundingPaddings.end = diff / currLength;
-                        }
+                        if(diff > 0) roundingPaddings.end = diff / currLength;
                     }
                 }
             }
@@ -232,77 +225,62 @@ def
         return roundingPaddings;
     },
 
-    calcContinuousTicks: function(desiredTickCount){
-        if(desiredTickCount == null) {
-            desiredTickCount = this.option('DesiredTickCount');
-        }
+    calcContinuousTicks: function(desiredTickCount) {
+        if(desiredTickCount == null) desiredTickCount = this.option('DesiredTickCount');
 
-        return this.scale.ticks(
-            desiredTickCount,
-            {
+        return this.scale.ticks(desiredTickCount, {
                 roundInside:       this.option('DomainRoundMode') !== 'tick',
                 numberExponentMin: this.option('TickExponentMin'),
                 numberExponentMax: this.option('TickExponentMax')
             });
     },
 
-    _getOptionsDefinition: function(){
+    _getOptionsDefinition: function() {
         return cartAxis_optionsDef;
     },
 
-    _registerResolversNormal: function(rs, keyArgs){
+    _registerResolversNormal: function(rs, keyArgs) {
         // II - By V1 Only Logic
-        if(this.chart.compatVersion() <= 1){
-            rs.push(this._resolveByV1OnlyLogic);
-        }
+        if(this.chart.compatVersion() <= 1) rs.push(this._resolveByV1OnlyLogic);
 
         // IV - By OptionId
-        rs.push(
-           this._resolveByOptionId,
-           this._resolveByOrientedId);
+        rs.push(this._resolveByOptionId, this._resolveByOrientedId);
 
-        if(this.index === 1){
-            rs.push(this._resolveByV1OptionId);
-        }
+        if(this.index === 1) rs.push(this._resolveByV1OptionId);
 
-        rs.push(
-           this._resolveByScaleType,
-           this._resolveByCommonId);
+        rs.push(this._resolveByScaleType, this._resolveByCommonId);
 
     },
 
     // xAxisOffset, yAxisOffset, x2AxisOffset
-    _resolveByOrientedId: pvc.options.specify(function(optionInfo){
+    _resolveByOrientedId: pvc.options.specify(function(optionInfo) {
         return this._chartOption(this.orientedId + "Axis" + optionInfo.name);
     }),
 
     // secondAxisOffset
-    _resolveByV1OptionId: pvc.options.specify(function(optionInfo){
-        //if(this.index === 1){
+    _resolveByV1OptionId: pvc.options.specify(function(optionInfo) {
         return this._chartOption('secondAxis' + optionInfo.name);
-        //}
     }),
 
     // numericAxisLabelSpacingMin
-    _resolveByScaleType: pvc.options.specify(function(optionInfo){
+    _resolveByScaleType: pvc.options.specify(function(optionInfo) {
         // this.scaleType
         // * discrete
         // * numeric    | continuous
         // * timeSeries | continuous
         var st = this.scaleType;
-        if(st){
-            var name  = optionInfo.name;
-            var value = this._chartOption(st + 'Axis' + name);
-            if(value === undefined && st !== 'discrete'){
+        if(st) {
+            var name  = optionInfo.name,
+                value = this._chartOption(st + 'Axis' + name);
+            if(value === undefined && st !== 'discrete')
                 value = this._chartOption('continuousAxis' + name);
-            }
 
             return value;
         }
     }),
 
     // axisOffset
-    _resolveByCommonId: pvc.options.specify(function(optionInfo){
+    _resolveByCommonId: pvc.options.specify(function(optionInfo) {
         return this._chartOption('axis' + optionInfo.name);
     })
 });
@@ -315,7 +293,7 @@ def
  *
  * @type string
  */
-pvc_CartesianAxis.getOrientation = function(type, chartOrientation){
+pvc_CartesianAxis.getOrientation = function(type, chartOrientation) {
     return ((type === 'base') === (chartOrientation === 'vertical')) ? 'x' : 'y';  // NXOR
 };
 
@@ -325,12 +303,10 @@ pvc_CartesianAxis.getOrientation = function(type, chartOrientation){
  * @param {number} index The index of the axis within its type.
  * @type string
  */
-pvc_CartesianAxis.getOrientedId = function(orientation, index){
-    if(index === 0) {
-        return orientation; // x, y
-    }
-
-    return orientation + (index + 1); // x2, y3, x4,...
+pvc_CartesianAxis.getOrientedId = function(orientation, index) {
+    return (index === 0)
+        ? orientation // x, y
+        : (orientation + (index + 1)); // x2, y3, x4,...
 };
 
 /* PRIVATE STUFF */
@@ -338,11 +314,11 @@ var cartAxis_fixedMinMaxSpec = {
     resolve: '_resolveFull',
     data: {
         /* orthoFixedMin, orthoFixedMax */
-        resolveV1: function(optionInfo){
-            if(!this.index && this.type === 'ortho'){
+        resolveV1: function(optionInfo) {
+            if(!this.index && this.type === 'ortho')
                 // Bare Id (no "Axis")
                 this._specifyChartOption(optionInfo, this.id + optionInfo.name);
-            }
+
             return true;
         }
     }
@@ -356,15 +332,13 @@ function pvc_castDomainScope(scope, axis) {
 }
 
 function pvc_castAxisPosition(side) {
-    if(side){
-        if(def.hasOwn(pvc_Sides.namesSet, side)){
+    if(side) {
+        if(def.hasOwn(pvc_Sides.namesSet, side)) {
             var mapAlign = pvc.BasePanel[this.orientation === 'y' ? 'horizontalAlign' : 'verticalAlign2'];
             return mapAlign[side];
         }
 
-        if(pvc.debug >= 2){
-            pvc.log(def.format("Invalid axis position value '{0}'.", [side]));
-        }
+        if(pvc.debug >= 2) pvc.log(def.format("Invalid axis position value '{0}'.", [side]));
     }
 
     // Ensure a proper value
@@ -372,11 +346,9 @@ function pvc_castAxisPosition(side) {
 }
 
 var cartAxis_normalV1Data = {
-    resolveV1: function(optionInfo){
-        if(!this.index){
-            if(this._resolveByOrientedId(optionInfo)){
-                return true;
-            }
+    resolveV1: function(optionInfo) {
+        if(!this.index) {
+            if(this._resolveByOrientedId(optionInfo)) return true;
         } else if(this._resolveByV1OptionId(optionInfo)) { // secondAxis...
             return true;
         }
@@ -387,25 +359,23 @@ var cartAxis_normalV1Data = {
     }
 };
 
-var defaultPosition = pvc.options.defaultValue(function(optionInfo){
-    if(!this.typeIndex){
-        return this.orientation === 'x' ? 'bottom' : 'left';
-    }
+var defaultPosition = pvc.options.defaultValue(function(optionInfo) {
+    if(!this.typeIndex) return this.orientation === 'x' ? 'bottom' : 'left';
 
     // Use the position opposite to that of the first axis
     // of same orientation (the same as type)
-    var firstAxis = this.chart.axesByType[this.type].first;
-    var position  = firstAxis.option('Position');
+    var firstAxis = this.chart.axesByType[this.type].first,
+        position  = firstAxis.option('Position');
 
     return pvc.BasePanel.oppositeAnchor[position];
 });
 
-function cartAxis_castSize(value){
+function cartAxis_castSize(value) {
     var position = this.option('Position');
     return pvc_Size.toOrtho(value, position);
 }
 
-function cartAxis_castTitleSize(value){
+function cartAxis_castTitleSize(value) {
     var position = this.option('Position');
 
     return pvc_Size.to(value, {singleProp: pvc.BasePanel.orthogonalLength[position]});
@@ -417,19 +387,19 @@ var cartAxis_optionsDef = def.create(axis_optionsDef, {
         resolve: '_resolveFull',
         data: {
             /* showXScale, showYScale, showSecondScale */
-            resolveV1: function(optionInfo){
-                if(this.index <= 1){
+            resolveV1: function(optionInfo) {
+                if(this.index <= 1) {
                     var v1OptionId = this.index === 0 ?
-                        def.firstUpperCase(this.orientation) :
-                        'Second';
+                            def.firstUpperCase(this.orientation) :
+                            'Second';
 
                     this._specifyChartOption(optionInfo, 'show' + v1OptionId + 'Scale');
                 }
                 return true;
             }
         },
-        cast:    Boolean,
-        value:   true
+        cast:  Boolean,
+        value: true
     },
 
     /*
@@ -437,19 +407,15 @@ var cartAxis_optionsDef = def.create(axis_optionsDef, {
      * >= 2  <- false
      */
     Composite: {
-        resolve: function(optionInfo){
+        resolve: function(optionInfo) {
             // Only first axis can be composite?
-            if(this.index > 0) {
-                optionInfo.specify(false);
-                return true;
-            }
-
-            return this._resolveFull(optionInfo);
+            return (this.index > 0)
+                ? (optionInfo.specify(false), true)
+                : this._resolveFull(optionInfo);
         },
         data: {
-            resolveV1: function(optionInfo){
-                this._specifyChartOption(optionInfo, 'useCompositeAxis');
-                return true;
+            resolveV1: function(optionInfo) {
+                return this._specifyChartOption(optionInfo, 'useCompositeAxis'), true;
             }
         },
         cast:  Boolean,
@@ -491,18 +457,16 @@ var cartAxis_optionsDef = def.create(axis_optionsDef, {
     OriginIsZero: {
         resolve: '_resolveFull',
         data: {
-            resolveV1: function(optionInfo){
-                switch(this.index){
+            resolveV1: function(optionInfo) {
+                switch(this.index) {
                     case 0:
                         this._specifyChartOption(optionInfo, 'originIsZero');
                         break;
                     case 1:
-                        if(this.chart._allowV1SecondAxis){
+                        if(this.chart._allowV1SecondAxis)
                             this._specifyChartOption(optionInfo, 'secondAxisOriginIsZero');
-                        }
                         break;
                 }
-
                 return true;
             }
         },
@@ -522,17 +486,15 @@ var cartAxis_optionsDef = def.create(axis_optionsDef, {
     Offset: {
         resolve: '_resolveFull',
         data: {
-            resolveV1: function(optionInfo){
+            resolveV1: function(optionInfo) {
                 switch(this.index) {
                     case 0:
                         this._specifyChartOption(optionInfo, 'axisOffset');
                         break;
 
                     case 1:
-                        if(this.chart._allowV1SecondAxis){
+                        if(this.chart._allowV1SecondAxis)
                             this._specifyChartOption(optionInfo, 'secondAxisOffset');
-                            break;
-                        }
                         break;
                 }
 
@@ -558,10 +520,8 @@ var cartAxis_optionsDef = def.create(axis_optionsDef, {
     Grid: {
         resolve: '_resolveFull',
         data: {
-            resolveV1: function(optionInfo){
-                if(!this.index){
-                    this._specifyChartOption(optionInfo, this.orientation + 'AxisFullGrid');
-                }
+            resolveV1: function(optionInfo) {
+                if(!this.index) this._specifyChartOption(optionInfo, this.orientation + 'AxisFullGrid');
                 return true;
             }
         },
@@ -600,11 +560,8 @@ var cartAxis_optionsDef = def.create(axis_optionsDef, {
         resolve: '_resolveFull',
         data: {
             resolveV1: cartAxis_normalV1Data.resolveV1,
-            resolveDefault: function(optionInfo){
-                if(this.chart.compatVersion() <= 1){
-                    optionInfo.defaultValue(5);
-                    return true;
-                }
+            resolveDefault: function(optionInfo) {
+                if(this.chart.compatVersion() <= 1) return optionInfo.defaultValue(5), true;
             }
         },
         cast: pvc.castNumber
@@ -623,11 +580,8 @@ var cartAxis_optionsDef = def.create(axis_optionsDef, {
         resolve: '_resolveFull',
         data: {
             resolveV1: cartAxis_normalV1Data.resolveV1,
-            resolveDefault: function(optionInfo){
-                if(this.chart.compatVersion() <= 1){
-                    optionInfo.defaultValue('none');
-                    return true;
-                }
+            resolveDefault: function(optionInfo) {
+                if(this.chart.compatVersion() <= 1) return optionInfo.defaultValue('none'), true;
             }
         },
 
@@ -670,7 +624,7 @@ var cartAxis_optionsDef = def.create(axis_optionsDef, {
     },
     TitleAlign: {
         resolve: '_resolveFull',
-        cast: function castAlign(align){
+        cast: function castAlign(align) {
             var position = this.option('Position');
             return pvc.parseAlign(position, align);
         }

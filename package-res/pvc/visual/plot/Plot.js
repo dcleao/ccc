@@ -163,9 +163,8 @@ pvc.visual.Plot.optionsDef = {
     // Box model options?
         
     Orientation: {
-        resolve: function(optionInfo){
-            optionInfo.specify(this._chartOption('orientation') || 'vertical');
-            return true;
+        resolve: function(optionInfo) {
+            return optionInfo.specify(this._chartOption('orientation') || 'vertical'), true;
         },
         cast: String
     },
@@ -173,16 +172,15 @@ pvc.visual.Plot.optionsDef = {
     ValuesVisible: {
         resolve: '_resolveFull',
         data: {
-            resolveV1: function(optionInfo){
-                if(this.globalIndex === 0){
+            resolveV1: function(optionInfo) {
+                if(this.globalIndex === 0) {
                     var show = this._chartOption('showValues');
-                    if(show !== undefined){
+                    if(show !== undefined) {
                         optionInfo.specify(show);
                     } else {
                         show = this.type !== 'point';
                         optionInfo.defaultValue(show);
                     }
-                    
                     return true;
                 }
             }
@@ -238,25 +236,16 @@ pvc.visual.Plot.optionsDef = {
     
     ColorAxis: {
         resolve: pvc.options.resolvers([
-            function(optionInfo){
-                if(this.globalIndex === 0){
-                    // plot0 must use color axis 0!
-                    // This also ensures that the color axis 0 is created...
-                    optionInfo.specify(1);
-                    return true;
-                }
+            function(optionInfo) {
+                // plot0 must use color axis 0!
+                // This also ensures that the color axis 0 is created...
+                if(this.globalIndex === 0) return optionInfo.specify(1), true;
             },
             '_resolveFull'
         ]),
-        cast:  function(value){
+        cast:  function(value) {
             value = pvc.castNumber(value);
-            if(value != null){
-                value = def.between(value, 1, 10);
-            } else {
-                value = 1;
-            }
-            
-            return value;
+            return value != null ? def.between(value, 1, 10) : 1;
         },
         value: 1
     }

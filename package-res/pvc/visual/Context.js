@@ -28,7 +28,7 @@
  * @param {pvc.visual.Scene} [scene] A scene object.
  */
 def.type('pvc.visual.Context')
-.init(function(panel, mark, scene){
+.init(function(panel, mark, scene) {
     this.chart = panel.chart;
     this.panel = panel;
     
@@ -96,7 +96,7 @@ def.type('pvc.visual.Context')
     /* EVENT HANDLERS */
     click: function() {
         var me = this;
-        if(me.clickable()) {  me.panel._onClick(me); }
+        if(me.clickable()) me.panel._onClick(me);
         
         if(me.selectableByClick()) {
             var ev = me.event;
@@ -104,7 +104,7 @@ def.type('pvc.visual.Context')
         }
     },
     
-    doubleClick: function() { if(this.doubleClickable()) { this.panel._onDoubleClick(this); } },
+    doubleClick: function() { if(this.doubleClickable()) this.panel._onDoubleClick(this); },
     
     /* Interactive Stuff */
     clickable: function() {
@@ -132,10 +132,10 @@ def.type('pvc.visual.Context')
     }
 });
 
-if(Object.defineProperty){
-    try{
+if(Object.defineProperty) {
+    try {
         Object.defineProperty(pvc.visual.Context.prototype, 'parent', {
-            get: function(){
+            get: function() {
                 throw def.error.operationInvalid("The 'this.parent.index' idiom has no equivalent in this version. Please try 'this.pvMark.parent.index'.");
             }
         });
@@ -156,14 +156,14 @@ if(Object.defineProperty){
  * @virtual
  * @internal
  */
-function visualContext_update(pvMark, scene){
+function visualContext_update(pvMark, scene) {
 
     this.event  = pv.event;
     this.pvMark = pvMark;
     
     if(pvMark) {
         var sign = this.sign = pvMark.sign || null;
-        if(!scene && sign) { scene = sign.scene(); }
+        if(!scene && sign) scene = sign.scene();
         
         if(!scene) {
             this.index = null;

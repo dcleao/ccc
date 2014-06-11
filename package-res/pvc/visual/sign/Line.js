@@ -10,13 +10,11 @@ pv.LineInterm = function() {
 pv.LineInterm.prototype = pv.extend(pv.Line);
     
 pv.LineInterm.prototype.getNearestInstanceToMouse = function(scene, eventIndex) {
-    var mouseIndex = pv.Line.prototype.getNearestInstanceToMouse.call(this, scene, eventIndex);
+    var mouseIndex = pv.Line.prototype.getNearestInstanceToMouse.call(this, scene, eventIndex),
+        // Don't return intermediate scenes.
+        s = scene[mouseIndex];
 
-    // Don't return intermediate scenes.
-    var s = scene[mouseIndex];
-    if(s && s.data && s.data.isIntermediate && mouseIndex + 1 < scene.length) {
-        mouseIndex++;
-    }
+    if(s && s.data && s.data.isIntermediate && mouseIndex + 1 < scene.length) mouseIndex++;
     return mouseIndex;
 };
 
@@ -34,13 +32,13 @@ def.type('pvc.visual.Line', pvc.visual.Sign)
         var basePosProp  = panel.isOrientationVertical() ? "left" : "bottom",
             orthoPosProp = panel.anchorOrtho(basePosProp);
 
-        this/* Positions */
-            ._lockDynamic(orthoPosProp, 'y')
+        // Positions
+        this._lockDynamic(orthoPosProp, 'y')
             ._lockDynamic(basePosProp,  'x');
     }
 
-    this/* Colors & Line */
-        ._bindProperty('strokeStyle', 'strokeColor', 'color')
+    // Colors & Line
+    this._bindProperty('strokeStyle', 'strokeColor', 'color')
         ._bindProperty('lineWidth',   'strokeWidth');
 
     // Segmented lines use fill color instead of stroke...so this doesn't work.
@@ -86,11 +84,10 @@ def.type('pvc.visual.Line', pvc.visual.Sign)
      * @override
      */
     interactiveColor: function(scene, color, type) {
-        if(this.mayShowNotAmongSelected(scene)) {
-            return this.mayShowActive(scene) ? 
-                   pv.Color.names.darkgray.darker().darker() : 
-                   this.dimColor(color, type);
-        }
+        if(this.mayShowNotAmongSelected(scene))
+            return this.mayShowActive(scene)
+                ? pv.Color.names.darkgray.darker().darker()
+                : this.dimColor(color, type);
 
         return this.base(scene, color, type);
     }

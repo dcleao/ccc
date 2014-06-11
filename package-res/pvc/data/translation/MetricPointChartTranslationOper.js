@@ -33,25 +33,25 @@ def.type('pvc.data.MetricPointChartTranslationOper')
     
     _meaLayoutRoles: ['x', 'y', 'color', 'size'],
     
-    configureType: function(){
+    configureType: function() {
         // VItem Indexes of continuous columns not yet being read
-        var freeMeaIndexes = [];
-        
-        // Idem, but for discrete columns
-        var freeDisIndexes = [];
+        var freeMeaIndexes = [],
+            // Idem, but for discrete columns
+            freeDisIndexes = [];
         
         this.collectFreeDiscreteAndConstinuousIndexes(freeDisIndexes, freeMeaIndexes);
         
         // Distribute free measure columns by unbound measure roles 
-        var N;
-        var autoDimNames = [];
-        var F = freeMeaIndexes.length;
-        if(F > 0){
+        var N,
+            autoDimNames = [],
+            F = freeMeaIndexes.length;
+
+        if(F > 0) {
             // Collect the default dimension names of the 
             // first F unbound roles
-            var R = this._meaLayoutRoles.length;
-            var i = 0;
-            while(i < R && autoDimNames.length < F){
+            var R = this._meaLayoutRoles.length,
+                i = 0;
+            while(i < R && autoDimNames.length < F) {
                 // If the measure role is unbound and has a default dimension,
                 //  the next unused dimension of the default dimension group name
                 //  is placed in autoDimNames.
@@ -61,7 +61,7 @@ def.type('pvc.data.MetricPointChartTranslationOper')
             }
             
             N = autoDimNames.length;
-            if(N > 0){
+            if(N > 0) {
                 freeMeaIndexes.length = N;
                 this.defReader({names: autoDimNames, indexes: freeMeaIndexes});
             }
@@ -74,7 +74,7 @@ def.type('pvc.data.MetricPointChartTranslationOper')
             this._getUnboundRoleDefaultDimNames('series', F, autoDimNames);
             
             N = autoDimNames.length;
-            if(N > 0){
+            if(N > 0) {
                 freeDisIndexes.length = N;
                 this.defReader({names: autoDimNames, indexes: freeDisIndexes});
             }

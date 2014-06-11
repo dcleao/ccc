@@ -25,15 +25,12 @@ def
             this.option('DataPart')));
         
         // Configure Ortho Axis Data Cell
-        var orthoRoleNames = def.array.to(this.option('OrthoRole'));
-        var dataPartValue  = this.option('DataPart' );
-        var orthoAxisIndex = this.option('OrthoAxis') - 1;
-        
-        var isStacked = this.option.isDefined('Stacked') ?
-            this.option('Stacked') :
-            undefined;
-        var nullInterpolationMode = this.option('NullInterpolationMode');
-        var trend = this.option('Trend');
+        var orthoRoleNames = def.array.to(this.option('OrthoRole')),
+            dataPartValue  = this.option('DataPart' ),
+            orthoAxisIndex = this.option('OrthoAxis') - 1,
+            isStacked = this.option.isDefined('Stacked') ? this.option('Stacked') : undefined,
+            nullInterpolationMode = this.option('NullInterpolationMode'),
+            trend = this.option('Trend');
 
         orthoRoleNames.forEach(function(orthoRoleName) {
              dataCells.push(new pvc.visual.CartesianOrthoDataCell(
@@ -55,12 +52,12 @@ def
 
 function pvc_castTrend(trend) {
     // The trend plot itself does not have trends...
-    if(this.name === 'trend') { return null; }
+    if(this.name === 'trend') return null;
     
     var type = this.option('TrendType');
-    if(!type && trend) { type = trend.type; }
+    if(!type && trend) type = trend.type;
     
-    if(!type || type === 'none') { return null; }
+    if(!type || type === 'none') return null;
     
     trend = trend ? Object.create(trend) : {};
     
@@ -88,14 +85,11 @@ pvc.visual.CartesianPlot.optionsDef = def.create(
         
         OrthoAxis: {
             resolve: function(optionInfo) {
-                if(this.globalIndex === 0) {
+                return this.globalIndex === 0
                     // plot0 must use ortho axis 0!
                     // This also ensures that the ortho axis 0 is created...
-                    optionInfo.specify(1);
-                    return true;
-                }
-                
-                return this._resolveFull(optionInfo);
+                    ? (optionInfo.specify(1), true)
+                    : this._resolveFull(optionInfo);
             },
             data: {
                 resolveV1: function(optionInfo) {
@@ -127,13 +121,8 @@ pvc.visual.CartesianPlot.optionsDef = def.create(
             data: {
                 resolveDefault: function(optionInfo) {
                     var type = this.option('TrendType');
-                    if(type) {
-                        // Cast handles the rest
-                        optionInfo.defaultValue({
-                            type: type
-                        });
-                        return true;
-                    }
+                    // Cast handles the rest
+                    if(type) return optionInfo.defaultValue({type: type}), true;
                 }
             },
             cast: pvc_castTrend

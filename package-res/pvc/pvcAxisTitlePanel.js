@@ -15,23 +15,23 @@ def
     this._extensionPrefix = 
         axis
         .extensionPrefixes
-        .map(function(prefix){
+        .map(function(prefix) {
             return prefix + 'Title';
         });
 })
 .add({
-    _calcLayout: function(layoutInfo){
+    _calcLayout: function(layoutInfo) {
         var scale = this.axis.scale;
-        if(!scale || scale.isNull){
+        if(!scale || scale.isNull) {
             return new pvc_Size(0, 0);
         }
         
         return this.base(layoutInfo);
     },
     
-    _createCore: function(layoutInfo){
+    _createCore: function(layoutInfo) {
         var scale = this.axis.scale;
-        if(!scale || scale.isNull){
+        if(!scale || scale.isNull) {
             return;
         }
         

@@ -95,8 +95,8 @@ def
     if(!defaultDimensionName && this.autoCreateDimension) 
         throw def.error.argumentRequired('defaultDimension');
     
-    var requireSingleDimension;
-    var requireIsDiscrete = def.get(keyArgs, 'requireIsDiscrete'); // isSingleDiscrete
+    var requireSingleDimension,
+        requireIsDiscrete = def.get(keyArgs, 'requireIsDiscrete'); // isSingleDiscrete
     if(requireIsDiscrete != null && !requireIsDiscrete) requireSingleDimension = true;
     
     if(requireSingleDimension != null) {
@@ -125,8 +125,7 @@ def
     }
 
     var traversalMode = def.get(keyArgs, 'traversalMode');
-    if(traversalMode != null && traversalMode !== this.traversalMode)
-        this.traversalMode = traversalMode;
+    if(traversalMode != null && traversalMode !== this.traversalMode) this.traversalMode = traversalMode;
 })
 .add(/** @lends pvc.visual.Role# */{
     isRequired: false,
@@ -211,8 +210,8 @@ def
     },
     
     setIsReversed: function(isReversed) {
-        if(!isReversed) { delete this.isReversed; } 
-        else            { this.isReversed = true; }
+        if(!isReversed) delete this.isReversed;
+        else            this.isReversed = true;
     },
     
     setTraversalMode: function(travMode) {
@@ -221,20 +220,19 @@ def
         travMode = def.nullyTo(travMode, T.FlattenedSingleLevel);
         
         if(travMode !== this.traversalMode) {
-            if(travMode === T.FlattenedSingleLevel) { // default value
+            if(travMode === T.FlattenedSingleLevel) // default value
                 delete this.traversalMode;
-            } else {
+            else
                 this.traversalMode = travMode;
-            }
         }
     },
 
     setRootLabel: function(rootLabel) {
         if(rootLabel !== this.rootLabel) {
-            if(!rootLabel) { delete this.rootLabel;      } // default value shows through 
-            else           { this.rootLabel = rootLabel; }
+            if(!rootLabel) delete this.rootLabel; // default value shows through
+            else           this.rootLabel = rootLabel;
             
-            if(this.grouping) { this._updateBind(this.grouping); }
+            if(this.grouping) this._updateBind(this.grouping);
         }
     },
 
@@ -260,21 +258,17 @@ def
             keyArgs = keyArgs ? Object.create(keyArgs) : {};
 
             var flatMode = keyArgs.flatteningMode;
-            if(flatMode == null) {
-                flatMode = keyArgs.flatteningMode = this._flatteningMode();
-            }
+            if(flatMode == null) flatMode = keyArgs.flatteningMode = this._flatteningMode();
             
-            if(keyArgs.isSingleLevel == null && !flatMode) {
-                keyArgs.isSingleLevel = true;
-            }
+            if(keyArgs.isSingleLevel == null && !flatMode) keyArgs.isSingleLevel = true;
             
             return grouping.ensure(keyArgs);
         }
     },
 
     _flatteningMode: function() {
-        var T = pvc.visual.TraversalMode;
-        var F = pvc.data.FlatteningMode;
+        var T = pvc.visual.TraversalMode,
+            F = pvc.data.FlatteningMode;
         switch(this.traversalMode) {
             case T.FlattenDfsPre:  return F.DfsPre;
             case T.FlattenDfsPost: return F.DfsPost;
@@ -292,7 +286,7 @@ def
 
     view: function(complex) {
         var grouping = this.grouping;
-        if(grouping){ return grouping.view(complex); }
+        if(grouping) return grouping.view(complex);
     },
 
     /**
@@ -302,7 +296,6 @@ def
      */
     preBind: function(groupingSpec) {
         this.__grouping = groupingSpec;
-
         return this;
     },
 
@@ -353,33 +346,28 @@ def
            } else {
                 /* Validate grouping spec according to role */
 
-                if(this.requireSingleDimension && !groupingSpec.isSingleDimension) {
+                if(this.requireSingleDimension && !groupingSpec.isSingleDimension)
                     throw def.error.operationInvalid(
                             "Role '{0}' only accepts a single dimension.",
                             [this.name]);
-                }
 
-                var valueType = this.valueType;
-                var requireIsDiscrete = this.requireIsDiscrete;
+                var valueType = this.valueType,
+                    requireIsDiscrete = this.requireIsDiscrete;
                 groupingSpec.dimensions().each(function(dimSpec) {
                     var dimType = dimSpec.type;
-                    if(valueType && dimType.valueType !== valueType) {
+                    if(valueType && dimType.valueType !== valueType)
                         throw def.error.operationInvalid(
                                 "Role '{0}' cannot be bound to dimension '{1}'. \nIt only accepts dimensions of type '{2}' and not of type '{3}'.",
                                 [this.name, dimType.name, pvc.data.DimensionType.valueTypeName(valueType), dimType.valueTypeName]);
-                    }
 
-                    if(requireIsDiscrete != null &&
-                       dimType.isDiscrete !== requireIsDiscrete) {
-                        
-                        if(requireIsDiscrete) {
-                            // A continuous dimension can be "coerced" to behave as discrete
-                            dimType._toDiscrete();
-                        } else {
+                    if(requireIsDiscrete != null && dimType.isDiscrete !== requireIsDiscrete) {
+                        if(!requireIsDiscrete)
                             throw def.error.operationInvalid(
                                 "Role '{0}' cannot be bound to dimension '{1}'. \nIt only accepts {2} dimensions.",
                                 [this.name, dimType.name, requireIsDiscrete ? 'discrete' : 'continuous']);
-                        }
+
+                        // A continuous dimension can be "coerced" to behave as discrete
+                        dimType._toDiscrete();
                     }
                 }, this);
             }

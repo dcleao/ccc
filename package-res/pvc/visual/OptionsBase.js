@@ -124,19 +124,13 @@ def
         
         if(this._defaults) {
             var value = this._defaults[optionInfo.name];
-            if(value !== undefined) {
-                optionInfo.defaultValue(value);
-                return true;
-            }
+            if(value !== undefined) return optionInfo.defaultValue(value), true;
         }
     },
     
     _specifyChartOption: function(optionInfo, asName) {
         var value = this._chartOption(asName);
-        if(value != null) {
-            optionInfo.specify(value);
-            return true;
-        }
+        if(value != null) return optionInfo.specify(value), true;
     }
 });
 

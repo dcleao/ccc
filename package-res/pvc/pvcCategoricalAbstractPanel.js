@@ -4,7 +4,7 @@
 
 def
 .type('pvc.CategoricalAbstractPanel', pvc.CartesianAbstractPanel)
-.init(function(chart, parent, plot, options){
+.init(function(chart, parent, plot, options) {
     
     this.base(chart, parent, plot, options);
     

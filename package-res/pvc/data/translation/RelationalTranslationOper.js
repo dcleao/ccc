@@ -81,25 +81,24 @@ def
 
         this.base();
 
-        var metadata = this.metadata;
+        var metadata = this.metadata,
+            J = this.J, // metadata.length
 
-        var J = this.J; // metadata.length
+            // Split between series and categories
+            C = this.options.categoriesCount,
+            S, valuesColIndexes, M,
+            D; // discrete count = D = S + C
 
-        // Split between series and categories
-        var C = this.options.categoriesCount;
-        if(C != null && (!isFinite(C) || C < 0)) { C = 0; }
-
-        var S;
+        if(C != null && (!isFinite(C) || C < 0)) C = 0;
 
         // Assuming duplicate valuesColIndexes is not valid
         // (v1 did not make this assumption)
-        var valuesColIndexes, M;
+
         if(this.options.isMultiValued) {
             valuesColIndexes = pvc.parseDistinctIndexArray(this.options.measuresIndexes, 0, J - 1);
             M = valuesColIndexes ? valuesColIndexes.length : 0;
         }
 
-        var D; // discrete count = D = S + C
         if(M == null) {
             // TODO: It seems that S is necessarily null at this time!
             if(J > 0 && J <= 3 && (C == null || C === 1) && S == null) {
@@ -129,8 +128,7 @@ def
                     .where(function(colDef, index) { return this._columnTypes[index] !== 0; }, this)
                     .select(function(colDef) { return colDef.colIndex; })
                     .take(Mmax)
-                    .array()
-                    ;
+                    .array();
 
                 M = valuesColIndexes.length;
             }
@@ -156,38 +154,37 @@ def
             }
         }
 
-        var seriesInRows = this.options.seriesInRows;
-        var colGroupSpecs = [];
+        var seriesInRows = this.options.seriesInRows,
+            colGroupSpecs = [];
         if(D) {
-            if(S && !seriesInRows) { colGroupSpecs.push({name: 'S', count: S}); }
-            if(C                 ) { colGroupSpecs.push({name: 'C', count: C}); }
-            if(S &&  seriesInRows) { colGroupSpecs.push({name: 'S', count: S}); }
+            if(S && !seriesInRows) colGroupSpecs.push({name: 'S', count: S});
+            if(C                 ) colGroupSpecs.push({name: 'C', count: C});
+            if(S &&  seriesInRows) colGroupSpecs.push({name: 'S', count: S});
         }
 
-        if(M) { colGroupSpecs.push({name: 'M', count: M}); }
+        if(M) colGroupSpecs.push({name: 'M', count: M});
 
         var availableInputIndexes = def.range(0, J).array();
 
         // If valuesColIndexes != null, these are reserved for values
-        if(valuesColIndexes) {
-            // Remove these indexes from available indexes
-            valuesColIndexes.forEach(function(inputIndex) {
-                availableInputIndexes.splice(inputIndex, 1);
-            });
-        }
+        // Remove these indexes from available indexes
+        if(valuesColIndexes) valuesColIndexes.forEach(function(inputIndex) {
+            availableInputIndexes.splice(inputIndex, 1);
+        });
 
         // Set the fields with actual number of columns of each group
         // Assign the input indexes of each group (Layout)
         var specsByName = {};
         colGroupSpecs.forEach(function(groupSpec) {
-            var count = groupSpec.count;
-            var name  = groupSpec.name;
+            var count = groupSpec.count,
+                name  = groupSpec.name;
 
             // Index group by name
             specsByName[name] = groupSpec;
 
-            if(valuesColIndexes && name === 'M') { groupSpec.indexes = valuesColIndexes; }
-            else                                 { groupSpec.indexes = availableInputIndexes.splice(0, count); }
+            groupSpec.indexes = valuesColIndexes && name === 'M'
+                ? valuesColIndexes
+                : availableInputIndexes.splice(0, count);
         });
 
         this.M = M;
@@ -200,7 +197,7 @@ def
         var itemPerm = [];
         ['S', 'C', 'M'].forEach(function(name) {
             var groupSpec = specsByName[name];
-            if(groupSpec) { def.array.append(itemPerm, groupSpec.indexes); }
+            if(groupSpec) def.array.append(itemPerm, groupSpec.indexes);
         });
 
         this._itemInfos = itemPerm.map(this._buildItemInfoFromMetadata, this);
@@ -220,9 +217,9 @@ def
      * @override
      */
     _configureTypeCore: function() {
-        var me = this;
-        var index = 0;
-        var dimsReaders = [];
+        var me = this,
+            index = 0,
+            dimsReaders = [];
 
         function add(dimGroupName, colGroupName, level, count) {
             var groupEndIndex = me._itemCrossGroupIndex[colGroupName] + count; // exclusive
@@ -232,26 +229,23 @@ def
 
                     // use first available slot for auto dims readers as long as within the group slots
                     index = me._nextAvailableItemIndex(index);
-                    if(index >= groupEndIndex) {
-                        // this group has no more slots available
-                        return;
-                    }
+                    // this group has no more slots available
+                    if(index >= groupEndIndex) return;
 
                     dimsReaders.push({names: dimName, indexes: index});
 
                     index++; // consume index
                     count--;
                 }
-
                 level++;
             }
         }
 
-        if(this.S > 0) { add('series',   'S', 0, this.S); }
-        if(this.C > 0) { add('category', 'C', 0, this.C); }
-        if(this.M > 0) { add('value',    'M', 0, this.M); }
+        if(this.S > 0) add('series',   'S', 0, this.S);
+        if(this.C > 0) add('category', 'C', 0, this.C);
+        if(this.M > 0) add('value',    'M', 0, this.M);
 
-        if(dimsReaders) { dimsReaders.forEach(this.defReader, this); }
+        if(dimsReaders) dimsReaders.forEach(this.defReader, this);
 
         // ----
         // The null test is required because plot2DataSeriesIndexes can be a number, a string...
@@ -260,17 +254,16 @@ def
             var plot2DataSeriesIndexes = this.options.plot2DataSeriesIndexes;
             if(plot2DataSeriesIndexes != null) {
                 var seriesReader = this._userDimsReadersByDim.series;
-                if(seriesReader) {
+                if(seriesReader)
                     this._userRead(relTransl_dataPartGet.call(this, plot2DataSeriesIndexes, seriesReader), dataPartDimName);
-                }
             }
         }
     },
 
     // Permutes the input rows
     _executeCore: function() {
-        var dimsReaders = this._getDimensionsReaders();
-        var permIndexes = this._itemPerm;
+        var dimsReaders = this._getDimensionsReaders(),
+            permIndexes = this._itemPerm;
 
         return def.query(this._getItems())
                   .select(function(item) {
@@ -294,20 +287,17 @@ function relTransl_dataPartGet(plot2DataSeriesIndexes, seriesReader) {
 
     /* Defer calculation of plot2SeriesKeySet because *data* isn't yet available. */
     function calcAxis2SeriesKeySet() {
-        var atoms = {};
-        var seriesKeys = def.query(me.source)
-                                .select(function(item){
-                                    seriesReader(item, atoms);
-                                    var value = atoms.series;
-                                    if(value != null && value.v != null){
-                                        value = value.v;
-                                    }
-
-                                    return value || null;
-                                })
-                                /* distinct excludes null keys */
-                                .distinct()
-                                .array();
+        var atoms = {},
+            seriesKeys = def.query(me.source)
+                .select(function(item) {
+                    seriesReader(item, atoms);
+                    var value = atoms.series;
+                    if(value != null && value.v != null) value = value.v;
+                    return value || null;
+                })
+                // distinct excludes null keys
+                .distinct()
+                .array();
 
         return me._createPlot2SeriesKeySet(plot2DataSeriesIndexes, seriesKeys);
     }

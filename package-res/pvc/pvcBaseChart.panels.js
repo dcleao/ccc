@@ -64,14 +64,12 @@ pvc.BaseChart
         this._initTitlePanel();
 
         // null on small charts or when not enabled
-        var legendPanel = this._initLegendPanel();
+        var legendPanel = this._initLegendPanel(),
+            // Is multi-chart root?
+            isMultichartRoot = hasMultiRole && !this.parent;
 
-        // Is multi-chart root?
-        var isMultichartRoot = hasMultiRole && !this.parent;
         if(isMultichartRoot) this._initMultiChartPanel();
-
-        if(legendPanel) this._initLegendScenes(legendPanel);
-
+        if(legendPanel)      this._initLegendScenes(legendPanel);
         if(!isMultichartRoot) {
             var o = this.options;
             this._createContent(
@@ -103,10 +101,11 @@ pvc.BaseChart
      * if the title is specified.
      */
     _initTitlePanel: function() {
-        var me = this;
-        var o = me.options;
-        var title = o.title;
-        if (!def.empty(title)) { // V1 depends on being able to pass "   " spaces...
+        var me = this,
+            o = me.options,
+            title = o.title;
+
+        if(!def.empty(title)) { // V1 depends on being able to pass "   " spaces...
             this.titlePanel = new pvc.TitlePanel(me, me.basePanel, {
                 title:        title,
                 font:         o.titleFont,
@@ -130,7 +129,7 @@ pvc.BaseChart
     _initLegendPanel: function() {
         var o = this.options;
         // global legend(s) switch
-        if (o.legend) { // legend is disabled on small charts...
+        if(o.legend) { // legend is disabled on small charts...
             var legend = new pvc.visual.Legend(this, 'legend', 0);
 
             // TODO: pass all these options to LegendPanel class
@@ -152,7 +151,7 @@ pvc.BaseChart
                 itemPadding:  o.legendItemPadding,
                 itemSize:     legend.option('ItemSize'),
                 markerSize:   o.legendMarkerSize
-                //shape:        options.legendShape // TODO: <- doesn't this come from the various color axes?
+                //shape:      options.legendShape // TODO: <- doesn't this come from the various color axes?
             });
         }
     },
@@ -165,8 +164,8 @@ pvc.BaseChart
      * Creates and initializes the multi-chart panel.
      */
     _initMultiChartPanel: function() {
-        var basePanel = this.basePanel;
-        var options = this.options;
+        var basePanel = this.basePanel,
+            options = this.options;
 
         this._multiChartPanel = new pvc.MultiChartPanel(
             this,
@@ -209,31 +208,27 @@ pvc.BaseChart
         var colorAxes = this.axesByType.color;
         if(!colorAxes) return;
 
-        var _dataPartAtom, _dataPartDimName, _rootScene;
+        var _dataPartAtom, _dataPartDimName, _rootScene,
+            // Always index from 0 (independently of the first color axis' index)
+            legendIndex = 0,
+            me = this,
+            getCellClickMode = function(axis, cellData) {
+                // Trend series cannot be set to invisible.
+                // They are created each time that visible changes.
+                // So trend legend groups are created locked (clickMode = 'none')
+                if(axis.option('LegendClickMode') === 'togglevisible') {
+                    if(_dataPartAtom === undefined) {
+                        _dataPartAtom = me._getTrendDataPartAtom() || null;
+                        if(_dataPartAtom) _dataPartDimName = _dataPartAtom.dimension.name;
+                    }
 
-        // Always index from 0 (independently of the first color axis' index)
-        var legendIndex = 0;
-
-        var me = this;
-
-        var getCellClickMode = function(axis, cellData) {
-            // Trend series cannot be set to invisible.
-            // They are created each time that visible changes.
-            // So trend legend groups are created locked (clickMode = 'none')
-            if(axis.option('LegendClickMode') === 'togglevisible') {
-                if(_dataPartAtom === undefined) {
-                    _dataPartAtom = me._getTrendDataPartAtom() || null;
-                    if(_dataPartAtom) _dataPartDimName = _dataPartAtom.dimension.name;
+                    if(_dataPartAtom && (cellData.firstAtoms()[_dataPartDimName] === _dataPartAtom))
+                        return 'none';
                 }
-
-                if(_dataPartAtom && (cellData.firstAtoms()[_dataPartDimName] === _dataPartAtom))
-                    return 'none';
-            }
-        };
-
-        var getRootScene = function() {
-            return _rootScene || (_rootScene = legendPanel._getBulletRootScene());
-        };
+            },
+            getRootScene = function() {
+                return _rootScene || (_rootScene = legendPanel._getBulletRootScene());
+            };
 
         def
         .query(colorAxes)
@@ -243,29 +238,28 @@ pvc.BaseChart
         .each(function(axis) {
 
             // Scale is shared by all data cells
-            var colorScale = axis.scale;
+            var colorScale = axis.scale,
+                cellIndex = -1,
+                dataCells = axis.dataCells,
+                C = dataCells.length;
 
-            var cellIndex = -1;
-            var dataCells = axis.dataCells;
-            var C = dataCells.length;
             while(++cellIndex < C) {
-                var dataCell = dataCells[cellIndex];
-
-                var cellData = axis.domainCellData(cellIndex);
-                var groupScene = getRootScene().createGroup({
-                    source:    cellData,
-                    colorAxis: axis,
-                    clickMode: getCellClickMode(axis, cellData),
-                    extensionPrefix: pvc.buildIndexedId('', legendIndex++)
-                });
+                var dataCell = dataCells[cellIndex],
+                    cellData = axis.domainCellData(cellIndex),
+                    groupScene = getRootScene().createGroup({
+                        source:    cellData,
+                        colorAxis: axis,
+                        clickMode: getCellClickMode(axis, cellData),
+                        extensionPrefix: pvc.buildIndexedId('', legendIndex++)
+                    });
 
                 // For later binding of an appropriate bullet renderer
                 dataCell.legendGroupScene(groupScene);
 
                 // Create one item scene per cell domain item.
                 axis.domainCellItems(cellData).forEach(function(itemData, itemIndex) {
-                    var itemScene = groupScene.createItem({source: itemData});
-                    var itemValue = axis.domainItemValue(itemData);
+                    var itemScene = groupScene.createItem({source: itemData}),
+                        itemValue = axis.domainItemValue(itemData);
 
                     // TODO: HACK: how to make this integrate better
                     // with the way scenes/signs get the default color.
@@ -297,13 +291,8 @@ pvc.BaseChart
         if(!PlotPanelClass)
             throw def.error.invalidOperation("There is no registered panel class for plot type '{0}'.", [plot.type]);
 
-        var panel = new PlotPanelClass(
-                this,
-                parentPanel,
-                plot,
-                Object.create(contentOptions));
-
-        var name = plot.name,
+        var panel = new PlotPanelClass(this, parentPanel, plot, Object.create(contentOptions)),
+            name = plot.name,
             plotPanels = this.plotPanels;
             
         plotPanels[plot.id] = panel;
@@ -313,4 +302,3 @@ pvc.BaseChart
         this.plotPanelList.push(panel);
     }
 });
-

@@ -153,23 +153,23 @@ def.type('pvc.visual.Scene')
         return avar && avar[prop || 'value'];
     },
 
-    getSeries:   function(prop) { return this.get('series');   },
-    getCategory: function(prop) { return this.get('category'); },
-    getValue:    function(prop) { return this.get('value');    }, // Also in legend
-    getTick:     function(prop) { return this.get('tick');     }, // Axis panels
-    getX:        function(prop) { return this.get('x');        },
-    getY:        function(prop) { return this.get('y');        },
-    getColor:    function(prop) { return this.get('color');    },
-    getSize:     function(prop) { return this.get('size');     },
+    getSeries:   function() { return this.get('series');   },
+    getCategory: function() { return this.get('category'); },
+    getValue:    function() { return this.get('value');    }, // Also in legend
+    getTick:     function() { return this.get('tick');     }, // Axis panels
+    getX:        function() { return this.get('x');        },
+    getY:        function() { return this.get('y');        },
+    getColor:    function() { return this.get('color');    },
+    getSize:     function() { return this.get('size');     },
 
-    getSeriesLabel:   function(prop) { return this.get('series',   'label'); },
-    getCategoryLabel: function(prop) { return this.get('category', 'label'); },
-    getValueLabel:    function(prop) { return this.get('value',    'label'); }, // Also in legend
-    getTickLabel:     function(prop) { return this.get('tick',     'label'); }, // Axis panels
-    getXLabel:        function(prop) { return this.get('x',        'label'); },
-    getYLabel:        function(prop) { return this.get('y',        'label'); },
-    getColorLabel:    function(prop) { return this.get('color',    'label'); },
-    getSizeLabel:     function(prop) { return this.get('size',     'label'); },
+    getSeriesLabel:   function() { return this.get('series',   'label'); },
+    getCategoryLabel: function() { return this.get('category', 'label'); },
+    getValueLabel:    function() { return this.get('value',    'label'); }, // Also in legend
+    getTickLabel:     function() { return this.get('tick',     'label'); }, // Axis panels
+    getXLabel:        function() { return this.get('x',        'label'); },
+    getYLabel:        function() { return this.get('y',        'label'); },
+    getColorLabel:    function() { return this.get('color',    'label'); },
+    getSizeLabel:     function() { return this.get('size',     'label'); },
 
     /**
      * Obtains the (first) group of this scene, or if inexistent
@@ -181,8 +181,8 @@ def.type('pvc.visual.Scene')
         var data = this.group;
         if(!data) {
             var scene = this;
-            while(!data && (scene = scene.parent)) { data = scene.group; }
-            if(!data) { data = this.panel.data; }
+            while(!data && (scene = scene.parent)) data = scene.group;
+            if(!data) data = this.panel.data;
         }
         return data;
     },
@@ -194,7 +194,7 @@ def.type('pvc.visual.Scene')
      */
     datums: function() {
         // For efficiency, assumes datums of multiple groups are disjoint sets
-        return this.groups  ? def.query(this.groups ).selectMany(function(g){ return g.datums(); }) :
+        return this.groups  ? def.query(this.groups ).selectMany(function(g) { return g.datums(); }) :
                this._datums ? def.query(this._datums) :
                def.query();
     },
@@ -210,17 +210,16 @@ def.type('pvc.visual.Scene')
         if(prop.charAt(0) === '#') {
             // An atom name
             prop = prop.substr(1).split('.');
-            if(prop.length > 2) { throw def.error.operationInvalid("Scene format mask is invalid."); }
+            if(prop.length > 2) throw def.error.operationInvalid("Scene format mask is invalid.");
 
             var atom = this.firstAtoms[prop[0]];
             if(atom) {
-                if(prop.length > 1) {
+                if(prop.length > 1)
                     switch(prop[1]) {
                         case 'value': return atom.value;
                         case 'label': break;
                         default:      throw def.error.operationInvalid("Scene format mask is invalid.");
                     }
-                }
 
                 // atom.toString() ends up returning atom.label
                 return atom;
@@ -251,7 +250,7 @@ def.type('pvc.visual.Scene')
     leafs: function() {
 
         function getFirstLeafFrom(leaf) {
-            while(leaf.childNodes.length) { leaf = leaf.childNodes[0]; }
+            while(leaf.childNodes.length) leaf = leaf.childNodes[0];
             return leaf;
         }
 
@@ -260,28 +259,21 @@ def.type('pvc.visual.Scene')
             if(!nextIndex) {
                 // Initialize
                 var item = getFirstLeafFrom(root);
-                if(item === root) { return 0; }
-
-                this.item = item;
-                return 1; // has next
+                return (item === root)
+                    ? 0
+                    : ((this.item = item), 1); // has next
             }
 
             // Has a next sibling?
             var next = this.item.nextSibling;
-            if(next) {
-                this.item = next;
-                return 1; // has next
-            }
+            if(next) return (this.item = next), 1;  // has next
 
             // Go to closest ancestor that has a sibling
+            // Take the first leaf from there
             var current = this.item;
-            while((current !== root) && (current = current.parentNode)) {
-                if((next = current.nextSibling)) {
-                    // Take the first leaf from there
-                    this.item = getFirstLeafFrom(next);
-                    return 1;
-                }
-            }
+            while((current !== root) && (current = current.parentNode))
+                if((next = current.nextSibling))
+                    return (this.item = getFirstLeafFrom(next)), 1;
 
             return 0;
         });
@@ -295,9 +287,7 @@ def.type('pvc.visual.Scene')
 
     setActive: function(isActive) {
         isActive = !!isActive; // normalize
-        if(this.isActive !== isActive) {
-            rootScene_setActive.call(this.root, this.isActive ? null : this);
-        }
+        if(this.isActive !== isActive) rootScene_setActive.call(this.root, this.isActive ? null : this);
     },
 
     // This is misleading as it clears whatever the active scene is,
@@ -309,13 +299,12 @@ def.type('pvc.visual.Scene')
     active: function() { return this.root._active; },
 
     activeSeries: function() {
-        var active = this.active();
-        var seriesVar;
+        var active = this.active(), seriesVar;
         return active && (seriesVar = active.vars.series) && seriesVar.value;
     },
 
     isActiveSeries: function() {
-        if(this.isActive) { return true; }
+        if(this.isActive) return true;
 
         var isActiveSeries = this.renderState.isActiveSeries;
         if(isActiveSeries == null) {
@@ -330,7 +319,8 @@ def.type('pvc.visual.Scene')
     },
 
     isActiveDatum: function() {
-        if(this.isActive) { return true; }
+        if(this.isActive) return true;
+
         return false;
         // TODO: Does seem to be doing more harm than good. So disabling this for now.
         /*
@@ -354,16 +344,12 @@ def.type('pvc.visual.Scene')
     },
 
     isActiveDescendantOrSelf: function() {
-        if(this.isActive) { return true; }
-
-        return def.lazy(this.renderState, 'isActiveDescOrSelf',  this._calcIsActiveDescOrSelf, this);
+        return this.isActive || def.lazy(this.renderState, 'isActiveDescOrSelf',  this._calcIsActiveDescOrSelf, this);
     },
 
     _calcIsActiveDescOrSelf: function() {
         var scene = this.active();
-        if(scene) {
-            while((scene = scene.parent)) { if(scene === this) { return true; } }
-        }
+        if(scene) while((scene = scene.parent)) if(scene === this) return true;
         return false;
     },
 
@@ -400,46 +386,35 @@ def.type('pvc.visual.Scene')
 
     /* ACTIONS - Update UI */
     select: function(ka) {
-        var me = this;
-        var datums = me.datums().array();
+        var me = this,
+            datums = me.datums().array();
         if(datums.length) {
             var chart = me.chart();
             chart._updatingSelections(function() {
                 datums = chart._onUserSelection(datums);
                 if(datums && datums.length) {
-                    if(chart.options.ctrlSelectMode && def.get(ka, 'replace', true)) {
+                    if(chart.options.ctrlSelectMode && def.get(ka, 'replace', true))
                         chart.data.replaceSelected(datums);
-                    } else {
+                    else
                         pvc.data.Data.toggleSelected(datums);
-                    }
                 }
             });
         }
     },
 
     isSelectedDescendantOrSelf: function() {
-        if(this.isSelected()) { return true; }
-
-        return def.lazy(this.renderState, 'isSelectedDescOrSelf',  this._calcIsSelectedDescOrSelf, this);
+        return this.isSelected() ||
+               def.lazy(this.renderState, 'isSelectedDescOrSelf',  this._calcIsSelectedDescOrSelf, this);
     },
 
     _calcIsSelectedDescOrSelf: function() {
         var child = this.firstChild;
-        if(child) {
-            do {
-              if(child.isSelectedDescendantOrSelf()) { return true; }
-            } while((child = child.nextSibling));
-        }
+        if(child) do { if(child.isSelectedDescendantOrSelf()) return true; } while((child = child.nextSibling));
         return false;
     },
 
-    // -------
-
     toggleVisible: function() {
-        if(pvc.data.Data.toggleVisible(this.datums())) {
-            // Re-render chart
-            this.chart().render(true, true, false);
-        }
+        if(pvc.data.Data.toggleVisible(this.datums())) this.chart().render(true, true, false);
     }
 });
 
@@ -458,15 +433,15 @@ function scene_renderId(renderId) {
 
 function rootScene_setActive(scene) {
     var ownerScene;
-    if(scene && (ownerScene = scene.ownerScene)) { scene = ownerScene; }
+    if(scene && (ownerScene = scene.ownerScene)) scene = ownerScene;
 
     var active = this._active;
     if(active !== scene) {
-        if(active) { scene_setActive.call(active, false); }
+        if(active) scene_setActive.call(active, false);
 
         this._active = active = scene || null;
 
-        if(active) { scene_setActive.call(active, true); }
+        if(active) scene_setActive.call(active, true);
 
         return true;
     }
@@ -477,8 +452,8 @@ function rootScene_setActive(scene) {
 function scene_setActive(isActive) {
     if(this.isActive !== isActive) {
         // Inherits isActive = false
-        if(!isActive) { delete this.isActive; }
-        else          { this.isActive = true; }
+        if(!isActive) delete this.isActive;
+        else          this.isActive = true;
     }
 }
 
@@ -502,14 +477,11 @@ function scene_setActive(isActive) {
 //
 // To be called on the class prototype, not on instances.
 pvc.visual.Scene.prototype.variable = function(name, impl) {
-    var proto = this;
-    var methods;
+    var proto = this, methods;
 
     // Var already defined (local or inherited)?
     if(!proto._vars || !proto._vars[name]) {
-        if(!(proto.hasOwnProperty('_vars'))) {
-            proto._vars = def.create(proto._vars);
-        }
+        if(!(proto.hasOwnProperty('_vars'))) proto._vars = def.create(proto._vars);
 
         proto._vars[name] = true;
 
@@ -526,22 +498,19 @@ pvc.visual.Scene.prototype.variable = function(name, impl) {
         var nameEvalCore = nameEval + 'Core';
 
         // _Eval_ Already defined?
-        if(!def.hasOwn(proto, nameEval)) {
-            methods[nameEval] = def.methodCaller(nameEvalCore);
-        }
+        if(!def.hasOwn(proto, nameEval)) methods[nameEval] = def.methodCaller(nameEvalCore);
 
         // _EvalCore_ already defined?
-        if(!def.hasOwn(proto, nameEvalCore)) {
+        if(!def.hasOwn(proto, nameEvalCore))
             // Normalize undefined to null (working as a default value)
             methods[nameEvalCore] = def.fun.to(impl === undefined ? null : impl);
-        }
     } else if(impl !== undefined) {
         // Override (EvalCore) implementation
         methods = def.set({}, '_' + name + 'EvalCore', def.fun.to(impl));
     }
 
     // Add methods to class
-    if(methods) { proto.constructor.add(methods); }
+    if(methods) proto.constructor.add(methods);
 
     return proto;
 };
@@ -556,10 +525,9 @@ function scene_createVarMainMethod(name, nameEval) {
         var vb = this.vars[name];
         if(vb === undefined) {
             vb = this[nameEval]();
-            if(vb === undefined) { vb = null; }
+            if(vb === undefined) vb = null;
             this.vars[name] = vb;
         }
-
         return vb;
     };
 }

@@ -4,7 +4,7 @@
 
 def
 .type('pvc.Abstract')
-.init(function(){
+.init(function() {
     this._syncLog();
 })
 .add({
@@ -13,12 +13,12 @@ def
     
     _logInstanceId: null,
     
-    _syncLog: function(){
-        if (pvc.debug && typeof console !== "undefined"){
+    _syncLog: function() {
+        if(pvc.debug && typeof console !== "undefined") {
             var logId = this._getLogInstanceId();
             
             ['log', 'info', ['trace', 'debug'], 'error', 'warn', ['group', 'groupCollapsed'], 'groupEnd']
-            .forEach(function(ps){
+            .forEach(function(ps) {
                 ps = ps instanceof Array ? ps : [ps, ps];
                 /*global pvc_installLog:true */
                 pvc_installLog(this, '_' + ps[0],  ps[1], logId);
@@ -26,31 +26,28 @@ def
         }
     },
 
-    _getLogInstanceId: function(){
+    _getLogInstanceId: function() {
         return this._logInstanceId || 
                (this._logInstanceId = this._processLogInstanceId(this._createLogInstanceId()));
     },
     
-    _createLogInstanceId: function(){
+    _createLogInstanceId: function() {
         return '' + this.constructor;
     },
     
-    _processLogInstanceId: function(logInstanceId){
+    _processLogInstanceId: function(logInstanceId) {
         var L = 30;
         var s = logInstanceId.substr(0, L);
-        if(s.length < L){
-            s += def.array.create(L - s.length, ' ').join('');
-        }
-        
+        if(s.length < L) s += def.array.create(L - s.length, ' ').join('');
         return "[" + s + "]";
     }
 });
 
-def.scope(function(){
+def.scope(function() {
     var o = pvc.Abstract.prototype;
-    var syncLogHook = function(){ this._syncLog(); };
+    var syncLogHook = function() { this._syncLog(); };
     
-    ['log', 'info', 'trace', 'error', 'warn', 'group', 'groupEnd'].forEach(function(p){
+    ['log', 'info', 'trace', 'error', 'warn', 'group', 'groupEnd'].forEach(function(p) {
         o['_' + p] = syncLogHook;
     });
 });

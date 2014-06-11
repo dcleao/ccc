@@ -26,9 +26,9 @@ def
 
     this.base(chart, parent, plot, options);
 
-    var sizeAxis = this.axes.size = chart._getAxis('size', (plot.option('SizeAxis') || 0) - 1); // may be undefined
+    var sizeAxis = this.axes.size = chart._getAxis('size', (plot.option('SizeAxis') || 0) - 1), // may be undefined
+        sizeRoleName = plot.option('SizeRole'); // assumed to be always defined
 
-    var sizeRoleName = plot.option('SizeRole'); // assumed to be always defined
     this.visualRoles.size = sizeRoleName ? chart.visualRole(sizeRoleName) : null;
 
     if(sizeAxis) {
@@ -59,16 +59,17 @@ def
         'value':    'y'
     },
 
-    _creating: function(){
+    _creating: function() {
         // Register BULLET legend prototype marks
         var groupScene = this.defaultLegendGroupScene();
-        if(groupScene && !groupScene.hasRenderer()){
-            var colorAxis = groupScene.colorAxis;
-            var drawMarker = def.nullyTo(colorAxis.option('LegendDrawMarker', true), this.dotsVisible);
-            var drawRule   = def.nullyTo(colorAxis.option('LegendDrawLine',   true), this.linesVisible);
-            if(drawMarker || drawRule){
+        if(groupScene && !groupScene.hasRenderer()) {
+            var colorAxis = groupScene.colorAxis,
+                drawMarker = def.nullyTo(colorAxis.option('LegendDrawMarker', true), this.dotsVisible),
+                drawRule   = def.nullyTo(colorAxis.option('LegendDrawLine',   true), this.linesVisible);
+
+            if(drawMarker || drawRule) {
                 var keyArgs = {drawMarker: drawMarker, drawRule: drawRule};
-                if(drawMarker){
+                if(drawMarker) {
                     keyArgs.markerShape =
                         colorAxis.option('LegendShape', true) ||
                         'circle'; // Dot's default shape
@@ -80,7 +81,7 @@ def
                     this.extend(keyArgs.markerPvProto, 'dot', {constOnly: true});
                 }
 
-                if(drawRule){
+                if(drawRule) {
                     keyArgs.rulePvProto = new pv.Line()
                             .lineWidth(1.5, pvc.extensionTag);
 
@@ -93,31 +94,28 @@ def
         }
     },
 
-    _getRootScene: function(){
+    _getRootScene: function() {
         return def.lazy(this, '_rootScene', this._buildScene, this);
     },
 
     /*
     * @override
     */
-    _calcLayout: function(layoutInfo){
+    _calcLayout: function(layoutInfo) {
         var rootScene = this._getRootScene();
-        if(rootScene.isSizeBound){
-            this.axes.size.setScaleRange(
-                    this._calcDotAreaRange(layoutInfo));
-        }
+        if(rootScene.isSizeBound)
+            this.axes.size.setScaleRange(this._calcDotAreaRange(layoutInfo));
 
         /* Adjust axis offset to avoid dots getting off the content area */
         this._calcAxesPadding(layoutInfo, rootScene);
     },
 
-    _getDotDiameterRefLength: function(layoutInfo){
+    _getDotDiameterRefLength: function(layoutInfo) {
         // Use the border box to always have the same size for != axis offsets (paddings)
+        var clientSize = layoutInfo.clientSize,
+            paddings   = layoutInfo.paddings;
 
-        var clientSize = layoutInfo.clientSize;
-        var paddings   = layoutInfo.paddings;
-
-        switch(this.sizeAxisRatioTo){
+        switch(this.sizeAxisRatioTo) {
             case 'minWidthHeight':
                 return Math.min(
                         clientSize.width  + paddings.width,
@@ -127,36 +125,33 @@ def
             case 'height': return clientSize.height + paddings.height;
         }
 
-        if(pvc.debug >= 2){
+        if(pvc.debug >= 2)
             this._log(
                 def.format(
                     "Invalid option 'sizeAxisRatioTo' value. Assuming 'minWidthHeight'.",
                     [this.sizeAxisRatioTo]));
-        }
 
         this.sizeRatioTo = 'minWidthHeight';
 
         return this._getDotDiameterRefLength(layoutInfo);
     },
 
-    _calcDotRadiusRange: function(layoutInfo){
-        var refLength = this._getDotDiameterRefLength(layoutInfo);
+    _calcDotRadiusRange: function(layoutInfo) {
+        return {
+            // Minimum SIZE (not radius) is 12
+            min: Math.sqrt(12),
 
-        // Diameter is 1/5 of ref length
-        var max = (this.sizeAxisRatio / 2) * refLength;
-
-        // Minimum SIZE (not radius) is 12
-        var min = Math.sqrt(12);
-
-        return {min: min, max: max};
+            // Diameter is 1/5 of ref length
+            max: (this.sizeAxisRatio / 2) * this._getDotDiameterRefLength(layoutInfo)
+        };
     },
 
-    _calcDotAreaRange: function(layoutInfo){
+    _calcDotAreaRange: function(layoutInfo) {
 
         var radiusRange = this._calcDotRadiusRange(layoutInfo);
 
         // Diamond Adjustment
-        if(this.shape === 'diamond'){
+        if(this.shape === 'diamond') {
             // Protovis draws diamonds inscribed on
             // a square with half-side radius*Math.SQRT2
             // (so that diamonds just look like a rotated square)
@@ -170,7 +165,7 @@ def
             minArea  = def.sqr(radiusRange.min),
             areaSpan = maxArea - minArea;
 
-        if(areaSpan <= 1){
+        if(areaSpan <= 1) {
             // Very little space
             // Rescue Mode - show *something*
             maxArea  = Math.max(maxArea, 2);
@@ -183,9 +178,7 @@ def
             };
             */
 
-            if(pvc.debug >= 3){
-                this._log("Using rescue mode dot area calculation due to insufficient space.");
-            }
+            if(pvc.debug >= 3) this._log("Using rescue mode dot area calculation due to insufficient space.");
         }
 
         return {
@@ -203,12 +196,12 @@ def
 
         var requestPaddings;
 
-        if(!this.autoPaddingByDotSize){
+        if(!this.autoPaddingByDotSize) {
             requestPaddings = this._calcRequestPaddings(layoutInfo);
         } else {
-            var axes = this.axes;
-            var clientSize = layoutInfo.clientSize;
-            var paddings   = layoutInfo.paddings;
+            var axes = this.axes,
+                clientSize = layoutInfo.clientSize,
+                paddings   = layoutInfo.paddings;
 
             requestPaddings = {};
 
@@ -226,25 +219,23 @@ def
             axes.y.setScaleRange(clientSize.height);
 
             // X and Y visual roles
-            var isV = this.isOrientationVertical();
-            var sceneXScale = axes.x.sceneScale({sceneVarName: isV ? 'x' : 'y'});
-            var sceneYScale = axes.y.sceneScale({sceneVarName: isV ? 'y' : 'x'});
-            var xMax = axes.x.scale.max;
-            var yMax = axes.y.scale.max;
-
-            var hasSizeRole = rootScene.isSizeBound;
-            var sizeScale   = hasSizeRole ? axes.size.scale : null;
+            var isV = this.isOrientationVertical(),
+                sceneXScale = axes.x.sceneScale({sceneVarName: isV ? 'x' : 'y'}),
+                sceneYScale = axes.y.sceneScale({sceneVarName: isV ? 'y' : 'x'}),
+                xMax = axes.x.scale.max,
+                yMax = axes.y.scale.max,
+                hasSizeRole = rootScene.isSizeBound,
+                sizeScale   = hasSizeRole ? axes.size.scale : null;
             if(!sizeScale) {
                 // Use the dot default size
                 var defaultSize = def.number.as(this._getExtension('dot', 'shapeRadius'), 0);
                 if(defaultSize <= 0) {
                     defaultSize = def.number.as(this._getExtension('dot', 'shapeSize'), 0);
-                    if(defaultSize <= 0) { defaultSize = 12; }
+                    if(defaultSize <= 0) defaultSize = 12;
                 } else {
                     // Radius -> Size
                     defaultSize = def.sqr(defaultSize);
                 }
-
                 sizeScale = def.fun.constant(defaultSize);
             }
 
@@ -272,14 +263,13 @@ def
                 if(padding < 0) padding = 0;
 
                 var value = requestPaddings[side];
-                if(value == null || padding > value)
-                    requestPaddings[side] = padding;
+                if(value == null || padding > value) requestPaddings[side] = padding;
             };
 
             var processScene = function(scene) {
-                var x = sceneXScale(scene);
-                var y = sceneYScale(scene);
-                var r = Math.sqrt(sizeScale(hasSizeRole ? scene.vars.size.value : 0));
+                var x = sceneXScale(scene),
+                    y = sceneYScale(scene),
+                    r = Math.sqrt(sizeScale(hasSizeRole ? scene.vars.size.value : 0));
 
                 // How much overflow on each side?
                 setSide('left',   r - x);
@@ -300,15 +290,15 @@ def
     /**
      * @override
      */
-    _createCore: function(/*layoutInfo*/){
+    _createCore: function(/*layoutInfo*/) {
         var me = this;
 
         me.base();
 
-        var chart      = me.chart;
-        var rootScene  = me._getRootScene();
-        var wrapper    = me._buildSignsWrapper();
-        var isV1Compat = me.compatVersion() <= 1;
+        var chart      = me.chart,
+            rootScene  = me._getRootScene(),
+            wrapper    = me._buildSignsWrapper(),
+            isV1Compat = me.compatVersion() <= 1;
 
         this._finalizeScene(rootScene);
 
@@ -321,24 +311,23 @@ def
                 extensionId: 'panel'
             })
             .lock('data', rootScene.childNodes)
-            .pvMark
-            ;
+            .pvMark;
 
         // -- LINE --
-        var isLineNoSelect = /*dotsVisible && */chart.selectableByFocusWindow();
+        var isLineNoSelect = /*dotsVisible && */chart.selectableByFocusWindow(),
 
-        // A discrete color role may have null values; the line is not hidden.
-        var isColorDiscrete = rootScene.isColorBound && this.visualRoles.color.isDiscrete();
+            // A discrete color role may have null values; the line is not hidden.
+            isColorDiscrete = rootScene.isColorBound && this.visualRoles.color.isDiscrete(),
 
-        var line = new pvc.visual.Line(me, me.pvScatterPanel, {
+            line = new pvc.visual.Line(me, me.pvScatterPanel, {
                 extensionId: 'line',
                 wrapper:     wrapper,
                 noTooltip:   false,
                 noSelect:       isLineNoSelect,
                 showsSelection: !isLineNoSelect
             })
-            .lockMark('data', function(seriesScene){ return seriesScene.childNodes; })
-            .intercept('visible', function(scene){
+            .lockMark('data', function(seriesScene) { return seriesScene.childNodes; })
+            .intercept('visible', function(scene) {
                 if(!me.linesVisible) { return false; }
 
                 var visible = this.delegateExtension();
@@ -373,15 +362,12 @@ def
                  * 1) it is active, or
                  * 2) it is single  (the only dot in the dataset)
                  */
-                if(!me.dotsVisible && !scene.isActive && !scene.isSingle){
-                    return pvc.invisibleFill;
-                }
-
-                // Follow normal logic
-                return this.base(scene, type);
+                return (!me.dotsVisible && !scene.isActive && !scene.isSingle)
+                    ? pvc.invisibleFill
+                    : this.base(scene, type); // Follow normal logic
             });
 
-        if(!rootScene.isSizeBound){
+        if(!rootScene.isSizeBound) {
             dot
             .override('baseSize', function(scene) {
                 /* When not showing dots,
@@ -400,7 +386,7 @@ def
 
                 return this.base(scene);
             });
-        } else if(!(me.autoPaddingByDotSize && me.sizeAxisRatioTo === 'minWidthHeight')){
+        } else if(!(me.autoPaddingByDotSize && me.sizeAxisRatioTo === 'minWidthHeight')) {
             // Default is to hide overflow dots,
             // for a case where the provided offset, or calculated one is not enough
             // (sizeAxisRatioTo='width' or 'height' don't guarantee no overflow)
@@ -411,9 +397,9 @@ def
         me.pvDot = dot.pvMark;
         me.pvDot.rubberBandSelectionMode = 'center';
 
-        if(pvc.visual.ValueLabel.isNeeded(me)){
+        if(pvc.visual.ValueLabel.isNeeded(me)) {
             var extensionIds = ['label'];
-            if(isV1Compat) { extensionIds.push('lineLabel'); }
+            if(isV1Compat) extensionIds.push('lineLabel');
 
             var label = pvc.visual.ValueLabel.maybeCreate(me, me.pvDot, {
                 extensionId: extensionIds,
@@ -421,22 +407,19 @@ def
             });
 
             // TODO: pvHeatGridLabel is v2 Copy&Paste bug or v1 legacy?
-            if(label) { me.pvHeatGridLabel = label.pvMark; }
+            if(label) me.pvHeatGridLabel = label.pvMark;
         }
     },
 
     _buildSignsWrapper: function() {
-        if(this.compatVersion() > 1) { return null; }
+        if(this.compatVersion() > 1) return null;
 
         return function(v1f) {
             return function(scene) {
-                var d = {
-                        category: scene.vars.x.rawValue,
-                        value:    scene.vars.y.rawValue
-                    };
+                var d = {category: scene.vars.x.rawValue, value: scene.vars.y.rawValue},
+                    // Compensate for the effect of intermediate scenes on mark's index
+                    pseudo = Object.create(this);
 
-                // Compensate for the effect of intermediate scenes on mark's index
-                var pseudo = Object.create(this);
                 pseudo.index = scene.dataIndex;
                 return v1f.call(pseudo, d);
             };
@@ -451,7 +434,7 @@ def
         this.pvScatterPanel.render();
     },
 
-    _buildScene: function(){
+    _buildScene: function() {
         var data = this.visibleData({ignoreNulls: false}),
             rootScene = new pvc.visual.Scene(null, {panel: this, source: data}),
             roles = this.visualRoles,

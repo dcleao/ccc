@@ -83,16 +83,13 @@ def
     // implementations to be defined.
     _valueEval: function() {
         var valueVar = this._valueEvalCore();
-        if(!(valueVar instanceof pvc_ValueLabelVar)) {
-            valueVar = new pvc_ValueLabelVar(valueVar, valueVar);
-        }
-        
+        if(!(valueVar instanceof pvc_ValueLabelVar)) valueVar = new pvc_ValueLabelVar(valueVar, valueVar);
         return valueVar;
     },
     
     _valueEvalCore: function() {
-        var value, rawValue, label, absLabel, trendSuffix;
-        var source = this.group || this.datum;
+        var value, rawValue, label, absLabel, trendSuffix,
+            source = this.group || this.datum;
         if(source) {
             value    = source.value;
             rawValue = source.rawValue;
@@ -106,10 +103,9 @@ def
     
     _getTrendLineSuffix: function(source) {
         var datum, trendOptions;
-        if((datum = source.firstDatum()) && (trendOptions = datum.trend)) {
-            return " (" + trendOptions.label + ")";
-        }
-        return "";
+        return ((datum = source.firstDatum()) && (trendOptions = datum.trend))
+            ? " (" + trendOptions.label + ")"
+            : "";
     }
 })
 .prototype

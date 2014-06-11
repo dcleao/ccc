@@ -28,7 +28,7 @@ pv.PieSlice.prototype.defaults = new pv.PieSlice()
 // -----------
 
 def.type('pvc.visual.PieSlice', pvc.visual.Sign)
-.init(function(panel, protoMark, keyArgs){
+.init(function(panel, protoMark, keyArgs) {
 
     var pvMark = protoMark.add(pv.PieSlice);
 
@@ -41,8 +41,8 @@ def.type('pvc.visual.PieSlice', pvc.visual.Sign)
     this._resolvePctRadius = def.get(keyArgs, 'resolvePctRadius');
     this._center = def.get(keyArgs, 'center');
 
-    this/* Colors */
-        .optional('lineWidth',  0.6)
+    // Colors
+    this.optional('lineWidth',  0.6)
         // Ensures that it is evaluated before x and y
         ._bindProperty('angle', 'angle')
         ._bindProperty('offsetRadius', 'offsetRadius')
@@ -62,7 +62,7 @@ def.type('pvc.visual.PieSlice', pvc.visual.Sign)
 
     _offsetSlice: function(fun) {
         var offset = this.pvMark.offsetRadius() || 0;
-        if(offset) { offset *= Math[fun](this.pvMark.midAngle()); }
+        if(offset) offset *= Math[fun](this.pvMark.midAngle());
         return offset;
     },
 
@@ -81,7 +81,7 @@ def.type('pvc.visual.PieSlice', pvc.visual.Sign)
             }
         } else if(this.mayShowNotAmongSelected(scene)) {
             //case 'stroke': // ANALYZER requirements, so until there's no way to configure it...
-            if(type === 'fill') { return this.dimColor(color, type); }
+            if(type === 'fill') return this.dimColor(color, type);
         }
 
         return this.base(scene, color, type);

@@ -27,14 +27,14 @@ def.type('pvc.data.BoxplotChartTranslationOper')
     /**
      * @override
      */
-    _configureTypeCore: function(){
-        var autoDimNames = [];
-       
-        // VItem Indexes of continuous columns not yet being read
-        var freeMeaIndexes = [];
-        
-        // Idem, but for discrete columns
-        var freeDisIndexes = [];
+    _configureTypeCore: function() {
+        var autoDimNames = [],
+
+            // VItem Indexes of continuous columns not yet being read
+            freeMeaIndexes = [],
+
+            // Idem, but for discrete columns
+            freeDisIndexes = [];
         
         this.collectFreeDiscreteAndConstinuousIndexes(freeDisIndexes, freeMeaIndexes);
         
@@ -48,6 +48,6 @@ def.type('pvc.data.BoxplotChartTranslationOper')
             this._getUnboundRoleDefaultDimNames(roleName, 1, autoDimNames);
         }, this);
 
-        if(autoDimNames.length) { this.defReader({names: autoDimNames}); }
+        if(autoDimNames.length) this.defReader({names: autoDimNames});
     }
 });

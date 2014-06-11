@@ -194,7 +194,7 @@
  */
 def.type('pvc.data.DimensionType')
 .init(
-function(complexType, name, keyArgs){
+function(complexType, name, keyArgs) {
     this.complexType = complexType;
     this.name  = name;
     this.label = def.get(keyArgs, 'label') || pvc.buildTitleFromName(name);
@@ -203,33 +203,31 @@ function(complexType, name, keyArgs){
     this.group = groupAndLevel[0];
     this.groupLevel = def.nullyTo(groupAndLevel[1], 0);
 
-    if(this.label.indexOf('{') >= 0){
-        this.label = def.format(this.label, [this.groupLevel+1]);
-    }
+    if(this.label.indexOf('{') >= 0) this.label = def.format(this.label, [this.groupLevel+1]);
 
     this.playedVisualRoles = new def.Map();
     this.isHidden = !!def.get(keyArgs, 'isHidden');
     
-    var valueType = def.get(keyArgs, 'valueType') || null;
-    var valueTypeName = pvc.data.DimensionType.valueTypeName(valueType);
-    var cast = def.getOwn(pvc.data.DimensionType.cast, valueTypeName, null);
+    var valueType = def.get(keyArgs, 'valueType') || null,
+        valueTypeName = pvc.data.DimensionType.valueTypeName(valueType),
+        cast = def.getOwn(pvc.data.DimensionType.cast, valueTypeName, null);
     
     this.valueType = valueType;
     this.valueTypeName = valueTypeName;
     this.cast = cast;
 
-    var isNumber = this.valueType === Number;
-    var isDate   = !isNumber && this.valueType === Date;
+    var isNumber = this.valueType === Number,
+        isDate   = !isNumber && this.valueType === Date;
+
     this.isDiscreteValueType = !isNumber && !isDate;
     this.isDiscrete = def.get(keyArgs, 'isDiscrete');
-    if(this.isDiscrete == null){
+    if(this.isDiscrete == null) {
         this.isDiscrete = this.isDiscreteValueType;
     } else {
         // Normalize the value
         this.isDiscrete = !!this.isDiscrete;
-        if(!this.isDiscrete && this.isDiscreteValueType) {
+        if(!this.isDiscrete && this.isDiscreteValueType)
             throw def.error.argumentInvalid('isDiscrete', "The only supported continuous value types are Number and Date.");
-        }
     }
     
     /** 
@@ -264,8 +262,8 @@ function(complexType, name, keyArgs){
     
     /** @private */
     this._comparer = def.get(keyArgs, 'comparer');
-    if(this._comparer === undefined){ // It is possible to prevent the default specifying null
-        switch(this.valueType){
+    if(this._comparer === undefined) { // It is possible to prevent the default specifying null
+        switch(this.valueType) {
             case Number:
             case Date:
                 this._comparer = def.compare;
@@ -356,17 +354,10 @@ function(complexType, name, keyArgs){
      * a positive number if {@link a} is after {@link b},
      * and 0 if they are considered to have the same order.
      */
-    compare: function(a, b){
-        if(a == null) {
-            if(b == null) {
-                return 0;
-            }
-            return -1;
-        } else if(b == null) {
-            return 1;
-        }
-        
-        return this._comparer.call(null, a, b);
+    compare: function(a, b) {
+        return a == null ? (b == null ? 0 : -1) :
+               b == null ? 1                    :
+               this._comparer.call(null, a, b);
     },
     
     /**
@@ -380,17 +371,12 @@ function(complexType, name, keyArgs){
      * 
      * @type function
      */
-    comparer: function(reverse){
-        if(!this.isComparable) {
-            return null;
-        }
-        
+    comparer: function(reverse) {
         var me = this;
-        if(reverse) {
-            return this._rc || (this._rc = function(a, b) { return me.compare(b, a); });
-        }
-        
-        return this._dc || (this._dc = function(a, b) { return me.compare(a, b); });
+        if(!me.isComparable) return null;
+        return reverse
+            ? (me._rc || (me._rc = function(a, b) { return me.compare(b, a); }))
+            : (me._dc || (me._dc = function(a, b) { return me.compare(a, b); }));
     },
     
     /**
@@ -401,50 +387,44 @@ function(complexType, name, keyArgs){
      * 
      * @type function
      */
-    atomComparer: function(reverse){
-        if(reverse) {
-            return this._rac || (this._rac = this._createReverseAtomComparer());
-        }
-        
-        return this._dac || (this._dac = this._createDirectAtomComparer());
+    atomComparer: function(reverse) {
+        return reverse
+            ? (this._rac || (this._rac = this._createReverseAtomComparer()))
+            : (this._dac || (this._dac = this._createDirectAtomComparer ()));
     },
     
     // Coercion to discrete upon the role binding (irreversible...)
-    _toDiscrete: function(){
+    _toDiscrete: function() {
         this.isDiscrete = true;
     },
     
-    _toCalculated: function(){
+    _toCalculated: function() {
         this.isCalculated = true;
     },
     
-    _createReverseAtomComparer: function(){
-        if(!this.isComparable){
-            /*global atom_idComparerReverse:true */
-            return atom_idComparerReverse;
-        }
+    _createReverseAtomComparer: function() {
+        /*global atom_idComparerReverse:true */
+        if(!this.isComparable) return atom_idComparerReverse;
         
         var me = this;
         
-        function reverseAtomComparer(a, b){
-            if(a === b) { return 0; } // Same atom
-            return me.compare(b.value, a.value); 
+        function reverseAtomComparer(a, b) {
+            // Same atom?
+            return a === b ? 0 : me.compare(b.value, a.value);
         }
         
         return reverseAtomComparer;
     },
     
-    _createDirectAtomComparer: function(){
-        if(!this.isComparable){
-            /*global atom_idComparer:true */
-            return atom_idComparer;
-        }
+    _createDirectAtomComparer: function() {
+        /*global atom_idComparer:true */
+        if(!this.isComparable) return atom_idComparer;
         
         var me = this;
         
-        function directAtomComparer(a, b){
-            if(a === b) { return 0; } // Same atom
-            return me.compare(a.value, b.value);
+        function directAtomComparer(a, b) {
+            // Same atom?
+            return a === b ? 0 : me.compare(a.value, b.value);
         }
         
         return directAtomComparer;
@@ -454,7 +434,7 @@ function(complexType, name, keyArgs){
      * Gets the dimension type's format provider object.
      * @type pvc.FormatProvider
      */
-    format: function(){
+    format: function() {
         return this._format;
     },
 
@@ -462,7 +442,7 @@ function(complexType, name, keyArgs){
      * Gets the dimension type's JS-context-free formatter function, if one is defined, or <tt>null</tt> otherwise.
      * @type function
      */
-    formatter: function(){
+    formatter: function() {
         return this._formatter;
     },
     
@@ -470,7 +450,7 @@ function(complexType, name, keyArgs){
      * Gets the dimension type's JS-context-free converter function, if one is defined, or <tt>null</tt> otherwise.
      * @type function
      */
-    converter: function(){
+    converter: function() {
         return this._converter;
     },
     
@@ -479,11 +459,9 @@ function(complexType, name, keyArgs){
      * such that {@link pvc.visual.Role#isPercent} is <tt>true</tt>.
      * @type boolean
      */
-    playingPercentVisualRole: function(){
+    playingPercentVisualRole: function() {
         return def.query(this.playedVisualRoles.values())
-                  .any(function(visualRole){ 
-                      return visualRole.isPercent; 
-                  }); 
+            .any(function(visualRole) { return visualRole.isPercent; });
     }
 });
 
@@ -510,17 +488,14 @@ pvc.data.DimensionType.cast = {
  * 
  *  @type string
  */
-pvc.data.DimensionType.dimensionGroupName = function(dimName){
+pvc.data.DimensionType.dimensionGroupName = function(dimName) {
     return dimName.replace(/^(.*?)(\d*)$/, "$1");
 };
 
 // TODO: Docs
-pvc.data.DimensionType.valueTypeName = function(valueType){
-    if(valueType == null){
-        return "Any";
-    }
-    
-    switch(valueType){
+pvc.data.DimensionType.valueTypeName = function(valueType) {
+    if(valueType == null) return "Any";
+    switch(valueType) {
         case Boolean: return 'Boolean';
         case Number:  return 'Number';
         case String:  return 'String';
@@ -544,21 +519,17 @@ pvc.data.DimensionType.valueTypeName = function(valueType){
  * 
  *  @returns {object} The extended dimension type specification.
  */
-pvc.data.DimensionType.extendSpec = function(dimName, dimSpec, keyArgs){
+pvc.data.DimensionType.extendSpec = function(dimName, dimSpec, keyArgs) {
     
     var dimGroup = pvc.data.DimensionType.dimensionGroupName(dimName),
         userDimGroupsSpec = def.get(keyArgs, 'dimensionGroups');
     
     if(userDimGroupsSpec) {
         var groupDimSpec = userDimGroupsSpec[dimGroup];
-        if(groupDimSpec) {
-            dimSpec = def.create(groupDimSpec, dimSpec /* Can be null */); 
-        }
+        if(groupDimSpec) dimSpec = def.create(groupDimSpec, dimSpec /* Can be null */);
     }
     
-    if(!dimSpec) {
-        dimSpec = {};
-    }
+    if(!dimSpec) dimSpec = {};
     
     switch(dimGroup) {
         case 'category':

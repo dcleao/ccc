@@ -14,13 +14,13 @@ pvc.color = {
 // --------------------------
 // exported
 
-function pvc_colorIsGray(color){
+function pvc_colorIsGray(color) {
     color = pv.color(color);
-    var r = color.r;
-    var g = color.g;
-    var b = color.b;
-    var avg = (r + g + b) / 3;
-    var tol = 2;
+    var r = color.r,
+        g = color.g,
+        b = color.b,
+        avg = (r + g + b) / 3,
+        tol = 2;
     return Math.abs(r - avg) <= tol &&
            Math.abs(g - avg) <= tol &&
            Math.abs(b - avg) <= tol;
@@ -43,7 +43,7 @@ function pvc_colorIsGray(color){
  * 
  * @type function 
  */
-function pvc_colorScales(keyArgs){
+function pvc_colorScales(keyArgs) {
     /*jshint expr:true */
     keyArgs || def.fail.argumentRequired('keyArgs');
     
@@ -90,7 +90,7 @@ function pvc_colorScales(keyArgs){
  * 
  * @type function 
  */
-function pvc_colorScale(keyArgs){
+function pvc_colorScale(keyArgs) {
     /*jshint expr:true */
     keyArgs || def.fail.argumentRequired('keyArgs');
     
@@ -114,7 +114,7 @@ function pvc_colorScale(keyArgs){
  */
 def
 .type('pvc.color.ScalesBuild')
-.init(function(keyArgs){
+.init(function(keyArgs) {
     this.keyArgs        = keyArgs;
     this.data           = keyArgs.data || def.fail.argumentRequired('keyArgs.data');
     this.domainDimName  = keyArgs.colorDimension || def.fail.argumentRequired('keyArgs.colorDimension');
@@ -125,7 +125,7 @@ def
         this.domainComparer = null;
         pvc.log("Color value dimension should be comparable. Generated color scale may be invalid.");
     } else {
-        this.domainComparer = function(a, b){ return dimType.compare(a, b); };
+        this.domainComparer = function(a, b) { return dimType.compare(a, b); };
     }
    
     this.nullRangeValue = keyArgs.colorMissing ? pv.color(keyArgs.colorMissing) : pv.Color.transparent;
@@ -138,7 +138,7 @@ def
     * 
     * @type pv.Scale
     */
-    build: function(){
+    build: function() {
         this.range = this._getRange();
         this.desiredDomainCount = this.range.length + this.domainRangeCountDif;
        
@@ -151,16 +151,16 @@ def
      * 
      * @type object
      */
-    buildMap: function(){
+    buildMap: function() {
         this.range = this._getRange();
         this.desiredDomainCount = this.range.length + this.domainRangeCountDif;
         
         var createCategoryScale;
         
         /* Compute a scale-function per data category? */
-        if(this.keyArgs.normPerBaseCategory){
+        if(this.keyArgs.normPerBaseCategory) {
             /* Ignore args' domain and calculate from data of each category */
-            createCategoryScale = function(leafData){
+            createCategoryScale = function(leafData) {
                 // Create a domain from leafData
                 var domain = this._ensureDomain(null, false, leafData);
                 //noinspection JSPotentiallyInvalidUsageOfThis
@@ -178,51 +178,42 @@ def
    
     _createScale: def.method({isAbstract: true}),
    
-    _createCategoryScalesMap: function(createCategoryScale){
+    _createCategoryScalesMap: function(createCategoryScale) {
         return this.data.children()
             .object({
-                name:    function(leafData){ return leafData.absKey; },
+                name:    function(leafData) { return leafData.absKey; },
                 value:   createCategoryScale,
                 context: this
             });
     },
    
-    _getRange: function(){
+    _getRange: function() {
         var keyArgs = this.keyArgs,
             range = keyArgs.colors || ['red', 'yellow', 'green'];
    
-        if(keyArgs.colorMin != null && keyArgs.colorMax != null){
-           
+        if(keyArgs.colorMin != null && keyArgs.colorMax != null)
             range = [keyArgs.colorMin, keyArgs.colorMax];
-           
-        } else if (keyArgs.colorMin != null){
-           
+        else if(keyArgs.colorMin != null)
             range.unshift(keyArgs.colorMin);
-           
-        } else if (keyArgs.colorMax != null){
-           
+        else if(keyArgs.colorMax != null)
             range.push(keyArgs.colorMax);
-        }
    
         return range.map(function(c) { return pv.color(c); });
     },
    
-    _getDataExtent: function(data){
+    _getDataExtent: function(data) {
        
         var extent = data.dimensions(this.domainDimName).extent({visible: true});
-        if(!extent) { // No atoms...
-            return null;
-        }
+        if(!extent) return null; // No atoms...
        
         var min = extent.min.value,
             max = extent.max.value;
         
-        if(max == min){
-            if(max >= 1){
+        if(max == min) {
+            if(max >= 1)
                 min = max - 1;
-            } else {
+            else
                 max = min + 1;
-            }
         }
        
         return {min: min, max: max};
@@ -230,18 +221,13 @@ def
    
     _getDomain: function() {
         var domain = this.keyArgs.colorDomain;
-        if(domain != null){
-            
+        if(domain != null) {
             domain = domain.slice();
 
-            if(this.domainComparer) {
-                domain.sort(this.domainComparer);
-            }
-           
-            if(domain.length > this.desiredDomainCount){ 
-                // More domain points than needed for supplied range
-                domain = domain.slice(0, this.desiredDomainCount);
-            }
+            if(this.domainComparer) domain.sort(this.domainComparer);
+
+            // More domain points than needed for supplied range
+            if(domain.length > this.desiredDomainCount) domain = domain.slice(0, this.desiredDomainCount);
         } else {
             // This ends up being padded...in ensureDomain
             domain = [];
@@ -253,24 +239,23 @@ def
     _ensureDomain: function(domain, doDomainPadding, data) {
         var extent;
        
-        if(domain && doDomainPadding){
+        if(domain && doDomainPadding) {
             /* 
              * If domain does not have as many values as there are colors (taking domainRangeCountDif into account),
              * it is *completed* with the extent calculated from data.
              * (NOTE: getArgsDomain already truncates the domain to number of colors)
              */
             var domainPointsMissing = this.desiredDomainCount - domain.length;
-            if(domainPointsMissing > 0){ 
+            if(domainPointsMissing > 0) {
                 extent = this._getDataExtent(data);
-                if(extent){
+                if(extent) {
                     // Assume domain is sorted
-                    switch(domainPointsMissing){  // + 1 in discrete ?????
+                    switch(domainPointsMissing) {  // + 1 in discrete ?????
                         case 1:
-                            if(this.domainComparer) {
+                            if(this.domainComparer)
                                 def.array.insert(domain, extent.max, this.domainComparer);
-                            } else {
+                            else
                                 domain.push(extent.max);
-                            }
                             break;
 
                         case 2:
@@ -285,10 +270,10 @@ def
 
                         default:
                             /* Ignore args domain altogether */
-                            if(pvc.debug >= 2){
-                                    pvc.log("Ignoring option 'colorDomain' due to unsupported length." +
-                                            def.format(" Should have '{0}', but instead has '{1}'.", [this.desiredDomainCount, domain.length]));
-                            }
+                            if(pvc.debug >= 2)
+                                pvc.log("Ignoring option 'colorDomain' due to unsupported length." +
+                                    def.format(" Should have '{0}', but instead has '{1}'.",
+                                        [this.desiredDomainCount, domain.length]));
                             domain = null;
                     }
                 }
@@ -297,42 +282,36 @@ def
        
        if(!domain) {
            /*jshint expr:true */
-               extent || (extent = this._getDataExtent(data));
-               if(extent){
-                   var min = extent.min,
-                       max = extent.max;
-                   var step = (max - min) / (this.desiredDomainCount - 1);
-                   domain = pv.range(min, max + step, step);
-               }
+           extent || (extent = this._getDataExtent(data));
+           if(extent) {
+               var min = extent.min,
+                   max = extent.max,
+                   step = (max - min) / (this.desiredDomainCount - 1);
+               domain = pv.range(min, max + step, step);
            }
-           
-           return domain;
        }
-   });
+       return domain;
+    }
+ });
         
     
 def
 .type('pvc.color.LinearScalesBuild', pvc.color.ScalesBuild)
 .add(/** @lends pvc.color.LinearScalesBuild# */{
     
-    _createScale: function(domain){
+    _createScale: function(domain) {
         var scale = pv.Scale.linear();
-
-        if(domain){
-            scale.domain.apply(scale, domain);
-        }
-        
+        if(domain) scale.domain.apply(scale, domain);
         scale.range.apply(scale, this.range);
-        
         return scale;
     }
 });
 
 def
 .type('pvc.color.DiscreteScalesBuild', pvc.color.ScalesBuild)
-.init(function(keyArgs){
+.init(function(keyArgs) {
     this.base(keyArgs);
-    
+
     this.domainRangeCountDif = 1;
 })
 .add(/** @lends pvc.color.DiscreteScalesBuild# */{
@@ -349,22 +328,17 @@ def
      * >dN-2  -       cN-1
      */
     //d0--cR0--d1--cR1--d2
-    _createScale: function(domain){
+    _createScale: function(domain) {
         var Dl = domain.length - 1,
             range = this.range,
             nullRangeValue = this.nullRangeValue,
             Rl = range.length - 1;
         
-        function scale(val){
-            if(val == null) {
-                return nullRangeValue;
-            }
-            
-            for(var i = 0 ; i < Dl ; i++){  // i <= D - 2  => domain[D-1]
-                if(val <= domain[i + 1]){
-                    return range[i];
-                }
-            }
+        function scale(val) {
+            if(val == null) return nullRangeValue;
+
+            // i <= D - 2  => domain[D-1]
+            for(var i = 0 ; i < Dl ; i++) if(val <= domain[i + 1]) return range[i];
             
             // > domain[Dl]
             return range[Rl];
@@ -375,8 +349,8 @@ def
         // Give it a bit of protovis looks
         def.copy(scale, pv.Scale.common);
         
-        scale.domain = function(){ return domain; };
-        scale.range  = function(){ return range;  };
+        scale.domain = function() { return domain; };
+        scale.range  = function() { return range;  };
         
         return scale;
     }
@@ -393,27 +367,27 @@ def
  *         (where sd is the standard deviation)
  ********/
 /*
-     getNormalColorScale: function (data, colAbsValues, origData){
+     getNormalColorScale: function(data, colAbsValues, origData) {
     var fillColorScaleByColKey;
     var options = this.chart.options;
-    if (options.normPerBaseCategory) {
+    if(options.normPerBaseCategory) {
       // compute the mean and standard-deviation for each column
       var myself = this;
       
-      var mean = pv.dict(colAbsValues, function(f){
-        return pv.mean(data, function(d){
+      var mean = pv.dict(colAbsValues, function(f) {
+        return pv.mean(data, function(d) {
           return myself.getValue(d[f]);
         })
       });
       
-      var sd = pv.dict(colAbsValues, function(f){
-        return pv.deviation(data, function(d){
+      var sd = pv.dict(colAbsValues, function(f) {
+        return pv.deviation(data, function(d) {
           myself.getValue(d[f]);
         })
       });
       
       //  compute a scale-function for each column (each key)
-      fillColorScaleByColKey = pv.dict(colAbsValues, function(f){
+      fillColorScaleByColKey = pv.dict(colAbsValues, function(f) {
         return pv.Scale.linear()
           .domain(-options.numSD * sd[f] + mean[f],
                   options.numSD * sd[f] + mean[f])
@@ -423,16 +397,16 @@ def
     } else {   // normalize over the whole array
       
       var mean = 0.0, sd = 0.0, count = 0;
-      for (var i=0; i<origData.length; i++)
+      for(var i=0; i<origData.length; i++)
         for(var j=0; j<origData[i].length; j++)
-          if (origData[i][j] != null){
+          if(origData[i][j] != null) {
             mean += origData[i][j];
             count++;
           }
       mean /= count;
-      for (var i=0; i<origData.length; i++){
-        for(var j=0; j<origData[i].length; j++){
-          if (origData[i][j] != null){
+      for(var i=0; i<origData.length; i++) {
+        for(var j=0; j<origData[i].length; j++) {
+          if(origData[i][j] != null) {
             var variance = origData[i][j] - mean;
             sd += variance*variance;
           }
@@ -447,7 +421,7 @@ def
                 options.numSD * sd + mean)
         .range(options.colorMin, options.colorMax);
       
-      fillColorScaleByColKey = pv.dict(colAbsValues, function(f){
+      fillColorScaleByColKey = pv.dict(colAbsValues, function(f) {
         return scale;
       });
     }

@@ -15,7 +15,7 @@
  */
 def
 .type('pvc.visual.SizeAxis', pvc_Axis)
-.init(function(chart, type, index, keyArgs){
+.init(function(chart, type, index, keyArgs) {
     
     // prevent naked resolution of size axis
     keyArgs = def.set(keyArgs, 'byNaked', false);
@@ -26,7 +26,7 @@ def
     /** @override */scaleTreatsNullAs: function() { return 'min'; },
     /** @override */scaleUsesAbs:      function() { return this.option('UseAbs'); },
     
-    setScaleRange: function(range){
+    setScaleRange: function(range) {
         var scale = this.scale;
         scale.min  = range.min;
         scale.max  = range.max;
@@ -34,9 +34,7 @@ def
         
         scale.range(scale.min, scale.max);
         
-        if(pvc.debug >= 4){
-            pvc.log("Scale: " + pvc.stringify(def.copyOwn(scale)));
-        }
+        if(pvc.debug >= 4) pvc.log("Scale: " + pvc.stringify(def.copyOwn(scale)));
         
         return this;
     },

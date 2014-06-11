@@ -14,7 +14,7 @@
  */
 def
 .type('pvc.visual.Legend', pvc.visual.OptionsBase)
-.init(function(chart, type, index, keyArgs){
+.init(function(chart, type, index, keyArgs) {
     // prevent naked resolution of legend
     keyArgs = def.set(keyArgs, 'byNaked', false);
     
@@ -29,7 +29,7 @@ function legend_castSize(size) {
     // Single size or sizeMax (a number or a string)
     // should be interpreted as meaning the orthogonal length.
     
-    if(!def.object.is(size)){
+    if(!def.object.is(size)) {
         var position = this.option('Position');
         size = new pvc_Size()
             .setSize(size, {
@@ -74,18 +74,16 @@ var legend_optionsDef = {
     Align: {
         resolve: '_resolveFull',
         data: {
-            resolveDefault: function(optionInfo){
+            resolveDefault: function(optionInfo) {
                 // Default value of align depends on position
                 var position = this.option('Position');
                 var align;
-                if(position !== 'top' && position !== 'bottom'){
+                if(position !== 'top' && position !== 'bottom')
                     align = 'top';
-                } else if(this.chart.compatVersion() <= 1) { // centered is better
+                else if(this.chart.compatVersion() <= 1) // centered is better
                     align = 'left';
-                }
-                
-                optionInfo.defaultValue(align);
-                return true;
+
+                return optionInfo.defaultValue(align), true;
             }
         },
         cast: legend_castAlign
@@ -94,18 +92,16 @@ var legend_optionsDef = {
     Margins:  {
         resolve: '_resolveFull',
         data: {
-            resolveDefault: function(optionInfo){
+            resolveDefault: function(optionInfo) {
                 // Default value of align depends on position
                 // Default value of margins depends on position
-                if(this.chart.compatVersion() > 1){
-                    var position = this.option('Position');
-                    
-                    // Set default margins
-                    var margins = def.set({}, pvc.BasePanel.oppositeAnchor[position], 5);
+                if(this.chart.compatVersion() > 1) {
+                    var position = this.option('Position'),
+                        // Set default margins
+                        margins = def.set({}, pvc.BasePanel.oppositeAnchor[position], 5);
                     
                     optionInfo.defaultValue(margins);
                 }
-                
                 return true;
             }
         },

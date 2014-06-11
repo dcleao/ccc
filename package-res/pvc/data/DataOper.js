@@ -19,7 +19,7 @@
  * @param {object} [keyArgs] Keyword arguments.
  */
 def.type('pvc.data.DataOper')
-.init(function(linkParent, keyArgs){
+.init(function(linkParent, keyArgs) {
     /*jshint expr:true */
     linkParent || def.fail.argumentRequired('linkParent');
     

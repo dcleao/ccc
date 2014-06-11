@@ -45,7 +45,7 @@
 
 def
 .type('pvc.PiePanel', pvc.PlotPanel)
-.init(function(chart, parent, plot, options){
+.init(function(chart, parent, plot, options) {
 
     // Before base, just to bring to attention that ValuesMask depends on it
     var labelStyle = plot.option('ValuesLabelStyle');
@@ -74,10 +74,10 @@ def
 
     valueRoleName: 'value',
 
-    _getV1Datum: function(scene){
+    _getV1Datum: function(scene) {
         // Ensure V1 tooltip function compatibility
         var datum = scene.datum;
-        if(datum){
+        if(datum) {
             var datumEx = Object.create(datum);
             datumEx.percent = scene.vars.value.percent;
             datum = datumEx;
@@ -90,10 +90,11 @@ def
      * @override
      */
     _calcLayout: function(layoutInfo) {
-        var clientSize   = layoutInfo.clientSize;
-        var clientWidth  = clientSize.width;
-        var clientRadius = Math.min(clientWidth, clientSize.height) / 2;
-        if(!clientRadius) { return new pvc_Size(0, 0); }
+        var clientSize   = layoutInfo.clientSize,
+            clientWidth  = clientSize.width,
+            clientRadius = Math.min(clientWidth, clientSize.height) / 2;
+
+        if(!clientRadius) return new pvc_Size(0, 0);
 
         var center = pv.vector(clientSize.width / 2, clientSize.height / 2);
 
@@ -108,41 +109,34 @@ def
         // ---------------------
 
         var labelFont = this._getConstantExtension('label', 'font');
-        if(!def.string.is(labelFont)) { labelFont = this.valuesFont; }
+        if(!def.string.is(labelFont)) labelFont = this.valuesFont;
 
         var maxPieRadius = clientRadius;
 
         if(this.valuesVisible && this.labelStyle === 'linked') {
             // Reserve space for labels and links
-            var linkInsetRadius  = resolvePercentRadius(this.linkInsetRadius );
-            var linkOutsetRadius = resolvePercentRadius(this.linkOutsetRadius);
-            var linkMargin       = resolvePercentWidth (this.linkMargin      );
-            var linkLabelSize    = resolvePercentWidth (this.linkLabelSize   );
+            var textMargin = def.number.to(this._getConstantExtension('label', 'textMargin'), 3),
+                textHeight = pv.Text.fontHeight(labelFont) * 2/ 3,
+                linkHandleWidth = this.linkHandleWidth * textHeight, // em
 
-            var textMargin = def.number.to(this._getConstantExtension('label', 'textMargin'), 3);
-            var textHeight = pv.Text.fontHeight(labelFont) * 2/3;
+                linkInsetRadius  = resolvePercentRadius(this.linkInsetRadius),
+                linkOutsetRadius = resolvePercentRadius(this.linkOutsetRadius),
+                linkMargin       = resolvePercentWidth (this.linkMargin      ) + linkHandleWidth,
+                linkLabelSize    = resolvePercentWidth (this.linkLabelSize   ),
 
-            var linkHandleWidth = this.linkHandleWidth * textHeight; // em
-            linkMargin += linkHandleWidth;
-
-            var linkLabelSpacingMin = this.linkLabelSpacingMin * textHeight; // em
-
-            var freeWidthSpace = Math.max(0, clientWidth / 2 - clientRadius);
-
-            // Radius stolen to pie by link and label
-            var spaceH = Math.max(0, linkOutsetRadius + linkMargin + linkLabelSize - freeWidthSpace);
-            var spaceV = linkOutsetRadius + textHeight; // at least one line of text (should be half line, but this way there's a small margin...)
-
-            var linkAndLabelRadius = Math.max(0, spaceV, spaceH);
+                linkLabelSpacingMin = this.linkLabelSpacingMin * textHeight, // em
+                freeWidthSpace = Math.max(0, clientWidth / 2 - clientRadius),
+                // Radius stolen to pie by link and label
+                spaceH = Math.max(0, linkOutsetRadius + linkMargin + linkLabelSize - freeWidthSpace),
+                spaceV = linkOutsetRadius + textHeight, // at least one line of text (should be half line, but this way there's a small margin...)
+                linkAndLabelRadius = Math.max(0, spaceV, spaceH);
 
             // Use the extra width on the label
             //linkLabelSize += freeWidthSpace / 2;
 
             if(linkAndLabelRadius >= maxPieRadius) {
                 this.valuesVisible = false;
-                if(pvc.debug >= 2) {
-                    this._log("Hiding linked labels due to insufficient space.");
-                }
+                if(pvc.debug >= 2) this._log("Hiding linked labels due to insufficient space.");
             } else {
 
                 maxPieRadius -= linkAndLabelRadius;
@@ -164,19 +158,17 @@ def
 
         // ---------------------
 
-        var explodedOffsetRadius = resolvePercentRadius(this.explodedOffsetRadius);
-
-        var activeOffsetRadius = 0;
-        if(this.hoverable()) {
-            activeOffsetRadius = resolvePercentRadius(this.activeOffsetRadius);
-        }
+        var explodedOffsetRadius = resolvePercentRadius(this.explodedOffsetRadius),
+            activeOffsetRadius = 0;
+        if(this.hoverable()) activeOffsetRadius = resolvePercentRadius(this.activeOffsetRadius);
 
         var maxOffsetRadius = explodedOffsetRadius + activeOffsetRadius;
 
         var normalPieRadius = maxPieRadius - maxOffsetRadius;
-        if(normalPieRadius < 0) { return new pvc_Size(0,0); }
+        if(normalPieRadius < 0) return new pvc_Size(0,0);
 
         // ---------------------
+
         layoutInfo.resolvePctRadius = resolvePercentRadius;
         layoutInfo.center = center;
         layoutInfo.clientRadius = clientRadius;
@@ -191,16 +183,14 @@ def
      * @override
      */
     _createCore: function(layoutInfo) {
-        var me = this;
-        var chart = me.chart;
-        var rootScene = this._buildScene();
-        var center = layoutInfo.center;
-        var normalRadius = layoutInfo.normalRadius;
+        var me = this,
+            chart = me.chart,
+            rootScene = this._buildScene(),
+            center = layoutInfo.center,
+            normalRadius = layoutInfo.normalRadius,
+            wrapper,
+            extensionIds = ['slice'];
 
-        // ------------
-
-        var wrapper;
-        var extensionIds = ['slice'];
         if(this.compatVersion() <= 1) {
             extensionIds.push(''); // let access as "pie_"
             wrapper = function(v1f) {
@@ -221,9 +211,9 @@ def
                     options: {
                         useCorners: true,
                         gravity: function() {
-                            var ma = this.midAngle();
-                            var isRightPlane = Math.cos(ma) >= 0;
-                            var isTopPlane   = Math.sin(ma) >= 0;
+                            var ma = this.midAngle(),
+                                isRightPlane = Math.cos(ma) >= 0,
+                                isTopPlane   = Math.sin(ma) >= 0;
                             return  isRightPlane ?
                                     (isTopPlane ? 'nw' : 'sw') :
                                     (isTopPlane ? 'ne' : 'se');
@@ -231,38 +221,25 @@ def
                     }
                 }
             })
-
             .lock('data', rootScene.childNodes)
-
             .override('angle', function(scene) { return scene.vars.value.angle;  })
-
             .override('defaultOffsetRadius', function() {
                 var explodeIndex = me.explodedSliceIndex;
-                if (explodeIndex == null || explodeIndex == this.pvMark.index) {
-                    return layoutInfo.explodedOffsetRadius;
-                }
-
-                return 0;
+                return (explodeIndex == null || explodeIndex == this.pvMark.index)
+                    ? layoutInfo.explodedOffsetRadius
+                    : 0;
             })
-
             .lockMark('outerRadius', function() { return chart.animate(0, normalRadius); })
-
             .localProperty('innerRadiusEx', pvc_PercentValue.parse)
-
             // In case the inner radius is specified, we better animate it as well
             .intercept('innerRadius', function(scene) {
                 var innerRadius = this.delegateExtension();
                 if(innerRadius == null) {
                     var innerRadiusPct = this.pvMark.innerRadiusEx();
-                    if(innerRadiusPct != null) {
-                        innerRadius = pvc_PercentValue.resolve(
-                                    innerRadiusPct,
-                                    this.pvMark.outerRadius()) || 0;
-                    } else {
-                        innerRadius = 0;
-                    }
+                    innerRadius =  (innerRadiusPct != null)
+                        ? (pvc_PercentValue.resolve(innerRadiusPct, this.pvMark.outerRadius()) || 0)
+                        : 0;
                 }
-
                 return innerRadius > 0 ? chart.animate(0, innerRadius) : 0;
             })
             .pvMark;
@@ -307,12 +284,12 @@ def
 
                         // the name of the anchor gets evaluated in the anchored mark;
                         var va = pvLabel.name(),
-                            ta = pvLabel.textAlign();
-
-                        var canHandle = 
-                            //va === 'center' ? ta === 'center' :
-                            va === 'outer'  ? ta === (sameAngle ? 'right' : 'left') : 
-                            false;
+                            ta = pvLabel.textAlign(),
+                            canHandle =
+                                //va === 'center' ? ta === 'center' :
+                                va === 'outer'
+                                    ? (ta === (sameAngle ? 'right' : 'left'))
+                                    : false;
 
                         if(!canHandle) return;
 
@@ -378,16 +355,15 @@ def
                     .lockMark('data', function(scene) {
                         // Calculate the dynamic dot at the
                         // slice's middle angle and outer radius...
-                        var pieSlice = this.parent.pieSlice();
-                        var midAngle = pieSlice.startAngle + pieSlice.angle / 2;
-                        var outerRadius = pieSlice.outerRadius - linkLayout.insetRadius;
-                        var x = pieSlice.left + outerRadius * Math.cos(midAngle);
-                        var y = pieSlice.top  + outerRadius * Math.sin(midAngle);
+                        var pieSlice = this.parent.pieSlice(),
+                            midAngle = pieSlice.startAngle + pieSlice.angle / 2,
+                            outerRadius = pieSlice.outerRadius - linkLayout.insetRadius,
+                            x = pieSlice.left + outerRadius * Math.cos(midAngle),
+                            y = pieSlice.top  + outerRadius * Math.sin(midAngle),
+                            firstDotScene = scene.childNodes[0];
 
-                        var firstDotScene = scene.childNodes[0];
                         if(!firstDotScene || !firstDotScene._isFirstDynamicScene) {
-                            firstDotScene = new pvc.visual.PieLinkLineScene(
-                                scene, x, y, /* index */ 0);
+                            firstDotScene = new pvc.visual.PieLinkLineScene(scene, x, y, /* index */ 0);
 
                             firstDotScene._isFirstDynamicScene = t;
                         } else {
@@ -427,7 +403,7 @@ def
                         if(style &&
                            !this._finished &&
                            !this.mayShowActive(scene) &&
-                            this.mayShowNotAmongSelected(scene)){
+                            this.mayShowNotAmongSelected(scene)) {
                             style = this.dimColor(style, 'text');
                         }
 
@@ -475,9 +451,7 @@ def
         // - actually it shares the same panel...
 
         var extensionIds = [{abs: 'content'}];
-        if(this.chart.parent) {
-            extensionIds.push({abs: 'smallContent'});
-        }
+        if(this.chart.parent) extensionIds.push({abs: 'smallContent'});
 
         return extensionIds.concat(this.base());
     },
@@ -505,24 +479,20 @@ pvc.PlotPanel.registerClass(pvc.PiePanel);
 def
 .type('pvc.visual.PieRootScene', pvc.visual.Scene)
 .init(function(panel) {
-    var categAxis     = panel.axes.category;
-    var categRootData = categAxis.domainData();
+    var categAxis     = panel.axes.category,
+        categRootData = categAxis.domainData();
 
     this.base(null, {panel: panel, source: categRootData});
 
-    var colorVarHelper = new pvc.visual.RoleVarHelper(this, panel.visualRoles.color, {roleVar: 'color'});
+    var colorVarHelper = new pvc.visual.RoleVarHelper(this, panel.visualRoles.color, {roleVar: 'color'}),
+        valueDimName = panel.visualRoles[panel.valueRoleName].lastDimensionName(),
+        valueDim     = categRootData.dimensions(valueDimName),
+        pctValueFormat = panel.chart.options.percentValueFormat,
+        angleScale = panel.axes.angle.scale,
+        sumAbs     = angleScale.isNull ? 0 : angleScale.domain()[1],
+        rootScene = this;
 
-    var valueDimName = panel.visualRoles[panel.valueRoleName].lastDimensionName();
-    var valueDim     = categRootData.dimensions(valueDimName);
-
-    var pctValueFormat = panel.chart.options.percentValueFormat;
-
-    var angleScale = panel.axes.angle.scale;
-    var sumAbs     = angleScale.isNull ? 0 : angleScale.domain()[1];
-    
     this.vars.sumAbs = new pvc_ValueLabelVar(sumAbs, formatValue(sumAbs));
-
-    var rootScene = this;
 
     // Create category scene sub-class
     var CategSceneClass = def.type(pvc.visual.PieCategoryScene)
@@ -571,35 +541,29 @@ def
 
         // Not possible to represent as pie if sumAbs = 0.
         // If this is a small chart, don't show message, which results in a pie with no slices..., a blank plot.
-        if(!rootScene.childNodes.length && !panel.visualRoles.multiChart.isBound()) {
+        if(!rootScene.childNodes.length && !panel.visualRoles.multiChart.isBound())
            throw new InvalidDataException("Unable to create a pie chart, please check the data values.");
-        }
     }
 
     function formatValue(value, categData) {
         if(categData) {
             var datums = categData._datums;
-            if(datums.length === 1) {
-                // Prefer to return the already formatted/provided label
-                return datums[0].atoms[valueDimName].label;
-            }
+            // Prefer to return the already formatted/provided label
+            if(datums.length === 1) return datums[0].atoms[valueDimName].label;
         }
-
         return valueDim.format(value);
     }
 })
 .add({
     layoutLinkLabels: function(layoutInfo) {
-        var startAngle = -Math.PI / 2;
-
-        var leftScenes  = [];
-        var rightScenes = [];
+        var startAngle = -Math.PI / 2,
+            leftScenes  = [],
+            rightScenes = [];
 
         this.childNodes.forEach(function(categScene) {
             startAngle = categScene.layoutI(layoutInfo, startAngle);
 
-            (categScene.vars.link.dir > 0 ? rightScenes : leftScenes)
-            .push(categScene);
+            (categScene.vars.link.dir > 0 ? rightScenes : leftScenes).push(categScene);
         });
 
         // Distribute left and right labels and finish their layout
@@ -628,22 +592,23 @@ def
     },
 
     _distributeLabelsDownwards: function(scenes, layoutInfo) {
-        var linkLayout = layoutInfo.link;
-        var labelSpacingMin = linkLayout.labelSpacingMin;
-        var yMax = layoutInfo.clientSize.height;
-        var overlapping = false;
+        var linkLayout = layoutInfo.link,
+            labelSpacingMin = linkLayout.labelSpacingMin,
+            yMax = layoutInfo.clientSize.height,
+            overlapping = false;
+
         for(var i = 0, J = scenes.length - 1 ; i < J ; i++) {
             var linkVar0 = scenes[i].vars.link;
 
-            if(!i && linkVar0.labelTop() < 0) { overlapping = true; }
+            if(!i && linkVar0.labelTop() < 0) overlapping = true;
 
-            var linkVar1 = scenes[i + 1].vars.link;
-            var labelTopMin1 = linkVar0.labelBottom() + labelSpacingMin;
-            if (linkVar1.labelTop() < labelTopMin1) {
+            var linkVar1 = scenes[i + 1].vars.link,
+                labelTopMin1 = linkVar0.labelBottom() + labelSpacingMin;
+            if(linkVar1.labelTop() < labelTopMin1) {
+                var halfLabelHeight1 = linkVar1.labelHeight / 2,
+                    targetY1 = labelTopMin1 + halfLabelHeight1,
+                    targetYMax = yMax - halfLabelHeight1;
 
-                var halfLabelHeight1 = linkVar1.labelHeight / 2;
-                var targetY1 = labelTopMin1 + halfLabelHeight1;
-                var targetYMax = yMax - halfLabelHeight1;
                 if(targetY1 > targetYMax) {
                     overlapping = true;
                     linkVar1.targetY = targetYMax;
@@ -657,20 +622,21 @@ def
     },
 
     _distributeLabelsUpwards: function(scenes, layoutInfo) {
-        var linkLayout = layoutInfo.link;
-        var labelSpacingMin = linkLayout.labelSpacingMin;
+        var linkLayout = layoutInfo.link,
+            labelSpacingMin = linkLayout.labelSpacingMin,
+            overlapping = false;
 
-        var overlapping = false;
         for(var i = scenes.length - 1 ; i > 0 ; i--) {
-            var linkVar1 = scenes[i - 1].vars.link;
-            var linkVar0 = scenes[i].vars.link;
-            if(i === 1 && linkVar1.labelTop() < 0) { overlapping = true; }
+            var linkVar1 = scenes[i - 1].vars.link,
+                linkVar0 = scenes[i].vars.link;
+
+            if(i === 1 && linkVar1.labelTop() < 0) overlapping = true;
 
             var labelBottomMax1 = linkVar0.labelTop() - labelSpacingMin;
-            if (linkVar1.labelBottom() > labelBottomMax1) {
-                var halfLabelHeight1 = linkVar1.labelHeight / 2;
-                var targetY1   = labelBottomMax1 - halfLabelHeight1;
-                var targetYMin = halfLabelHeight1;
+            if(linkVar1.labelBottom() > labelBottomMax1) {
+                var halfLabelHeight1 = linkVar1.labelHeight / 2,
+                    targetY1   = labelBottomMax1 - halfLabelHeight1,
+                    targetYMin = halfLabelHeight1;
                 if(targetY1 < targetYMin) {
                     overlapping = true;
                     linkVar1.targetY = targetYMin;
@@ -689,16 +655,14 @@ def
             totalHeight += categScene.vars.link.labelHeight;
         });
 
-        var freeSpace = layoutInfo.clientSize.height - totalHeight; // may be < 0
-        var labelSpacing = freeSpace;
-        if(scenes.length > 1) {
-            labelSpacing /= (scenes.length - 1);
-        }
+        var freeSpace = layoutInfo.clientSize.height - totalHeight, // may be < 0
+            labelSpacing = freeSpace;
+        if(scenes.length > 1) labelSpacing /= (scenes.length - 1);
 
         var y = 0;
         scenes.forEach(function(scene) {
-            var linkVar = scene.vars.link;
-            var halfLabelHeight = linkVar.labelHeight / 2;
+            var linkVar = scene.vars.link,
+                halfLabelHeight = linkVar.labelHeight / 2;
             y += halfLabelHeight;
             linkVar.targetY = y;
             y += halfLabelHeight + labelSpacing;
@@ -725,38 +689,34 @@ def
     sliceLabel: function() { return this.format(this.sliceLabelMask()); },
 
     layoutI: function(layoutInfo, startAngle) {
-        var valueVar = this.vars.value;
-        var endAngle = startAngle + valueVar.angle;
-        var midAngle = (startAngle + endAngle) / 2;
+        var valueVar = this.vars.value,
+            endAngle = startAngle + valueVar.angle,
+            midAngle = (startAngle + endAngle) / 2,
+            // Overwrite existing link var, if any.
+            linkVar = (this.vars.link = new pvc.visual.PieLinkLabelVar()),
+            linkLayout = layoutInfo.link,
+            labelLines = pvc.text.justify(valueVar.sliceLabel, linkLayout.maxTextWidth, layoutInfo.labelFont),
+            lineCount = labelLines.length;
 
-        // Overwrite existing link var, if any.
-        var linkVar = (this.vars.link = new pvc.visual.PieLinkLabelVar());
-
-        var linkLayout = layoutInfo.link;
-
-        var labelLines = pvc.text.justify(valueVar.sliceLabel, linkLayout.maxTextWidth, layoutInfo.labelFont);
-        var lineCount = labelLines.length;
         linkVar.labelLines  = labelLines;
         linkVar.labelHeight = lineCount * linkLayout.lineHeight;
 
         this.lineScenes = def.array.create(lineCount, this);
 
-        var cosMid = Math.cos(midAngle);
-        var sinMid = Math.sin(midAngle);
-
-        var isAtRight = cosMid >= 0;
-        var dir = isAtRight ? 1 : -1;
+        var cosMid = Math.cos(midAngle),
+            sinMid = Math.sin(midAngle),
+            isAtRight = cosMid >= 0,
+            dir = isAtRight ? 1 : -1;
 
         // Label anchor is at the side with opposite name to the side of the pie where it is placed.
         linkVar.labelAnchor = isAtRight ?  'left' : 'right';
 
-        var center = layoutInfo.center;
-        var elbowRadius = linkLayout.elbowRadius;
-        var elbowX = center.x + elbowRadius * cosMid;
-        var elbowY = center.y + elbowRadius * sinMid; // baseY
-
-        var anchorX = center.x + dir * elbowRadius;
-        var targetX = anchorX + dir * linkLayout.linkMargin;
+        var center = layoutInfo.center,
+            elbowRadius = linkLayout.elbowRadius,
+            elbowX = center.x + elbowRadius * cosMid,
+            elbowY = center.y + elbowRadius * sinMid, // baseY
+            anchorX = center.x + dir * elbowRadius,
+            targetX = anchorX + dir * linkLayout.linkMargin;
 
         new pvc.visual.PieLinkLineScene(this, elbowX,  elbowY);
         new pvc.visual.PieLinkLineScene(this, anchorX, elbowY);
@@ -770,15 +730,13 @@ def
     },
 
     layoutII: function(layoutInfo) {
-        var linkVar = this.vars.link;
+        var linkVar = this.vars.link,
+            targetY = linkVar.targetY,
+            targetX = linkVar.targetX,
+            handleWidth = layoutInfo.link.handleWidth;
 
-        var targetY = linkVar.targetY;
-        var targetX = linkVar.targetX;
-
-        var handleWidth = layoutInfo.link.handleWidth;
-        if(handleWidth > 0) {
+        if(handleWidth > 0)
             new pvc.visual.PieLinkLineScene(this, targetX - linkVar.dir * handleWidth, targetY);
-        }
 
         new pvc.visual.PieLinkLineScene(this, targetX, targetY);
 

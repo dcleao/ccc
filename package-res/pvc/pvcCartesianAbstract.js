@@ -7,7 +7,7 @@
  */
 def
 .type('pvc.CartesianAbstract', pvc.BaseChart)
-.init(function(options){
+.init(function(options) {
     
     this.axesPanels = {};
     
@@ -90,8 +90,7 @@ def
             // In case we're being re-rendered,
             // capture the axes' focusWindow, if any.
             // and set it as the next focusWindow.
-            var fwData;
-            var fw = this.focusWindow;
+            var fwData, fw = this.focusWindow;
             if(fw) fwData = fw._exportData();
             
             fw = this.focusWindow = new pvc.visual.CartesianFocusWindow(this);

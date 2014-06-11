@@ -3,22 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 def.type('pvc.visual.Dot', pvc.visual.Sign)
-.init(function(panel, parentMark, keyArgs){
+.init(function(panel, parentMark, keyArgs) {
     
     var pvMark = parentMark.add(pv.Dot);
     
     var protoMark = def.get(keyArgs, 'proto');
-    if(protoMark){
-        pvMark.extend(protoMark);
-    }
+    if(protoMark) pvMark.extend(protoMark);
     
     keyArgs = def.setDefaults(keyArgs, 'freeColor', false);
     
     this.base(panel, pvMark, keyArgs);
     
-    if(!def.get(keyArgs, 'freePosition', false)){
-        var a_left   = panel.isOrientationVertical() ? 'left' : 'bottom';
-        var a_bottom = panel.anchorOrtho(a_left);
+    if(!def.get(keyArgs, 'freePosition', false)) {
+        var a_left   = panel.isOrientationVertical() ? 'left' : 'bottom',
+            a_bottom = panel.anchorOrtho(a_left);
 
         /* Positions */
         this._lockDynamic(a_left,   'x')
@@ -55,7 +53,7 @@ def.type('pvc.visual.Dot', pvc.visual.Sign)
     y: def.fun.constant(0),
     x: def.fun.constant(0),
     
-    radius: function(){
+    radius: function() {
         // Store extended value, if any
         // See #baseSize
         this.instanceState().cccRadius = this.delegateExtension();
@@ -70,7 +68,7 @@ def.type('pvc.visual.Dot', pvc.visual.Sign)
 
     defaultSize: def.fun.constant(12),
     
-    interactiveSize: function(scene, size){
+    interactiveSize: function(scene, size) {
         return this.mayShowActive(scene, /*noSeries*/true) ?
                (Math.max(size, 5) * 2.5) : 
                size;
@@ -81,18 +79,17 @@ def.type('pvc.visual.Dot', pvc.visual.Sign)
     /**
      * @override
      */
-    interactiveColor: function(scene, color, type){
+    interactiveColor: function(scene, color, type) {
         if(this.mayShowActive(scene, /*noSeries*/true)) {
-            if(type === 'stroke') { return color.brighter(1); }
+            if(type === 'stroke') return color.brighter(1);
         } else if(this.mayShowNotAmongSelected(scene)) {
-            if(this.mayShowActive(scene)) { return color.alpha(0.8); }
+            if(this.mayShowActive(scene)) return color.alpha(0.8);
             
             switch(type) {
                 case 'fill':   return this.dimColor(color, type);
                 case 'stroke': return color.alpha(0.45);
             }
         }
-
         return this.base(scene, color, type);
     }
 });

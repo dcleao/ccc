@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 def.type('pvc.visual.Sign', pvc.visual.BasicSign)
-.init(function(panel, pvMark, keyArgs){
+.init(function(panel, pvMark, keyArgs) {
     var me = this;
 
     me.base(panel, pvMark, keyArgs);
@@ -11,18 +11,15 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
     me._ibits = panel._ibits;
 
     var extensionIds = def.get(keyArgs, 'extensionId');
-    if(extensionIds != null){ // empty string is a valid extension id.
+    if(extensionIds != null) // empty string is a valid extension id.
         me.extensionAbsIds = def.array.to(panel._makeExtensionAbsId(extensionIds));
-    }
 
     me.isActiveSeriesAware = def.get(keyArgs, 'activeSeriesAware', true);
     if(me.isActiveSeriesAware) {
         // Should also check if the corresponding data has > 1 atom?
         var roles = panel.visualRoles;
         var seriesRole = roles && roles.series;
-        if(!seriesRole || !seriesRole.isBound()) {
-            me.isActiveSeriesAware = false;
-        }
+        if(!seriesRole || !seriesRole.isBound()) me.isActiveSeriesAware = false;
     }
 
     /* Extend the pv mark */
@@ -33,7 +30,7 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
           ._bindProperty('strokeStyle', 'strokeColor', 'color');
     }
 })
-.postInit(function(panel, pvMark, keyArgs){
+.postInit(function(panel, pvMark, keyArgs) {
 
     this._addInteractive(keyArgs);
 
@@ -52,37 +49,28 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
 
     // To be called on prototype
     property: function(name) {
-        var upperName  = def.firstUpperCase(name);
-        var baseName   = 'base'        + upperName;
-        var defName    = 'default'     + upperName;
-        var normalName = 'normal'      + upperName;
-        var interName  = 'interactive' + upperName;
-
-        var methods = {};
+        var upperName  = def.firstUpperCase(name),
+            baseName   = 'base'        + upperName,
+            defName    = 'default'     + upperName,
+            normalName = 'normal'      + upperName,
+            interName  = 'interactive' + upperName,
+            methods = {};
 
         // ex: color
         methods[name] = function(scene, arg) {
             this._finished = false;
-
             this._arg = arg; // for use in calling default methods (see #_bindProperty)
 
             // ex: baseColor
             var value = this[baseName](scene, arg);
-            if(value == null ) { return null;  } // undefined included
-            if(this._finished) { return value; }
+            if(value == null ) return null; // undefined included
+            if(this._finished) return value;
 
-            if(this.showsInteraction() && scene.anyInteraction()) {
-                // ex: interactiveColor
-                value = this[interName](scene, value, arg);
-            } else {
-                // ex: normalColor
-                value = this[normalName](scene, value, arg);
-            }
+            // ex: interactiveColor or normalColor
+            value = this[this.showsInteraction() && scene.anyInteraction() ? interName : normalName](scene, value, arg);
 
-            // Possible memory leak in case of error
-            // but it is not serious.
-            // Performance is more important
-            // so no try/finally is added.
+            // Possible memory leak in case of error but it is not serious.
+            // Performance is more important so no try/finally is added.
             this._arg = null;
 
             return value;
@@ -140,11 +128,9 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
             this._extended = true;
 
             var extensionAbsIds = this.extensionAbsIds;
-            if(extensionAbsIds) {
-                extensionAbsIds.forEach(function(extensionAbsId) {
+            if(extensionAbsIds) extensionAbsIds.forEach(function(extensionAbsId) {
                     this.panel.extendAbs(this.pvMark, extensionAbsId);
                 }, this);
-            }
         }
 
         return this;
@@ -178,7 +164,7 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
     _bindProperty: function(pvName, prop, realProp) {
         var me = this;
 
-        if(!realProp) { realProp = prop; }
+        if(!realProp) realProp = prop;
 
         var defaultPropName = "default" + def.firstUpperCase(realProp);
         if(def.fun.is(me[defaultPropName])) {
@@ -221,20 +207,17 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
         return me._intercept(pvName, mainPropMethod);
     },
 
-    _intercept: function(name, fun){
-        var mark = this.pvMark;
-
+    _intercept: function(name, fun) {
         // Apply all extensions, in order
-
-        var extensionAbsIds = this.extensionAbsIds;
-        if(extensionAbsIds){
-            def
-            .query(extensionAbsIds)
-            .select(function(extensionAbsId){
+        var mark = this.pvMark,
+            extensionAbsIds = this.extensionAbsIds;
+        if(extensionAbsIds) {
+            def.query(extensionAbsIds)
+            .select(function(extensionAbsId) {
                 return this.panel._getExtensionAbs(extensionAbsId, name);
              }, this)
             .where(def.notUndef)
-            .each(function(extValue){
+            .each(function(extValue) {
                 extValue = mark.wrap(extValue, name);
 
                 // Gets set on the mark; We intercept it afterwards.
@@ -245,7 +228,6 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
         }
 
         // Intercept with specified function (may not be a property function)
-
         (mark._intercepted || (mark._intercepted = {}))[name] = true;
 
         mark.intercept(name, fun);
@@ -268,28 +250,22 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
             var bits = me._ibits,
                 I    = pvc.visual.Interactive;
 
-            if(get(ka, 'noTooltip'    )) { bits &= ~I.ShowsTooltip;    }
-            if(get(ka, 'noHover'      )) { bits &= ~I.Hoverable;       }
-            if(get(ka, 'noClick'      )) { bits &= ~I.Clickable;       }
-            if(get(ka, 'noDoubleClick')) { bits &= ~I.DoubleClickable; }
-            if(get(ka, 'noSelect'     )) { bits &= ~I.SelectableAny;   }
+            if(get(ka, 'noTooltip'    )) bits &= ~I.ShowsTooltip;
+            if(get(ka, 'noHover'      )) bits &= ~I.Hoverable;
+            if(get(ka, 'noClick'      )) bits &= ~I.Clickable;
+            if(get(ka, 'noDoubleClick')) bits &= ~I.DoubleClickable;
+            if(get(ka, 'noSelect'     )) bits &= ~I.SelectableAny;
             else if(this.selectable()) {
-                if(get(ka, 'noClickSelect' )) { bits &= ~I.SelectableByClick;      }
-                if(get(ka, 'noRubberSelect')) { bits &= ~I.SelectableByRubberband; }
+                if(get(ka, 'noClickSelect' )) bits &= ~I.SelectableByClick;
+                if(get(ka, 'noRubberSelect')) bits &= ~I.SelectableByRubberband;
             }
 
             // By default interaction is SHOWN if the sign
             // is sensitive to interactive events.
             if(me.showsInteraction()) {
-                if(get(ka, 'showsInteraction') === false) { bits &= ~I.ShowsInteraction; }
-
-                if(me.showsActivity()) {
-                    if(get(ka, 'showsActivity') === false) { bits &= ~I.ShowsActivity; }
-                }
-
-                if(me.showsSelection()) {
-                    if(get(ka, 'showsSelection') === false) { bits &= ~I.ShowsSelection; }
-                }
+                if(get(ka, 'showsInteraction') === false) bits &= ~I.ShowsInteraction;
+                if(me.showsActivity()  && get(ka, 'showsActivity' ) === false) bits &= ~I.ShowsActivity;
+                if(me.showsSelection() && get(ka, 'showsSelection') === false) bits &= ~I.ShowsSelection;
             }
 
             me._ibits = bits;
@@ -298,10 +274,10 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
         if(!me.handlesEvents()) {
             me.pvMark.events('none');
         } else {
-            if(me.showsTooltip()     ) { me._addPropTooltip(get(ka, 'tooltipArgs')); }
-            if(me.hoverable()        ) { me._addPropHoverable();   }
-            if(me.handlesClickEvent()) { me._addPropClick();       }
-            if(me.doubleClickable()  ) { me._addPropDoubleClick(); }
+            if(me.showsTooltip()     ) me._addPropTooltip(get(ka, 'tooltipArgs'));
+            if(me.hoverable()        ) me._addPropHoverable();
+            if(me.handlesClickEvent()) me._addPropClick();
+            if(me.doubleClickable()  ) me._addPropDoubleClick();
         }
     },
 
@@ -312,7 +288,7 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
     defaultColor: function(scene/*, type*/) { return this.defaultColorSceneScale()(scene); },
 
     dimColor: function(color, type) {
-        if(type === 'text'){
+        if(type === 'text') {
             return pvc.toGrayScale(
                 color,
                 /*alpha*/-0.75, // if negative, multiplies by color.alpha
@@ -340,7 +316,7 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
     },
 
     mayShowActive: function(scene, noSeries) {
-        if(!this.showsActivity()) { return false; }
+        if(!this.showsActivity()) return false;
 
         return scene.isActive ||
                (!noSeries && this.isActiveSeriesAware && scene.isActiveSeries()) ||
@@ -363,7 +339,7 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
 
         var tooltipFormatter = def.get(ka, 'buildTooltip') ||
                            this._getTooltipFormatter(tipOptions);
-        if(!tooltipFormatter) { return; }
+        if(!tooltipFormatter) return;
 
         tipOptions.isEnabled = this._isTooltipEnabled.bind(this);
 
@@ -398,9 +374,9 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
     _isTooltipEnabled: function() { return this.panel._isTooltipEnabled(); },
 
     _createTooltipProp: function(tooltipFormatter, isLazy) {
-        var me = this;
+        var me = this,
+            formatTooltip;
 
-        var formatTooltip;
         if(!isLazy) {
             formatTooltip = function(scene) {
                 var context = me.context(scene);
@@ -409,8 +385,8 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
         } else {
             formatTooltip = function(scene) {
                 // Capture current context
-                var context = me.context(scene, /*createNew*/true);
-                var tooltip;
+                var context = me.context(scene, /*createNew*/true),
+                    tooltip;
 
                 // Function that formats the tooltip only on first use
                 return function() {
@@ -418,25 +394,22 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
                         tooltip = tooltipFormatter(context);
                         context = null; // release context;
                     }
-
                     return tooltip;
                 };
             };
         }
 
         return function(scene) {
-            if(scene && !scene.isIntermediate && scene.showsTooltip()) {
+            if(scene && !scene.isIntermediate && scene.showsTooltip())
                 return formatTooltip(scene);
-            }
         };
     },
 
     /* HOVERABLE */
     _addPropHoverable: function() {
-        var panel  = this.panel;
+        var panel  = this.panel,
+            onEvent, offEvent;
 
-        var onEvent;
-        var offEvent;
 //        switch(pvMark.type) {
 //            default:
 //            case 'dot':
@@ -465,7 +438,7 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
             .event(offEvent, function(scene) {
                 if(scene.hoverable() && !panel.selectingByRubberband() && !panel.animating()) {
                      // Clears THE active scene, if ANY (not necessarily = scene)
-                    if(scene.clearActive()) { panel.renderInteractive(); }
+                    if(scene.clearActive()) panel.renderInteractive();
                 }
             });
     },
@@ -477,8 +450,8 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
     _ignoreClicks: 0,
 
     _propCursorClick: function(s) {
-        var ibits = (this._ibits & s._ibits);
-        var I = pvc.visual.Interactive;
+        var ibits = (this._ibits & s._ibits),
+            I = pvc.visual.Interactive;
         //noinspection JSBitwiseOperatorUsage
         return (ibits & I.HandlesClickEvent) || (ibits & I.DoubleClickable) ?
                'pointer' :
@@ -508,26 +481,26 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
         // Avoid this PV context plumbing here!
 
         // Not yet in context...
-        var me = this;
-        var pvMark = me.pvMark;
-        var pvInstance = pvMark.instance();
-        var scene = pvInstance.data;
-
-        var wait  = me.doubleClickable() && scene.doubleClickable();
+        var me = this,
+            pvMark = me.pvMark,
+            pvInstance = pvMark.instance(),
+            scene = pvInstance.data,
+            wait  = me.doubleClickable() && scene.doubleClickable();
         if(!wait) {
-            if(me._ignoreClicks) { me._ignoreClicks--;    }
-            else                 { me._handleClickCore(); }
+            if(me._ignoreClicks) me._ignoreClicks--;
+            else                 me._handleClickCore();
         } else {
-            var pvScene = pvMark.scene;
-            var pvIndex = pvMark.index;
-            var pvEvent = pv.event;
+            var pvScene = pvMark.scene,
+                pvIndex = pvMark.index,
+                pvEvent = pv.event;
 
             // Delay click evaluation so that
             // it may be canceled if a double-click meanwhile fires.
             // When timeout finished, reestablish protovis context.
             window.setTimeout(function() {
-                if(me._ignoreClicks) { me._ignoreClicks--; }
-                else {
+                if(me._ignoreClicks) {
+                    me._ignoreClicks--;
+                } else {
                     try {
                         pv.event = pvEvent;
                         pvMark.context(pvScene, pvIndex, function() { me._handleClickCore(); });
@@ -550,8 +523,8 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
         // The following must be tested before delegating to context
         // because we might not need to ignore the clicks.
         // Assumes that: this.doubleClickable()
-        var me = this;
-        var scene = me.scene();
+        var me = this,
+            scene = me.scene();
         if(scene && scene.doubleClickable()) {
             // TODO: explain why 2 ignores
             me._ignoreClicks = 2;

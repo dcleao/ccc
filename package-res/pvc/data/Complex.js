@@ -64,7 +64,7 @@ def
     var owner;
     if(source) {
         owner = source.owner;
-        if(!atomsBase) { atomsBase = source.atoms; }
+        if(!atomsBase) atomsBase = source.atoms;
     }
 
     me.owner = owner = (owner || me);
@@ -74,44 +74,38 @@ def
     me.atoms = atomsBase ? Object.create(atomsBase) : {};
 
     var dimNamesSpecified = !!dimNames;
-    if(!dimNames) { dimNames = type._dimsNames; }
+    if(!dimNames) dimNames = type._dimsNames;
 
-    var atomsMap = me.atoms;
-    var D = dimNames.length;
-    var i, dimName;
+    var atomsMap = me.atoms,
+        D = dimNames.length,
+        i, dimName;
 
-    if(atomsByName){
+    if(atomsByName) {
         // Fill the atoms map
 
-        var ownerDims = owner._dimensions;
+        var ownerDims = owner._dimensions,
+            addAtom = function(dimName) { // ownerDims, atomsBase, atomsMap, atomsByName
+                var v = atomsByName[dimName],
+                    // Need to intern, even if null.
+                    atom = ownerDims[dimName].intern(v);
 
-        var addAtom = function(dimName) { // ownerDims, atomsBase, atomsMap, atomsByName
-            var v = atomsByName[dimName];
-
-            // Need to intern, even if null.
-            var atom = ownerDims[dimName].intern(v);
-
-            // Don't add atoms already in base proto object.
-            // (virtual) nulls are already in the root proto object.
-            if(v != null && (!atomsBase || atom !== atomsBase[dimName])) {
-                atomsMap[dimName] = atom;
-            }
-        };
+                // Don't add atoms already in base proto object.
+                // (virtual) nulls are already in the root proto object.
+                if(v != null && (!atomsBase || atom !== atomsBase[dimName])) atomsMap[dimName] = atom;
+            };
 
         if(!dimNamesSpecified) {
-            for(dimName in atomsByName) { addAtom(dimName); }
+            for(dimName in atomsByName) addAtom(dimName);
         } else {
             i = D;
-            while(i--) { addAtom(dimNames[i]); }
+            while(i--) addAtom(dimNames[i]);
         }
 
         if(calculate) {
             // May be null
             atomsByName = type._calculate(me);
-            for(dimName in atomsByName) {
-                // Not yet added
-                if(!def.hasOwnProp.call(atomsMap, dimName)) { addAtom(dimName); }
-            }
+            // Not yet added?
+            for(dimName in atomsByName) if(!def.hasOwnProp.call(atomsMap, dimName)) addAtom(dimName);
         }
     }
 
@@ -120,34 +114,34 @@ def
     if(!D) {
         me.value = null;
         me.key   = '';
-        if(wantLabel) { me.label = ""; }
+        if(wantLabel) me.label = "";
     } else if(D === 1) {
         atom = atomsMap[dimNames[0]];
         me.value     = atom.value;    // always typed when only one
         me.rawValue  = atom.rawValue; // original
         me.key       = atom.key;      // string
-        if(wantLabel) { me.label = atom.label; }
+        if(wantLabel) me.label = atom.label;
     } else {
-        var key, label, alabel;
-        var keySep   = owner.keySep;
-        var labelSep = owner.labelSep;
+        var key, label, alabel,
+            keySep   = owner.keySep,
+            labelSep = owner.labelSep;
 
         for(i = 0 ; i < D ; i++) {
             atom = atomsMap[dimNames[i]];
 
             // Add to key, null or not
-            if(!i) { key  = atom.key; }
-            else   { key += (keySep + atom.key); }
+            if(!i) key  = atom.key;
+            else   key += (keySep + atom.key);
 
             // Add to label, when non-empty
             if(wantLabel && (alabel = atom.label)) {
-                if(label) { label += (labelSep + alabel); }
-                else      { label  = alabel; }
+                if(label) label += (labelSep + alabel);
+                else      label  = alabel;
             }
         }
 
         me.value = me.rawValue = me.key = key;
-        if(wantLabel) { me.label = label; }
+        if(wantLabel) me.label = label;
     }
 })
 .add(/** @lends pvc.data.Complex# */{
@@ -171,16 +165,16 @@ def
     label: null,
     rawValue: undefined,
 
-    ensureLabel: function(){
+    ensureLabel: function() {
         var label = this.label;
-        if(label == null){
+        if(label == null) {
             label = "";
             var labelSep = this.owner.labelSep;
             def.eachOwn(this.atoms, function(atom) {
                 var alabel = atom.label;
                 if(alabel) {
-                    if(label) { label += (labelSep + alabel); }
-                    else      { label  = alabel; }
+                    if(label) label += (labelSep + alabel);
+                    else      label  = alabel;
                 }
             });
 
@@ -190,16 +184,14 @@ def
         return label;
     },
 
-    view: function(dimNames){
+    view: function(dimNames) {
         return new pvc.data.ComplexView(this, dimNames);
     },
 
     toString : function() {
        var s = [ '' + this.constructor.typeName ];
 
-       if (this.index != null) {
-           s.push("#" + this.index);
-       }
+       if(this.index != null) s.push("#" + this.index);
 
        this.owner.type.dimensionsNames().forEach(function(name) {
            s.push(name + ": " + pvc.stringify(this.atoms[name].value));
@@ -223,30 +215,28 @@ def
 
 pvc.data.Complex.rightTrimKeySep = function(key, keySep) {
     if(key && keySep) {
-        var j;
-        var K = keySep.length;
-        while(key.lastIndexOf(keySep) === (j = key.length - K) && j >= 0) {
+        var j, K = keySep.length;
+        while(key.lastIndexOf(keySep) === (j = key.length - K) && j >= 0)
             key = key.substr(0, j);
-        }
     }
     return key;
 };
 
-pvc.data.Complex.values = function(complex, dimNames){
+pvc.data.Complex.values = function(complex, dimNames) {
     var atoms = complex.atoms;
-    return dimNames.map(function(dimName){ return atoms[dimName].value; });
+    return dimNames.map(function(dimName) { return atoms[dimName].value; });
 };
 
-pvc.data.Complex.compositeKey = function(complex, dimNames){
+pvc.data.Complex.compositeKey = function(complex, dimNames) {
     var atoms = complex.atoms;
     return dimNames
-        .map(function(dimName){ return atoms[dimName].key; })
+        .map(function(dimName) { return atoms[dimName].key; })
         .join(complex.owner.keySep);
 };
 
-pvc.data.Complex.labels = function(complex, dimNames){
+pvc.data.Complex.labels = function(complex, dimNames) {
     var atoms = complex.atoms;
-    return dimNames.map(function(dimName){ return atoms[dimName].label; });
+    return dimNames.map(function(dimName) { return atoms[dimName].label; });
 };
 
 var complex_id = def.propGet('id');

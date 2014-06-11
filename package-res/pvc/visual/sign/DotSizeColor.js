@@ -11,15 +11,15 @@ def
 
     var isV1Compat = this.compatVersion() <= 1;
     
-    this
-    ._bindProperty('lineWidth', 'strokeWidth')
-    .intercept('visible', function(scene) {
-        if(!this.canShow(scene)) { return false; }
-        
-        var visible = this.delegateExtension();
-        if(visible == null) { visible = isV1Compat || this.defaultVisible(scene); }
-        return visible;
-    });
+    this._bindProperty('lineWidth', 'strokeWidth')
+        .intercept('visible', function(scene) {
+            if(!this.canShow(scene)) return false;
+
+            var visible = this.delegateExtension();
+            return visible == null
+                ? (isV1Compat || this.defaultVisible(scene))
+                : visible;
+        });
     
     this._initColor();
     this._initSize();
@@ -32,9 +32,9 @@ def
             // Override current default scene color
             var baseSceneDefColor = this._sceneDefColor;
             this._sceneDefColor = function(scene, type) {
-                return type === 'stroke' && scene.vars.size.value < 0 ?
-                       pv.Color.names.black :
-                       baseSceneDefColor.call(this, scene, type);
+                return type === 'stroke' && scene.vars.size.value < 0
+                    ? pv.Color.names.black
+                    : baseSceneDefColor.call(this, scene, type);
             };
             
             this.pvMark
@@ -66,10 +66,10 @@ def
     _initColor: function() {
         // TODO: can't most of this be incorporated in the sizeAxis code
         // or in Sign#_initDefColorScale ??
-        var colorConstant;
-        var sceneColorScale;
-        var panel = this.panel;
-        var colorRole = panel.visualRoles.color;
+        var colorConstant,
+            sceneColorScale,
+            panel = this.panel,
+            colorRole = panel.visualRoles.color;
         if(colorRole) {
             this.isColorDiscrete = colorRole.isDiscrete();
             
@@ -83,25 +83,22 @@ def
                 colorConstant = colorAxis.option('Unbound');
             }
         }
-        
-        if(!sceneColorScale) {
-            sceneColorScale = def.fun.constant(colorConstant || pvc.defaultColor);
-        }
 
-        this._sceneDefColor = sceneColorScale;
+        this._sceneDefColor = sceneColorScale || def.fun.constant(colorConstant || pvc.defaultColor);
     },
 
     _initSize: function() {
-        var panel = this.panel;
-        var plot  = panel.plot;
-        var shape = plot.option('Shape');
-        var nullSizeShape = plot.option('NullShape');
-        var sizeRole = panel.visualRoles.size;
-        var sceneSizeScale, sceneShapeScale;
+        var panel = this.panel,
+            plot  = panel.plot,
+            shape = plot.option('Shape'),
+            nullSizeShape = plot.option('NullShape'),
+            sizeRole = panel.visualRoles.size,
+            sceneSizeScale, sceneShapeScale;
+
         if(sizeRole) {
-            var sizeAxis  = panel.axes.size;
-            var sizeScale = sizeAxis && sizeAxis.scale;
-            var isSizeBound = !!sizeScale && sizeRole.isBound();
+            var sizeAxis  = panel.axes.size,
+                sizeScale = sizeAxis && sizeAxis.scale,
+                isSizeBound = !!sizeScale && sizeRole.isBound();
             if(isSizeBound) {
                 this.isSizeBound = true;
                 
@@ -124,7 +121,7 @@ def
         if(!sceneSizeScale) {
             // => !isSizeBound
             sceneShapeScale = def.fun.constant(shape);
-            sceneSizeScale  = function(scene){ return this.base(scene); };
+            sceneSizeScale  = function(scene) { return this.base(scene); };
         }
         
         this._sceneDefSize  = sceneSizeScale;
@@ -156,10 +153,10 @@ def
                 case 'stroke': return color.darker();
             }
         } else if(this.showsSelection()) {
-            var isSelected = scene.isSelected();
-            var notAmongSelected = !isSelected && scene.anySelected();
-            if(notAmongSelected){
-                if(this.mayShowActive(scene)) { return color.alpha(0.8); }
+            var isSelected = scene.isSelected(),
+                notAmongSelected = !isSelected && scene.anySelected();
+            if(notAmongSelected) {
+                if(this.mayShowActive(scene)) return color.alpha(0.8);
 
                 switch(type) {
                     // Metric sets an alpha while HG does not
@@ -168,15 +165,12 @@ def
                 }
             }
 
-            if(isSelected && pvc_colorIsGray(color)) {
-                if(type === 'stroke') { color = color.darker(3); }
-
-                return color.darker(2);
-            }
+            if(isSelected && pvc_colorIsGray(color))
+                return type === 'stroke' ? color.darker(3) : color.darker(2);
         }
 
         // When some active that's not me, the stroke shows a darker color, as well
-        if(type === 'stroke') { return color.darker(); }
+        if(type === 'stroke') return color.darker();
         
         // show base color
         return color;
@@ -187,11 +181,11 @@ def
     defaultShape: function(scene) { return this._sceneDefShape(scene); },
 
     interactiveSize: function(scene, size) {
-        if(!this.mayShowActive(scene, /*noSeries*/true)) { return size; }
+        if(!this.mayShowActive(scene, /*noSeries*/true)) return size;
 
         // At least 1 px, no more than 10% of the radius, and no more that 3px.
-        var radius    = Math.sqrt(size);
-        var radiusInc = Math.max(1, Math.min(1.1 * radius, 2));
+        var radius    = Math.sqrt(size),
+            radiusInc = Math.max(1, Math.min(1.1 * radius, 2));
         return def.sqr(radius + radiusInc);
     },
 

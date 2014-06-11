@@ -52,12 +52,11 @@ def.type('pvc.data.GroupingSpec')
 .init(function(levelSpecs, type, ka) {
     this.type = type || null;
     
-    var ids = [];
+    var ids = [],
+        dimNames = []; // accumulated dimension names
     
     this.hasCompositeLevels = false;
-    
-    var dimNames = []; // accumulated dimension names
-    
+
     this.levels = def.query(levelSpecs || undefined) // -> null query
         .where(function(levelSpec) { return levelSpec.dimensions.length > 0; })
         .select(function(levelSpec) {
@@ -104,7 +103,7 @@ def.type('pvc.data.GroupingSpec')
      * Late binds a grouping specification to a complex type.
      * @param {pvc.data.ComplexType} type A complex type.
      */
-    bind: function(type){
+    bind: function(type) {
         this.type = type || def.fail.argumentRequired('type');
         this.levels.forEach(function(levelSpec) { levelSpec.bind(type); });
     },
@@ -219,17 +218,17 @@ def.type('pvc.data.GroupingSpec')
     _ensure: function(ka) {
         var me = this;
         
-        if(def.get(ka, 'isSingleLevel') && !me.isSingleLevel) { return me._singleLevelGrouping(ka); }
-        if(def.get(ka, 'reverse')) { return me._reverse(ka); }
+        if(def.get(ka, 'isSingleLevel') && !me.isSingleLevel) return me._singleLevelGrouping(ka);
+        if(def.get(ka, 'reverse')) return me._reverse(ka);
         
-        var flatteningMode = def.get(ka, 'flatteningMode') || me.flatteningMode;
-        var rootLabel      = def.get(ka, 'rootLabel') || me.rootLabel;
-        if(flatteningMode !== me.flatteningMode || rootLabel !== me.rootLabel) {
+        var flatteningMode = def.get(ka, 'flatteningMode') || me.flatteningMode,
+            rootLabel      = def.get(ka, 'rootLabel') || me.rootLabel;
+
+        if(flatteningMode !== me.flatteningMode || rootLabel !== me.rootLabel)
             return new pvc.data.GroupingSpec(me.levels, me.type, { // Share Levels
                 flatteningMode: flatteningMode,
                 rootLabel:      rootLabel
             });
-        }
         
         return me;
     },
@@ -243,17 +242,14 @@ def.type('pvc.data.GroupingSpec')
      * @type pvc.data.GroupingSpec 
      */
     _singleLevelGrouping: function(ka) {
-        var reverse = !!def.get(ka, 'reverse');
-        var dimSpecs = 
-            this
-            .dimensions()
-            .select(function(dimSpec) {
-                return reverse ? 
-                       new pvc.data.GroupingDimensionSpec(dimSpec.name, !dimSpec.reverse, dimSpec.type.complexType) :
-                       dimSpec;
-            });
-                        
-        var levelSpec = new pvc.data.GroupingLevelSpec(dimSpecs, this.type);
+        var reverse = !!def.get(ka, 'reverse'),
+            dimSpecs = this .dimensions()
+                .select(function(dimSpec) {
+                    return reverse
+                        ? new pvc.data.GroupingDimensionSpec(dimSpec.name, !dimSpec.reverse, dimSpec.type.complexType)
+                        : dimSpec;
+                }),
+            levelSpec = new pvc.data.GroupingLevelSpec(dimSpecs, this.type);
         
         return new pvc.data.GroupingSpec([levelSpec], this.type, {
             flatteningMode: null, // turns into singleLevel
@@ -268,16 +264,15 @@ def.type('pvc.data.GroupingSpec')
      * @type pvc.data.GroupingSpec 
      */
     _reverse: function(ka) {
-        var levelSpecs = 
-            def
-            .query(this.levels)
+        var levelSpecs = def.query(this.levels)
             .select(function(levelSpec) {
-                var dimSpecs = 
-                    def
-                    .query(levelSpec.dimensions)
-                    .select(function(dimSpec) {
-                        return new pvc.data.GroupingDimensionSpec(dimSpec.name, !dimSpec.reverse, dimSpec.type.complexType);
-                    });
+                var dimSpecs = def.query(levelSpec.dimensions)
+                        .select(function(dimSpec) {
+                            return new pvc.data.GroupingDimensionSpec(
+                                dimSpec.name,
+                                !dimSpec.reverse,
+                                dimSpec.type.complexType);
+                        });
                 
                 //noinspection JSPotentiallyInvalidUsageOfThis
                 return new pvc.data.GroupingLevelSpec(dimSpecs, this.type);
@@ -289,21 +284,21 @@ def.type('pvc.data.GroupingSpec')
         });
     },
 
-    toString: function(){
+    toString: function() {
         return def.query(this.levels)
-                .select(function(level){ return '' + level; })
-                .array()
-                .join(', ');
+            .select(function(level) { return '' + level; })
+            .array()
+            .join(', ');
     }
 });
 
 def.type('pvc.data.GroupingLevelSpec')
-.init(function(dimSpecs, type){
-    var ids = [];
-    var dimNames = [];
+.init(function(dimSpecs, type) {
+    var ids = [],
+        dimNames = [];
     
     this.dimensions = def.query(dimSpecs)
-       .select(function(dimSpec){
+       .select(function(dimSpec) {
            ids.push(dimSpec.id);
            dimNames.push(dimSpec.name);
            return dimSpec;
@@ -313,7 +308,7 @@ def.type('pvc.data.GroupingLevelSpec')
     this._dimNames = dimNames;
     
     this.dimensionsInDefOrder = this.dimensions.slice(0);
-    if(type) { this._sortDimensions(type); }
+    if(type) this._sortDimensions(type);
     
     this.id = ids.join(',');
     this.depth = this.dimensions.length;
@@ -343,39 +338,36 @@ def.type('pvc.data.GroupingLevelSpec')
     },
     
     compare: function(a, b) {
-        var dims = this.dimensions;
-        var D = this.depth;
-        for(var i = 0 ; i < D ; i++) {
-            var result = dims[i].compareDatums(a, b);
-            if(result/* !== 0*/) { return result; }
-        }
+        var dims = this.dimensions, D = this.depth, result;
+        for(var i = 0 ; i < D ; i++)
+            if((result = dims[i].compareDatums(a, b))/* !== 0*/)
+                return result;
         return 0;
     },
     
     key: function(datum) {
-        var key      = '';
-        var dimNames = this._dimNames;
-        var D        = this.depth;
-        
-        var keySep   = datum.owner.keySep;
-        var datoms   = datum.atoms;
+        var key      = '',
+            dimNames = this._dimNames,
+            D        = this.depth,
+            keySep   = datum.owner.keySep,
+            datoms   = datum.atoms;
 
         // This builds a key compatible with that of pvc.data.Complex#key
         // See also pvc.data.Complex.compositeKey
         for(var i = 0 ; i < D ; i++) {
             var k = datoms[dimNames[i]].key;
-            if(!i) { key = k; }
-            else   { key += (keySep + k); }
+            if(!i) key = k;
+            else   key += (keySep + k);
         }
         
         return key;
     },
 
     atomsInfo: function(datum) {
-        var atoms    = {};
-        var dimNames = this._dimNames;
-        var D        = this.depth;
-        var datoms   = datum.atoms;
+        var atoms    = {},
+            dimNames = this._dimNames,
+            D        = this.depth,
+            datoms   = datum.atoms;
 
         // See also pvc.data.Complex.compositeKey
         for(var i = 0 ; i < D ; i++) {
@@ -387,10 +379,7 @@ def.type('pvc.data.GroupingLevelSpec')
     },
 
     toString: function() {
-        return def.query(this.dimensions)
-                .select(function(dimSpec) { return '' + dimSpec; })
-                .array()
-                .join('|');
+        return def.query(this.dimensions).select(String).array().join('|');
     }
 });
 
@@ -399,7 +388,7 @@ def.type('pvc.data.GroupingDimensionSpec')
     this.name     = name;
     this.reverse  = !!reverse;
     this.id       = name + ":" + (reverse ? '0' : '1');
-    if(type) { this.bind(type); }
+    if(type) this.bind(type);
 })
 .add( /** @lends pvc.data.GroupingDimensionSpec */ {
     type: null,
@@ -457,20 +446,15 @@ def.type('pvc.data.GroupingDimensionSpec')
 pvc.data.GroupingSpec.parse = function(specText, type) {
     if(!specText) { return new pvc.data.GroupingSpec(null, type); }
     
-    var levels;
-    if(def.array.is(specText)) {
-        levels = specText;
-    } else if(def.string.is(specText)) {
-        levels = specText.split(/\s*,\s*/); 
-    }
+    var levels = def.string.is(specText)
+            ? specText.split(/\s*,\s*/)
+            : def.array.as(specText),
 
-    var levelSpecs = 
-        def
-        .query(levels)
-        .select(function(levelText){
-            var dimSpecs = groupSpec_parseGroupingLevel(levelText, type);
-            return new pvc.data.GroupingLevelSpec(dimSpecs, type);
-        });
+        levelSpecs = def.query(levels)
+            .select(function(levelText) {
+                var dimSpecs = groupSpec_parseGroupingLevel(levelText, type);
+                return new pvc.data.GroupingLevelSpec(dimSpecs, type);
+            });
     
     return new pvc.data.GroupingSpec(levelSpecs, type);
 };

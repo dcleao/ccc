@@ -36,10 +36,9 @@ def
             resolve:    '_resolveFull',
             cast:       pvc.castPositiveNumber,
             getDefault: function() {
-                if(this.chart instanceof pvc.PieChart) {
+                if(this.chart instanceof pvc.PieChart)
                     // 5/4 <=> 10/8 < 10/7
                     return 10/7;
-                }
 
                 // Cartesian, ...
                 return 5/4;

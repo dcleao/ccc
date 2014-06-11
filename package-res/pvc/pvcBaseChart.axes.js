@@ -65,13 +65,8 @@ pvc.BaseChart
     _chartLevel: function() {
         // 1 = root, 2 = leaf, 1 | 2 = 3 = everywhere
         var level = 0;
-
-        // Root?
-        if(!this.parent) { level |= 1; }
-
-        // Leaf?
-        if(this.parent || !this.visualRoles.multiChart.isBound()) { level |= 2; }
-
+        if(!this.parent) level |= 1; // Root
+        if(this.parent || !this.visualRoles.multiChart.isBound()) level |= 2; // Leaf
         return level;
     },
 
@@ -112,8 +107,8 @@ pvc.BaseChart
         this._axisCreationOrder.forEach(function(type) {
             // Create?
             if((this._axisCreateChartLevel[type] & chartLevel) !== 0) {
-                var AxisClass;
-                var dataCellsByAxisIndex = dataCellsByAxisTypeThenIndex[type];
+                var AxisClass,
+                    dataCellsByAxisIndex = dataCellsByAxisTypeThenIndex[type];
                 if(dataCellsByAxisIndex) {
 
                     AxisClass = this._axisClassByType[type];
@@ -185,10 +180,8 @@ pvc.BaseChart
 
     _setAxesScales: function(chartLevel) {
         this.axesList.forEach(function(axis) {
-            if((this._axisSetScaleChartLevel[axis.type] & chartLevel) &&
-               axis.isBound()) {
+            if((this._axisSetScaleChartLevel[axis.type] & chartLevel) && axis.isBound())
                 this._setAxisScale(axis, chartLevel);
-            }
         }, this);
     },
 
@@ -213,9 +206,8 @@ pvc.BaseChart
     },
 
     _describeScale: function(axis, scale) {
-        if(scale.isNull && pvc.debug >= 3) {
+        if(scale.isNull && pvc.debug >= 3)
             this._log(def.format("{0} scale for axis '{1}'- no data", [axis.scaleType, axis.id]));
-        }
     },
 
     /**
@@ -224,22 +216,15 @@ pvc.BaseChart
      * @virtual
      */
     _setDiscreteAxisScale: function(axis) {
-        if(axis.type === 'color') {
-            this._setDiscreteColorAxisScale(axis);
-            return;
-        }
+        if(axis.type === 'color') return this._setDiscreteColorAxisScale(axis);
 
         /* DOMAIN */
-        var values = axis.domainValues();
-        var scale = new pv.Scale.ordinal();
-        if(!values.length) {
-            scale.isNull = true;
-        } else {
-            scale.domain(values);
-        }
+        var values = axis.domainValues(),
+            scale = new pv.Scale.ordinal();
+
+        if(!values.length) scale.isNull = true; else scale.domain(values);
 
         this._describeScale(axis, scale);
-
         axis.setScale(scale);
     },
 
@@ -250,51 +235,50 @@ pvc.BaseChart
      */
     _setTimeSeriesAxisScale: function(axis) {
         /* DOMAIN */
-        var extent = this._getContinuousVisibleExtentConstrained(axis); // null when no data...
+        var extent = this._getContinuousVisibleExtentConstrained(axis), // null when no data...
+            scale = new pv.Scale.linear();
 
-        var scale = new pv.Scale.linear();
-        if(!extent){
+        if(!extent) {
             scale.isNull = true;
         } else {
-            var dMin = extent.min;
-            var dMax = extent.max;
-            var epsi = 1;
+            var dMin = extent.min,
+                dMax = extent.max,
+                epsi = 1;
+                normalize = function() {
+                    var d = dMax - dMin;
 
-            var normalize = function() {
-                var d = dMax - dMin;
+                    // very close to zero delta (<0 or >0)
+                    // is turned into 0 delta
+                    if(d && Math.abs(d) < epsi) {
+                        dMax = dMin = new Date(Math.round((dMin + dMax) / 2));
+                        d = 0;
+                    }
 
-                // very close to zero delta (<0 or >0)
-                // is turned into 0 delta
-                if(d && Math.abs(d) < epsi) {
-                    dMax = dMin = new Date(Math.round((dMin + dMax) / 2));
-                    d = 0;
-                }
+                    // zero delta?
+                    if(!d) {
+                        // Adjust *all* that are not locked, or, if all locked, max
+                        // dMax = new Date(dMax.getTime() + pvc.time.intervals.h); // 1 h
 
-                // zero delta?
-                if(!d) {
-                    // Adjust *all* that are not locked, or, if all locked, max
-                    // dMax = new Date(dMax.getTime() + pvc.time.intervals.h); // 1 h
+                        if(!extent.minLocked)
+                            dMin = new Date(dMin.getTime() - pvc.time.intervals.h);
 
-                    if(!extent.minLocked)
-                        dMin = new Date(dMin.getTime() - pvc.time.intervals.h);
+                        // If both are locked, ignore max lock!
+                        if(!extent.maxLocked || extent.minLocked)
+                            dMax = new Date(dMax.getTime() + pvc.time.intervals.h);
 
-                    // If both are locked, ignore max lock!
-                    if(!extent.maxLocked || extent.minLocked)
-                        dMax = new Date(dMax.getTime() + pvc.time.intervals.h);
+                    } else if(d < 0) {
+                        // negative delta, bigger than epsi
 
-                } else if(d < 0) {
-                    // negative delta, bigger than epsi
+                        // adjust max if it is not locked, or
+                        // adjust min if it is not locked, or
+                        // adjust max (all locked)
 
-                    // adjust max if it is not locked, or
-                    // adjust min if it is not locked, or
-                    // adjust max (all locked)
-
-                    if(!extent.maxLocked || extent.minLocked)
-                        dMax = new Date(dMin.getTime() + pvc.time.intervals.h);
-                    else /*if(!extent.minLocked)*/
-                        dMin = new Date(dMax.getTime() - pvc.time.intervals.h);
-                }
-            };
+                        if(!extent.maxLocked || extent.minLocked)
+                            dMax = new Date(dMin.getTime() + pvc.time.intervals.h);
+                        else /*if(!extent.minLocked)*/
+                            dMin = new Date(dMax.getTime() - pvc.time.intervals.h);
+                    }
+                };
 
             normalize();
 
@@ -317,50 +301,48 @@ pvc.BaseChart
         if(axis.type === 'color') return this._setNumericColorAxisScale(axis);
 
         /* DOMAIN */
-        var extent = this._getContinuousVisibleExtentConstrained(axis);
-
-        var scale = new pv.Scale.linear();
+        var extent = this._getContinuousVisibleExtentConstrained(axis),
+            scale = new pv.Scale.linear();
         if(!extent) {
             scale.isNull = true;
         } else {
-            var dMin = extent.min;
-            var dMax = extent.max;
-            var epsi = 1e-10;
+            var dMin = extent.min,
+                dMax = extent.max,
+                epsi = 1e-10,
+                normalize = function() {
+                    var d = dMax - dMin;
 
-            var normalize = function() {
-                var d = dMax - dMin;
+                    // very close to zero delta (<0 or >0)
+                    // is turned into 0 delta
+                    if(d && Math.abs(d) <= epsi) {
+                        dMin = (dMin + dMax) / 2;
+                        dMin = dMax = +dMin.toFixed(10);
+                        d = 0;
+                    }
 
-                // very close to zero delta (<0 or >0)
-                // is turned into 0 delta
-                if(d && Math.abs(d) <= epsi) {
-                    dMin = (dMin + dMax) / 2;
-                    dMin = dMax = +dMin.toFixed(10);
-                    d = 0;
-                }
+                    // zero delta?
+                    if(!d) {
+                        // Adjust *all* that are not locked, or, if all locked, max
+                        if(!extent.minLocked)
+                            dMin = Math.abs(dMin) > epsi ? (dMin * 0.99) : -0.1;
 
-                // zero delta?
-                if(!d) {
-                    // Adjust *all* that are not locked, or, if all locked, max
-                    if(!extent.minLocked)
-                        dMin = Math.abs(dMin) > epsi ? (dMin * 0.99) : -0.1;
+                        // If both are locked, ignore max lock!
+                        if(!extent.maxLocked || extent.minLocked)
+                            dMax = Math.abs(dMax) > epsi ? (dMax * 1.01) : +0.1;
 
-                    // If both are locked, ignore max lock!
-                    if(!extent.maxLocked || extent.minLocked)
-                        dMax = Math.abs(dMax) > epsi ? (dMax * 1.01) : +0.1;
+                    } else if(d < 0) {
+                        // negative delta, bigger than epsi
 
-                } else if(d < 0) {
-                    // negative delta, bigger than epsi
+                        // adjust max if it is not locked, or
+                        // adjust min if it is not locked, or
+                        // adjust max (all locked)
 
-                    // adjust max if it is not locked, or
-                    // adjust min if it is not locked, or
-                    // adjust max (all locked)
-
-                    if(!extent.maxLocked || extent.minLocked)
-                        dMax = Math.abs(dMin) > epsi ? dMin * 1.01 : +0.1;
-                    else /*if(!extent.minLocked)*/
-                        dMin = Math.abs(dMax) > epsi ? dMax * 0.99 : -0.1;
-                }
-            };
+                        if(!extent.maxLocked || extent.minLocked)
+                            dMax = Math.abs(dMin) > epsi ? dMin * 1.01 : +0.1;
+                        else /*if(!extent.minLocked)*/
+                            dMin = Math.abs(dMax) > epsi ? dMax * 0.99 : -0.1;
+                    }
+                };
 
             normalize();
 
@@ -376,15 +358,9 @@ pvc.BaseChart
                      * the scale does not contain the number 0.
                      */
                     if(dMin > 0) {
-                        if(!extent.minLocked) {
-                            extent.minLocked = true;
-                            dMin = 0;
-                        }
+                        if(!extent.minLocked) extent.minLocked = true, dMin = 0;
                     } else {
-                        if(!extent.maxLocked) {
-                            extent.maxLocked = true;
-                            dMax = 0;
-                        }
+                        if(!extent.maxLocked) extent.maxLocked = true, dMax = 0;
                     }
 
                     normalize();
@@ -410,14 +386,12 @@ pvc.BaseChart
 
     /** @virtual */
     _getContinuousVisibleExtentConstrained: function(axis, min, max) {
-        var dim;
-        var getDim = function() {
-            return dim ||
-                   (dim = this.data.owner.dimensions(axis.role.grouping.lastDimensionName()));
-        };
-
-        var minLocked = false;
-        var maxLocked = false;
+        var dim,
+            getDim = function() {
+                return dim || (dim = this.data.owner.dimensions(axis.role.grouping.lastDimensionName()));
+            },
+            minLocked = false,
+            maxLocked = false;
 
         // TODO: NOTE: there's the possibility that a conversion error occurs
         // and that a non-null FixedMin/Max option value is here converted into null.
@@ -433,7 +407,7 @@ pvc.BaseChart
             // Dereference atom
             if(minLocked) {
                 min = min.value;
-                if(min < 0 && axis.scaleUsesAbs()) { min = -min; }
+                if(min < 0 && axis.scaleUsesAbs()) min = -min;
             }
         }
 
@@ -445,15 +419,15 @@ pvc.BaseChart
             // Dereference atom
             if(maxLocked) {
                 max = max.value;
-                if(max < 0 && axis.scaleUsesAbs()) { max = -max; }
+                if(max < 0 && axis.scaleUsesAbs()) max = -max;
             }
         }
 
         if(min == null || max == null) {
             var baseExtent = this._getContinuousVisibleExtent(axis); // null when no data
-            if(!baseExtent) { return null; }
-            if(min == null) { min = baseExtent.min; }
-            if(max == null) { max = baseExtent.max; }
+            if(!baseExtent) return null;
+            if(min == null) min = baseExtent.min;
+            if(max == null) max = baseExtent.max;
         }
 
         return {min: min, max: max, minLocked: minLocked, maxLocked: maxLocked};
@@ -489,54 +463,12 @@ pvc.BaseChart
             .reduce(pvc.unionExtents, null);
     },
 
-    /**
-     * Gets the extent of the values of the specified role
-     * over all datums of the visible data.
-     *
-     * @param {pvc.visual.Axis} valueAxis The value axis.
-     * @param {pvc.visual.Role} valueDataCell The data cell.
-     * @type object
-     *
-     * @protected
-     * @virtual
-     */
-    _getContinuousVisibleCellExtent: function(valueAxis, valueDataCell) {
-        var valueRole = valueDataCell.role;
-
-        this._warnSingleContinuousValueRole(valueRole);
-
-        // not supported/implemented?
-        if(valueRole.name === 'series') throw def.error.notImplemented();
-
-        var isSumNorm = valueAxis.scaleSumNormalized(),
-            data    = this.visiblePlotData(valueDataCell.plot, valueDataCell.dataPartValue), // [ignoreNulls=true]
-            dimName = valueRole.lastDimensionName();
-        if(isSumNorm) {
-            var sum = data.dimensionsSumAbs(dimName);
-            if(sum) return {min: 0, max: sum};
-        } else {
-            var useAbs = valueAxis.scaleUsesAbs(),
-                extent = data.dimensions(dimName).extent({abs: useAbs});
-            if(extent) {
-                // TODO: aren't these Math.abs repeating work??
-                var minValue = extent.min.value,
-                    maxValue = extent.max.value;
-                return {
-                    min: (useAbs ? Math.abs(minValue) : minValue),
-                    max: (useAbs ? Math.abs(maxValue) : maxValue)
-                };
-            }
-        }
-    },
-
     // -------------
 
     _setDiscreteColorAxisScale: function(axis) {
-        var domainValues = axis.domainValues();
-
         // Call the transformed color scheme with the domain values
         //  to obtain a final scale object.
-        var scale = axis.scheme()(domainValues);
+        var scale = axis.scheme()(axis.domainValues());
 
         this._describeScale(axis, scale);
         axis.setScale(scale, /*noWrap*/true);
@@ -545,8 +477,7 @@ pvc.BaseChart
 
     _setNumericColorAxisScale: function(axis) {
         // TODO: how to handle more?
-        if(axis.dataCells.length !== 1)
-            throw def.error("Can't handle multiple continuous datacells in color axis.");
+        if(axis.dataCells.length !== 1) throw def.error("Can't handle multiple continuous datacells in color axis.");
 
         // Single Continuous
         // -> Global Scope (actually as only the root chart sets the scale, it is implied)
@@ -554,19 +485,19 @@ pvc.BaseChart
         // -> Any isNull
         this._warnSingleContinuousValueRole(axis.role);
 
-        var visibleDomainData = this.visiblePlotData(axis.dataCell.plot, axis.dataCell.dataPartValue); // [ignoreNulls=true]
-        var normByCateg = axis.option('NormByCategory');
-        var scaleOptions = {
-            type:        axis.option('ScaleType'),
-            colors:      axis.option('Colors')().range(), // obtain the underlying colors array
-            colorDomain: axis.option('Domain'),
-            colorMin:    axis.option('Min'),
-            colorMax:    axis.option('Max'),
-            colorMissing:axis.option('Missing'), // TODO: already handled by the axis wrapping
-            data:        visibleDomainData,
-            colorDimension: axis.role.lastDimensionName(),
-            normPerBaseCategory: normByCateg
-        };
+        var visibleDomainData = this.visiblePlotData(axis.dataCell.plot, axis.dataCell.dataPartValue), // [ignoreNulls=true]
+            normByCateg = axis.option('NormByCategory'),
+            scaleOptions = {
+                type:        axis.option('ScaleType'),
+                colors:      axis.option('Colors')().range(), // obtain the underlying colors array
+                colorDomain: axis.option('Domain'),
+                colorMin:    axis.option('Min'),
+                colorMax:    axis.option('Max'),
+                colorMissing:axis.option('Missing'), // TODO: already handled by the axis wrapping
+                data:        visibleDomainData,
+                colorDimension: axis.role.lastDimensionName(),
+                normPerBaseCategory: normByCateg
+            };
 
         if(!normByCateg) {
             var scale = pvc_colorScale(scaleOptions);
@@ -605,15 +536,14 @@ pvc.BaseChart
     },
 
     _createRoleColorScale: function(roleName) {
-        var firstScale, scale;
-        var valueToColorMap = {};
+        var firstScale, scale, valueToColorMap = {};
 
         this.axesByType.color.forEach(function(axis) {
             // Only use color axes with specified Colors
-            var axisRole = axis.role;
-            var isRoleCompatible =
-                (axisRole.name === roleName) ||
-                (axisRole.sourceRole && axisRole.sourceRole.name === roleName);
+            var axisRole = axis.role,
+                isRoleCompatible =
+                    (axisRole.name === roleName) ||
+                    (axisRole.sourceRole && axisRole.sourceRole.name === roleName);
 
             if(isRoleCompatible &&
                axis.scale &&
@@ -639,11 +569,7 @@ pvc.BaseChart
         scale = function(value) {
             var key = '' + value;
             if(def.hasOwnProp.call(valueToColorMap, key)) return valueToColorMap[key];
-
-            // creates a new entry...
-            var color = firstScale(value);
-            valueToColorMap[key] = color;
-            return color;
+            return (valueToColorMap[key] = firstScale(value));
         };
 
         def.copy(scale, firstScale); // TODO: domain() and range() should be overriden...

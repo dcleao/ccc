@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 def.type('pvc.visual.Bar', pvc.visual.Sign)
-.init(function(panel, protoMark, keyArgs){
+.init(function(panel, protoMark, keyArgs) {
 
     var pvMark = protoMark.add(pv.Bar);
     
@@ -24,9 +24,7 @@ def.type('pvc.visual.Bar', pvc.visual.Sign)
      * @override
      */
     normalColor: function(scene, color, type) {
-        if(type === 'stroke' && !this.normalStroke) { return null; }
-
-        return color;
+        return (type === 'stroke' && !this.normalStroke) ? null : color;
     },
 
     /**
@@ -34,28 +32,25 @@ def.type('pvc.visual.Bar', pvc.visual.Sign)
      */
     interactiveColor: function(scene, color, type) {
         if(type === 'stroke') {
-            if(this.mayShowActive(scene, /*noSeries*/true)) { return color.brighter(1.3).alpha(0.7); }
+            if(this.mayShowActive(scene, /*noSeries*/true)) return color.brighter(1.3).alpha(0.7);
+            if(!this.normalStroke) return null;
             
-            if(!this.normalStroke) { return null; }
+            if(this.mayShowNotAmongSelected(scene))
+                return this.mayShowActive(scene)
+                    ? pv.Color.names.darkgray.darker().darker()
+                    : this.dimColor(color, type);
             
-            if(this.mayShowNotAmongSelected(scene)) {
-                if(this.mayShowActive(scene)) { return pv.Color.names.darkgray.darker().darker(); }
-                
-                return this.dimColor(color, type);
-            }
-            
-            if(this.mayShowActive(scene)) { return color.brighter(1).alpha(0.7); }
+            if(this.mayShowActive(scene)) return color.brighter(1).alpha(0.7);
 
         } else if(type === 'fill') {
-            if(this.mayShowActive(scene, /*noSeries*/true)) { return color.brighter(0.2).alpha(0.8); } 
+            if(this.mayShowActive(scene, /*noSeries*/true)) return color.brighter(0.2).alpha(0.8);
 
-            if(this.mayShowNotAmongSelected(scene)) {
-                if(this.mayShowActive(scene)) { return pv.Color.names.darkgray.darker(2).alpha(0.8); }
-                
-                return this.dimColor(color, type);
-            }
+            if(this.mayShowNotAmongSelected(scene))
+                return this.mayShowActive(scene)
+                    ? pv.Color.names.darkgray.darker(2).alpha(0.8)
+                    : this.dimColor(color, type);
             
-            if(this.mayShowActive(scene)) { return color.brighter(0.2).alpha(0.8); }
+            if(this.mayShowActive(scene)) return color.brighter(0.2).alpha(0.8);
         }
 
         return this.base(scene, color, type);
@@ -65,8 +60,8 @@ def.type('pvc.visual.Bar', pvc.visual.Sign)
     defaultStrokeWidth: function() { return 0.5; },
 
     interactiveStrokeWidth: function(scene, strokeWidth) {
-        if(this.mayShowActive(scene, /*noSeries*/true)) { return Math.max(1, strokeWidth) * 1.3; }
-
-        return strokeWidth;
+        return this.mayShowActive(scene, /*noSeries*/true)
+            ? Math.max(1, strokeWidth) * 1.3
+            : strokeWidth;
     }
 });

@@ -64,9 +64,7 @@ function(dimension, value, label, rawValue, key) {
     this.id = (value == null ? -def.nextId() : def.nextId()); // Ensure null sorts first, when sorted by id
     this.value = value;
     this.label = label;
-    if(rawValue !== undefined) {
-        this.rawValue = rawValue;
-    }
+    if(rawValue !== undefined) this.rawValue = rawValue;
     this.key = key;
 })
 .add( /** @lends pvc.data.Atom */{
@@ -77,11 +75,9 @@ function(dimension, value, label, rawValue, key) {
     /**
      * Obtains the label of the atom.
      */
-    toString: function(){
+    toString: function() {
         var label = this.label;
-        if(label != null){
-            return label;
-        }
+        if(label != null) return label;
         
         label = this.value;
         return label != null ? ("" + label) : "";

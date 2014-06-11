@@ -26,7 +26,7 @@ def
 .init(function(keyArgs) {
     this.drawRule = def.get(keyArgs, 'drawRule', false);
 
-    if(this.drawRule) { this.rulePvProto = def.get(keyArgs, 'rulePvProto'); }
+    if(this.drawRule) this.rulePvProto = def.get(keyArgs, 'rulePvProto');
 
     this.drawMarker = !this.drawRule || def.get(keyArgs, 'drawMarker', true);
     if(this.drawMarker) {
@@ -41,21 +41,21 @@ def
     rulePvProto: null,
     markerPvProto: null,
 
-    create: function(legendPanel, pvBulletPanel, extensionPrefix, wrapper){
-        var renderInfo = {};
-        var drawRule = this.drawRule;
-        var sceneColorProp = function(scene) { return scene.color; };
+    create: function(legendPanel, pvBulletPanel, extensionPrefix, wrapper) {
+        var renderInfo = {},
+            drawRule = this.drawRule,
+            sceneColorProp = function(scene) { return scene.color; };
 
         if(drawRule) {
             var rulePvBaseProto = new pv_Mark()
-                .left (0)
-                .top  (function() { return this.parent.height() / 2; })
-                .width(function() { return this.parent.width();      })
-                .lineWidth(1, pvc.extensionTag) // act as if it were a user extension
-                .strokeStyle(sceneColorProp, pvc.extensionTag); // idem
+                    .left (0)
+                    .top  (function() { return this.parent.height() / 2; })
+                    .width(function() { return this.parent.width();      })
+                    .lineWidth(1, pvc.extensionTag) // act as if it were a user extension
+                    .strokeStyle(sceneColorProp, pvc.extensionTag), // idem
+                rp = this.rulePvProto;
 
-            var rp = this.rulePvProto;
-            if(rp) { rulePvBaseProto = rp.extend(rulePvBaseProto); }
+            if(rp) rulePvBaseProto = rp.extend(rulePvBaseProto);
 
             renderInfo.pvRule = new pvc.visual.Rule(legendPanel, pvBulletPanel, {
                     proto: rulePvBaseProto,
@@ -74,30 +74,29 @@ def
                 .pvMark;
         }
 
-        if(this.drawMarker){
+        if(this.drawMarker) {
             var markerPvBaseProto = new pv_Mark()
-                // Center the marker in the panel
-                .left(function() { return this.parent.width () / 2; })
-                .top (function() { return this.parent.height() / 2; })
-                // If order of properties is changed, by extension,
-                // dependent properties will not work...
-                .shapeSize(function() { return this.parent.width(); }, pvc.extensionTag) // width <= height
-                .lineWidth(2, pvc.extensionTag)
-                .fillStyle(sceneColorProp, pvc.extensionTag)
-                .strokeStyle(sceneColorProp, pvc.extensionTag)
-                .shape(this.markerShape, pvc.extensionTag)
-                .angle(drawRule ? 0 : Math.PI/2, pvc.extensionTag) // So that 'bar' gets drawn vertically
-                .antialias(function() {
-                    var cos = Math.abs(Math.cos(this.angle()));
-                    if(cos !== 0 && cos !== 1) {
-                        switch(this.shape()) { case 'square': case 'bar': return false; }
-                    }
+                    // Center the marker in the panel
+                    .left(function() { return this.parent.width () / 2; })
+                    .top (function() { return this.parent.height() / 2; })
+                    // If order of properties is changed, by extension,
+                    // dependent properties will not work...
+                    .shapeSize(function() { return this.parent.width(); }, pvc.extensionTag) // width <= height
+                    .lineWidth(2, pvc.extensionTag)
+                    .fillStyle(sceneColorProp, pvc.extensionTag)
+                    .strokeStyle(sceneColorProp, pvc.extensionTag)
+                    .shape(this.markerShape, pvc.extensionTag)
+                    .angle(drawRule ? 0 : Math.PI/2, pvc.extensionTag) // So that 'bar' gets drawn vertically
+                    .antialias(function() {
+                        var cos = Math.abs(Math.cos(this.angle()));
+                        if(cos !== 0 && cos !== 1) {
+                            switch(this.shape()) { case 'square': case 'bar': return false; }
+                        }
+                        return true;
+                    }, pvc.extensionTag),
+                mp = this.markerPvProto;
 
-                    return true;
-                }, pvc.extensionTag);
-
-            var mp = this.markerPvProto;
-            if(mp) { markerPvBaseProto = mp.extend(markerPvBaseProto); }
+            if(mp) markerPvBaseProto = mp.extend(markerPvBaseProto);
 
             renderInfo.pvDot = new pvc.visual.Dot(legendPanel, pvBulletPanel, {
                     proto:         markerPvBaseProto,

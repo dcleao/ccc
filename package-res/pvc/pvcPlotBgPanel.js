@@ -16,7 +16,7 @@ def
 .add({
     anchor:  'fill',
 
-    _getExtensionId: function(){
+    _getExtensionId: function() {
         return 'plotBg';
     },
     
@@ -25,8 +25,7 @@ def
         this.pvPanel
             .borderPanel
             .lock('zOrder', -13)
-            .antialias(false)
-            ;
+            .antialias(false);
         
         this.base(layoutInfo);
     }

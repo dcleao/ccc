@@ -23,7 +23,7 @@ pvc.visual.BoxPlot.optionsDef = def.create(
     pvc.visual.CategoricalPlot.optionsDef, 
     {
         // NO Values Label!
-        
+
         Stacked: {
             resolve: null,
             value:   false
@@ -35,17 +35,12 @@ pvc.visual.BoxPlot.optionsDef = def.create(
         
         BoxSizeRatio: {
             resolve: '_resolveFull',
-            cast: function(value){
+            cast: function(value) {
                 value = pvc.castNumber(value);
-                if(value == null){
-                    value = 1;
-                } else if(value < 0.05){
-                    value = 0.05;
-                } else if(value > 1){
-                    value = 1;
-                }
-                
-                return value;
+                return value == null ? 1    :
+                       value <  0.05 ? 0.05 :
+                       value >  1    ? 1    :
+                       value;
             },
             value: 1/3
         },
@@ -53,21 +48,16 @@ pvc.visual.BoxPlot.optionsDef = def.create(
         BoxSizeMax: {
             resolve: '_resolveFull',
             data: {
-                resolveV1: function(optionInfo){
+                resolveV1: function(optionInfo) {
                     // default to v1 option
-                    this._specifyChartOption(optionInfo, 'maxBoxSize');
-                    return true;
+                    return this._specifyChartOption(optionInfo, 'maxBoxSize'), true;
                 }
             },
-            cast: function(value){
+            cast: function(value) {
                 value = pvc.castNumber(value);
-                if(value == null){
-                    value = Infinity;
-                } else if(value < 1){
-                    value = 1;
-                }
-                
-                return value;
+                return value == null ? Infinity :
+                       value <  1    ? 1        :
+                       value;
             },
             value: Infinity
         }

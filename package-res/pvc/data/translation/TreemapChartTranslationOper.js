@@ -28,26 +28,24 @@ def.type('pvc.data.TreemapChartTranslationOper')
      * @override
      */
     _configureTypeCore: function() {
-        var autoDimNames = [];
+        var autoDimNames = [],
+
+            // VItem Indexes of continuous columns not yet being read
+            freeMeaIndexes = [],
         
-        // VItem Indexes of continuous columns not yet being read
-        var freeMeaIndexes = [];
-        
-        // Idem, but for discrete columns
-        var freeDisIndexes = [];
+            // Idem, but for discrete columns
+            freeDisIndexes = [];
         
         this.collectFreeDiscreteAndConstinuousIndexes(freeDisIndexes, freeMeaIndexes);
         
-        var D = freeDisIndexes.length;
-        var M = freeMeaIndexes.length;
+        var D = freeDisIndexes.length,
+            M = freeMeaIndexes.length;
         
-        if(D) { this._getUnboundRoleDefaultDimNames('category', D, autoDimNames); }
-        if(M) {
-            def.query(['size', 'color']).take(M).each(function(roleName) {
-                this._getUnboundRoleDefaultDimNames(roleName, 1, autoDimNames);
-            }, this);
-        }
+        if(D) this._getUnboundRoleDefaultDimNames('category', D, autoDimNames);
+        if(M) def.query(['size', 'color']).take(M).each(function(roleName) {
+            this._getUnboundRoleDefaultDimNames(roleName, 1, autoDimNames);
+        }, this);
         
-        if(autoDimNames.length) { this.defReader({names: autoDimNames}); }
+        if(autoDimNames.length) this.defReader({names: autoDimNames});
     }
 });

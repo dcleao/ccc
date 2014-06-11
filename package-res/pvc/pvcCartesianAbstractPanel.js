@@ -68,36 +68,34 @@ def
 
     offsetPaddings: null,
 
-    _calcLayout: function(layoutInfo){
+    _calcLayout: function(layoutInfo) {
         layoutInfo.requestPaddings = this._calcRequestPaddings(layoutInfo);
     },
 
     _calcRequestPaddings: function(layoutInfo) {
         var reqPads;
         var offPads = this.offsetPaddings;
-        if(offPads){
+        if(offPads) {
             var tickRoundPads = this.chart._getAxesRoundingPaddings();
             var clientSize = layoutInfo.clientSize;
             var pads       = layoutInfo.paddings;
 
-            pvc_Sides.names.forEach(function(side){
-                var len_a = pvc.BasePanel.orthogonalLength[side];
-
-                var clientLen  = clientSize[len_a];
-                var paddingLen = pads[len_a];
-
-                var len = clientLen + paddingLen;
+            pvc_Sides.names.forEach(function(side) {
+                var len_a = pvc.BasePanel.orthogonalLength[side],
+                    clientLen  = clientSize[len_a],
+                    paddingLen = pads[len_a],
+                    len = clientLen + paddingLen;
 
                 // Only request offset-padding if the tickRoundPads.side is not locked
                 if(!tickRoundPads[side + 'Locked']) {
                     // Offset paddings are a percentage of the outer length
                     // (there are no margins in this panel).
-                    var offLen = len * (offPads[side] || 0);
+                    var offLen = len * (offPads[side] || 0),
 
-                    // Rounding paddings are the percentage of the
-                    // client length that already actually is padding
-                    // due to domain rounding.
-                    var roundLen = clientLen * (tickRoundPads[side] || 0);
+                        // Rounding paddings are the percentage of the
+                        // client length that already actually is padding
+                        // due to domain rounding.
+                        roundLen = clientLen * (tickRoundPads[side] || 0);
 
                     // So, if the user wants offLen padding but the
                     // client area already contains roundLen of padding,
@@ -119,13 +117,13 @@ def
 
         var hideOverflow;
         var contentOverflow = this.chart.options.leafContentOverflow || 'auto';
-        if(contentOverflow === 'auto'){
+        if(contentOverflow === 'auto') {
             // Overflow
             hideOverflow =
                 def
                 .query(['ortho', 'base'])
                 .select(function(axisType) { return this.axes[axisType]; }, this)
-                .any(function(axis){
+                .any(function(axis) {
                     return axis.option('FixedMin') != null ||
                            axis.option('FixedMax') != null;
                 });
@@ -133,7 +131,7 @@ def
             hideOverflow = (contentOverflow === 'hidden');
         }
 
-        if (hideOverflow){
+        if(hideOverflow) {
             // Padding area is used by bubbles and other vizs without problem
             this.pvPanel.borderPanel.overflow('hidden');
         }

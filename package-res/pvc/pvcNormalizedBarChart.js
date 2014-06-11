@@ -13,7 +13,7 @@ def
      * Processes options after user options and default options have been merged.
      * @override
      */
-    _processOptionsCore: function(options){
+    _processOptionsCore: function(options) {
         // Still affects visual role isPercent
         options.stacked = true;
 

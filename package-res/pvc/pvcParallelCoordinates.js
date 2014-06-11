@@ -10,7 +10,7 @@
  */
 def
 .type('pvc.ParallelCoordinates', pvc.BaseChart)
-.init(function(options){
+.init(function(options) {
 
     // Force the value dimension not to be a number
     options = options || {};
@@ -85,7 +85,7 @@ def
      *    - this.dimensionDescr: description of dimensions
      *    - this.data: array with hashmap per data-point
      *****/
-    retrieveData: function () {
+    retrieveData: function() {
         var data = this.chart.data;
         var numDigit = this.chart.options.numDigits;
 
@@ -123,10 +123,10 @@ def
         var coordMapUpdate = function(i, val) {
             var cMap = pCoordMapping[i];
             var k = null; // define in outer scope.
-            if (!cMap.categorical) {
+            if(!cMap.categorical) {
                 var keyVal = val.toFixed(numDigit);   // force the number to be a string
                 k = cMap.map[keyVal];
-                if (k == null) {
+                if(k == null) {
                     k = cMap.len;
                     cMap.len++;
                     cMap.map[keyVal] = k;
@@ -134,7 +134,7 @@ def
                 }
             } else {
                 k = cMap.map[val];
-                if (k == null) {
+                if(k == null) {
                     k = cMap.len;
                     cMap.len++;
                     cMap.map[val] = k;
@@ -145,8 +145,8 @@ def
 
         // 3. determine the value to be displayed
         //   for the categorical dimensions map == displayValue
-        for(var d in pCoordMapping){
-            if (pCoordMapping.hasOwnProperty(d) && 
+        for(var d in pCoordMapping) {
+            if(pCoordMapping.hasOwnProperty(d) &&
                 pCoordMapping[d] && 
                 pCoordMapping[d].categorical) {
                 pCoordMapping[d].displayValue = pCoordMapping[d].map;
@@ -156,29 +156,29 @@ def
         var i, item, k;
     
         // 4. apply the sorting of the dimension
-        if (this.chart.options.sortCategorical || 
+        if(this.chart.options.sortCategorical ||
             this.chart.options.mapAllDimensions) {
             // prefill the coordMapping in order to get it in sorted order.
             // sorting is required if all dimensions are mapped!!
-            for (i=0; i<pCoordMapping.length; i++) {
-                if (pCoordMapping[i]) {
+            for(i=0; i<pCoordMapping.length; i++) {
+                if(pCoordMapping[i]) {
                     // add all data
-                    for (var col=0; col<values[i].length; col++) {
+                    for(var col=0; col<values[i].length; col++) {
                         coordMapUpdate(i, values[i][col]);
                     }
            
                     // create a sorted array
                     var cMap = pCoordMapping[i].map;
                     var sorted = [];
-                    for(item in cMap){
-                        if(cMap.hasOwnProperty(item)){
+                    for(item in cMap) {
+                        if(cMap.hasOwnProperty(item)) {
                             sorted.push(item);
                         }
                     }
                     sorted.sort();
                     // and assign a new index to all items
-                    if (pCoordMapping[i].categorical){
-                        for(k=0; k<sorted.length; k++){
+                    if(pCoordMapping[i].categorical) {
+                        for(k=0; k<sorted.length; k++) {
                             cMap[sorted[k]] = k;
                         }
                     } else {
@@ -200,7 +200,7 @@ def
         var generateHashMap = function(col) {
             var record = {};
             for(var j in pCoordIndex) {
-                if(pCoordIndex.hasOwnProperty(j)){
+                if(pCoordIndex.hasOwnProperty(j)) {
                     record[pCoordKeys[j]] = (pCoordMapping[j]) ?
                             coordMapUpdate(j, values[j][col]) :
                                 values[j][col];
@@ -216,7 +216,7 @@ def
          *  Generate an array of descriptors for the dimensions (in 3 steps).
          ******/
         // 1. find the dimensions
-        var descrVals = this.dimensions.map(function(cat){
+        var descrVals = this.dimensions.map(function(cat) {
             var item2 = {};
             // the part after "__" is assumed to be the units
             var elements = cat.split("__");
@@ -240,18 +240,18 @@ def
             var v;
       
             // two version of the same code (one with mapping and one without)
-            if (pCoordMapping[index]) {
+            if(pCoordMapping[index]) {
                 theMin = theMax = theMin2 = theMax2 =
                 pCoordMapping[index].displayValue[ values[index][0] ];
 
                 for(k=1; k<len; k++) {
                     v = pCoordMapping[index].displayValue[ values[index][k] ] ;
-                    if (v < theMin){
+                    if(v < theMin) {
                         theMin2 = theMin;
                         theMin = v;
                     }
                     
-                    if (v > theMax) {
+                    if(v > theMax) {
                         theMax2 = theMax;
                         theMax = v;
                     }
@@ -261,12 +261,12 @@ def
 
                 for(k=1; k<len; k++) {
                     v = values[index][k];
-                    if (v < theMin) {
+                    if(v < theMin) {
                         theMin2 = theMin;
                         theMin = v;
                     }
                     
-                    if (v > theMax) {
+                    if(v > theMax) {
                         theMax2 = theMax;
                         theMax = v;
                     }
@@ -280,17 +280,17 @@ def
 
             // 3. and include the mapping (and reverse mapping) 
             item.categorical = false; 
-            if (pCoordMapping[index]) {
+            if(pCoordMapping[index]) {
                 item.map = pCoordMapping[index].map;
                 item.mapLength = pCoordMapping[index].len;
                 item.categorical = pCoordMapping[index].categorical; 
 
                 // create the reverse-mapping from key to original value
-                if (!item.categorical) {
+                if(!item.categorical) {
                     item.orgValue = [];
                     var theMap =  pCoordMapping[index].map;
-                    for (var key in theMap){
-                        if(theMap.hasOwnProperty(key)){
+                    for(var key in theMap) {
+                        if(theMap.hasOwnProperty(key)) {
                             item.orgValue[ theMap[key] ] = 0.0+key;
                         }
                     }
@@ -300,9 +300,9 @@ def
 
         // generate a object using the given set of keys and values
         //  (map from keys[i] to vals[i])
-        var genKeyVal = function (keys, vals) {
+        var genKeyVal = function(keys, vals) {
             var record = {};
-            for (var i = 0; i<keys.length; i++){
+            for(var i = 0; i<keys.length; i++) {
                 record[keys[i]] = vals[i];
             }
             return record;
@@ -310,7 +310,7 @@ def
         this.dimensionDescr = genKeyVal(this.dimensions, descrVals);
     },
 
-    _createCore: function(){
+    _createCore: function() {
 
         var myself = this;
 
@@ -339,7 +339,7 @@ def
             var theMax = dimDescr[t].max;
             var theStep = dimDescr[t].step;
             // add some margin at top and bottom (based on step)
-            if (addMargin) {
+            if(addMargin) {
                 theMin -= theStep;
                 theMax += theStep;
             }
@@ -352,7 +352,7 @@ def
             var scale = getDimSc(t, true)
                 .range(botRuleOffs, topRulePos);
             var dd = dimDescr[t];
-            if (dd.orgValue && !dd.categorical) {
+            if(dd.orgValue && !dd.categorical) {
                 // map the value to the original value
                 var func = function(x) { 
                     var res = scale( dd.orgValue[x]);
@@ -462,12 +462,12 @@ def
          var labelXoffs = 6,
          labelYoffs = 3;
          for(var d in dimDescr) {
-             if(dimDescr.hasOwnProperty(d)){
+             if(dimDescr.hasOwnProperty(d)) {
                  var dim = dimDescr[d];
-                 if (dim.categorical) {
+                 if(dim.categorical) {
                      var  xVal = x(dim.id) + labelXoffs;
-                     for (var l in dim.map){
-                         if(dim.map.hasOwnProperty(l)){
+                     for(var l in dim.map) {
+                         if(dim.map.hasOwnProperty(l)) {
                              labels[labels.length] = {
                                      x:  xVal,
                                      y:  y[dim.id](dim.map[l]) + labelYoffs,
@@ -482,9 +482,9 @@ def
          this.pvPanel.add(pv.Panel)
              .data(labels)
              .add(pv.Label)
-             .left(function(d) {return d.x;})
-             .bottom(function(d) { return d.y;})
-             .text(function(d) { return d.label;})
+             .left(function(d) {return d.x; })
+             .bottom(function(d) { return d.y; })
+             .text(function(d) { return d.label; })
              .textAlign("left")
              ;
     
@@ -500,7 +500,7 @@ def
              .visible(selectVisible)
              .add(pv.Line)
              .data(dims)
-             .left(function(t, d) { return x(t);})
+             .left(function(t, d) { return x(t); })
              .bottom(function(t, d) { return y[t](d[t]); })
              .strokeStyle(function(t, d) { 
                  var dd = dimDescr[active];
@@ -530,7 +530,7 @@ def
 
          // Updater for slider and resizer.
          function selectAll(d) {
-             if (d.dy < 3) {  // 
+             if(d.dy < 3) {  //
                  var t = d.dim;
                  filter[t].min = Math.max(y[t].domain()[0], y[t].invert(0));
                  filter[t].max = Math.min(y[t].domain()[1], y[t].invert(height));
@@ -553,9 +553,9 @@ def
              .event("selectend", selectAll)
              .add(pv.Bar)
              .left(25)
-             .top(function(d) {return d.y;})
+             .top(function(d) {return d.y; })
              .width(10)
-             .height(function(d) { return d.dy;})
+             .height(function(d) { return d.dy; })
              .fillStyle(function(t) { 
                  return (t.dim == active) ? 
                         colors[t.dim]((filter[t.dim].max + filter[t.dim].min) / 2) : 

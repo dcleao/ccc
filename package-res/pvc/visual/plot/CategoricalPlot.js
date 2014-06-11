@@ -109,7 +109,7 @@ def
 
             // The following would not work:
             //  var max = data.children()
-            //     .select(function(catGroup){ return catGroup.dimensions(valueDimName).sum(); })
+            //     .select(function(catGroup) { return catGroup.dimensions(valueDimName).sum(); })
             //     .max();
             //
             //  return max != null ? {min: 0, max: max} : null;

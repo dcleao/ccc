@@ -41,14 +41,14 @@ def
         var colorDimName = 'value',
             sizeDimName  = 'value2';
 
-        if(this.compatVersion() <= 1){
-            switch(this.options.colorValIdx){
+        if(this.compatVersion() <= 1) {
+            switch(this.options.colorValIdx) {
                 case 0:  colorDimName = 'value';  break;
                 case 1:  colorDimName = 'value2'; break;
                 default: colorDimName = 'value';
             }
     
-            switch(this.options.sizeValIdx){
+            switch(this.options.sizeValIdx) {
                 case 0:  sizeDimName = 'value' ; break;
                 case 1:  sizeDimName = 'value2'; break;
                 default: sizeDimName = 'value' ;

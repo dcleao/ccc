@@ -18,7 +18,7 @@
  *         Name: {
  *             cast:  String,
  *             value: 'John Doe',
- *             resolve: function(context){
+ *             resolve: function(context) {
  *                 this.setDefault();
  *             }
  *         }
@@ -166,14 +166,11 @@ function pvc_options(specs, context) {
     
     /** @private */
     function set(opts, isDefault) {
-        for(var name in opts) {
-            var info = def.hasOwnProp.call(_infos, name) && _infos[name];
-            if(info) {
-                var value = opts[name];
-                if(value !== undefined) { info.set(value, isDefault); }
-            }
+        var name, info, value;
+        for(name in opts) {
+            info = def.hasOwnProp.call(_infos, name) && _infos[name];
+            if(info && (value = opts[name]) !== undefined) info.set(value, isDefault);
         }
-        
         return option;
     }
     
@@ -200,40 +197,32 @@ function pvc_options(specs, context) {
 // returning <c>true</c> as well.
 function options_resolvers(list) {
     return function(optionInfo) {
-        for(var i = 0, L = list.length ; i < L ; i++) {
-            var m = list[i];
-            
-            if(typeof m === 'string') { m = this[m]; } 
-            
-            if(m.call(this, optionInfo) === true) { return true; }
+        var i, m;
+        for(i = 0, L = list.length ; i < L ; i++) {
+            m = list[i];
+            if(typeof m === 'string') m = this[m];
+            if(m.call(this, optionInfo) === true) return true;
         }
     };
 }
 
 function options_constantResolver(value, op) {
     return function(optionInfo) {
-        optionInfo.specify(value);
-        return true;
+        return optionInfo.specify(value), true;
     };
 }
 
 function options_specifyResolver(fun, op) {
     return function(optionInfo) {
         var value = fun.call(this, optionInfo);
-        if(value !== undefined) {
-            optionInfo.specify(value);
-            return true;
-        }
+        if(value !== undefined) return optionInfo.specify(value), true;
     };
 }
 
 function options_defaultResolver(fun) {
     return function(optionInfo) {
         var value = fun.call(this, optionInfo);
-        if(value !== undefined) {
-            optionInfo.defaultValue(value);
-            return true;
-        }
+        if(value !== undefined) return optionInfo.defaultValue(value), true;
     };
 }
 
@@ -255,7 +244,7 @@ pvc.options = pvc_options;
  */
 var pvc_OptionInfo = 
 def.type() // Anonymous type
-.init(function(name, option, context, spec){
+.init(function(name, option, context, spec) {
     this.name = name;
     this.option = option;
 
@@ -295,9 +284,8 @@ def.type() // Anonymous type
             if(!this._setCalled) {
                 this.isSpecified = false;
                 var value = this._dynDefault();
-                if(value != null) {
-                    this.value = this._dv = value;
-                } // else maintain existing default value
+                if(value != null) this.value = this._dv = value;
+                // else maintain existing default value
             }
         }
         
@@ -318,8 +306,7 @@ def.type() // Anonymous type
      * @type any
      */
     defaultValue: function(defaultValue) {
-        if(arguments.length) { this.set(defaultValue, true); }
-        
+        if(arguments.length) this.set(defaultValue, true);
         return this._dv;
     },
     
@@ -347,7 +334,7 @@ def.type() // Anonymous type
         
         this._setCalled = true;
 
-        if(value != null) { value = this.cast(value); }
+        if(value != null) value = this.cast(value);
         
         if(value == null) {
             value = this._dynDefault();
@@ -362,12 +349,11 @@ def.type() // Anonymous type
         if(isDefault) {
             this._dv = value;
             // Don't touch an already specified value
-            if(!this.isSpecified) { this.value = value; }
+            if(!this.isSpecified) this.value = value;
         } else {
             this.isResolved = this.isSpecified = true;
             this.value = value;
         }
-
         return this;
     },
     
@@ -377,11 +363,8 @@ def.type() // Anonymous type
     },
 
     _getFunProp: function(name) {
-        var fun = this[name];
-        if(fun) {
-            var context = this._context;
-            if(context && typeof fun === 'string') { fun = context[fun]; }
-        }
+        var fun = this[name], ctx;
+        if(fun && (ctx = this._context) && def.string.is(fun)) fun = ctx[fun];
         return fun;
     }
 });

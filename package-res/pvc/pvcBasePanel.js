@@ -320,8 +320,8 @@ def
             
             // * size may have no specified components 
             // * referenceSize may be null
-            var desiredSize = this.size.resolve(referenceSize);
-            var sizeMax     = this.sizeMax.resolve(referenceSize);
+            var desiredSize = this.size.resolve(referenceSize),
+                sizeMax     = this.sizeMax.resolve(referenceSize);
             
             if(!availableSize) {
                 if(desiredSize.width == null || desiredSize.height == null)
@@ -339,33 +339,28 @@ def
             if(sizeMax.height != null && availableSize.height > sizeMax.height)
                 availableSize.height = sizeMax.height;
             
-            var halfBorder   = this.borderWidth / 2;
-            var realMargins  = (def.get(ka, 'margins' ) || this.margins ).resolve(referenceSize);
-            var realPaddings = (def.get(ka, 'paddings') || this.paddings).resolve(referenceSize);
-            
-            var margins  = pvc_Sides.inflate(realMargins,  halfBorder);
-            var paddings = pvc_Sides.inflate(realPaddings, halfBorder);
-            
-            var spaceWidth  = margins.width  + paddings.width;
-            var spaceHeight = margins.height + paddings.height;
-            
-            var availableClientSize = new pvc_Size(
-                Math.max(availableSize.width  - spaceWidth,  0),
-                Math.max(availableSize.height - spaceHeight, 0)
-            );
-            
-            var desiredClientSize = def.copyOwn(desiredSize);
+            var halfBorder   = this.borderWidth / 2,
+                realMargins  = (def.get(ka, 'margins' ) || this.margins ).resolve(referenceSize),
+                realPaddings = (def.get(ka, 'paddings') || this.paddings).resolve(referenceSize),
+                margins  = pvc_Sides.inflate(realMargins,  halfBorder),
+                paddings = pvc_Sides.inflate(realPaddings, halfBorder),
+                spaceWidth  = margins.width  + paddings.width,
+                spaceHeight = margins.height + paddings.height,
+                availableClientSize = new pvc_Size(
+                        Math.max(availableSize.width  - spaceWidth,  0),
+                        Math.max(availableSize.height - spaceHeight, 0)
+                    ),
+                desiredClientSize = def.copyOwn(desiredSize);
+
             if(desiredClientSize.width != null)
                 desiredClientSize.width = Math.max(desiredClientSize.width - spaceWidth, 0);
             
             if(desiredClientSize.height != null)
                 desiredClientSize.height = Math.max(desiredClientSize.height - spaceHeight, 0);
             
-            var prevLayoutInfo = this._layoutInfo || null;
-            var canChange = def.get(ka, 'canChange', true);
-            
-            var layoutInfo = 
-                this._layoutInfo = {
+            var prevLayoutInfo = this._layoutInfo || null,
+                canChange = def.get(ka, 'canChange', true),
+                layoutInfo = this._layoutInfo = {
                     canChange:         canChange,
                     referenceSize:     referenceSize,
                     
@@ -462,22 +457,19 @@ def
      * @virtual
      */
     _calcLayout: function(layoutInfo) {
-        var clientSize;
-        var me = this;
-
-        // These are used in layoutCycle
-        var margins, remSize, useLog;
+        var clientSize,
+            me = this,
+            // These are used in layoutCycle
+            margins, remSize, useLog;
 
         if(me._children) {
-            var aolMap = pvc.BasePanel.orthogonalLength;
-            var aoMap  = pvc.BasePanel.relativeAnchor;
-            var altMap = pvc.BasePanel.leftTopAnchor;
-            var aofMap = pvc_Offset.namesSidesToOffset;
-
-            // Classify children
-
-            var fillChildren = [];
-            var sideChildren = [];
+            var aolMap = pvc.BasePanel.orthogonalLength,
+                aoMap  = pvc.BasePanel.relativeAnchor,
+                altMap = pvc.BasePanel.leftTopAnchor,
+                aofMap = pvc_Offset.namesSidesToOffset,
+                // Classify children
+                fillChildren = [],
+                sideChildren = [];
 
             me._children.forEach(function(child) {
                 var a = child.anchor;
@@ -515,7 +507,7 @@ def
         return clientSize;
         
         // --------------------
-        function doMaxTimes(maxTimes, fun, ctx){
+        function doMaxTimes(maxTimes, fun, ctx) {
             var index = 0;
             while(maxTimes--) {
                 // remTimes = maxTimes
@@ -528,17 +520,17 @@ def
         function layoutCycle(remTimes, iteration) {
             if(useLog) me._group("LayoutCycle #" + (iteration + 1) + " (remaining: " + remTimes + ")");
             try {
-               var canResize = (remTimes > 0);
-
                 // Reset margins and remSize
                 // ** Instances we can mutate
                 margins = new pvc_Sides(0);
                 remSize = def.copyOwn(clientSize);
 
-                // Lay out SIDE child panels
-                var child;
-                var index = 0;
-                var count = sideChildren.length;
+                var canResize = (remTimes > 0),
+                    // Lay out SIDE child panels
+                    child,
+                    index = 0,
+                    count = sideChildren.length;
+
                 while(index < count) {
                     child = sideChildren[index];
                     if(useLog) me._group("SIDE Child #" + (index + 1) + " at " + child.anchor);
@@ -571,8 +563,7 @@ def
         }
         
         function layoutChild(child, canResize) {
-            var resized = false;
-            var paddings;
+            var resized = false, paddings;
             
             childKeyArgs.canChange = canResize;
             
@@ -624,15 +615,15 @@ def
             
             // true if stopped, false otherwise
             return def.query(pvc_Sides.names).each(function(side) {
-                var curPad = (paddings && paddings[side]) || 0;
-                var newPad = (newPaddings && newPaddings[side]) || 0;
+                var curPad = (paddings && paddings[side]) || 0,
+                    newPad = (newPaddings && newPaddings[side]) || 0;
                  if(Math.abs(newPad - curPad) >= 0.1) return false; // Stop iteration
             });
         }
 
         function checkChildResize(child, canResize) {
-            var resized = false;
-            var addWidth = child.width - remSize.width;
+            var resized = false,
+                addWidth = child.width - remSize.width;
             if(addWidth > 0) {
                 if(pvc.debug >= 3) this._log("Child added width = " + addWidth);
                 
@@ -640,7 +631,6 @@ def
                     if(pvc.debug >= 2) this._warn("Child wanted more width, but layout iterations limit has been reached.");
                 } else {
                     resized = true;
-                    
                     remSize   .width += addWidth;
                     clientSize.width += addWidth;
                 }
@@ -654,7 +644,6 @@ def
                     if(pvc.debug >= 2) this._warn("Child wanted more height, but layout iterations limit has been reached.");
                 } else {
                     resized = true;
-                    
                     remSize   .height += addHeight;
                     clientSize.height += addHeight;
                 }
@@ -664,10 +653,11 @@ def
         }
         
         function positionChild(child) {
-            var side  = child.anchor;
-            var align = child.align;
-            var alignTo = child.alignTo;
-            var sidePos;
+            var side  = child.anchor,
+                align = child.align,
+                alignTo = child.alignTo,
+                sidePos;
+
             if(side === 'fill') {
                 side = 'left';
                 sidePos = margins.left + remSize.width / 2 - (child.width / 2);
@@ -677,17 +667,13 @@ def
             }
             
             var sideo, sideOPosChildOffset;
-            switch(align){
-                case 'top':
-                case 'bottom':
-                case 'left':
-                case 'right':
+            switch(align) {
+                case 'top': case 'bottom': case 'left': case 'right':
                     sideo = align;
                     sideOPosChildOffset = 0;
                     break;
                 
-                case 'center':
-                case 'middle':
+                case 'center': case 'middle':
                     // 'left', 'right' -> 'top'
                     // else -> 'left'
                     sideo = altMap[aoMap[side]];
@@ -698,36 +684,30 @@ def
             }
             
             
-            var sideOPosParentOffset;
-            var sideOTo;
+            var sideOPosParentOffset, sideOTo;
             switch(alignTo) {
-                case 'top':
-                case 'bottom':
-                case 'left':
-                case 'right':
+                case 'top': case 'bottom': case 'left': case 'right':
                     sideOTo = alignTo;
                     sideOPosParentOffset = (sideOTo !== sideo) ? remSize[aolMap[sideo]] : 0;
                     break;
 
-                case 'center':
-                case 'middle':
+                case 'center': case 'middle':
                     sideOTo = altMap[aoMap[side]];
                     
                     sideOPosParentOffset = remSize[aolMap[sideo]] / 2;
                     break;
                         
-                case 'page-center':
-                case 'page-middle':
+                case 'page-center': case 'page-middle':
                     sideOTo = altMap[aoMap[side]];
                     
-                    var lenProp = aolMap[sideo];
-                    var pageLen = Math.min(remSize[lenProp], layoutInfo.pageClientSize[lenProp]);
+                    var lenProp = aolMap[sideo],
+                        pageLen = Math.min(remSize[lenProp], layoutInfo.pageClientSize[lenProp]);
                     sideOPosParentOffset = pageLen / 2;
                     break;
             }
             
-            var sideOPos = margins[sideOTo] + sideOPosParentOffset + sideOPosChildOffset;
-            var resolvedOffset = child.offset.resolve(remSize);
+            var sideOPos = margins[sideOTo] + sideOPosParentOffset + sideOPosChildOffset,
+                resolvedOffset = child.offset.resolve(remSize);
             if(resolvedOffset) {
                 sidePos  += resolvedOffset[aofMap[side ]] || 0;
                 sideOPos += resolvedOffset[aofMap[sideo]] || 0;
@@ -738,17 +718,14 @@ def
                 if(sideOPos < 0) sideOPos = 0;
             }
             
-            child.setPosition(
-                    def.set({}, 
-                        side,  sidePos,
-                        sideo, sideOPos));
+            child.setPosition(def.set({}, side, sidePos, sideo, sideOPos));
         }
         
         // Decreases available size and increases margins
         function updateSide(child) {
-            var side   = child.anchor;
-            var sideol = aolMap[side];
-            var olen   = child[sideol];
+            var side   = child.anchor,
+                sideol = aolMap[side],
+                olen   = child[sideol];
             
             margins[side]   += olen;
             remSize[sideol] -= olen;
@@ -797,8 +774,8 @@ def
             
             if(this.isRoot) this._creating();
             
-            var margins  = this._layoutInfo.margins;
-            var paddings = this._layoutInfo.paddings;
+            var margins  = this._layoutInfo.margins,
+                paddings = this._layoutInfo.paddings;
             
             /* Protovis Panel */
             if(this.isTopRoot) {
@@ -825,11 +802,11 @@ def
                 this.pvPanel = this.parent.pvPanel.add(this.type);
             }
             
-            var pvBorderPanel = this.pvPanel;
-            
-            // Set panel size
-            var width  = this.width  - margins.width;
-            var height = this.height - margins.height;
+            var pvBorderPanel = this.pvPanel,
+                // Set panel size
+                width  = this.width  - margins.width,
+                height = this.height - margins.height;
+
             pvBorderPanel
                 .width (width)
                 .height(height);
@@ -899,7 +876,7 @@ def
             }
             
             var extensionId = this._getExtensionId();
-            // if(extensionId != null){ // '' is allowed cause this is relative to #_getExtensionPrefix
+            // if(extensionId != null) { // '' is allowed cause this is relative to #_getExtensionPrefix
             // Wrap the panel that is extended with a Panel sign
             new pvc.visual.Panel(this, null, {
                 panel:       pvBorderPanel,
@@ -947,8 +924,8 @@ def
                 this.chart.axesList.forEach(function(axis) {
                     var scale = axis.scale;
                     if(scale) {
-                        var d = scale.domain && scale.domain();
-                        var r = scale.range  && scale.range ();
+                        var d = scale.domain && scale.domain(),
+                            r = scale.range  && scale.range ();
                         out.push(axis.id);
                         out.push("    domain: " + (!d ? '?' : pvc.stringify(d)));
                         out.push("    range : " + (!r ? '?' : pvc.stringify(r)));
@@ -1023,8 +1000,8 @@ def
         //  and consequently, the previous passed callback handler to be called,
         //  before leaving the pvPanel.render() call.
         // See the callback below.
-        var prevAnimating = this._animating;
-        var animate = this.animatable();
+        var prevAnimating = this._animating,
+            animate = this.animatable();
         this._animating = animate && !def.get(ka, 'bypassAnimation', false) ? 1 : 0;
         try {
             // When animating, renders the animation's 'start' point
@@ -1094,10 +1071,9 @@ def
         if(this.isVisible) {
             var pvMarks = this._getSelectableMarks();
             if(pvMarks && pvMarks.length) {
-                pvMarks.forEach(function(pvMark){ pvMark.render(); });
+                pvMarks.forEach(function(pvMark) { pvMark.render(); });
             } else if(!this._children) {
-                this.pvPanel.render();
-                return;
+                return void this.pvPanel.render();
             }
             
             if(this._children) this._children.forEach(function(c) { c.renderInteractive(); });
@@ -1204,7 +1180,7 @@ def
     _absSmallBaseExtId: {abs: 'smallBase'},
     
     _getExtensionId: function() {
-        if (this.isRoot) return !this.chart.parent ? this._absBaseExtId : this._absSmallBaseExtId;
+        if(this.isRoot) return !this.chart.parent ? this._absBaseExtId : this._absSmallBaseExtId;
     },
     
     _getExtensionPrefix: function() { return this._extensionPrefix; },
@@ -1283,9 +1259,9 @@ def
     initLayerPanel: function(/*pvPanel, layer*/) {},
     
     /* EVENTS & VISUALIZATION CONTEXT */
-    _getV1DimName: function(v1Dim){
-        var dimNames = this._v1DimName || (this._v1DimNameCache = {});
-        var dimName  = dimNames[v1Dim];
+    _getV1DimName: function(v1Dim) {
+        var dimNames = this._v1DimName || (this._v1DimNameCache = {}),
+            dimName  = dimNames[v1Dim];
         if(dimName == null) {
             var role = this.chart.visualRoles[this._v1DimRoleName[v1Dim]];
             dimName = role ? role.lastDimensionName() : '';
@@ -1295,7 +1271,7 @@ def
         return dimName;
     },
     
-    _getV1Datum: function(scene){ return scene.datum; },
+    _getV1Datum: function(scene) { return scene.datum; },
     
     /**
      * Obtains the visualization context of the panel.
@@ -1311,13 +1287,12 @@ def
      */
     context: function() {
         var context = this._context;
-        if(!context || context.isPinned) {
+        if(!context || context.isPinned)
             context = this._context = new pvc.visual.Context(this);
-        } else {
+        else
             /*global visualContext_update:true */
             visualContext_update.call(context);
-        }
-        
+
         return context;
     },
     
@@ -1328,17 +1303,17 @@ def
     
     // Axis panel overrides this
     _getTooltipFormatter: function(tipOptions) {
-        var isV1Compat = this.compatVersion() <= 1;
-        
-        var tooltipFormat = tipOptions.format;
+        var isV1Compat = this.compatVersion() <= 1,
+            tooltipFormat = tipOptions.format;
+
         if(!tooltipFormat) {
-            if(!isV1Compat) { return this._summaryTooltipFormatter; }
+            if(!isV1Compat) return this._summaryTooltipFormatter;
             
             tooltipFormat = this.chart.options.v1StyleTooltipFormat;
-            if(!tooltipFormat) { return; }
+            if(!tooltipFormat) return;
         }
         
-        if(isV1Compat) {
+        if(isV1Compat)
             return function(context) {
                 return tooltipFormat.call(
                         context.panel, 
@@ -1347,7 +1322,6 @@ def
                         context.getV1Value() || '',
                         context.getV1Datum());
             };
-        }
         
         return function(context) { return tooltipFormat.call(context, context.scene); };
     },
@@ -1356,18 +1330,19 @@ def
         var scene = context.scene;
         
         // No group and no datum?
-        if(!scene.datum) { return ""; }
+        if(!scene.datum) return "";
         
-        var group = scene.group;
-        var isMultiDatumGroup = group && group.count() > 1;
+        var group = scene.group,
+            isMultiDatumGroup = group && group.count() > 1,
         
-        // Single null datum?
-        var firstDatum = scene.datum;
-        if(!isMultiDatumGroup && (!firstDatum || firstDatum.isNull)) { return ""; }
+            // Single null datum?
+            firstDatum = scene.datum;
+
+        if(!isMultiDatumGroup && (!firstDatum || firstDatum.isNull)) return "";
         
-        var data = scene.data();
-        var visibleKeyArgs = {visible: true};
-        var tooltip = [];
+        var data = scene.data(),
+            visibleKeyArgs = {visible: true},
+            tooltip = [];
         
         if(firstDatum.isInterpolated) {
             tooltip.push('<i>Interpolation</i>: ' + def.html.escape(firstDatum.interpolation) + '<br/>');
@@ -1375,49 +1350,43 @@ def
             tooltip.push('<i>' + def.html.escape(firstDatum.trend.label) + '</i><br/>');
         }
         
-        var complexType = data.type;
-        
-        /* TODO: Big HACK to prevent percentages from
-         * showing up in the Lines of BarLine
-         */
-        var playingPercentMap = context.panel.stacked === false ? 
-                                null :
-                                complexType.getPlayingPercentVisualRoleDimensionMap();
+        var complexType = data.type,
+            // TODO: Big HACK to prevent percentages from showing up in the Lines of BarLine
+            playingPercentMap = context.panel.stacked === false
+                ? null
+                : complexType.getPlayingPercentVisualRoleDimensionMap(),
 
-        var percentValueFormat = playingPercentMap ?
-                                 context.chart.options.percentValueFormat:
-                                 null;
+            percentValueFormat = playingPercentMap
+                ? context.chart.options.percentValueFormat
+                : null,
 
-        var commonAtoms = isMultiDatumGroup ? group.atoms : scene.datum.atoms;
-        var commonAtomsKeys = complexType.sortDimensionNames(def.keys(commonAtoms));
+            commonAtoms = isMultiDatumGroup ? group.atoms : scene.datum.atoms,
+
+            commonAtomsKeys = complexType.sortDimensionNames(def.keys(commonAtoms));
         
-        function addDim(escapedDimLabel, label){
+        function addDim(escapedDimLabel, label) {
             tooltip.push('<b>' + escapedDimLabel + "</b>: " + (def.html.escape(label) || " - ") + '<br/>');
         }
         
         function calcPercent(atom, dimName) {
-            var pct;
-            if(group) {
-                pct = group.dimensions(dimName).valuePercent(visibleKeyArgs);
-            } else {
-                pct = data.dimensions(dimName).percent(atom.value, visibleKeyArgs);
-            }
-            
+            var pct = group
+                ? group.dimensions(dimName).valuePercent(visibleKeyArgs)
+                : data .dimensions(dimName).percent(atom.value, visibleKeyArgs);
+
             return percentValueFormat(pct);
         }
         
         var anyCommonAtom = false;
-        commonAtomsKeys.forEach(function(dimName){
-            var atom = commonAtoms[dimName];
-            var dimType = atom.dimension.type;
-            if(!dimType.isHidden){
+        commonAtomsKeys.forEach(function(dimName) {
+            var atom = commonAtoms[dimName],
+                dimType = atom.dimension.type;
+            if(!dimType.isHidden) {
                 if(!isMultiDatumGroup || atom.value != null) {
                     anyCommonAtom = true;
                     
                     var valueLabel = atom.label;
-                    if(playingPercentMap && playingPercentMap.has(dimName)) {
+                    if(playingPercentMap && playingPercentMap.has(dimName))
                         valueLabel += " (" + calcPercent(atom, dimName) + ")";
-                    }
                     
                     addDim(def.html.escape(atom.dimension.type.label), valueLabel);
                 }
@@ -1425,30 +1394,29 @@ def
         });
         
         if(isMultiDatumGroup) {
-            if(anyCommonAtom){ tooltip.push('<hr />'); }
+            if(anyCommonAtom) tooltip.push('<hr />');
             
             tooltip.push("<b>#</b>: " + group._datums.length + '<br/>');
             
             complexType
             .sortDimensionNames(group.freeDimensionsNames())
-            .forEach(function(dimName){
+            .forEach(function(dimName) {
                 var dim = group.dimensions(dimName);
-                if(!dim.type.isHidden){
+                if(!dim.type.isHidden) {
                     var dimLabel = def.html.escape(dim.type.label),
                         valueLabel;
                     
                     if(dim.type.valueType === Number) {
                         // Sum
                         valueLabel = dim.format(dim.value(visibleKeyArgs));
-                        if(playingPercentMap && playingPercentMap.has(dimName)) {
+                        if(playingPercentMap && playingPercentMap.has(dimName))
                             valueLabel += " (" + calcPercent(null, dimName) + ")";
-                        }
                         
                         dimLabel = "&sum; " + dimLabel;
                     } else {
                         valueLabel = dim
                             .atoms(visibleKeyArgs)
-                            .map(function(atom){ return atom.label || "- "; }).join(", ");
+                            .map(function(atom) { return atom.label || "- "; }).join(", ");
                     }
                     
                     addDim(dimLabel, valueLabel);
@@ -1478,11 +1446,10 @@ def
     _onClick: function(context) {
         var handler = this.clickAction;
         if(handler) {
-            if(this.compatVersion() <= 1) {
+            if(this.compatVersion() <= 1)
                 this._onV1Click(context, handler);
-            } else {
+            else
                 handler.call(context, context.scene);
-            }
         }
     },
     
@@ -1490,11 +1457,10 @@ def
     _onDoubleClick: function(context) {
         var handler = this.doubleClickAction;
         if(handler) {
-            if(this.compatVersion() <= 1) {
+            if(this.compatVersion() <= 1)
                 this._onV1DoubleClick(context, handler);
-            } else {
+            else
                 handler.call(context, context.scene);
-            }
         }
     },
     
@@ -1528,7 +1494,7 @@ def
             var r = mark.shapeRadius();
             if(r == null) { 
                 var  s = mark.shapeSize();
-                if(s != null) { r = Math.sqrt(s); }
+                if(s != null) r = Math.sqrt(s);
             }
 
             return r || dr;
@@ -1560,9 +1526,7 @@ def
             .fillStyle("rgba(255, 0, 0, 0.2)");
 
         // When non-interactive tooltip prop is not created...
-        if(def.fun.is(pvDot.tooltip)) {
-            pvDot.tooltip("Some charts did not fit the available space.");
-        }
+        if(def.fun.is(pvDot.tooltip)) pvDot.tooltip("Some charts did not fit the available space.");
     },
     
     /* SELECTION & RUBBER-BAND */
@@ -1578,21 +1542,20 @@ def
         var me = this,
             chart = me.chart;
         
-        if(!me.interactive()) { return; }
+        if(!me.interactive()) return;
         
         var clickClearsSelection = me.unselectable(),
             useRubberband        = me.selectableByRubberband();
         
         // NOOP?
-        if(!useRubberband && !clickClearsSelection) { return; }
+        if(!useRubberband && !clickClearsSelection) return;
         
         var data = me.data,
             pvParentPanel = me.pvRootPanel || me.pvPanel.paddingPanel;
         
         // IE must have a fill style to fire events
-        if(!me._getExtensionAbs('base', 'fillStyle')) {
+        if(!me._getExtensionAbs('base', 'fillStyle'))
             pvParentPanel.fillStyle(pvc.invisibleFill);
-        }
         
         // Require all events, wether it's painted or not
         pvParentPanel.lock('events', 'all');
@@ -1614,49 +1577,47 @@ def
         me._selectingByRubberband = false;
 
         // Rubber band
-        var toScreen, rb;
-        
-        var selectBar = 
-            this.selectBar = 
-            new pvc.visual.Bar(me, pvParentPanel, {
-                extensionId:   'rubberBand',
-                normalStroke:  true,
-                noHover:       true,
-                noSelect:      true,
-                noClick:       true,
-                noDoubleClick: true,
-                noTooltip:     true
-            })
-            .override('defaultStrokeWidth', def.fun.constant(1.5))
-            .override('defaultColor', function(scene, type) {
-                return type === 'stroke' ? 
-                       '#86fe00' :                 /* 'rgb(255,127,0)' */ 
-                       'rgba(203, 239, 163, 0.6)'  /* 'rgba(255, 127, 0, 0.15)' */
-                       ;
-            })
-            .override('interactiveColor', function(scene, color) { return color; })
-            .pvMark
-            .lock('visible', function() { return !!rb;  })
-            .lock('left',    function() { return rb.x;  })
-            .lock('right')
-            .lock('top',     function() { return rb.y;  })
-            .lock('bottom')
-            .lock('width',   function() { return rb.dx; })
-            .lock('height',  function() { return rb.dy; })
-            .lock('cursor')
-            .lock('events', 'none')
-            ;
+        var toScreen, rb,
+            selectBar = this.selectBar =
+                new pvc.visual.Bar(me, pvParentPanel, {
+                    extensionId:   'rubberBand',
+                    normalStroke:  true,
+                    noHover:       true,
+                    noSelect:      true,
+                    noClick:       true,
+                    noDoubleClick: true,
+                    noTooltip:     true
+                })
+                .override('defaultStrokeWidth', def.fun.constant(1.5))
+                .override('defaultColor', function(scene, type) {
+                    return type === 'stroke' ?
+                           '#86fe00' :                 /* 'rgb(255,127,0)' */
+                           'rgba(203, 239, 163, 0.6)'  /* 'rgba(255, 127, 0, 0.15)' */
+                           ;
+                })
+                .override('interactiveColor', function(scene, color) { return color; })
+                .pvMark
+                .lock('visible', function() { return !!rb;  })
+                .lock('left',    function() { return rb.x;  })
+                .lock('right')
+                .lock('top',     function() { return rb.y;  })
+                .lock('bottom')
+                .lock('width',   function() { return rb.dx; })
+                .lock('height',  function() { return rb.dy; })
+                .lock('cursor')
+                .lock('events', 'none');
         
         // NOTE: Rubber band coordinates are always transformed to canvas/client 
         // coordinates (see 'select' and 'selectend' events)
-        var selectionEndedDate; 
+        var selectionEndedDate;
+
         pvParentPanel
             .intercept('data', function() {
                 var scenes = this.delegate();
                 if(scenes) {
                     scenes.forEach(function(scene) {
                         // Initialize x,y,dx and dy properties
-                        if(scene.x == null) { scene.x = scene.y = scene.dx = scene.dy = 0; }
+                        if(scene.x == null) scene.x = scene.y = scene.dx = scene.dy = 0;
                     });
                 }
                 return scenes;
@@ -1664,14 +1625,14 @@ def
             .event('mousedown', pv.Behavior.select().autoRender(false))
             .event('select', function(scene) {
                 if(!rb) {
-                    if(me.animating()) { return; }
-                    if(scene.dx * scene.dx + scene.dy * scene.dy <= dMin2) { return; }
+                    if(me.animating()) return;
+                    if(scene.dx * scene.dx + scene.dy * scene.dy <= dMin2) return;
                     
                     rb = new pv.Shape.Rect(scene.x, scene.y, scene.dx, scene.dy);
                     
                     me._selectingByRubberband = true;
                     
-                    if(!toScreen) { toScreen = pvParentPanel.toScreenTransform(); }
+                    if(!toScreen) toScreen = pvParentPanel.toScreenTransform();
                     
                     me.rubberBand = rb.apply(toScreen);
                 } else {
@@ -1685,7 +1646,7 @@ def
                 if(rb) {
                     var ev = arguments[arguments.length - 1];
                     
-                    if(!toScreen) { toScreen = pvParentPanel.toScreenTransform(); }
+                    if(!toScreen) toScreen = pvParentPanel.toScreenTransform();
                     
                     var rbs = rb.apply(toScreen);
                     
@@ -1712,7 +1673,7 @@ def
                         }
                     }
                     
-                    if(data.clearSelected()) { chart.updateSelections(); }
+                    if(data.clearSelected()) chart.updateSelections();
                 });
         }
     },
@@ -1724,7 +1685,7 @@ def
     },
     
     _onRubberBandSelectionEnd: function(ev, ka) {
-        if(pvc.debug >= 20) { this._log("rubberBand " + pvc.stringify(this.rubberBand)); }
+        if(pvc.debug >= 20) this._log("rubberBand " + pvc.stringify(this.rubberBand));
         
         ka = Object.create(ka || {});
         ka.toggle = false; // output argument
@@ -1757,7 +1718,7 @@ def
         var datums = datumMap.values();
         if(datums.length) {
             datums = this.chart._onUserSelection(datums);
-            if(datums && !datums.length) { datums = null; }
+            if(datums && !datums.length) datums = null;
         }
         
         return datums;
@@ -1773,25 +1734,22 @@ def
     
     _getOwnDatumsOnRect: function(datumMap, rect, ka) {
         var me = this;
-        if(!me.isVisible) { return false; }
+        if(!me.isVisible) return false;
         
         var pvMarks = me._getSelectableMarks();
-        if(!pvMarks || !pvMarks.length) { return false; }
+        if(!pvMarks || !pvMarks.length) return false;
         
-        var inCount = datumMap.count;
-        
-        var selectionMode = def.get(ka, 'markSelectionMode');
-        var processDatum = function(datum) {
-            if(!datum.isNull) { datumMap.set(datum.id, datum); }
-        };
-        var processScene = function(scene) {
-            if(scene.selectableByRubberband()) {
-                scene.datums().each(processDatum);
-            }
-        };
-        var processMark = function(pvMark) {
-            pvMark.eachSceneWithDataOnRect(rect, processScene, null, selectionMode);
-        };
+        var inCount = datumMap.count,
+            selectionMode = def.get(ka, 'markSelectionMode'),
+            processDatum = function(datum) {
+                if(!datum.isNull) datumMap.set(datum.id, datum);
+            },
+            processScene = function(scene) {
+                if(scene.selectableByRubberband()) scene.datums().each(processDatum);
+            },
+            processMark = function(pvMark) {
+                pvMark.eachSceneWithDataOnRect(rect, processScene, null, selectionMode);
+            };
         
         pvMarks.forEach(processMark);
         
@@ -1804,7 +1762,7 @@ def
      * Returns true if the anchor is one of the values 'top' or 'bottom'.
      */
     isAnchorTopOrBottom: function(anchor) {
-        if (!anchor) { anchor = this.anchor; }
+        if(!anchor) { anchor = this.anchor; }
         return anchor === "top" || anchor === "bottom";
     },
 
@@ -1899,15 +1857,15 @@ def
 def.scope(function() {
     // Create Anchor methods
     
-    var BasePanel = pvc.BasePanel;
-    var methods = {};
-    var anchorDicts = {
-        anchorOrtho:       'relativeAnchor',
-        anchorOrthoMirror: 'relativeAnchorMirror',
-        anchorOpposite:    'oppositeAnchor',
-        anchorLength:      'parallelLength',
-        anchorOrthoLength: 'orthogonalLength'
-    };
+    var BasePanel = pvc.BasePanel,
+        methods = {},
+        anchorDicts = {
+            anchorOrtho:       'relativeAnchor',
+            anchorOrthoMirror: 'relativeAnchorMirror',
+            anchorOpposite:    'oppositeAnchor',
+            anchorLength:      'parallelLength',
+            anchorOrthoLength: 'orthogonalLength'
+        };
     
     def.eachOwn(anchorDicts, function(d, am) {
         var dict = BasePanel[d];

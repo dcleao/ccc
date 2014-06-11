@@ -6,7 +6,7 @@
 
 def
 .type('pvc.visual.RoleVarHelper')
-.init(function(rootScene, role, keyArgs){
+.init(function(rootScene, role, keyArgs) {
     var hasPercentSubVar = def.get(keyArgs, 'hasPercentSubVar', false),
         roleVarName = def.get(keyArgs, 'roleVar'),
         g = this.grouping = role && role.grouping,
@@ -24,8 +24,7 @@ def
     }
     
     if(!roleVarName) {
-        if(!role)
-            throw def.error.operationInvalid("Role is not defined, so the roleVar argument is required.");
+        if(!role) throw def.error.operationInvalid("Role is not defined, so the roleVar argument is required.");
         
         roleVarName = role.name;
     }
@@ -72,12 +71,12 @@ def
             // there's a single value for all the datums of the group.
             var roleVar,
                 rootContDim = this.rootContDim;
-            if(!rootContDim){
+            if(!rootContDim) {
                 // Discrete
                 
                 // We choose the value of the first datum of the group...
                 var firstDatum = scene.datum;
-                if(firstDatum && !firstDatum.isNull){
+                if(firstDatum && !firstDatum.isNull) {
                     var view = this.grouping.view(firstDatum);
                     roleVar = pvc_ValueLabelVar.fromComplex(view);
                 }

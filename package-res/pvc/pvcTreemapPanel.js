@@ -6,7 +6,7 @@
 
 def
 .type('pvc.TreemapPanel', pvc.PlotPanel)
-.init(function(chart, parent, plot, options){
+.init(function(chart, parent, plot, options) {
     
     this.base(chart, parent, plot, options);
     
@@ -20,47 +20,45 @@ def
     plotType: 'treemap',
 
     _createCore: function(layoutInfo) {
-        var me = this;
-        var cs = layoutInfo.clientSize;
-        var rootScene = me._buildScene();
+        var me = this,
+            cs = layoutInfo.clientSize,
+            rootScene = me._buildScene();
 
         // Every datum is hidden
-        if(!rootScene) { return; }
+        if(!rootScene) return;
 
         // Not possible to represent a treemap if rootScene.vars.size.value = 0.
         // If this is a small chart, don't show message, which results in a blank plot.
-        if(!rootScene.childNodes.length && !this.visualRoles.multiChart.isBound()) {
+        if(!rootScene.childNodes.length && !this.visualRoles.multiChart.isBound())
            throw new InvalidDataException("Unable to create a treemap chart, please check the data values.");
-        }
 
-        var lw0 = def.number.to(me._getConstantExtension('leaf', 'lineWidth'), 1);
-        var lw  = lw0;
-        var lw2 = lw/2;
-        
-        var sizeProp = me.visualRoles.size.isBound() ?
-                       // Does not use sceneScale on purpose because of the 'nullToZero'
-                       // code not calling the base scale when null.
-                       // The base scale already handles the null case, 
-                       // translating it to the minimum value.
-                       me.axes.size.scale.by1(function(scene) { return scene.vars.size.value; }) :
-                       100;
-                
-        var panel = me.pvTreemapPanel = new pvc.visual.Panel(me, me.pvPanel, {
-                panelType:   pv.Layout.Treemap,
-                extensionId: 'panel'
-            })
-            .pvMark
-            .lock('visible', true)
-            .lock('nodes',   rootScene.nodes())
-            // Reserve space for interaction borders
-            .lock('left',    lw2)
-            .lock('top',     lw2)
-            .lock('width',   cs.width  - lw)
-            .lock('height',  cs.height - lw)
-            .lock('size',    sizeProp)
-            .lock('mode',    me.layoutMode)
-            .lock('order',   null) // TODO: option for this?
-            .lock('round',   false);
+        var lw0 = def.number.to(me._getConstantExtension('leaf', 'lineWidth'), 1),
+            lw  = lw0,
+            lw2 = lw/ 2,
+            // Does not use sceneScale on purpose because of the 'nullToZero'
+            // code not calling the base scale when null.
+            // The base scale already handles the null case,
+            // translating it to the minimum value.
+            sizeProp = me.visualRoles.size.isBound()
+                ? me.axes.size.scale.by1(function(scene) { return scene.vars.size.value; })
+                : 100,
+
+            panel = me.pvTreemapPanel = new pvc.visual.Panel(me, me.pvPanel, {
+                    panelType:   pv.Layout.Treemap,
+                    extensionId: 'panel'
+                })
+                .pvMark
+                .lock('visible', true)
+                .lock('nodes',   rootScene.nodes())
+                // Reserve space for interaction borders
+                .lock('left',    lw2)
+                .lock('top',     lw2)
+                .lock('width',   cs.width  - lw)
+                .lock('height',  cs.height - lw)
+                .lock('size',    sizeProp)
+                .lock('mode',    me.layoutMode)
+                .lock('order',   null) // TODO: option for this?
+                .lock('round',   false);
         
         // Node prototype
         // Reserve space for interaction borders
@@ -72,28 +70,21 @@ def
         
         // ------------------
         
-        var colorAxis = me.axes.color;
-        var colorScale;
-        if(me.visualRoles.color.isBound()) {
-            colorScale = colorAxis.sceneScale({sceneVarName: 'color'});
-        } else {
-            colorScale = def.fun.constant(colorAxis.option('Unbound'));
-        }
-        
-        // ------------------
-        
-        var pvLeafMark = new pvc.visual.Bar(me, panel.leaf, {extensionId: 'leaf'})
-            .lockMark('visible')
-            .override('defaultColor', function(scene) {
-                return colorScale(scene);
-            })
-            .override('defaultStrokeWidth', function() { return lw0; })
-            .pvMark
-            .antialias(false)
-            .lineCap('round') // only used by strokeDashArray
-            .strokeDasharray(function(scene) {
-                return scene.vars.size.value < 0 ? 'dash' : null; // Keep this in sync with the style in pvc.sign.DotSizeColor
-            });
+        var colorAxis = me.axes.color,
+            colorScale = me.visualRoles.color.isBound()
+                ? colorAxis.sceneScale({sceneVarName: 'color'})
+                : def.fun.constant(colorAxis.option('Unbound')),
+
+            pvLeafMark = new pvc.visual.Bar(me, panel.leaf, {extensionId: 'leaf'})
+                .lockMark('visible')
+                .override('defaultColor', function(scene) { return colorScale(scene); })
+                .override('defaultStrokeWidth', function() { return lw0; })
+                .pvMark
+                .antialias(false)
+                .lineCap('round') // only used by strokeDashArray
+                .strokeDasharray(function(scene) {
+                    return scene.vars.size.value < 0 ? 'dash' : null; // Keep this in sync with the style in pvc.sign.DotSizeColor
+                });
        
         new pvc.visual.Bar(me, panel.node, {
             extensionId: 'ascendant',
@@ -108,31 +99,25 @@ def
                    this.delegateExtension(true); 
          })
         .override('anyInteraction', function(scene) {
-            return scene.anyInteraction() ||
-                   scene.isActiveDescendantOrSelf(); // special kind of interaction
+            return scene.anyInteraction() || scene.isActiveDescendantOrSelf(); // special kind of interaction
         })
         .override('defaultStrokeWidth', function() { return 1.5 * lw; })
         .override('interactiveStrokeWidth', function(scene, w) {
-            if(this.showsActivity() && scene.isActiveDescendantOrSelf()) {
-               w = Math.max(1, w) * 1.5;
-            }
-            return w;
+            return (this.showsActivity() && scene.isActiveDescendantOrSelf())
+                ? Math.max(1, w) * 1.5
+                : w;
         })
         .override('defaultColor',     function(scene) { return colorScale(scene); })
         .override('normalColor',      def.fun.constant(null))
         .override('interactiveColor', function(scene, color, type) {
             if(type === 'stroke') {
                 if(this.showsActivity()) {
-                    if(scene.isActiveDescendantOrSelf()) {
-                        return pv.color(color).brighter(0.5)/*.alpha(0.7)*/;
-                    }
-                    
-                    if(scene.anyActive()) { return null; }
+                    if(scene.isActiveDescendantOrSelf()) return pv.color(color).brighter(0.5); /*.alpha(0.7)*/
+                    if(scene.anyActive()) return null;
                }
-                
-               if(this.showsSelection() && scene.isSelectedDescendantOrSelf()) {
-                   return pv.color(color).brighter(0.5)/*.alpha(0.7)*/;
-               }
+
+               if(this.showsSelection() && scene.isSelectedDescendantOrSelf())
+                   return pv.color(color).brighter(0.5); /*.alpha(0.7)*/
             }
             return null;
         })
@@ -149,12 +134,11 @@ def
                 // If it fits horizontally => horizontal.
                 var text = this.defaultText(scene),
                     pvLabel = this.pvMark;
-                if(scene.dx - 2 * pvLabel.textMargin() > pv.Text.measureWidth(text, pvLabel.font())) {
-                    return 0;
-                }
 
-                // Else, orient it in the widest dimension.
-                return (scene.dx >= scene.dy) ? 0 : -Math.PI / 2;
+                return (scene.dx - 2 * pvLabel.textMargin() > pv.Text.measureWidth(text, pvLabel.font()))
+                    ? 0
+                    // Else, orient it in the widest dimension.
+                    : ((scene.dx >= scene.dy) ? 0 : -Math.PI / 2);
             })
             .override('calcTextFitInfo', function(scene, text) {
                 var pvLabel = this.pvMark,
@@ -168,14 +152,12 @@ def
                 
                 if(!isHorizText && !isVertiText) return;
 
-                var hide = false;
-
-                // Text Height
-                var m  = pv.Text.measure(text, pvLabel.font()),
+                var hide = false,
+                    m  = pv.Text.measure(text, pvLabel.font()),
                     th = m.height * 0.75, // tight text bounding box
                     thMax = scene[isVertiText ? 'dx' : 'dy'];
                 
-                if(pvLabel.textBaseline() !== 'middle')  thMax /= 2;
+                if(pvLabel.textBaseline() !== 'middle') thMax /= 2;
 
                 thMax -= 2*tm;
 
@@ -184,11 +166,11 @@ def
                 // Text Width
                 var twMax = scene[isVertiText ? 'dy' : 'dx'];
                     
-                if(pvLabel.textAlign() !== 'center')  twMax /= 2;
+                if(pvLabel.textAlign() !== 'center') twMax /= 2;
 
                 twMax -= 2*tm;
                 
-                hide |= (twMax <= 0) || (this.hideOverflowed && m.width > twMax);
+                hide |= ((twMax <= 0) || (this.hideOverflowed && m.width > twMax));
 
                 return {
                     hide: hide,
@@ -199,7 +181,7 @@ def
         }
     },
     
-    _getExtensionId: function(){
+    _getExtensionId: function() {
         // 'content' coincides, visually, with 'plot', in this chart type
         // Actually it shares the same panel...
         
@@ -207,26 +189,26 @@ def
         return extensionIds.concat(this.base());
     },
     
-    renderInteractive: function(){
+    renderInteractive: function() {
         this.pvTreemapPanel.render();
     },
     
     // Returns null when all size-var values sum to 0.
     _buildScene: function() {
         // Hierarchical data, by categ1 (level1) , categ2 (level2), categ3 (level3),...
-        var data = this.visibleData({ignoreNulls: false});
+        var data = this.visibleData({ignoreNulls: false})
 
         // Everything hidden?
-        if(!data.childCount()) { return null; }
+        if(!data.childCount()) return null;
         
-        var roles = this.visualRoles;
-        var rootScene = new pvc.visual.Scene(null, {panel: this, source: data});
-        var sizeVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size',  allowNestedVars: true, hasPercentSubVar: true});
-        var sizeIsBound = roles.size.isBound();
-        var colorGrouping = roles.color && roles.color.grouping;
-        var colorByParent = colorGrouping && this.plot.option('ColorMode') === 'byparent';
+        var roles = this.visualRoles,
+            rootScene     = new pvc.visual.Scene(null, {panel: this, source: data}),
+            sizeVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size',  allowNestedVars: true, hasPercentSubVar: true}),
+            sizeIsBound   = roles.size.isBound(),
+            colorGrouping = roles.color && roles.color.grouping,
+            colorByParent = colorGrouping && this.plot.option('ColorMode') === 'byparent';
         
-        var recursive = function(scene) {
+        function recursive(scene) {
             var group = scene.group;
             
             // The 'category' var value is the local group's value...
@@ -254,9 +236,7 @@ def
             // it seems that the waterfall's DfsPre/DfsPost flattening
             // needs the distinction between the key of the ancestor,
             // and the key of the nonexistent leaf under it...
-            //
-            // 
-            
+
             // TODO: Should be the abs key (no trailing empty keys)
             scene.vars.category = pvc_ValueLabelVar.fromComplex(group);
             
@@ -266,7 +246,7 @@ def
                 // 0-valued branch, retreat
                 // Remove from parent, if not the root itself.
                 // Return the scene anyway (required for the rootScene).
-                if(scene.parentNode) { scene.parentNode.removeChild(scene); }
+                if(scene.parentNode) scene.parentNode.removeChild(scene);
                 return scene;
             }
 
@@ -277,7 +257,7 @@ def
                 .array();
                     
             if(!colorGrouping) {
-                if(!scene.parent) { scene.vars.color = new pvc_ValueLabelVar(null, ""); }
+                if(!scene.parent) scene.vars.color = new pvc_ValueLabelVar(null, "");
             } else {
                 // Leafs, in colorByParent, receive the parent's color.
                 var colorGroup = (colorByParent && !children.length) ? group.parent : group;
@@ -287,20 +267,16 @@ def
                     var colorView = colorGrouping.view(colorGroup);
                     //scene.vars.color = pvc_ValueLabelVar.fromComplex(colorView); //
                     //scene.vars.color = new pvc_ValueLabelVar(colorGroup.absKey, colorGroup.absLabel);
-                    scene.vars.color = new pvc_ValueLabelVar(
-                        colorView.keyTrimmed(), 
-                        colorView.label);
+                    scene.vars.color = new pvc_ValueLabelVar(colorView.keyTrimmed(), colorView.label);
                 }
             }
             
-            if(children.length) {
-                children.forEach(function(childData) {
-                    recursive(new pvc.visual.Scene(scene, {source: childData}));
-                });
-            }
+            children.forEach(function(childData) {
+                recursive(new pvc.visual.Scene(scene, {source: childData}));
+            });
             
             return scene;
-        };
+        }
         
         return recursive(rootScene);
     }

@@ -7,11 +7,11 @@ pvc.data.Data
     /**
      * Returns some information on the data points
      */
-    getInfo: function(){
+    getInfo: function() {
 
         var out = ["DATA SUMMARY", pvc.logSeparator, "  Dimension", pvc.logSeparator];
         
-        def.eachOwn(this.dimensions(), function(dimension, name){
+        def.eachOwn(this.dimensions(), function(dimension, name) {
             var count = dimension.count(),
                 type = dimension.type,
                 features = [];
@@ -19,16 +19,16 @@ pvc.data.Data
             features.push('"' + type.label + '"');
             features.push(type.valueTypeName);
             
-            if(type.isComparable){ features.push("comparable"); }
-            if(!type.isDiscrete){ features.push("continuous"); }
-            if(type.isHidden){ features.push("hidden"); }
+            if(type.isComparable) features.push("comparable");
+            if(!type.isDiscrete)  features.push("continuous");
+            if(type.isHidden)     features.push("hidden");
             
             out.push(
                 "  " + 
                 name +
                 " (" + features.join(', ') + ")" +
                 " (" + count + ")\n\t" + 
-                dimension.atoms().slice(0, 10).map(function(atom){ return atom.label; }).join(", ") + 
+                dimension.atoms().slice(0, 10).map(function(atom) { return atom.label; }).join(", ") +
                 (count > 10 ? "..." : ""));
         });
         
@@ -43,7 +43,7 @@ pvc.data.Data
      * 
      * @deprecated
      */
-    getValues: function(){
+    getValues: function() {
         /**
          * Values is the inner Vs matrix
          *  X | S1  | ... | S2  |
@@ -53,7 +53,7 @@ pvc.data.Data
          * CJ | V1J | ... | VNJ |
          */
         return pv.range(0, this.getCategoriesSize())
-            .map(function(categIndex){
+            .map(function(categIndex) {
                 return this._getValuesForCategoryIndex(categIndex);
             }, this);
     },
@@ -63,8 +63,8 @@ pvc.data.Data
      * 
      * @deprecated
      */
-    _getDimensionValues: function(name){
-        return this.dimensions(name).atoms().map(function(atom){ return atom.value; });
+    _getDimensionValues: function(name) {
+        return this.dimensions(name).atoms().map(function(atom) { return atom.value; });
     },
 
     /**
@@ -72,15 +72,15 @@ pvc.data.Data
      * 
      * @deprecated
      */
-    _getDimensionVisibleValues: function(name){
-        return this.dimensions(name).atoms({visible: true}).map(function(atom){ return atom.value; });
+    _getDimensionVisibleValues: function(name) {
+        return this.dimensions(name).atoms({visible: true}).map(function(atom) { return atom.value; });
     },
     
     /**
      * Returns the unique series values.
      * @deprecated
      */
-    getSeries: function(){
+    getSeries: function() {
         return this._getDimensionValues('series');
     },
 
@@ -88,7 +88,7 @@ pvc.data.Data
      * Returns an array with the indexes of the visible series values.
      * @deprecated
      */
-    getVisibleSeriesIndexes: function(){
+    getVisibleSeriesIndexes: function() {
         return this.dimensions('series').indexes({visible: true});
     },
     
@@ -96,7 +96,7 @@ pvc.data.Data
      * Returns an array with the indexes of the visible category values.
      * @deprecated
      */
-    getVisibleCategoriesIndexes: function(){
+    getVisibleCategoriesIndexes: function() {
         return this.dimensions('category').indexes({visible: true});
     },
 
@@ -104,7 +104,7 @@ pvc.data.Data
      * Returns an array with the visible series.
      * @deprecated
      */
-    getVisibleSeries: function(){
+    getVisibleSeries: function() {
         return this._getDimensionVisibleValues('series');
     },
 
@@ -112,7 +112,7 @@ pvc.data.Data
      * Returns the categories on the underlying data
      * @deprecated
      */
-    getCategories: function(){
+    getCategories: function() {
         return this._getDimensionValues('category');
     },
 
@@ -121,7 +121,7 @@ pvc.data.Data
      * 
      * @deprecated
      */
-    getVisibleCategories: function(){
+    getVisibleCategories: function() {
         return this._getDimensionVisibleValues('category');
     },
     
@@ -129,25 +129,25 @@ pvc.data.Data
      * Returns the values for a given category index
      * @deprecated
      */
-    _getValuesForCategoryIndex: function(categIdx){
-        var categAtom = this.dimensions('category').atoms()[categIdx];
-        var datumsBySeriesKey = this.datums({category: categAtom})
-                                    .uniqueIndex(function(datum){ return datum.atoms.series.key; });
+    _getValuesForCategoryIndex: function(categIdx) {
+        var categAtom = this.dimensions('category').atoms()[categIdx],
+            datumsBySeriesKey = this.datums({category: categAtom})
+                .uniqueIndex(function(datum) { return datum.atoms.series.key; });
         
         // Sorted series atoms
         return this.dimensions('series')
-                   .atoms()
-                   .map(function(atom){
-                        var datum = def.getOwn(datumsBySeriesKey, atom.key);
-                        return datum ? datum.atoms.value.value : null;
-                    });
+           .atoms()
+           .map(function(atom) {
+                var datum = def.getOwn(datumsBySeriesKey, atom.key);
+                return datum ? datum.atoms.value.value : null;
+            });
     },
     
     /**
      * Returns how many series we have
      * @deprecated
      */
-    getSeriesSize: function(){
+    getSeriesSize: function() {
         var dim = this.dimensions('series', {assertExists: false});
         return dim ? dim.count() : 0;
     },
@@ -156,7 +156,7 @@ pvc.data.Data
      * Returns how many categories, or data points, we have
      * @deprecated
      */
-    getCategoriesSize: function(){
+    getCategoriesSize: function() {
         var dim = this.dimensions('category', {assertExists: false});
         return dim ? dim.count() : 0;
     }

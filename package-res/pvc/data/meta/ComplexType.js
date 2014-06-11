@@ -18,7 +18,7 @@
  */
 def.type('pvc.data.ComplexType')
 .init(
-function(dimTypeSpecs){
+function(dimTypeSpecs) {
     /**
      * A map of the dimension types by name.
      * 
@@ -85,24 +85,20 @@ function(dimTypeSpecs){
      */
     this._dimsNamesByGroup = {};
     
-    if(dimTypeSpecs) {
-        for(var name in dimTypeSpecs){
-            this.addDimension(name, dimTypeSpecs[name]);
-        }
-    }
+    if(dimTypeSpecs) for(var name in dimTypeSpecs) this.addDimension(name, dimTypeSpecs[name]);
 })
 .add(/** @lends pvc.data.ComplexType# */{
-    describe: function(){
+    describe: function() {
 
         var out = ["COMPLEX TYPE INFORMATION", pvc.logSeparator];
         
-        this._dimsList.forEach(function(type){
+        this._dimsList.forEach(function(type) {
             var features = [];
             
             features.push(type.valueTypeName);
-            if(type.isComparable) { features.push("comparable"); }
-            if(!type.isDiscrete)  { features.push("continuous"); }
-            if(type.isHidden)     { features.push("hidden"); }
+            if(type.isComparable) features.push("comparable");
+            if(!type.isDiscrete)  features.push("continuous");
+            if(type.isHidden)     features.push("hidden");
 
             out.push("  " + type.name + " (" + features.join(', ') + ")");
         });
@@ -129,15 +125,12 @@ function(dimTypeSpecs){
      * 
      * @type pvc.data.DimensionType | pvc.data.DimensionType[] | null
      */
-    dimensions: function(name, keyArgs){
-        if(name == null) {
-            return this._dims;
-        }
+    dimensions: function(name, keyArgs) {
+        if(name == null) return this._dims;
         
         var dimType = def.getOwn(this._dims, name, null);
-        if(!dimType && def.get(keyArgs, 'assertExists', true)) {
-            throw def.error.argumentInvalid('name', "Undefined dimension '{0}'", [name]); 
-        }
+        if(!dimType && def.get(keyArgs, 'assertExists', true))
+            throw def.error.argumentInvalid('name', "Undefined dimension '{0}'", [name]);
         
         return dimType;
     },
@@ -150,7 +143,7 @@ function(dimTypeSpecs){
      * </p>
      * @type pvc.data.DimensionType[]
      */
-    dimensionsList: function(){
+    dimensionsList: function() {
         return this._dimsList;
     },
     
@@ -163,7 +156,7 @@ function(dimTypeSpecs){
      * </p>
      * @type pvc.data.DimensionType[]
      */
-    calculatedDimensionsList: function(){
+    calculatedDimensionsList: function() {
         return this._calcDimsList;
     },
     
@@ -175,7 +168,7 @@ function(dimTypeSpecs){
      * </p>
      * @type string[]
      */
-    dimensionsNames: function(){
+    dimensionsNames: function() {
         return this._dimsNames;
     },
     
@@ -192,11 +185,10 @@ function(dimTypeSpecs){
      * 
      * @type pvc.data.DimensionType[]
      */
-    groupDimensions: function(group, keyArgs){
+    groupDimensions: function(group, keyArgs) {
         var dims = def.getOwn(this._dimsByGroup, group);
-        if(!dims && def.get(keyArgs, 'assertExists', true)) {
+        if(!dims && def.get(keyArgs, 'assertExists', true))
             throw def.error.operationInvalid("There is no dimension type group with name '{0}'.", [group]);
-        }
         
         return dims;
     },
@@ -214,11 +206,10 @@ function(dimTypeSpecs){
      *  
      * @type string[]
      */
-    groupDimensionsNames: function(group, keyArgs){
+    groupDimensionsNames: function(group, keyArgs) {
         var dimNames = def.getOwn(this._dimsNamesByGroup, group);
-        if(!dimNames && def.get(keyArgs, 'assertExists', true)) {
+        if(!dimNames && def.get(keyArgs, 'assertExists', true))
             throw def.error.operationInvalid("There is no dimension type group with name '{0}'.", [group]);
-        }
         
         return dimNames;
     },
@@ -235,7 +226,7 @@ function(dimTypeSpecs){
      *  
      * @type {pvc.data.DimensionType}
      */
-    addDimension: function(name, dimTypeSpec){
+    addDimension: function(name, dimTypeSpec) {
         // <Debug>
         /*jshint expr:true */
         name || def.fail.argumentRequired('name');
@@ -247,8 +238,8 @@ function(dimTypeSpecs){
         
         this._dimsIndexByName = null; // reset
         
-        var group = dimension.group;
-        var groupLevel;
+        var group = dimension.group,
+            groupLevel;
         if(group) {
             var groupDims = def.getOwn(this._dimsByGroup, group),
                 groupDimsNames;
@@ -276,10 +267,10 @@ function(dimTypeSpecs){
             
             // Find the index of the last dimension of the same group
             // or the one that has a higher level that this one
-            for(var i = 0 ; i < L ; i++){
+            for(var i = 0 ; i < L ; i++) {
                 var dim = this._dimsList[i];
-                if(dim.group === group){
-                    if(dim.groupLevel > groupLevel){
+                if(dim.group === group) {
+                    if(dim.groupLevel > groupLevel) {
                         // Before the current one
                         index = i;
                         break;
@@ -290,29 +281,26 @@ function(dimTypeSpecs){
                 }
             } 
                
-            if(index == null){
-                index = L;
-            }
+            if(index == null) index = L;
         }
         
         def.array.insertAt(this._dimsList,  index, dimension);
         def.array.insertAt(this._dimsNames, index, name);
         
         // calculated
-        if(dimension._calculate){
+        if(dimension._calculate) {
             index = def.array.binarySearch(
                         this._calcDimsList, 
                         dimension._calculationOrder, 
                         def.compare,
-                        function(dimType){ return dimType._calculationOrder; });
-            if(index >= 0){
+                        function(dimType) { return dimType._calculationOrder; });
+            if(index >= 0)
                 // Add after
                 index++;
-            } else {
+            else
                 // Add at the two's complement of index
                 index = ~index;
-            }
-            
+
             def.array.insertAt(this._calcDimsList, index, dimension);
         }
         
@@ -321,25 +309,23 @@ function(dimTypeSpecs){
         return dimension;
     },
     
-    addCalculation: function(calcSpec, dimsOptions){
+    addCalculation: function(calcSpec, dimsOptions) {
         /*jshint expr:true */
         calcSpec || def.fail.argumentRequired('calcSpec');
         
         var calculation = calcSpec.calculation ||
-                          def.fail.argumentRequired('calculations[i].calculation');
+                          def.fail.argumentRequired('calculations[i].calculation'),
+            dimNames = calcSpec.names;
+
+        dimNames = def.string.is(dimNames)
+            ? dimNames.split(/\s*\,\s*/)
+            : def.array.as(dimNames);
         
-        var dimNames = calcSpec.names;
-        if(typeof dimNames === 'string'){
-            dimNames = dimNames.split(/\s*\,\s*/);
-        } else {
-            dimNames = def.array.as(dimNames);
-        }
-        
-        if(dimNames && dimNames.length){
+        if(dimNames && dimNames.length) {
             var calcDimNames = this._calculatedDimNames;
             
-            dimNames.forEach(function(name){
-                if(name){
+            dimNames.forEach(function(name) {
+                if(name) {
                     name = name.replace(/^\s*(.+?)\s*$/, "$1"); // trim
                     
                     !def.hasOwn(calcDimNames, name) || 
@@ -347,7 +333,7 @@ function(dimTypeSpecs){
                     
                     // Dimension need to be created?
                     var dimType = this._dims[name];
-                    if(!dimType){
+                    if(!dimType) {
                         var dimSpec = pvc.data.DimensionType.extendSpec(name, null, dimsOptions);
                         this.addDimension(name, dimSpec);
                     }
@@ -362,20 +348,19 @@ function(dimTypeSpecs){
         this._calculations.push(calculation);
     },
     
-    isCalculated: function(dimName){
+    isCalculated: function(dimName) {
         return def.hasOwn(this._calculatedDimNames, dimName);
     },
     
-    _calculate: function(complex){
+    _calculate: function(complex) {
         var calcs = this._calculations;
         var L = calcs.length;
         if(L) {
             var valuesByName = {}; 
             for(var i = 0 ; i < L ; i++) {
-                var calc = calcs[i];
+                var calc = calcs[i]; // NOTE: on purpose to make this be null
                 calc(complex, valuesByName);
             }
-            
             return valuesByName;
         }
     },
@@ -386,12 +371,12 @@ function(dimTypeSpecs){
      * 
      * @type def.Map
      */
-    getPlayingPercentVisualRoleDimensionMap: function(){
+    getPlayingPercentVisualRoleDimensionMap: function() {
         var map = this._isPctRoleDimTypeMap;
         if(!map) {
             map = this._isPctRoleDimTypeMap = new def.Map(
                 def.query(def.own(this._dims))
-                    .where(function(dimType){ return dimType.playingPercentVisualRole(); })
+                    .where(function(dimType) { return dimType.playingPercentVisualRole(); })
                     .object({
                         name: function(dimType) { return dimType.name; } 
                     }));
@@ -410,20 +395,20 @@ function(dimTypeSpecs){
      * 
      * @type any[]
      */
-    sortDimensionNames: function(dims, nameKey){
+    sortDimensionNames: function(dims, nameKey) {
         var dimsIndexByName = this._dimsIndexByName;
-        if(!dimsIndexByName){
+        if(!dimsIndexByName) {
             dimsIndexByName = 
                 def
                 .query(this._dimsList)
                 .object({
-                    name:  function(dim){ return dim.name; },
-                    value: function(dim, index){ return index; }
+                    name:  function(dim) { return dim.name; },
+                    value: function(dim, index) { return index; }
                 });
             this._dimsIndexByName = dimsIndexByName;
         }
         
-        dims.sort(function(da, db){
+        dims.sort(function(da, db) {
             return def.compare(
                     dimsIndexByName[nameKey ? nameKey(da) : da],
                     dimsIndexByName[nameKey ? nameKey(db) : db]);

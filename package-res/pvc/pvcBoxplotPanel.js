@@ -35,43 +35,39 @@ def
 
         this.base();
         
-        var rootScene = this._buildScene();
+        var rootScene = this._buildScene(),
+            a_bottom  = this.isOrientationVertical() ? "bottom" : "left",
+            a_left    = this.anchorOrtho(a_bottom),
+            a_width   = this.anchorLength(a_bottom),
+            a_height  = this.anchorOrthoLength(a_bottom);
 
-        var a_bottom = this.isOrientationVertical() ? "bottom" : "left",
-            a_left   = this.anchorOrtho(a_bottom),
-            a_width  = this.anchorLength(a_bottom),
-            a_height = this.anchorOrthoLength(a_bottom);
-
-        function defaultColor(scene, type){
+        function defaultColor(scene, type) {
             var color = this.base(scene, type);
             return type === 'stroke' ? color.darker(1) : color;
         }
         
         /* Category Panel */
         var extensionIds = ['panel'];
-        if(this.compatVersion() <= 1){
+        if(this.compatVersion() <= 1)
             extensionIds.push(''); // let access as "box_"
-        }
         
         this.pvBoxPanel = new pvc.visual.Panel(this, this.pvPanel, {
                 extensionId: extensionIds
             })
             .lock('data', rootScene.childNodes)
-            .lockMark(a_left, function(scene){
+            .lockMark(a_left, function(scene) {
                 var catVar = scene.vars.category;
                 return catVar.x - catVar.width / 2;
             })
             .pvMark
-            [a_width](function(scene){ return scene.vars.category.width; })
-            ;
+            [a_width](function(scene) { return scene.vars.category.width; });
         
         /* V Rules */
-        function setupRuleWhisker(rule){
-            rule.lock(a_left, function(){ 
+        function setupRuleWhisker(rule) {
+            rule.lock(a_left, function() {
                     return this.pvMark.parent[a_width]() / 2;
                 })
-                .override('defaultColor', defaultColor)
-                ;
+                .override('defaultColor', defaultColor);
 
             return rule;
         }
@@ -85,13 +81,12 @@ def
                 noDoubleClick: false,
                 showsInteraction: true
             }))
-            .intercept('visible', function(scene){
+            .intercept('visible', function(scene) {
                 return scene.vars.category.showRuleWhiskerUpper && this.delegateExtension(true);
             })
             .pvMark
-            .lock(a_bottom, function(scene){ return scene.vars.category.ruleWhiskerUpperBottom; })
-            .lock(a_height, function(scene){ return scene.vars.category.ruleWhiskerUpperHeight; })
-            ;
+            .lock(a_bottom, function(scene) { return scene.vars.category.ruleWhiskerUpperBottom; })
+            .lock(a_height, function(scene) { return scene.vars.category.ruleWhiskerUpperHeight; });
 
         this.pvRuleWhiskerLower = setupRuleWhisker(new pvc.visual.Rule(this, this.pvBoxPanel, {
                 extensionId:   'boxRuleWhisker',
@@ -102,18 +97,17 @@ def
                 noDoubleClick: false,
                 showsInteraction: true
             }))
-            .intercept('visible', function(scene){
+            .intercept('visible', function(scene) {
                 return scene.vars.category.showRuleWhiskerBelow && this.delegateExtension(true);
             })
             .pvMark
-            .lock(a_bottom, function(scene){ return scene.vars.category.ruleWhiskerLowerBottom; })
-            .lock(a_height, function(scene){ return scene.vars.category.ruleWhiskerLowerHeight; })
-            ;
+            .lock(a_bottom, function(scene) { return scene.vars.category.ruleWhiskerLowerBottom; })
+            .lock(a_height, function(scene) { return scene.vars.category.ruleWhiskerLowerHeight; });
 
         /* Box Bar */
-        function setupHCateg(sign){
-            sign.lockMark(a_left,  function(scene){ return scene.vars.category.boxLeft;  })
-                .lockMark(a_width, function(scene){ return scene.vars.category.boxWidth; })
+        function setupHCateg(sign) {
+            sign.lockMark(a_left,  function(scene) { return scene.vars.category.boxLeft;  })
+                .lockMark(a_width, function(scene) { return scene.vars.category.boxWidth; })
                 ;
             
             return sign;
@@ -124,18 +118,17 @@ def
                 freePosition:  true,
                 normalStroke:  true
             }))
-            .intercept('visible', function(scene){
+            .intercept('visible', function(scene) {
                 return scene.vars.category.showBox && this.delegateExtension(true);
             })
-            .lockMark(a_bottom, function(scene){ return scene.vars.category.boxBottom; })
-            .lockMark(a_height, function(scene){ return scene.vars.category.boxHeight; })
+            .lockMark(a_bottom, function(scene) { return scene.vars.category.boxBottom; })
+            .lockMark(a_height, function(scene) { return scene.vars.category.boxHeight; })
             .override('defaultColor', defaultColor)
             .override('defaultStrokeWidth', def.fun.constant(1))
-            .pvMark
-            ;
+            .pvMark;
 
         /* H Rules */
-        function setupHRule(rule){
+        function setupHRule(rule) {
             setupHCateg(rule);
             
             rule.override('defaultColor', defaultColor);
@@ -156,8 +149,7 @@ def
                 return scene.vars.minimum.value != null && this.delegateExtension(true);
             })
             .pvMark
-            .lock(a_bottom,  function(scene) { return scene.vars.minimum.position; }) // bottom
-            ;
+            .lock(a_bottom,  function(scene) { return scene.vars.minimum.position; }); // bottom
 
         this.pvRuleMax = setupHRule(new pvc.visual.Rule(this, this.pvBoxPanel, {
                 extensionId:   'boxRuleMax',
@@ -172,8 +164,7 @@ def
                 return scene.vars.maximum.value != null && this.delegateExtension(true);
             })
             .pvMark
-            .lock(a_bottom, function(scene) { return scene.vars.maximum.position; }) // bottom
-            ;
+            .lock(a_bottom, function(scene) { return scene.vars.maximum.position; }); // bottom
 
         this.pvRuleMedian = setupHRule(new pvc.visual.Rule(this, this.pvBoxPanel, {
                 extensionId:   'boxRuleMedian',
@@ -189,8 +180,7 @@ def
             })
             .lockMark(a_bottom,  function(scene) { return scene.vars.median.position; }) // bottom
             .override('defaultStrokeWidth', def.fun.constant(2))
-            .pvMark
-            ;
+            .pvMark;
     },
 
     /**
@@ -226,8 +216,8 @@ def
         return rootScene;
         
         function createCategScene(categData) {
-            var categScene = new pvc.visual.Scene(rootScene, {source: categData});
-            var vars = categScene.vars;
+            var categScene = new pvc.visual.Scene(rootScene, {source: categData}),
+                vars = categScene.vars;
             
             // Series distinction is ignored
             // If the role is bound by the user, its data will not be visible 
@@ -241,11 +231,11 @@ def
                 'boxWidth', boxWidth,
                 'boxLeft',  bandWidth / 2 - boxWidth / 2);
             
-            chart.measureVisualRoles().forEach(function(role){
+            chart.measureVisualRoles().forEach(function(role) {
                 var dimName = measureRolesDimNames[role.name],
                     svar;
 
-                if(dimName){
+                if(dimName) {
                     var dim = categData.dimensions(dimName),
                         value = dim.value(visibleKeyArgs);
                     
@@ -271,19 +261,17 @@ def
                 top;
 
             var show = hasLower || hasUpper;
-            if(show){
+            if(show) {
                 bottom = hasLower  ? vars.lowerQuartil.position :
                          hasMedian ? vars.median.position :
-                         vars.upperQuartil.position
-                         ;
+                         vars.upperQuartil.position;
 
                 top    = hasUpper  ? vars.upperQuartil.position :
                          hasMedian ? vars.median.position :
-                         vars.lowerQuartil.position
-                         ;
+                         vars.lowerQuartil.position;
 
                 show = (top !== bottom);
-                if(show){
+                if(show) {
                     catVar.boxBottom = bottom;
                     catVar.boxHeight = top - bottom;
                 }
@@ -293,16 +281,15 @@ def
             
             // vRules
             show = vars.maximum.value != null;
-            if(show){
+            if(show) {
                 bottom = hasUpper  ? vars.upperQuartil.position :
                          hasMedian ? vars.median.position :
                          hasLower  ? vars.lowerQuartil.position :
                          hasMin    ? vars.minimum.position  :
-                         null
-                         ;
+                         null;
                 
                 show = bottom != null;
-                if(show){
+                if(show) {
                     catVar.ruleWhiskerUpperBottom = bottom;
                     catVar.ruleWhiskerUpperHeight = vars.maximum.position - bottom;
                 }
@@ -313,15 +300,14 @@ def
             // ----
 
             show = hasMin;
-            if(show){
+            if(show) {
                 top = hasLower  ? vars.lowerQuartil.position :
                       hasMedian ? vars.median.position :
                       hasUpper  ? vars.upperQuartil.position :
-                      null
-                      ;
+                      null;
 
                 show = top != null;
-                if(show){
+                if(show) {
                     bottom = vars.minimum.position;
                     catVar.ruleWhiskerLowerHeight = top - bottom;
                     catVar.ruleWhiskerLowerBottom = bottom;

@@ -16,30 +16,24 @@
  * @param {any} label The label of the variable.
  * @param {any} [rawValue] The raw value of the variable.
  */
-var pvc_ValueLabelVar = pvc.visual.ValueLabelVar = function(value, label, rawValue, absLabel){
+var pvc_ValueLabelVar = pvc.visual.ValueLabelVar = function(value, label, rawValue, absLabel) {
     this.value = value;
     this.label = label;
     
-    if(rawValue !== undefined) { this.rawValue = rawValue; }
-    if(absLabel !== undefined) { this.absLabel = absLabel; } // Only Data have absLabel not undefined
+    if(rawValue !== undefined) this.rawValue = rawValue;
+    if(absLabel !== undefined) this.absLabel = absLabel; // Only Data have absLabel not undefined
 };
 
 def.set(
     pvc_ValueLabelVar.prototype,
     'rawValue', undefined,
     'absLabel', undefined,
-    'setValue', function(v) {
-        this.value = v;
-        return this;
-    },
-    'setLabel', function(v) {
-        this.label = v;
-        return this;
-    },
-    'clone',    function(){
+    'setValue', function(v) { return this.value = v, this; },
+    'setLabel', function(v) { return this.label = v, this; },
+    'clone',    function() {
         return new pvc_ValueLabelVar(this.value, this.label, this.rawValue);
     },
-    'toString', function(){
+    'toString', function() {
         var label = this.label || this.value;
         return label == null ? "" :
                (typeof label !== 'string') ? ('' + label) :

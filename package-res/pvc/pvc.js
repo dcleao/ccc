@@ -12,9 +12,7 @@ if(!Array.prototype.every) Array.prototype.every = function(fun /*, thisArg */) 
     if(typeof fun !== 'function') throw new TypeError();
 
     var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
-    for(var i = 0; i < len; i++) {
-        if(i in t && !fun.call(thisArg, t[i], i, t)) return false;
-    }
+    for(var i = 0; i < len; i++) if(i in t && !fun.call(thisArg, t[i], i, t)) return false;
     return true;
 };
 
@@ -34,11 +32,10 @@ var pvc = def.globalSpace('pvc', {
 (function() {
     /*global window:true*/
     if((typeof window !== 'undefined')  && window.location) {
-        var urlIfHasDebug = function(url) { return url && (/\bdebug=true\b/).test(url) ? url : null; };
-		var url = urlIfHasDebug(window.location.href);
-        if(!url) {
-            try { url = urlIfHasDebug(window.top.location.href); } catch(e) { /*XSS*/ }
-        }
+        var urlIfHasDebug = function(url) { return url && (/\bdebug=true\b/).test(url) ? url : null;},
+		    url = urlIfHasDebug(window.location.href);
+
+        if(!url) try { url = urlIfHasDebug(window.top.location.href); } catch(e) { /*XSS*/ }
         if(url) {
             var m = /\bdebugLevel=(\d+)/.exec(url);
             pvc.debug = m ? (+m[1]) : 3;
@@ -71,7 +68,7 @@ pvc.setDebug = function(level) {
 /*global console:true*/
 
 function pvc_syncLog() {
-    if (pvc.debug > 0 && typeof console !== "undefined") {
+    if(pvc.debug > 0 && typeof console !== "undefined") {
         ['log', 'info', ['trace', 'debug'], 'error', 'warn', ['group', 'groupCollapsed'], 'groupEnd']
         .forEach(function(ps) {
             ps = ps instanceof Array ? ps : [ps, ps];
@@ -79,7 +76,7 @@ function pvc_syncLog() {
             pvc_installLog(pvc, ps[0],  ps[1],  '[pvChart]');
         });
     } else {
-        if(pvc.debug > 1) { pvc.debug = 1; }
+        if(pvc.debug > 1) pvc.debug = 1;
 
         ['log', 'info', 'trace', 'warn', 'group', 'groupEnd']
         .forEach(function(p) { pvc[p] = def.noop; });
@@ -87,10 +84,10 @@ function pvc_syncLog() {
         var _errorPrefix = "[pvChart ERROR]: ";
 
         pvc.error = function(e) {
-            if(e && typeof e === 'object' && e.message) { e = e.message; }
+            if(e && typeof e === 'object' && e.message) e = e.message;
 
             e = '' + def.nullyTo(e, '');
-            if(e.indexOf(_errorPrefix) < 0) { e = _errorPrefix + e; }
+            if(e.indexOf(_errorPrefix) < 0) e = _errorPrefix + e;
 
             throw new Error(e);
         };
@@ -111,7 +108,7 @@ function pvc_syncTipsyLog() {
 }
 
 function pvc_installLog(o, pto, pfrom, prompt) {
-    if(!pfrom) { pfrom = pto; }
+    if(!pfrom) pfrom = pto;
     var c = console;
     var m = c[pfrom] || c.log;
     var fun;
@@ -148,11 +145,9 @@ pvc.setDebug(pvc.debug);
  */
 pvc.defaultCompatVersion = function(compatVersion) {
     var defaults = pvc.BaseChart.prototype.defaults;
-    if(compatVersion != null) {
-        return defaults.compatVersion = compatVersion;
-    }
-
-    return defaults.compatVersion;
+    return (compatVersion != null)
+        ? (defaults.compatVersion = compatVersion)
+        : defaults.compatVersion;
 };
 
 pvc.cloneMatrix = function(m) {
@@ -162,9 +157,8 @@ pvc.cloneMatrix = function(m) {
 pvc.normAngle = pv.Shape.normalizeAngle;
 
 pvc.stringify = function(t, keyArgs) {
-    var maxLevel = def.get(keyArgs, 'maxLevel') || 5;
-
-    var out = [];
+    var maxLevel = def.get(keyArgs, 'maxLevel') || 5,
+        out = [];
     pvc.stringifyRecursive(out, t, maxLevel, keyArgs);
     return out.join('');
 };
@@ -180,31 +174,21 @@ pvc.stringifyRecursive = function(out, t, remLevels, keyArgs) {
                     return true;
                 }
 
-                if(def.fun.is(t.stringify)) {
-                    return t.stringify(out, remLevels, keyArgs);
-                }
+                if(def.fun.is(t.stringify)) return t.stringify(out, remLevels, keyArgs);
 
                 if(t instanceof Array) {
                     out.push('[');
                     t.forEach(function(item, index) {
-                        if(index) { out.push(', '); }
-                        if(!pvc.stringifyRecursive(out, item, remLevels, keyArgs)) {
-                            out.pop();
-                        }
+                        if(index) out.push(', ');
+                        if(!pvc.stringifyRecursive(out, item, remLevels, keyArgs)) out.pop();
                     });
                     out.push(']');
                 } else {
                     var ownOnly = def.get(keyArgs, 'ownOnly', true);
-                    if(t === def.global) {
-                        out.push('<window>');
-                        return true;
-                    }
+                    if(t === def.global) return out.push('<window>'), true;
 
-                    if(def.fun.is(t.cloneNode)) {
-                        // DOM object
-                        out.push('<dom #' + (t.id || t.name || '?') + '>');
-                        return true;
-                    }
+                    // DOM object
+                    if(def.fun.is(t.cloneNode)) return out.push('<dom #' + (t.id || t.name || '?') + '>'), true;
 
                     if(remLevels > 1 && t.constructor !== Object) {
                         remLevels = 1;
@@ -215,11 +199,11 @@ pvc.stringifyRecursive = function(out, t, remLevels, keyArgs) {
                     var first = true;
                     for(var p in t) {
                         if(!ownOnly || def.hasOwnProp.call(t, p)) {
-                            if(!first) { out.push(', '); }
+                            if(!first) out.push(', ');
                             out.push(p + ': ');
                             if(!pvc.stringifyRecursive(out, t[p], remLevels, keyArgs)) {
                                 out.pop();
-                                if(!first) { out.pop(); }
+                                if(!first) out.pop();
                             } else if(first) {
                                 first = false;
                             }
@@ -228,39 +212,25 @@ pvc.stringifyRecursive = function(out, t, remLevels, keyArgs) {
 
                     if(first) {
                         var s = '' + t;
-                        if(s !== '[object Object]') { // not very useful
-                            out.push('{'+ s + '}');
-                        }
+                        if(s !== '[object Object]') out.push('{'+ s + '}'); // not very useful
                     }
 
                     out.push('}');
                 }
-//                    else {
-//                        out.push(JSON.stringify("'new ...'"));
-//                    }
+                // else {
+                //     out.push(JSON.stringify("'new ...'"));
+                // }
                 return true;
 
-            case 'number':
-                out.push(''+(Math.round(100000 * t) / 100000)); // 6 dec places max
-                return true;
-
-            case 'boolean':
-                out.push(''+t);
-                return true;
-
-            case 'string':
-                out.push(JSON.stringify(t));
-                return true;
-
+            // 6 dec places max
+            case 'number':  out.push(''+(Math.round(100000 * t) / 100000)); return true;
+            case 'boolean': out.push(''+t); return true;
+            case 'string':  out.push(JSON.stringify(t)); return true;
             case 'function':
-                if(def.get(keyArgs, 'funs', false)) {
-                    out.push(JSON.stringify(t.toString().substr(0, 13) + '...'));
-                    return true;
-                }
-
-                return false;
+                return def.get(keyArgs, 'funs', false)
+                    ? (out.push(JSON.stringify(t.toString().substr(0, 13) + '...')), true)
+                    : false;
         }
-
         out.push("'new ???'");
         return true;
     }
@@ -299,41 +269,32 @@ pvc.extendType = function(type, exts, names) {
         var sceneVars = type.prototype._vars;
         var addExtension = function(ext, n) {
             if(ext !== undefined) {
-                if(!exts2) { exts2 = {}; }
-                if(sceneVars && sceneVars[n]) {
-                    n = '_' + n + 'EvalCore';
-                }
+                if(!exts2) exts2 = {};
+                if(sceneVars && sceneVars[n]) n = '_' + n + 'EvalCore';
 
                 exts2[n] = def.fun.to(ext);
             }
         };
 
-        if(names) {
+        if(names)
             names.forEach(function(n) { addExtension(exts[n], n); });
-        } else {
+        else
             def.each(addExtension);
-        }
 
-        if(exts2) { type.add(exts2); }
+        if(exts2) type.add(exts2);
     }
 };
 
-pv.Color.prototype.stringify = function(out, remLevels, keyArgs){
+pv.Color.prototype.stringify = function(out, remLevels, keyArgs) {
     return pvc.stringifyRecursive(out, this.key, remLevels, keyArgs);
 };
 
 pv_Mark.prototype.hasDelegateValue = function(name, tag) {
     var p = this.$propertiesMap[name];
-    if(p){
-        return (!tag || p.tag === tag);
-    }
-
-    // This mimics the way #bind works
-    if(this.proto){
-        return this.proto.hasDelegateValue(name, tag);
-    }
-
-    return false;
+    return p
+        ? (!tag || p.tag === tag)
+        // This mimics the way #bind works
+        : (!!this.proto && this.proto.hasDelegateValue(name, tag));
 };
 
 /**
@@ -368,7 +329,7 @@ pv_Mark.prototype.hasDelegateValue = function(name, tag) {
  */
 pvc.defaultColorScheme = null;
 
-pvc.brighterColorTransform = function(color){
+pvc.brighterColorTransform = function(color) {
     return (color.rgb ? color : pv.color(color)).brighter(0.6);
 };
 
@@ -382,7 +343,7 @@ pvc.brighterColorTransform = function(color){
  * @param {string|pv.Color|string[]|pv.Color[]|pv.Scale|function} [colors=null] Something convertible to a color scheme by {@link pvc.colorScheme}.
  * @return {null|pv.Scale} A color scale function or null.
  */
-pvc.setDefaultColorScheme = function(colors){
+pvc.setDefaultColorScheme = function(colors) {
     return pvc.defaultColorScheme = pvc.colorScheme(colors);
 };
 
@@ -408,12 +369,12 @@ pvc.defaultColor = pv.Colors.category10()('?');
  *
  * @returns {null|function} A color scheme function or null.
  */
-pvc.colorScheme = function(colors){
-    if(colors == null) { return null; }
+pvc.colorScheme = function(colors) {
+    if(colors == null) return null;
 
     if(typeof colors === 'function') {
         // Assume already a color scheme (a color scale factory)
-        if(!colors.hasOwnProperty('range')) { return colors; }
+        if(!colors.hasOwnProperty('range')) return colors;
 
         // A protovis color scale
         // Obtain its range colors array and discard the scale function.
@@ -422,7 +383,7 @@ pvc.colorScheme = function(colors){
         colors = def.array.as(colors);
     }
 
-    if(!colors.length) { return null; }
+    if(!colors.length) return null;
 
     return function() {
         var scale = pv.colors(colors); // creates a color scale with a defined range
@@ -439,43 +400,38 @@ pvc.colorScheme = function(colors){
  * @param {string|pv.Color|string[]|pv.Color[]|pv.Scale|function} [colors=null] Something convertible to a color scheme by {@link pvc.colorScheme}.
  * @type function
  */
-pvc.createColorScheme = function(colors){
+pvc.createColorScheme = function(colors) {
     return pvc.colorScheme(colors) ||
            pvc.defaultColorScheme  ||
            pv.Colors.category10;
 };
 
 // Convert to Grayscale using YCbCr luminance conv.
-pvc.toGrayScale = function(color, alpha, maxGrayLevel, minGrayLevel){
+pvc.toGrayScale = function(color, alpha, maxGrayLevel, minGrayLevel) {
     color = pv.color(color);
 
     var avg = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
     // Don't let the color get near white, or it becomes unperceptible in most monitors
-    if(maxGrayLevel === undefined) {
+    if(maxGrayLevel === undefined)
         maxGrayLevel = 200;
-    } else if(maxGrayLevel == null){
+    else if(maxGrayLevel == null)
         maxGrayLevel = 255; // no effect
-    }
 
-    if(minGrayLevel === undefined){
+    if(minGrayLevel === undefined)
         minGrayLevel = 30;
-    } else if(minGrayLevel == null){
+    else if(minGrayLevel == null)
         minGrayLevel = 0; // no effect
-    }
 
     var delta = (maxGrayLevel - minGrayLevel);
-    if(delta <= 0){
-        avg = maxGrayLevel;
-    } else {
+    avg = (delta <= 0)
+        ? maxGrayLevel
         // Compress
-        avg = minGrayLevel + (avg / 255) * delta;
-    }
+        : (minGrayLevel + (avg / 255) * delta);
 
-    if(alpha == null){
+    if(alpha == null)
         alpha = color.opacity;
-    } else if(alpha < 0){
+    else if(alpha < 0)
         alpha = (-alpha) * color.opacity;
-    }
 
     avg = Math.round(avg);
 
@@ -483,7 +439,7 @@ pvc.toGrayScale = function(color, alpha, maxGrayLevel, minGrayLevel){
 };
 
 // TODO: change the name of this
-pvc.removeTipsyLegends = function(){
+pvc.removeTipsyLegends = function() {
     try {
         $('.tipsy').remove();
     } catch(e) {
@@ -491,12 +447,10 @@ pvc.removeTipsyLegends = function(){
     }
 };
 
-pvc.createDateComparer = function(parser, key){
-    if(!key){
-        key = pv.identity;
-    }
+pvc.createDateComparer = function(parser, key) {
+    if(!key) key = pv.identity;
 
-    return function(a, b){
+    return function(a, b) {
         return parser.parse(key(a)) - parser.parse(key(b));
     };
 };
@@ -518,15 +472,15 @@ pvc.time = {
         'ms':  1
     },
 
-    withoutTime: function(t){
+    withoutTime: function(t) {
         return new Date(t.getFullYear(), t.getMonth(), t.getDate());
     },
 
     weekday: {
-        previousOrSelf: function(t, toWd){
-            var wd  = t.getDay();
-            var difDays = wd - toWd;
-            if(difDays){
+        previousOrSelf: function(t, toWd) {
+            var wd = t.getDay(),
+                difDays = wd - toWd;
+            if(difDays) {
                 // Round to the previous wanted week day
                 var previousOffset = difDays < 0 ? (7 + difDays) : difDays;
                 t = new Date(t - previousOffset * pvc.time.intervals.d);
@@ -534,10 +488,10 @@ pvc.time = {
             return t;
         },
 
-        nextOrSelf: function(t, toWd){
-            var wd  = t.getDay();
-            var difDays = wd - toWd;
-            if(difDays){
+        nextOrSelf: function(t, toWd) {
+            var wd = t.getDay(),
+                difDays = wd - toWd;
+            if(difDays) {
                 // Round to the next wanted week day
                 var nextOffset = difDays > 0 ? (7 - difDays) : -difDays;
                 t = new Date(t + nextOffset * pvc.time.intervals.d);
@@ -545,18 +499,16 @@ pvc.time = {
             return t;
         },
 
-        closestOrSelf: function(t, toWd){
-            var wd = t.getDay(); // 0 - Sunday, ..., 6 - Friday
-            var difDays = wd - toWd;
-            if(difDays){
-                var D = pvc.time.intervals.d;
-                var sign = difDays > 0 ? 1 : -1;
+        closestOrSelf: function(t, toWd) {
+            var wd = t.getDay(), // 0 - Sunday, ..., 6 - Friday
+                difDays = wd - toWd;
+            if(difDays) {
+                var D = pvc.time.intervals.d,
+                    sign = difDays > 0 ? 1 : -1;
                 difDays = Math.abs(difDays);
-                if(difDays >= 4){
-                    t = new Date(t.getTime() + sign * (7 - difDays) * D);
-                } else {
-                    t = new Date(t.getTime() - sign * difDays * D);
-                }
+                t = (difDays >= 4)
+                    ? new Date(t.getTime() + sign * (7 - difDays) * D)
+                    : new Date(t.getTime() - sign * difDays * D);
             }
             return t;
         }
@@ -587,9 +539,9 @@ pvc.buildTitleFromName = function(name) {
 };
 
 pvc.buildIndexedId = function(prefix, index) {
-    if(index > 0) { return prefix + "" + (index + 1); } // base2, ortho3,..., legend2
-
-    return prefix; // base, ortho, legend
+    return (index > 0)
+        ? (prefix + "" + (index + 1)) // base2, ortho3,..., legend2
+        : prefix; // base, ortho, legend
 };
 
 /**
@@ -599,19 +551,16 @@ pvc.buildIndexedId = function(prefix, index) {
  *
  * @type Array
  */
-pvc.splitIndexedId = function(indexedId){
-    var match = /^(.*?)(\d*)$/.exec(indexedId);
-    var index = null;
-
+pvc.splitIndexedId = function(indexedId) {
+    var match = /^(.*?)(\d*)$/.exec(indexedId),
+        index = null;
     if(match[2]) {
         index = Number(match[2]);
-        if(index <= 1) {
+        if(index <= 1)
             index = 1;
-        } else {
+        else
             index--;
-        }
     }
-
     return [match[1], index];
 };
 
@@ -621,14 +570,13 @@ function pvc_unwrapExtensionOne(id, prefix) {
 
         return prefix ? (prefix + def.firstUpperCase(id)) : id;
     }
-
     return prefix;
 }
 
 var pvc_oneNullArray = [null];
 
 pvc.makeExtensionAbsId = function(id, prefix) {
-    if(!id) { return prefix; }
+    if(!id) return prefix;
 
     var result = [];
 
@@ -637,7 +585,7 @@ pvc.makeExtensionAbsId = function(id, prefix) {
     for(var i = 0, I = prefix.length ; i < I ; i++) {
         for(var j = 0, J = id.length ; j < J ; j++) {
             var absId = pvc_unwrapExtensionOne(id[j], prefix[i]);
-            if(absId) { result.push(absId); }
+            if(absId) result.push(absId);
         }
     }
 
@@ -647,39 +595,34 @@ pvc.makeExtensionAbsId = function(id, prefix) {
 pvc.makeEnumParser = function(enumName, hasKey, dk) {
     if(def.array.is(hasKey)) {
         var keySet = {};
-        hasKey.forEach(function(k) { if(k) { keySet[k.toLowerCase()] = k; }});
+        hasKey.forEach(function(k) { if(k) keySet[k.toLowerCase()] = k; });
         hasKey = function(k) { return def.hasOwn(keySet, k); };
     }
 
-    if(dk) { dk = dk.toLowerCase(); }
+    if(dk) dk = dk.toLowerCase();
 
     return function(k) {
-        if(k) { k = (''+k).toLowerCase(); }
+        if(k) k = (''+k).toLowerCase();
 
         if(!hasKey(k)) {
-            if(k && pvc.debug >= 2) {
-                pvc.warn("Invalid '" + enumName + "' value: '" + k + "'. Assuming '" + dk + "'.");
-            }
+            if(k && pvc.debug >= 2) pvc.warn("Invalid '" + enumName + "' value: '" + k + "'. Assuming '" + dk + "'.");
 
             k = dk;
         }
-
         return k;
     };
 };
 
-pvc.parseDistinctIndexArray = function(value, min, max){
+pvc.parseDistinctIndexArray = function(value, min, max) {
     value = def.array.as(value);
-    if(value == null) { return null; }
-
-    if(min == null) { min = 0; }
-
-    if(max == null) { max = Infinity; }
+    if(value == null) return null;
+    if(min == null) min = 0;
+    if(max == null) max = Infinity;
 
     var a = def
         .query(value)
         .select(function(index) { return +index; }) // to number
-        .where(function(index) { return !isNaN(index) && index >= min && index <= max; })
+        .where (function(index) { return !isNaN(index) && index >= min && index <= max; })
         .distinct()
         .array();
 
@@ -729,108 +672,86 @@ pvc.parseContinuousColorScaleType = function(scaleType) {
                 break;
 
             default:
-                if(pvc.debug >= 2){
-                    pvc.log("[Warning] Invalid 'ScaleType' option value: '" + scaleType + "'.");
-                }
-
-            scaleType = null;
+                if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'ScaleType' option value: '" + scaleType + "'.");
+                scaleType = null;
                 break;
         }
     }
-
     return scaleType;
 };
 
-pvc.parseDomainScope = function(scope, orientation){
-    if(scope){
+pvc.parseDomainScope = function(scope, orientation) {
+    if(scope) {
         scope = (''+scope).toLowerCase();
-        switch(scope){
+        switch(scope) {
             case 'cell':
             case 'global':
                 break;
 
             case 'section': // row (for y) or col (for x), depending on the associated orientation
-                if(!orientation){
-                    throw def.error.argumentRequired('orientation');
-                }
-
+                if(!orientation) throw def.error.argumentRequired('orientation');
                 scope = orientation === 'y' ? 'row' : 'column';
                 break;
 
             case 'column':
             case 'row':
-                if(orientation && orientation !== (scope === 'row' ? 'y' : 'x')){
+                if(orientation && orientation !== (scope === 'row' ? 'y' : 'x')) {
                     scope = 'section';
 
-                    if(pvc.debug >= 2){
-                        pvc.log("[Warning] Invalid 'DomainScope' option value: '" + scope + "' for the orientation: '" + orientation + "'.");
-                    }
+                    if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'DomainScope' option value: '" +
+                        scope + "' for the orientation: '" + orientation + "'.");
                 }
                 break;
 
             default:
-                if(pvc.debug >= 2){
-                    pvc.log("[Warning] Invalid 'DomainScope' option value: '" + scope + "'.");
-                }
-
+                if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'DomainScope' option value: '" + scope + "'.");
                 scope = null;
                 break;
         }
     }
-
     return scope;
 };
 
-pvc.parseDomainRoundingMode = function(mode){
-    if(mode){
+pvc.parseDomainRoundingMode = function(mode) {
+    if(mode) {
         mode = (''+mode).toLowerCase();
-        switch(mode){
+        switch(mode) {
             case 'none':
             case 'nice':
             case 'tick':
                 break;
 
             default:
-                if(pvc.debug >= 2){
-                    pvc.log("[Warning] Invalid 'DomainRoundMode' value: '" + mode + "'.");
-                }
-
+                if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'DomainRoundMode' value: '" + mode + "'.");
                 mode = null;
                 break;
         }
     }
-
     return mode;
 };
 
-pvc.parseOverlappedLabelsMode = function(mode){
-    if(mode){
+pvc.parseOverlappedLabelsMode = function(mode) {
+    if(mode) {
         mode = (''+mode).toLowerCase();
-        switch(mode){
+        switch(mode) {
             case 'leave':
             case 'hide':
             case 'rotatethenhide':
                 break;
 
             default:
-                if(pvc.debug >= 2){
-                    pvc.log("[Warning] Invalid 'OverlappedLabelsMode' option value: '" + mode + "'.");
-                }
-
+                if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'OverlappedLabelsMode' option value: '" + mode + "'.");
                 mode = null;
                 break;
         }
     }
-
     return mode;
 };
 
 pvc.castNumber = function(value) {
     if(value != null) {
         value = +value; // to number
-        if(isNaN(value)) {
-            value = null;
-        }
+        if(isNaN(value)) value = null;
     }
 
     return value;
@@ -838,97 +759,80 @@ pvc.castNumber = function(value) {
 
 pvc.castPositiveNumber = function(value) {
     value = pvc.castNumber(value);
-    if(value != null && !(value > 0)) {
-        value = null;
-    }
+    if(value != null && !(value > 0)) value = null;
     return value;
 };
 
 pvc.castNonNegativeNumber = function(value) {
     value = pvc.castNumber(value);
-    if(value != null && value < 0) {
-        value = null;
-    }
+    if(value != null && value < 0) value = null;
     return value;
 };
 
 pvc.parseWaterDirection = function(value) {
-    if(value){
+    if(value) {
         value = (''+value).toLowerCase();
-        switch(value){
+        switch(value) {
             case 'up':
             case 'down':
                 return value;
         }
 
-        if(pvc.debug >= 2){
-            pvc.log("[Warning] Invalid 'WaterDirection' value: '" + value + "'.");
-        }
+        if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'WaterDirection' value: '" + value + "'.");
     }
 };
 
 pvc.parseTrendType = function(value) {
-    if(value){
+    if(value) {
         value = (''+value).toLowerCase();
-        if(value === 'none'){
-            return value;
-        }
+        if(value === 'none') return value;
+        if(pvc.trends.has(value)) return value;
 
-        if(pvc.trends.has(value)){
-            return value;
-        }
-
-        if(pvc.debug >= 2){
-            pvc.log("[Warning] Invalid 'TrendType' value: '" + value + "'.");
-        }
+        if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'TrendType' value: '" + value + "'.");
     }
 };
 
 pvc.parseNullInterpolationMode = function(value) {
-    if(value){
+    if(value) {
         value = (''+value).toLowerCase();
-        switch(value){
+        switch(value) {
             case 'none':
             case 'linear':
             case 'zero':
                 return value;
         }
 
-        if(pvc.debug >= 2){
-            pvc.log("[Warning] Invalid 'NullInterpolationMode' value: '" + value + "'.");
-        }
+        if(pvc.debug >= 2) pvc.log("[Warning] Invalid 'NullInterpolationMode' value: '" + value + "'.");
     }
 };
 
-pvc.parseAlign = function(side, align){
-    if(align){ align = (''+align).toLowerCase(); }
+pvc.parseAlign = function(side, align) {
+    if(align) { align = (''+align).toLowerCase(); }
     var align2, isInvalid;
-    if(side === 'left' || side === 'right'){
+    if(side === 'left' || side === 'right') {
         align2 = align && pvc.BasePanel.verticalAlign[align];
-        if(!align2){
+        if(!align2) {
             align2 = 'middle';
             isInvalid = !!align;
         }
     } else {
         align2 = align && pvc.BasePanel.horizontalAlign[align];
-        if(!align2){
+        if(!align2) {
             align2 = 'center';
             isInvalid = !!align;
         }
     }
 
-    if(isInvalid && pvc.debug >= 2){
-        pvc.log(def.format("Invalid alignment value '{0}'. Assuming '{1}'.", [align, align2]));
-    }
+    if(isInvalid && pvc.debug >= 2) pvc.log(def.format("Invalid alignment value '{0}'. Assuming '{1}'.", [align, align2]));
 
     return align2;
 };
 
 // suitable for protovis.anchor(..) of all but the Wedge mark...
-pvc.parseAnchor = function(anchor){
-    if(anchor){
+pvc.parseAnchor = function(anchor) {
+    if(anchor) {
         anchor = (''+anchor).toLowerCase();
-        switch(anchor){
+        switch(anchor) {
             case 'top':
             case 'left':
             case 'center':
@@ -937,16 +841,14 @@ pvc.parseAnchor = function(anchor){
                 return anchor;
         }
 
-        if(pvc.debug >= 2){
-            pvc.log(def.format("Invalid anchor value '{0}'.", [anchor]));
-        }
+        if(pvc.debug >= 2) pvc.log(def.format("Invalid anchor value '{0}'.", [anchor]));
     }
 };
 
-pvc.parseAnchorWedge = function(anchor){
-    if(anchor){
+pvc.parseAnchorWedge = function(anchor) {
+    if(anchor) {
         anchor = (''+anchor).toLowerCase();
-        switch(anchor){
+        switch(anchor) {
             case 'outer':
             case 'inner':
             case 'center':
@@ -955,29 +857,19 @@ pvc.parseAnchorWedge = function(anchor){
                 return anchor;
         }
 
-        if(pvc.debug >= 2){
-            pvc.log(def.format("Invalid wedge anchor value '{0}'.", [anchor]));
-        }
+        if(pvc.debug >= 2) pvc.log(def.format("Invalid wedge anchor value '{0}'.", [anchor]));
     }
 };
 
-pvc.unionExtents = function(result, range){
+pvc.unionExtents = function(result, range) {
     if(!result) {
-        if(!range){
-            return null;
-        }
+        if(!range) return null;
 
         result = {min: range.min, max: range.max};
-    } else if(range){
-        if(range.min < result.min){
-            result.min = range.min;
-        }
-
-        if(range.max > result.max){
-            result.max = range.max;
-        }
+    } else if(range) {
+        if(range.min < result.min) result.min = range.min;
+        if(range.max > result.max) result.max = range.max;
     }
-
     return result;
 };
 
@@ -994,7 +886,7 @@ pvc.unionExtents = function(result, range){
  * </ol>
  */
 var pvc_Sides = pvc.Sides = function(sides) {
-    if(sides != null) { this.setSides(sides); }
+    if(sides != null) this.setSides(sides);
 };
 
 pvc_Sides.hnames = 'left right'.split(' ');
@@ -1002,16 +894,14 @@ pvc_Sides.vnames = 'top bottom'.split(' ');
 pvc_Sides.names  = 'left right top bottom'.split(' ');
 pvc_Sides.namesSet = pv.dict(pvc_Sides.names, def.retTrue);
 
-pvc.parsePosition = function(side, defaultSide){
-    if(side){
+pvc.parsePosition = function(side, defaultSide) {
+    if(side) {
         side = (''+side).toLowerCase();
 
-        if(!def.hasOwn(pvc_Sides.namesSet, side)){
+        if(!def.hasOwn(pvc_Sides.namesSet, side)) {
             var newSide = defaultSide || 'left';
 
-            if(pvc.debug >= 2){
-                pvc.log(def.format("Invalid position value '{0}. Assuming '{1}'.", [side, newSide]));
-            }
+            if(pvc.debug >= 2) pvc.log(def.format("Invalid position value '{0}. Assuming '{1}'.", [side, newSide]));
 
             side = newSide;
         }
@@ -1020,32 +910,27 @@ pvc.parsePosition = function(side, defaultSide){
     return side || defaultSide || 'left';
 };
 
-pvc_Sides.as = function(v){
-    if(v != null && !(v instanceof pvc_Sides)){
-        v = new pvc_Sides().setSides(v);
-    }
-
+pvc_Sides.as = function(v) {
+    if(v != null && !(v instanceof pvc_Sides)) v = new pvc_Sides().setSides(v);
     return v;
 };
 
 pvc_Sides.to = function(v) {
-    if(v == null || !(v instanceof pvc_Sides)) {
-        v = new pvc_Sides().setSides(v);
-    }
+    if(v == null || !(v instanceof pvc_Sides)) v = new pvc_Sides().setSides(v);
     return v;
 };
 
-pvc_Sides.prototype.stringify = function(out, remLevels, keyArgs){
+pvc_Sides.prototype.stringify = function(out, remLevels, keyArgs) {
     return pvc.stringifyRecursive(out, def.copyOwn(this), remLevels, keyArgs);
 };
 
-pvc_Sides.prototype.setSides = function(sides){
-    if(typeof sides === 'string'){
-        var comps = sides.split(/\s+/).map(function(comp){
+pvc_Sides.prototype.setSides = function(sides) {
+    if(typeof sides === 'string') {
+        var comps = sides.split(/\s+/).map(function(comp) {
             return pvc_PercentValue.parse(comp);
         });
 
-        switch(comps.length){
+        switch(comps.length) {
             case 1:
                 this.set('all', comps[0]);
                 return this;
@@ -1077,72 +962,48 @@ pvc_Sides.prototype.setSides = function(sides){
     } else if(typeof sides === 'number') {
         this.set('all', sides);
         return this;
-    } else if (typeof sides === 'object') {
-        if(sides instanceof pvc_PercentValue){
+    } else if(typeof sides === 'object') {
+        if(sides instanceof pvc_PercentValue) {
             this.set('all', sides);
         } else {
             this.set('all',    sides.all);
             this.set('width',  sides.width);
             this.set('height', sides.height);
-            for(var p in sides) {
-                if(pvc_Sides.namesSet.hasOwnProperty(p)) {
-                    this.set(p, sides[p]);
-                }
-            }
+            for(var p in sides) if(pvc_Sides.namesSet.hasOwnProperty(p)) this.set(p, sides[p]);
         }
-
         return this;
     }
 
-    if(pvc.debug) {
-        pvc.log("Invalid 'sides' value: " + pvc.stringify(sides));
-    }
+    if(pvc.debug) pvc.log("Invalid 'sides' value: " + pvc.stringify(sides));
 
     return this;
 };
 
 pvc_Sides.prototype.set = function(prop, value) {
     value = pvc_PercentValue.parse(value);
-    if(value != null) {
-        switch(prop) {
-            case 'all':
-                // expand
-                pvc_Sides.names.forEach(function(p) { this[p] = value; }, this);
-                break;
-
-            case 'width':
-                this.left = this.right = pvc_PercentValue.divide(value, 2);
-                break;
-
-            case 'height':
-                this.top = this.bottom = pvc_PercentValue.divide(value, 2);
-                break;
-
-            default: if(def.hasOwn(pvc_Sides.namesSet, prop)) {
-                this[prop] = value;
-            }
-        }
+    if(value != null) switch(prop) {
+        case 'all':    pvc_Sides.names.forEach(function(p) { this[p] = value; }, this); break;
+        case 'width':  this.left = this.right  = pvc_PercentValue.divide(value, 2); break;
+        case 'height': this.top  = this.bottom = pvc_PercentValue.divide(value, 2); break;
+        default:       if(def.hasOwn(pvc_Sides.namesSet, prop)) this[prop] = value;
     }
 };
 
-pvc_Sides.prototype.resolve = function(width, height){
-    if(typeof width === 'object'){
+pvc_Sides.prototype.resolve = function(width, height) {
+    if(typeof width === 'object') {
         height = width.height;
         width  = width.width;
     }
 
     var sides = {};
 
-    pvc_Sides.names.forEach(function(side){
-        var value  = 0;
-        var sideValue = this[side];
-        if(sideValue != null){
-            if(typeof(sideValue) === 'number'){
-                value = sideValue;
-            } else {
-                value = sideValue.resolve((side === 'left' || side === 'right') ? width : height);
-            }
-        }
+    pvc_Sides.names.forEach(function(side) {
+        var value  = 0,
+            sideValue = this[side];
+        if(sideValue != null)
+            value = (typeof(sideValue) === 'number')
+                ? sideValue
+                : sideValue.resolve((side === 'left' || side === 'right') ? width : height);
 
         sides[side] = value;
     }, this);
@@ -1150,27 +1011,27 @@ pvc_Sides.prototype.resolve = function(width, height){
     return pvc_Sides.updateSize(sides);
 };
 
-pvc_Sides.updateSize = function(sides){
+pvc_Sides.updateSize = function(sides) {
     sides.width  = (sides.left   || 0) + (sides.right || 0);
     sides.height = (sides.bottom || 0) + (sides.top   || 0);
 
     return sides;
 };
 
-pvc_Sides.resolvedMax = function(a, b){
+pvc_Sides.resolvedMax = function(a, b) {
     var sides = {};
 
-    pvc_Sides.names.forEach(function(side){
+    pvc_Sides.names.forEach(function(side) {
         sides[side] = Math.max(a[side] || 0, b[side] || 0);
     });
 
     return sides;
 };
 
-pvc_Sides.inflate = function(sides, by){
+pvc_Sides.inflate = function(sides, by) {
     var sidesOut = {};
 
-    pvc_Sides.names.forEach(function(side){
+    pvc_Sides.names.forEach(function(side) {
         sidesOut[side] = (sides[side] || 0) + by;
     });
 
@@ -1179,11 +1040,11 @@ pvc_Sides.inflate = function(sides, by){
 
 // -------------
 
-var pvc_PercentValue = pvc.PercentValue = function(pct){
+var pvc_PercentValue = pvc.PercentValue = function(pct) {
     this.percent = pct;
 };
 
-pvc_PercentValue.prototype.resolve = function(total){
+pvc_PercentValue.prototype.resolve = function(total) {
     return this.percent * total;
 };
 
@@ -1192,24 +1053,22 @@ pvc_PercentValue.prototype.divide = function(divisor) {
 };
 
 pvc_PercentValue.divide = function(value, divisor) {
-    return (value instanceof pvc_PercentValue) ?
-        value.divide(divisor) :
-        (value / divisor);
+    return (value instanceof pvc_PercentValue)
+        ? value.divide(divisor)
+        : (value / divisor);
 };
 
-pvc_PercentValue.parse = function(value){
-    if(value != null && value !== ''){
-        switch(typeof value){
+pvc_PercentValue.parse = function(value) {
+    if(value != null && value !== '') {
+        switch(typeof value) {
             case 'number': return value;
             case 'string':
                 var match = value.match(/^(.+?)\s*(%)?$/);
-                if(match){
+                if(match) {
                     var n = +match[1];
-                    if(!isNaN(n)){
-                        if(match[2]){
-                            if(n >= 0){
-                                return new pvc_PercentValue(n / 100);
-                            }
+                    if(!isNaN(n)) {
+                        if(match[2]) {
+                            if(n >= 0) return new pvc_PercentValue(n / 100);
                         } else {
                             return n;
                         }
@@ -1218,19 +1077,15 @@ pvc_PercentValue.parse = function(value){
                 break;
 
             case 'object':
-                if(value instanceof pvc_PercentValue){
-                    return value;
-                }
+                if(value instanceof pvc_PercentValue) return value;
                 break;
         }
 
-        if(pvc.debug){
-            pvc.log(def.format("Invalid margins component '{0}'", [''+value]));
-        }
+        if(pvc.debug) pvc.log(def.format("Invalid margins component '{0}'", [''+value]));
     }
 };
 
-pvc_PercentValue.resolve = function(value, total){
+pvc_PercentValue.resolve = function(value, total) {
     return (value instanceof pvc_PercentValue) ? value.resolve(total) : value;
 };
 
@@ -1241,11 +1096,9 @@ var pvc_markZOrder = pv_Mark.prototype.zOrder;
 
 pv_Mark.prototype.zOrder = function(zOrder) {
     var borderPanel = this.borderPanel;
-    if(borderPanel && borderPanel !== this){
-        return pvc_markZOrder.call(borderPanel, zOrder);
-    }
-
-    return pvc_markZOrder.call(this, zOrder);
+    return (borderPanel && borderPanel !== this)
+        ? pvc_markZOrder.call(borderPanel, zOrder)
+        : pvc_markZOrder.call(this, zOrder);
 };
 
 /* PROPERTIES */
@@ -1257,10 +1110,8 @@ pv_Mark.prototype.wrapper = function(wrapper) {
 pv_Mark.prototype.wrap = function(f, m) {
     if(f && def.fun.is(f) && this._wrapper && !f._cccWrapped) {
         f = this._wrapper(f, m);
-
         f._cccWrapped = true;
     }
-
     return f;
 };
 
@@ -1270,13 +1121,9 @@ pv.Mark.prototype.call = function(f) {
     f.call(this, this);
 };
 
-pv_Mark.prototype.lock = function(prop, value){
-    if(value !== undefined) {
-        this[prop](value);
-    }
-
+pv_Mark.prototype.lock = function(prop, value) {
+    if(value !== undefined) this[prop](value);
     (this._locked || (this._locked = {}))[prop] = true;
-
     return this;
 };
 
@@ -1284,16 +1131,14 @@ pv_Mark.prototype.isIntercepted = function(prop) {
     return this._intercepted && this._intercepted[prop];
 };
 
-pv_Mark.prototype.isLocked = function(prop){
+pv_Mark.prototype.isLocked = function(prop) {
     return this._locked && this._locked[prop];
 };
 
 pv_Mark.prototype.ensureEvents = function(defEvs) {
     // labels and other marks don't receive events by default
     var events = this.propertyValue('events', /*inherit*/ true);
-    if(!events || events === 'none') {
-        this.events(defEvs || 'all');
-    }
+    if(!events || events === 'none') this.events(defEvs || 'all');
     return this;
 };
 
@@ -1337,21 +1182,17 @@ pv_Mark.prototype.addMargins = function(margins) {
 /* SCENE */
 pv_Mark.prototype.eachInstanceWithData = function(fun, ctx) {
     this.eachInstance(function(scenes, index, t) {
-        if(scenes.mark.sign && scenes[index].data) {
-            fun.call(ctx, scenes, index, t);
-        }
+        if(scenes.mark.sign && scenes[index].data) fun.call(ctx, scenes, index, t);
     });
 };
 
 pv_Mark.prototype.eachSceneWithDataOnRect = function(rect, fun, ctx, selectionMode) {
     var me   = this;
     var sign = me.sign;
-    if(sign && !sign.selectable()) { return; } // TODO: shouldn't it be selectableByRubberband?
+    if(sign && !sign.selectable()) ßreturn; // TODO: shouldn't it be selectableByRubberband?
 
     // center, partial and total (not implemented)
-    if(selectionMode == null) {
-        selectionMode = me.rubberBandSelectionMode || 'partial';
-    }
+    if(selectionMode == null) selectionMode = me.rubberBandSelectionMode || 'partial';
 
     var useCenter = (selectionMode === 'center');
 
@@ -1365,9 +1206,9 @@ pv_Mark.prototype.eachSceneWithDataOnRect = function(rect, fun, ctx, selectionMo
     });
 
     function processShape(shape, instance) {
-        if (shape.intersectsRect(rect)) {
+        if(shape.intersectsRect(rect)) {
             var cccScene = instance.data; // exists for sure (ensured by eachInstanceWithData)
-            if(cccScene && cccScene.datum) { fun.call(ctx, cccScene); }
+            if(cccScene && cccScene.datum) fun.call(ctx, cccScene);
         }
     }
 };
@@ -1375,12 +1216,10 @@ pv_Mark.prototype.eachSceneWithDataOnRect = function(rect, fun, ctx, selectionMo
 pv_Mark.prototype.eachDatumOnRect = function(rect, fun, ctx, selectionMode) {
     var me   = this;
     var sign = me.sign;
-    if(sign && !sign.selectable()) { return; }
+    if(sign && !sign.selectable()) return;
 
     // center, partial and total (not implemented)
-    if(selectionMode == null) {
-        selectionMode = me.rubberBandSelectionMode || 'partial';
-    }
+    if(selectionMode == null) selectionMode = me.rubberBandSelectionMode || 'partial';
 
     var useCenter = (selectionMode === 'center');
 
@@ -1394,61 +1233,51 @@ pv_Mark.prototype.eachDatumOnRect = function(rect, fun, ctx, selectionMode) {
     });
 
     function processShape(shape, instance) {
-        if (shape.intersectsRect(rect)) {
+        if(shape.intersectsRect(rect)) {
             var cccScene = instance.data; // exists for sure (ensured by eachInstanceWithData)
-            if(cccScene && cccScene.datum) {
-                cccScene
-                    .datums()
-                    .each(function(datum) { if(!datum.isNull) { fun.call(ctx, datum); } });
-            }
+            if(cccScene && cccScene.datum)
+                cccScene.datums().each(function(datum) { if(!datum.isNull) fun.call(ctx, datum); });
         }
     }
 };
 
 /* BOUNDS */
-pv.Transform.prototype.transformHPosition = function(left){
+pv.Transform.prototype.transformHPosition = function(left) {
     return this.x + (this.k * left);
 };
 
-pv.Transform.prototype.transformVPosition = function(top){
+pv.Transform.prototype.transformVPosition = function(top) {
     return this.y + (this.k * top);
 };
 
 // width / height
-pv.Transform.prototype.transformLength = function(length){
+pv.Transform.prototype.transformLength = function(length) {
     return this.k * length;
 };
 
 // --------------------
 
 var pvc_Size = def.type('pvc.Size')
-.init(function(width, height){
-    if(arguments.length === 1){
-        if(width != null){
-            this.setSize(width);
-        }
+.init(function(width, height) {
+    if(arguments.length === 1) {
+        if(width  != null) this.setSize(width);
     } else {
-        if(width != null){
-            this.width  = width;
-        }
-
-        if(height != null){
-            this.height = height;
-        }
+        if(width  != null) this.width  = width;
+        if(height != null) this.height = height;
     }
 })
 .add({
-    stringify: function(out, remLevels, keyArgs){
+    stringify: function(out, remLevels, keyArgs) {
         return pvc.stringifyRecursive(out, def.copyOwn(this), remLevels, keyArgs);
     },
 
-    setSize: function(size, keyArgs){
-        if(typeof size === 'string'){
-            var comps = size.split(/\s+/).map(function(comp){
+    setSize: function(size, keyArgs) {
+        if(typeof size === 'string') {
+            var comps = size.split(/\s+/).map(function(comp) {
                 return pvc_PercentValue.parse(comp);
             });
 
-            switch(comps.length){
+            switch(comps.length) {
                 case 1:
                     this.set(def.get(keyArgs, 'singleProp', 'all'), comps[0]);
                     return this;
@@ -1464,70 +1293,55 @@ var pvc_Size = def.type('pvc.Size')
         } else if(typeof size === 'number') {
             this.set(def.get(keyArgs, 'singleProp', 'all'), size);
             return this;
-        } else if (typeof size === 'object') {
-            if(size instanceof pvc_PercentValue){
+        } else if(typeof size === 'object') {
+            if(size instanceof pvc_PercentValue) {
                 this.set(def.get(keyArgs, 'singleProp', 'all'), size);
             } else {
-
                 this.set('all', size.all);
-                for(var p in size){
-                    if(p !== 'all'){
-                        this.set(p, size[p]);
-                    }
-                }
+                for(var p in size) if(p !== 'all') this.set(p, size[p]);
             }
             return this;
         }
 
-        if(pvc.debug) {
-            pvc.log("Invalid 'size' value: " + pvc.stringify(size));
-        }
+        if(pvc.debug) pvc.log("Invalid 'size' value: " + pvc.stringify(size));
 
         return this;
     },
 
-    set: function(prop, value){
-        if(value != null && (prop === 'all' || def.hasOwn(pvc_Size.namesSet, prop))){
+    set: function(prop, value) {
+        if(value != null && (prop === 'all' || def.hasOwn(pvc_Size.namesSet, prop))) {
             value = pvc_PercentValue.parse(value);
-            if(value != null){
-                if(prop === 'all'){
-                    // expand
-                    pvc_Size.names.forEach(function(p){
-                        this[p] = value;
-                    }, this);
-
-                } else {
+            if(value != null) {
+                if(prop === 'all')
+                    pvc_Size.names.forEach(function(p) { this[p] = value; }, this);
+                else
                     this[prop] = value;
-                }
             }
         }
-
         return this;
     },
 
-    clone: function(){
+    clone: function() {
         return new pvc_Size(this.width, this.height);
     },
 
-    intersect: function(size){
+    intersect: function(size) {
         return new pvc_Size(
                Math.min(this.width,  size.width),
                Math.min(this.height, size.height));
     },
 
-    resolve: function(refSize){
+    resolve: function(refSize) {
         var size = {};
 
-        pvc_Size.names.forEach(function(length){
+        pvc_Size.names.forEach(function(length) {
             var lengthValue = this[length];
-            if(lengthValue != null){
-                if(typeof(lengthValue) === 'number'){
+            if(lengthValue != null) {
+                if(typeof(lengthValue) === 'number') {
                     size[length] = lengthValue;
-                } else if(refSize){
+                } else if(refSize) {
                     var refLength = refSize[length];
-                    if(refLength != null){
-                        size[length] = lengthValue.resolve(refLength);
-                    }
+                    if(refLength != null) size[length] = lengthValue.resolve(refLength);
                 }
             }
         }, this);
@@ -1539,30 +1353,23 @@ var pvc_Size = def.type('pvc.Size')
 pvc_Size.names = ['width', 'height'];
 pvc_Size.namesSet = pv.dict(pvc_Size.names, def.retTrue);
 
-pvc_Size.toOrtho = function(value, anchor){
-    if(value != null){
+pvc_Size.toOrtho = function(value, anchor) {
+    if(value != null) {
         // Single size (a number or a string with only one number)
         // should be interpreted as meaning the orthogonal length.
         var a_ol;
-        if(anchor){
-            a_ol = pvc.BasePanel.orthogonalLength[anchor];
-        }
+        if(anchor) a_ol = pvc.BasePanel.orthogonalLength[anchor];
 
         value = pvc_Size.to(value, {singleProp: a_ol});
 
-        if(anchor){
-            delete value[pvc.BasePanel.oppositeLength[a_ol]];
-        }
+        if(anchor) delete value[pvc.BasePanel.oppositeLength[a_ol]];
     }
 
     return value;
 };
 
-pvc_Size.to = function(v, keyArgs){
-    if(v != null && !(v instanceof pvc_Size)){
-        v = new pvc_Size().setSize(v, keyArgs);
-    }
-
+pvc_Size.to = function(v, keyArgs) {
+    if(v != null && !(v instanceof pvc_Size)) v = new pvc_Size().setSize(v, keyArgs);
     return v;
 };
 
@@ -1571,33 +1378,26 @@ pvc_Size.to = function(v, keyArgs){
 var pvc_Offset =
 def
 .type('pvc.Offset')
-.init(function(x, y){
-    if(arguments.length === 1){
-        if(x != null){
-            this.setOffset(x);
-        }
+.init(function(x, y) {
+    if(arguments.length === 1) {
+        if(x != null) this.setOffset(x);
     } else {
-        if(x != null){
-            this.x = x;
-        }
-
-        if(y != null){
-            this.y = y;
-        }
+        if(x != null) this.x = x;
+        if(y != null) this.y = y;
     }
 })
 .add({
-    stringify: function(out, remLevels, keyArgs){
+    stringify: function(out, remLevels, keyArgs) {
         return pvc.stringifyRecursive(out, def.copyOwn(this), remLevels, keyArgs);
     },
 
-    setOffset: function(offset, keyArgs){
-        if(typeof offset === 'string'){
-            var comps = offset.split(/\s+/).map(function(comp){
+    setOffset: function(offset, keyArgs) {
+        if(typeof offset === 'string') {
+            var comps = offset.split(/\s+/).map(function(comp) {
                 return pvc_PercentValue.parse(comp);
             });
 
-            switch(comps.length){
+            switch(comps.length) {
                 case 1:
                     this.set(def.get(keyArgs, 'singleProp', 'all'), comps[0]);
                     return this;
@@ -1613,53 +1413,41 @@ def
         } else if(typeof offset === 'number') {
             this.set(def.get(keyArgs, 'singleProp', 'all'), offset);
             return this;
-        } else if (typeof offset === 'object') {
+        } else if(typeof offset === 'object') {
             this.set('all', offset.all);
-            for(var p in offset){
-                if(p !== 'all'){
-                    this.set(p, offset[p]);
-                }
-            }
+            for(var p in offset) if(p !== 'all') this.set(p, offset[p]);
             return this;
         }
-
-        if(pvc.debug) {
-            pvc.log("Invalid 'offset' value: " + pvc.stringify(offset));
-        }
+        if(pvc.debug) pvc.log("Invalid 'offset' value: " + pvc.stringify(offset));
         return this;
     },
 
-    set: function(prop, value){
-        if(value != null && def.hasOwn(pvc_Offset.namesSet, prop)){
+    set: function(prop, value) {
+        if(value != null && def.hasOwn(pvc_Offset.namesSet, prop)) {
             value = pvc_PercentValue.parse(value);
-            if(value != null){
-                if(prop === 'all'){
-                    // expand
-                    pvc_Offset.names.forEach(function(p){
+            if(value != null) {
+                if(prop === 'all')
+                    pvc_Offset.names.forEach(function(p) {
                         this[p] = value;
                     }, this);
-
-                } else {
+                else
                     this[prop] = value;
-                }
             }
         }
     },
 
-    resolve: function(refSize){
+    resolve: function(refSize) {
         var offset = {};
 
-        pvc_Size.names.forEach(function(length){
-            var offsetProp  = pvc_Offset.namesSizeToOffset[length];
-            var offsetValue = this[offsetProp];
-            if(offsetValue != null){
-                if(typeof(offsetValue) === 'number'){
+        pvc_Size.names.forEach(function(length) {
+            var offsetProp  = pvc_Offset.namesSizeToOffset[length],
+                offsetValue = this[offsetProp];
+            if(offsetValue != null) {
+                if(typeof(offsetValue) === 'number') {
                     offset[offsetProp] = offsetValue;
-                } else if(refSize){
+                } else if(refSize) {
                     var refLength = refSize[length];
-                    if(refLength != null){
-                        offset[offsetProp] = offsetValue.resolve(refLength);
-                    }
+                    if(refLength != null) offset[offsetProp] = offsetValue.resolve(refLength);
                 }
             }
         }, this);
@@ -1671,14 +1459,11 @@ def
 pvc_Offset
 .addStatic({ names: ['x', 'y'] })
 .addStatic({
-    namesSet: pv.dict(pvc_Offset.names, def.retTrue),
-    namesSizeToOffset: {width: 'x', height: 'y'},
+    namesSet:           pv.dict(pvc_Offset.names, def.retTrue),
+    namesSizeToOffset:  {width: 'x', height: 'y'},
     namesSidesToOffset: {left: 'x', right: 'x', top: 'y', bottom: 'y'},
     as: function(v) {
-        if(v != null && !(v instanceof pvc_Offset)) {
-            v = new pvc_Offset().setOffset(v);
-        }
-
+        if(v != null && !(v instanceof pvc_Offset)) v = new pvc_Offset().setOffset(v);
         return v;
     }
 });
@@ -1706,9 +1491,7 @@ pvc.round10 = function(value, places) {
 };
 
 pvc.mult10 = function(value, exponent) {
-    if(!exponent) return value;
-
-    return mult10(+value, exponent);
+    return !exponent ? value : mult10(+value, exponent);
 };
 
 

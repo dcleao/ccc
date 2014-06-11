@@ -12,7 +12,7 @@
  * @name NoDataException
  * @class An error thrown when a chart has no data.
  */
-def.global.NoDataException = function(){};
+def.global.NoDataException = function() {};
 
 /**
  * @name InvalidDataException
@@ -45,7 +45,7 @@ function data_disposeChildList(list, parentProp) {
 
             // Avoid child removing itself from its parent.
             // removeAt is generally an expensive operation.
-            if(parentProp) { child[parentProp] = null; }
+            if(parentProp) child[parentProp] = null;
             
             child.dispose(); 
         }
@@ -76,11 +76,10 @@ function data_addColChild(parent, childrenProp, child, parentProp, index) {
     child[parentProp] = parent;
     
     var col = (parent[childrenProp] || (parent[childrenProp] = []));
-    if(index == null || index >= col.length){
+    if(index == null || index >= col.length)
         col.push(child);
-    } else {
+    else
         col.splice(index, 0, child);
-    }
 }
 
 /**
@@ -102,13 +101,7 @@ function data_removeColChild(parent, childrenProp, child, parentProp) {
     //(child && (!child[parentProp] || child[parentProp] === parent)) || def.assert("Not a child");
     // </Debug>
     
-    var children = parent[childrenProp];
-    if(children) {
-        var index = children.indexOf(child);
-        if(index >= 0){
-            def.array.removeAt(children, index);
-        }
-    }
-    
+    var children = parent[childrenProp], index;
+    if(children && (index = children.indexOf(child)) >= 0) def.array.removeAt(children, index);
     child[parentProp] = null;
 }

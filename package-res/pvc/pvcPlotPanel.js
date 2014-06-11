@@ -29,9 +29,9 @@ def
     this.valuesOverflow = plot.option('ValuesOverflow');
     this.valuesOptimizeLegibility = plot.option('ValuesOptimizeLegibility');
     
-    var roles = this.visualRoles = Object.create(chart.visualRoles);
-    
-    var colorRoleName = plot.option('ColorRole');
+    var roles = this.visualRoles = Object.create(chart.visualRoles),
+        colorRoleName = plot.option('ColorRole');
+
     roles.color = colorRoleName ? chart.visualRole(colorRoleName) : null;
 })
 .add({
@@ -60,12 +60,12 @@ def
     },
 
     /* @override */
-    isOrientationVertical: function(){
+    isOrientationVertical: function() {
         return this.orientation === pvc.orientation.vertical;
     },
 
     /* @override */
-    isOrientationHorizontal: function(){
+    isOrientationHorizontal: function() {
         return this.orientation === pvc.orientation.horizontal;
     }
 })

@@ -296,7 +296,7 @@ def
         //        var multiChartPageIndex;
         //        if(isFinite(multiChartMax)) {
         //            multiChartPageIndex = chart.multiChartPageIndex;
-        //            if(isNaN(multiChartPageIndex)){
+        //            if(isNaN(multiChartPageIndex)) {
         //                multiChartPageIndex = null;
         //            } else {
         //                // The next page number

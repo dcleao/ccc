@@ -36,15 +36,14 @@ def
                 "\n  DebugLevel: " + pvc.debug);
     
     /* DEBUG options */
-    if(pvc.debug >= 3 && !parent && originalOptions){
+    if(pvc.debug >= 3 && !parent && originalOptions) {
         this._info("OPTIONS:\n", originalOptions);
-        if(pvc.debug >= 5) {
+        if(pvc.debug >= 5)
             // Log also as text, for easy copy paste of options JSON
             this._trace(pvc.stringify(originalOptions, {ownOnly: false, funs: true}));
-        }
     }
     
-    if(parent) { parent._addChild(this); }
+    if(parent) parent._addChild(this);
 
     this._constructData(options);
     this._constructVisualRoles(options);
@@ -175,8 +174,7 @@ def
     compatVersion: function(options) { return (options || this.options).compatVersion; },
     
     _createLogInstanceId: function() {
-        return "" + 
-            this.constructor + this._createLogChildSuffix();
+        return "" + this.constructor + this._createLogChildSuffix();
     },
     
     _createLogChildSuffix: function() {
@@ -186,7 +184,7 @@ def
                "";
     },
     
-    _addChild: function(childChart){
+    _addChild: function(childChart) {
         /*jshint expr:true */
         (childChart.parent === this) || def.assert("Not a child of this chart.");
         
@@ -211,28 +209,23 @@ def
         
         this.isCreated = false;
         
-        if(pvc.debug >= 3) { this._log("Creating"); }
+        if(pvc.debug >= 3) this._log("Creating");
         
         this.children = [];
+
+        // Now's as good a time as any to completely clear out all tipsy tooltips
+        if(!this.parent) pvc.removeTipsyLegends();
         
-        if(!this.parent) {
-            // Now's as good a time as any to completely clear out all
-            //  tipsy tooltips
-            pvc.removeTipsyLegends();
-        }
-        
-        /* Options may be changed between renders */
+        // Options may be changed between renders
         this._processOptions();
         
-        /* Any data exists or throws
-         * (must be done AFTER processing options
-         *  because of width, height properties and noData extension point...) 
-         */
+        // Any data exists or throws
+        // (must be done AFTER processing options
+        //  because of width, height properties and noData extension point...)
         if(!this.parent) this._checkNoDataI();
         
-        /* Initialize root visual roles.
-         * The Complex Type gets defined on the first load of data.
-         */
+        // Initialize root visual roles.
+        // The Complex Type gets defined on the first load of data.
         if(!this.parent && !this.data) {
             this._initVisualRoles();
             
@@ -243,92 +236,68 @@ def
             this._bindVisualRolesPreII();
         }
         
-        /* Initialize the data (and _bindVisualRolesPost) */
+        // Initialize the data (and _bindVisualRolesPost)
         this._initData(keyArgs);
 
-        /* When data is excluded, there may be no data after all */
+        // When data is excluded, there may be no data after all
         if(!this.parent) this._checkNoDataII();
         
-        var hasMultiRole = this.visualRoles.multiChart.isBound();
+        var hasMultiRole = this.visualRoles.multiChart.isBound(),
+            // 1 = root, 2 = leaf, 1 | 2 = 3 = everywhere
+            chartLevel = this._chartLevel();
         
-        // 1 = root, 2 = leaf, 1 | 2 = 3 = everywhere
-        var chartLevel = this._chartLevel();
-        
-        /* Initialize plots */
+        // Initialize plots
         this._initPlots(hasMultiRole);
         
-        /* Initialize axes */
+        // Initialize axes
         this._initAxes(hasMultiRole);
 
-        /* Initialize multi-charts */
-        if(hasMultiRole && !this.parent) {
-            this._initMultiCharts();
-        }
+        // Initialize multi-charts
+        if(hasMultiRole && !this.parent) this._initMultiCharts();
 
-        /* Trends and Interpolation on Root Chart only */
+        // Trends and Interpolation on Root Chart only
         if(!this.parent) {
             // Interpolated data affects generated trends
             this._interpolate(hasMultiRole);
             this._generateTrends(hasMultiRole);
         }
         
-        /* Set axes scales */
+        // Set axes scales
         this._setAxesScales(chartLevel);
     },
 
     _createPhase2: function(/*keyArgs*/) {
         var hasMultiRole = this.visualRoles.multiChart.isBound();
         
-        /* Initialize chart panels */
+        // Initialize chart panels
         this._initChartPanels(hasMultiRole);
         
         this.isCreated = true;
     },
 
-    // --------------
-    
     _setSmallLayout: function(keyArgs) {
-        if(keyArgs){
-            var basePanel = this.basePanel;
-            
+        if(keyArgs) {
+            var me = this, basePanel = me.basePanel;
+
+            function setProp(p) {
+                var v = keyArgs[p];
+                if(v != null) return (me[p] = v), true;
+            }
+
             // NOTE: bitwise or is on purpose so that both are always evaluated
             //noinspection JSBitwiseOperatorUsage
-            if(this._setProp('left', keyArgs) | this._setProp('top', keyArgs)){
-                if(basePanel) {
-                    def.set(
-                       basePanel.position,
-                       'left', this.left, 
-                       'top',  this.top);
-                }
-            }
+            if((setProp('left') | setProp('top')) && basePanel)
+                def.set(basePanel.position, 'left', this.left, 'top', this.top);
             
             //noinspection JSBitwiseOperatorUsage
-            if(this._setProp('width', keyArgs) | this._setProp('height', keyArgs)){
-                if(basePanel){
-                    basePanel.size = new pvc_Size(this.width, this.height);
-                }
-            }
+            if((setProp('width') | setProp('height')) && basePanel)
+                basePanel.size = new pvc_Size(this.width, this.height);
             
-            if(this._setProp('margins', keyArgs) && basePanel){
-                basePanel.margins = new pvc_Sides(this.margins);
-            }
-            
-            if(this._setProp('paddings', keyArgs) && basePanel){
-                basePanel.paddings = new pvc_Sides(this.paddings);
-            }
+            if(setProp('margins' ) && basePanel) basePanel.margins  = new pvc_Sides(this.margins );
+            if(setProp('paddings') && basePanel) basePanel.paddings = new pvc_Sides(this.paddings);
         }
     },
-    
-    _setProp: function(p, keyArgs) {
-        var v = keyArgs[p];
-        if(v != null) {
-            this[p] = v;
-            return true;
-        }
-    },
-    
-    // --------------
-    
+
     /**
      * Processes options after user options and defaults have been merged.
      * Applies restrictions,
@@ -344,9 +313,7 @@ def
             this.paddings = options.paddings;
         }
 
-        if(this.compatVersion() <= 1) {
-            options.plot2 = this._allowV1SecondAxis && !!options.secondAxis;
-        }
+        if(this.compatVersion() <= 1) options.plot2 = this._allowV1SecondAxis && !!options.secondAxis;
 
         this._processFormatOptions(options);
 
@@ -371,24 +338,18 @@ def
     _processOptionsCore: function(options) {
         if(!this.parent) {
             var interactive = (pv.renderer() !== 'batik');
+            if(interactive && (interactive = options.interactive) == null) interactive = true;
+
+            var ibits = 0;
             if(interactive) {
-                interactive = options.interactive;
-                if(interactive == null) { interactive = true; }
-            }
-
-            var ibits;
-            if(!interactive) {
-                ibits = 0;
-            } else {
                 var I = pvc.visual.Interactive;
-
                 ibits = I.Interactive | I.ShowsInteraction;
 
-                if(this._processTooltipOptions(options)) { ibits |= I.ShowsTooltip; }
+                if(this._processTooltipOptions(options)) ibits |= I.ShowsTooltip;
 
                 // NOTE: VML animations perform really bad,
                 //  and so its better for the user experience to be deactivated.
-                if(options.animate && $.support.svg) { ibits |= I.Animatable; }
+                if(options.animate && $.support.svg) ibits |= I.Animatable;
 
                 var preventUnselect = false;
                 if(options.selectable) {
@@ -406,20 +367,17 @@ def
                     }
                 }
 
-                if(!preventUnselect &&
-                   pvc.parseClearSelectionMode(options.clearSelectionMode) === 'emptyspaceclick') {
+                if(!preventUnselect && pvc.parseClearSelectionMode(options.clearSelectionMode) === 'emptyspaceclick')
                     ibits |= I.Unselectable;
-                }
 
-                if(options.hoverable) { ibits |= I.Hoverable; }
-                if(options.clickable) { ibits |= (I.Clickable | I.DoubleClickable); }
+                if(options.hoverable) ibits |= I.Hoverable;
+                if(options.clickable) ibits |= (I.Clickable | I.DoubleClickable);
             }
-
-            this._ibits = ibits;
         } else {
-            this._ibits = this.parent._ibits;
+            ibits = this.parent._ibits;
             this._tooltipOptions = this.parent._tooltipOptions;
         }
+        this._ibits = ibits;
     },
 
     _tooltipDefaults: {
@@ -438,34 +396,30 @@ def
     },
 
     _processTooltipOptions: function(options) {
-        var isV1Compat = this.compatVersion() <= 1;
-        var tipOptions = options.tooltip;
-        var tipEnabled = options.tooltipEnabled;
+        var isV1Compat = this.compatVersion() <= 1,
+            tipOptions = options.tooltip,
+            tipEnabled = options.tooltipEnabled;
+
         if(tipEnabled == null) {
-            if(tipOptions) { tipEnabled = tipOptions.enabled; }
-
+            if(tipOptions) tipEnabled = tipOptions.enabled;
             if(tipEnabled == null) {
-                if(isV1Compat) { tipEnabled = options.showTooltips; }
-
-                if(tipEnabled == null) {
-                    tipEnabled = true;
-                }
+                if(isV1Compat) tipEnabled = options.showTooltips;
+                if(tipEnabled == null) tipEnabled = true;
             }
         }
 
         if(tipEnabled) {
-            if(!tipOptions) { tipOptions = {}; }
-            else { tipOptions = def.copy(tipOptions); }
+            if(!tipOptions) tipOptions = {};
+            else tipOptions = def.copy(tipOptions);
 
-            if(isV1Compat) { this._importV1TooltipOptions(tipOptions, options); }
+            if(isV1Compat) this._importV1TooltipOptions(tipOptions, options);
 
             def.eachOwn(this._tooltipDefaults, function(dv, p) {
                 var value = options['tooltip' + def.firstUpperCase(p)];
-                if(value !== undefined) {
+                if(value !== undefined)
                     tipOptions[p] = value;
-                } else if(tipOptions[p] === undefined) {
+                else if(tipOptions[p] === undefined)
                     tipOptions[p] = dv;
-                }
             });
         } else {
             tipOptions = {};
@@ -481,14 +435,10 @@ def
         if(v1TipOptions) {
             this.extend(v1TipOptions, 'tooltip');
 
-            for(var p in v1TipOptions) {
-                if(tipOptions[p] === undefined) {
-                    tipOptions[p] = v1TipOptions[p];
-                }
-            }
+            for(var p in v1TipOptions) if(tipOptions[p] === undefined) tipOptions[p] = v1TipOptions[p];
 
             // Force V1 html default
-            if(tipOptions.html == null) { tipOptions.html = false; }
+            if(tipOptions.html == null) tipOptions.html = false;
         }
     },
 
@@ -558,10 +508,8 @@ def
             if(!_) throw def.error.argumentRequired('format');
             if(_ !== v1) {
                 if(!def.is(_, formProvider)) {
-                    if(v1) {
-                        def.configure(v1, _);
-                        return this;
-                    }
+                    if(v1) return def.configure(v1, _), this;
+
                     _ = formProvider(_);
                 }
                 this._format = _;
@@ -581,7 +529,7 @@ def
         var hasError;
 
         /*global console:true*/
-        if(pvc.debug > 1) { pvc.group("CCC RENDER"); }
+        if(pvc.debug > 1) pvc.group("CCC RENDER");
 
         // Don't let selection change events to fire before the render is finished
         this._suspendSelectionUpdate();
@@ -589,11 +537,10 @@ def
             this.useTextMeasureCache(function() {
                 try {
                     while(true) {
-                        if (!this.isCreated || recreate) {
+                        if(!this.isCreated || recreate)
                             this._create({reloadData: reloadData});
-                        } else if(!this.parent && this.isCreated) {
+                        else if(!this.parent && this.isCreated)
                             pvc.removeTipsyLegends();
-                        }
 
                         // TODO: Currently, the following always redirects the call
                         // to topRoot.render;
@@ -620,8 +567,8 @@ def
                     }
                 } catch (e) {
                     /*global NoDataException:true*/
-                    if (e instanceof NoDataException) {
-                        if(pvc.debug > 1){ this._log("No data found."); }
+                    if(e instanceof NoDataException) {
+                        if(pvc.debug > 1) this._log("No data found.");
                         this._addErrorPanelMessage("No data found", true);
                     } else {
                         hasError = true;
@@ -629,19 +576,15 @@ def
                         // We don't know how to handle this
                         pvc.logError(e.message);
 
-                        if(pvc.debug > 0) {
-                            this._addErrorPanelMessage("Error: " + e.message, false);
-                        }
+                        if(pvc.debug > 0) this._addErrorPanelMessage("Error: " + e.message, false);
                         //throw e;
                     }
                 }
             });
         } finally {
-            if(!hasError){ this._resumeSelectionUpdate(); }
-
-            if(pvc.debug > 1) { pvc.groupEnd(); }
+            if(!hasError) this._resumeSelectionUpdate();
+            if(pvc.debug > 1) pvc.groupEnd();
         }
-
         return this;
     },
 
@@ -654,14 +597,14 @@ def
             pvMsg = pvPanel.anchor("center").add(pv.Label)
                         .text(text);
 
-        if(isNoData) { this.extend(pvMsg, "noDataMessage"); }
+        if(isNoData) this.extend(pvMsg, "noDataMessage");
 
         pvPanel.render();
     },
 
     useTextMeasureCache: function(fun, ctx) {
-        var root = this.root;
-        var textMeasureCache = root._textMeasureCache ||
+        var root = this.root,
+            textMeasureCache = root._textMeasureCache ||
                                (root._textMeasureCache = pv.Text.createCache());
 
         return pv.Text.usingCache(textMeasureCache, fun, ctx || this);

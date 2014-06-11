@@ -58,10 +58,9 @@ def
         
         this._addPlot(treemapPlot);
         
-        if(this.options.legend == null) {
+        if(this.options.legend == null)
             // Only show the legend by default if color mode is byparent
             this.options.legend = treemapPlot.option('ColorMode') === 'byparent';
-        }
         
         var rootCategoryLabel = treemapPlot.option('RootCategoryLabel');
         this.visualRoles.category.setRootLabel(rootCategoryLabel);
@@ -73,9 +72,9 @@ def
             // Switch to custom Treemap color-axis class
             //  that handles derived colors calculation.
             // Class shared object. Take care to inherit from it before changing.
-            if(!def.hasOwnProp.call(this, '_axisClassByType')) {
+            if(!def.hasOwnProp.call(this, '_axisClassByType'))
                 this._axisClassByType = Object.create(this._axisClassByType);
-            }
+
             this._axisClassByType.color = pvc.visual.TreemapDiscreteColorAxis;
         } else {
             // Revert to default color axis class

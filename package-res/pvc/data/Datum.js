@@ -67,8 +67,8 @@ function(data, atomsByName) {
 
         var changed = this.isSelected !== select;
         if(changed) {
-            if(!select) { delete this.isSelected; }
-            else        { this.isSelected = true; }
+            if(!select) delete this.isSelected;
+            else        this.isSelected = true;
 
             /*global data_onDatumSelectedChanged:true */
             data_onDatumSelectedChanged.call(this.owner, this, select);

@@ -29,7 +29,7 @@ def
 })
 .add(/** @lends pvc.visual.legend.WaterfallBulletGroupScene# */{
     renderer: function(renderer) {
-        if(renderer != null) { this._renderer = renderer; }
+        if(renderer != null) this._renderer = renderer;
         return this._renderer;
     },
     

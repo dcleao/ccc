@@ -44,7 +44,7 @@ def
     
     setDim: function(name, spec) {
         var _ = this._ensureDim(name).spec;
-        if(spec) { def.copy(_, spec); }
+        if(spec) def.copy(_, spec);
         return this;
     },
     
@@ -54,9 +54,9 @@ def
     },
     
     _createDim: function(name, spec) {
-        var dimGroupName = pvc.data.DimensionType.dimensionGroupName(name);
-        var dimGroupSpec = this._dimGroupSpecs[dimGroupName];
-        if(dimGroupSpec) { spec = def.create(dimGroupSpec, spec /* Can be null */); }
+        var dimGroupName = pvc.data.DimensionType.dimensionGroupName(name),
+            dimGroupSpec = this._dimGroupSpecs[dimGroupName];
+        if(dimGroupSpec) spec = def.create(dimGroupSpec, spec /* Can be null */);
         return {
             name: name,
             groupName: dimGroupName,
@@ -66,24 +66,16 @@ def
     
     readDim: function(name, spec) {
         var info = this._ensureDim(name, spec);
-        if(info.isRead) {
-            throw def.error.operationInvalid("Dimension '{0}' already is the target of a reader.", [name]);
-        }
-        if(info.isCalc) {
-            throw def.error.operationInvalid("Dimension '{0}' is being calculated, so it cannot be the target of a reader.", [name]);
-        }
+        if(info.isRead) throw def.error.operationInvalid("Dimension '{0}' already is the target of a reader.", [name]);
+        if(info.isCalc) throw def.error.operationInvalid("Dimension '{0}' is being calculated, so it cannot be the target of a reader.", [name]);
         
         info.isRead = true;
     },
     
     calcDim: function(name, spec) {
         var info = this._ensureDim(name, spec);
-        if(info.isCalc) {
-            throw def.error.operationInvalid("Dimension '{0}' already is being calculated.", [name]);
-        }
-        if(info.isRead) {
-            throw def.error.operationInvalid("Dimension '{0}' is the target of a reader, so it cannot be calculated.", [name]);
-        }
+        if(info.isCalc) throw def.error.operationInvalid("Dimension '{0}' already is being calculated.", [name]);
+        if(info.isRead) throw def.error.operationInvalid("Dimension '{0}' is the target of a reader, so it cannot be calculated.", [name]);
         
         info.isCalc = true;
     },
@@ -91,9 +83,8 @@ def
     isReadOrCalc: function(name) {
         if(name) {
             var info = def.getOwn(this._dims, name);
-            if(info) { return info.isRead || info.isCalc; }
+            if(info) return info.isRead || info.isCalc;
         }
-        
         return false;
     },
     
@@ -105,10 +96,11 @@ def
         calcSpec.calculation || def.fail.argumentRequired('calculations[i].calculation');
         
         var dimNames = calcSpec.names;
-        if(typeof dimNames === 'string') { dimNames = dimNames.split(/\s*\,\s*/); } 
-        else                             { dimNames = def.array.as(dimNames);     }
+        dimNames = def.string.is(dimNames)
+            ? dimNames.split(/\s*\,\s*/)
+            : def.array.as(dimNames);
         
-        if(dimNames && dimNames.length) { dimNames.forEach(this.calcDim, this); }
+        if(dimNames && dimNames.length) dimNames.forEach(this.calcDim, this);
         
         this._calcList.push(calcSpec);
     },
@@ -117,9 +109,9 @@ def
         //var keyArgs = {assertExists: false};
         
         this._dimList.forEach(function(dimInfo) {
-            var dimName = dimInfo.name;
-            //if(!complexType.dimensions(dimName, keyArgs)){
-            var spec = dimInfo.spec;
+            var dimName = dimInfo.name,
+            //if(!complexType.dimensions(dimName, keyArgs)) {
+                spec = dimInfo.spec;
             
             spec = pvc.data.DimensionType.extendSpec(dimName, spec, dimsOptions);
             

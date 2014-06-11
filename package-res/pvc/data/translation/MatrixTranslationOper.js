@@ -67,44 +67,39 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
         // we can't trust their stated data type
         // cause when nulls exist on the first row, 
         // they frequently come stated as "string"...
-        var knownContinColTypes = this._knownContinuousColTypes;
-        var columns = 
-            def
-            .query(this.metadata)
-            // Fix indexes of colDefs
-            .select(function(colDef, colIndex) {
-                // Ensure colIndex is trustable
-                colDef.colIndex = colIndex;
-                return colDef;
-             })
-            .where(function(colDef) {
-                var colType = colDef.colType;
-                return !colType || knownContinColTypes[colType.toLowerCase()] !== 1;
-            })
-            .select(function(colDef) { return colDef.colIndex; })
-            .array();
+        var knownContinColTypes = this._knownContinuousColTypes,
+            columns = def.query(this.metadata)
+                // Fix indexes of colDefs
+                .select(function(colDef, colIndex) {
+                    // Ensure colIndex is trustable
+                    colDef.colIndex = colIndex;
+                    return colDef;
+                 })
+                .where(function(colDef) {
+                    var colType = colDef.colType;
+                    return !colType || knownContinColTypes[colType.toLowerCase()] !== 1;
+                })
+                .select(function(colDef) { return colDef.colIndex; })
+                .array(),
+
+            // 1 - continuous (number, date)
+            // 0 - discrete   (anything else)
+            // Assume all are continuous
+            columnTypes = def.array.create(this.J, 1),
         
-        // 1 - continuous (number, date)
-        // 0 - discrete   (anything else)
-        // Assume all are continuous
-        var columnTypes = def.array.create(this.J, 1);
-        
-        // Number of rows in source
-        var I = this.I;
-        var source = this.source;
-        
-        // Number of columns remaining to confirm data type
-        var J = columns.length;
+            // Number of rows in source
+            I = this.I,
+            source = this.source,
+
+            // Number of columns remaining to confirm data type
+            J = columns.length;
         
         for(var i = 0 ; i < I && J > 0 ; i++) {
-            var row = source[i];
-            var m = 0;
+            var row = source[i], m = 0;
             while(m < J) {
-                var j = columns[m];
-                var value = row[j];
+                var j = columns[m], value = row[j];
                 if(value != null) {
                     columnTypes[j] = this._getSourceValueType(value);
-                    
                     columns.splice(m, 1);
                     J--;
                 } else {
@@ -131,9 +126,8 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
     _getSourceValueType: function(value) {
         switch(typeof value) {
             case 'number': return 1;
-            case 'object': if(value instanceof Date) { return 1; }
+            case 'object': if(value instanceof Date) return 1;
         }
-        
         return 0; // discrete
     },
     
@@ -144,20 +138,16 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
             "ROWS (" + Math.min(10, this.I) + "/" + this.I + ")"
         ];
         
-        def
-        .query(this.source)
+        def.query(this.source)
         .take(10)
-        .each(function(row, index) {
-            out.push("  [" + index + "] " + pvc.stringify(row));
-        });
+        .each(function(row, index) { out.push("  [" + index + "] " + pvc.stringify(row)); });
         
-        if(this.I > 10) { out.push('  ...'); }
+        if(this.I > 10) out.push('  ...');
         
         out.push("COLS (" + this.J + ")");
         
         var colTypes = this._columnTypes;
-        this
-        .metadata
+        this.metadata
         .forEach(function(col, j) {
             out.push(
                 "  [" + j + "] " + 
@@ -174,15 +164,15 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
     },
     
     _logVItem: function(kindList, kindScope) {
-        var out = ["VIRTUAL ITEM ARRAY", pvc.logSeparator];
-        var maxName  = 4;// length of column header
-        var maxLabel = 5;// idem
-        var maxDim   = 9;// idem
+        var out = ["VIRTUAL ITEM ARRAY", pvc.logSeparator],
+            maxName  = 4,// length of column header
+            maxLabel = 5,// idem
+            maxDim   = 9;// idem
         this._itemInfos.forEach(function(info, index) {
             maxName  = Math.max(maxName , (info.name  ||'').length);
             maxLabel = Math.max(maxLabel, (info.label ||'').length);
             var dimName = this._userIndexesToSingleDim[index];
-            if(dimName) { maxDim = Math.max(maxDim, dimName.length); }
+            if(dimName) maxDim = Math.max(maxDim, dimName.length);
         }, this);
         
         // TODO: would be better off with a generic ASCII table layout code...
@@ -201,9 +191,9 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
         var index = 0;
         kindList.forEach(function(kind) {
             for(var i = 0, L = kindScope[kind] ; i < L ; i++) {
-                var info = this._itemInfos[index];
-                var dimName = this._userIndexesToSingleDim[index];
-                if(dimName === undefined) { dimName = ''; }
+                var info = this._itemInfos[index],
+                    dimName = this._userIndexesToSingleDim[index];
+                if(dimName === undefined) dimName = '';
                 out.push(
                     " " + index + "    | " + 
                           kind  + "    | " +
@@ -242,14 +232,12 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
         def.query(plot2DataSeriesIndexes).each(function(indexText) {
             // Validate
             var seriesIndex = +indexText; // + -> convert to number
-            if(isNaN(seriesIndex)) {
+            if(isNaN(seriesIndex))
                 throw def.error.argumentInvalid('plot2DataSeriesIndexes', "Element is not a number '{0}'.", [indexText]);
-            }
 
             if(seriesIndex < 0) {
-                if(seriesIndex <= -seriesCount) {
+                if(seriesIndex <= -seriesCount)
                     throw def.error.argumentInvalid('plot2DataSeriesIndexes', "Index is out of range '{0}'.", [seriesIndex]);
-                }
 
                 seriesIndex = seriesCount + seriesIndex;
             } else if(seriesIndex >= seriesCount) {
@@ -257,7 +245,7 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
             }
 
             // Set
-            if(!plot2SeriesKeySet) { plot2SeriesKeySet = {}; }
+            if(!plot2SeriesKeySet) plot2SeriesKeySet = {};
             
             plot2SeriesKeySet[seriesKeys[seriesIndex]] = true;
         });
@@ -268,11 +256,9 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
     // TODO: docs
     _dataPartGet: function(calcAxis2SeriesKeySet, seriesReader) {
 
-        var me = this;
-        
-        var dataPartDimName = this.options.dataPartDimName;
-
-        var dataPartDimension,
+        var me = this,
+            dataPartDimName = this.options.dataPartDimName,
+            dataPartDimension,
             plot2SeriesKeySet,
             part1Atom,
             part2Atom,
@@ -287,23 +273,19 @@ def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
                 plot2SeriesKeySet = calcAxis2SeriesKeySet();
                 dataPartDimension = me.data.dimensions(dataPartDimName);
 
-                if(pvc.debug >=3 && plot2SeriesKeySet) {
+                if(pvc.debug >=3 && plot2SeriesKeySet)
                     pvc.log("Second axis series values: " + pvc.stringify(def.keys(plot2SeriesKeySet)));
-                }
             }
 
-            var partAtom;
             seriesReader(item, outAtomsSeries);
+
             var series = outAtomsSeries.series;
-            if(series != null && series.v != null) { series = series.v; }
+
+            if(series != null && series.v != null) series = series.v;
             
-            if(def.hasOwn(plot2SeriesKeySet, series)) {
-                partAtom = part2Atom || (part2Atom = dataPartDimension.intern("1"));
-            } else {
-                partAtom = part1Atom || (part1Atom = dataPartDimension.intern("0"));
-            }
-            
-            outAtoms[dataPartDimName] = partAtom;
+            outAtoms[dataPartDimName] = def.hasOwn(plot2SeriesKeySet, series)
+                ? (part2Atom || (part2Atom = dataPartDimension.intern("1")))
+                : (part1Atom || (part1Atom = dataPartDimension.intern("0")));
         }
 
         return dataPartGet;

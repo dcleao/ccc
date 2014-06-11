@@ -23,7 +23,7 @@
 var pvc_Axis =
 def
 .type('pvc.visual.Axis', pvc.visual.OptionsBase)
-.init(function(chart, type, index, keyArgs){
+.init(function(chart, type, index, keyArgs) {
 
     this.base(chart, type, index, keyArgs);
 
@@ -86,8 +86,8 @@ def
 
         var domainData = this._domainData;
         if(!domainData) {
-            var dataPartValues = this.dataCells.map(dataCell_dataPartValue);
-            var partsData = this.chart.partData(dataPartValues);
+            var dataPartValues = this.dataCells.map(dataCell_dataPartValue),
+                partsData = this.chart.partData(dataPartValues);
             this._domainData = domainData = this._createDomainData(partsData);
         }
         return domainData;
@@ -97,23 +97,18 @@ def
         var dataCells = this.dataCells;
         if(dataCells.length === 1) return this.domainData();
 
-        var dataCell = dataCells[cellIndex];
-        var partData = this.chart.partData(dataCell.dataPartValue);
+        var dataCell = dataCells[cellIndex],
+            partData = this.chart.partData(dataCell.dataPartValue);
         return this._createDomainData(partData);
     },
 
     domainCellItems: function(cellDataOrIndex) {
         var dataCells = this.dataCells;
-        if(dataCells.length === 1) {
-            return this.domainItems();
-        }
+        if(dataCells.length === 1) return this.domainItems();
 
-        var cellData;
-        if(typeof cellDataOrIndex === 'number') {
-            cellData = this.domainCellData(/*cellIndex*/cellDataOrIndex);
-        } else {
-            cellData = cellDataOrIndex;
-        }
+        var cellData = def.number.is(cellDataOrIndex)
+            ? this.domainCellData(/*cellIndex*/cellDataOrIndex)
+            : cellDataOrIndex;
 
         return this._selectDomainItems(cellData).array();
     },
@@ -121,19 +116,13 @@ def
     domainValues: function() {
         // For discrete axes
         var domainValues = this._domainValues;
-        if(!domainValues) {
-            this._calcDomainItems();
-            domainValues = this._domainValues;
-        }
+        if(!domainValues) domainValues = (this._calcDomainItems(), this._domainValues);
         return domainValues;
     },
 
     domainItems: function() {
         var domainItems = this._domainItems;
-        if(!domainItems) {
-            this._calcDomainItems();
-            domainItems = this._domainItems;
-        }
+        if(!domainItems)  domainItems = (this._calcDomainItems(), this._domainItems);
         return domainItems;
     },
 
@@ -164,33 +153,31 @@ def
         // where we want null to be matched to the first color of the color scale
         // (typically happens when there is only a null series).
         if(scale.type !== 'discrete') {
-            var useAbs = this.scaleUsesAbs();
-            var nullAs = this.scaleTreatsNullAs();
+            var useAbs = this.scaleUsesAbs(),
+                nullAs = this.scaleTreatsNullAs();
             if(nullAs && nullAs !== 'null') {
                 var nullIsMin = nullAs === 'min'; // Otherwise 'zero'
                 // Below, the min valow is evaluated each time on purpose,
                 // because otherwise we would have to rewrap when the domain changes.
                 // It does change, for example, on MultiChart scale coordination.
-                if(useAbs) {
+                if(useAbs)
                     by = function(v) {
                         return scale(v == null ? (nullIsMin ? scale.domain()[0] : 0) : (v < 0 ? -v : v));
                     };
-                } else {
+                else
                     by = function(v) {
                         return scale(v == null ? (nullIsMin ? scale.domain()[0] : 0) : v);
                     };
-                }
             } else {
                 var nullRangeValue = this.scaleNullRangeValue();
-                if(useAbs) {
+                if(useAbs)
                     by = function(v) {
                         return v == null ? nullRangeValue : scale(v < 0 ? -v : v);
                     };
-                } else {
+                else
                     by = function(v) {
                         return v == null ? nullRangeValue : scale(v);
                     };
-                }
             }
         } else {
             // ensure null -> ""
@@ -241,9 +228,10 @@ def
     _checkRoleCompatibility: function() {
         var L = this.dataCells.length;
         if(L > 1) {
-            var grouping = this._getBoundRoleGrouping(this.role);
-            var otherGrouping;
-            var i;
+            var grouping = this._getBoundRoleGrouping(this.role),
+                otherGrouping,
+                i;
+
             if(this.scaleType === 'discrete') {
                 for(i = 1; i < L ; i++) {
                     otherGrouping = this._getBoundRoleGrouping(this.dataCells[i].role);
@@ -284,12 +272,11 @@ def
     },
 
     _calcDomainItems: function() {
-        var hasOwn = def.hasOwnProp;
-
-        var domainValuesSet = {};
-        var domainValues = [];
-        var domainItems  = [];
-        var domainData = this.domainData();
+        var hasOwn = def.hasOwnProp,
+            domainValuesSet = {},
+            domainValues = [],
+            domainItems  = [],
+            domainData = this.domainData();
 
         this._selectDomainItems(domainData).each(function(itemData) {
             var itemValue = this.domainItemValue(itemData);

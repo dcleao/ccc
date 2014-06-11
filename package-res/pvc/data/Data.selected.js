@@ -13,9 +13,9 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
      */
     selectedCount: function() {
         // NOTE: isNull: false is not required here, because null datums cannot be selected
-        if(!this.isOwner()) { return this.datums(null, {selected: true}).count(); }
-
-        return this._selectedNotNullDatums.count;
+        return this.isOwner()
+            ? this._selectedNotNullDatums.count
+            : this.datums(null, {selected: true}).count();
     },
 
     /**
@@ -31,9 +31,9 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
      */
     selectedDatums: function() {
         // NOTE: isNull: false is not required here, because null datums cannot be selected
-        if(!this.isOwner()) { return this.datums(null, {selected: true}).array(); }
-
-        return this._selectedNotNullDatums.values();
+        return this.isOwner()
+            ? this._selectedNotNullDatums.values()
+            : this.datums(null, {selected: true}).array();
     },
 
     /**
@@ -42,15 +42,11 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
      * @type def.Map(pvc.data.Datum)
      */
     selectedDatumMap: function() {
-        if(!this.isOwner()) {
-            // NOTE: isNull: false is not required here, because null datums cannot be selected
-            var datums =
-                this.datums(null, {selected: true}).object({name: def.propGet('id')});
+        if(this.isOwner()) return this._selectedNotNullDatums.clone();
 
-            return new def.Set(datums);
-        }
-
-        return this._selectedNotNullDatums.clone();
+        // NOTE: isNull: false is not required here, because null datums cannot be selected
+        var datums = this.datums(null, {selected: true}).object({name: def.propGet('id')});
+        return new def.Set(datums);
     },
 
     /**
@@ -69,19 +65,16 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
         /*global datum_deselect:true, datum_isSelected:true, complex_id:true*/
 
         // Materialize, cause we're using it twice
-        if(!def.array.is(datums)) { datums = datums.array(); }
+        if(!def.array.is(datums)) datums = datums.array();
 
         // Clear all but the ones we'll be selecting.
         // This way we can have a correct changed flag.
-        var alreadySelectedById =
-            def
-            .query(datums)
-            .where(datum_isSelected)
-            .object({name: complex_id});
-
-        var changed = this.owner.clearSelected(function(datum) {
-                return !def.hasOwn(alreadySelectedById, datum.id);
-            });
+        var alreadySelectedById = def.query(datums)
+                .where(datum_isSelected)
+                .object({name: complex_id}),
+            changed = this.owner.clearSelected(function(datum) {
+                    return !def.hasOwn(alreadySelectedById, datum.id);
+                });
 
         changed |= pvc.data.Data.setSelected(datums, true);
 
@@ -97,9 +90,8 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
     clearSelected: function(funFilter) {
         /*global datum_deselect:true */
 
-        if(this.owner !== this) { return this.owner.clearSelected(funFilter); }
-
-        if(!this._selectedNotNullDatums.count) { return false; }
+        if(this.owner !== this) return this.owner.clearSelected(funFilter);
+        if(!this._selectedNotNullDatums.count) return false;
 
         var changed;
         if(funFilter) {
@@ -138,8 +130,8 @@ function data_onDatumSelectedChanged(datum, selected) {
     !datum.isNull || def.assert("Null datums do not notify selected changes");
     // </Debug>
 
-    if(selected) { this._selectedNotNullDatums.set(datum.id, datum); }
-    else         { this._selectedNotNullDatums.rem(datum.id);        }
+    if(selected) this._selectedNotNullDatums.set(datum.id, datum);
+    else         this._selectedNotNullDatums.rem(datum.id);
 
     this._sumAbsCache = null;
 }
@@ -155,10 +147,10 @@ function data_onDatumSelectedChanged(datum, selected) {
  * @type undefined
  * @internal
  */
-function data_onDatumVisibleChanged(datum, visible){
-    var did = datum.id;
-    var me  = this;
-    var hasOwn = def.hasOwnProp;
+function data_onDatumVisibleChanged(datum, visible) {
+    var did = datum.id,
+        me  = this,
+        hasOwn = def.hasOwnProp;
     if(hasOwn.call(me._datumsById, did)) {
 
         // <Debug>
@@ -166,28 +158,28 @@ function data_onDatumVisibleChanged(datum, visible){
         !datum.isNull || def.assert("Null datums do not notify visible changes");
         // </Debug>
 
-        if(visible) { me._visibleNotNullDatums.set(did, datum); }
-        else        { me._visibleNotNullDatums.rem(did);        }
+        if(visible) me._visibleNotNullDatums.set(did, datum);
+        else        me._visibleNotNullDatums.rem(did);
 
         me._sumAbsCache = null;
 
         // Notify dimensions
         /*global dim_onDatumVisibleChanged:true */
-        var list = me._dimensionsList;
-        var i = 0;
-        var L = list.length;
-        while(i < L) { dim_onDatumVisibleChanged.call(list[i++], datum, visible); }
+        var list = me._dimensionsList,
+            i = 0,
+            L = list.length;
+        while(i < L) dim_onDatumVisibleChanged.call(list[i++], datum, visible);
         
         // Notify child and link child datas
         list = me.childNodes;
         i = 0;
         L = list.length;
-        while(i < L) { data_onDatumVisibleChanged.call(list[i++], datum, visible); }
+        while(i < L) data_onDatumVisibleChanged.call(list[i++], datum, visible);
         
         list = me._linkChildren;
         if(list && (L = list.length)) {
             i = 0;
-            while(i < L) { data_onDatumVisibleChanged.call(list[i++], datum, visible); }
+            while(i < L) data_onDatumVisibleChanged.call(list[i++], datum, visible);
         }
     }
 }
@@ -204,10 +196,9 @@ function data_onDatumVisibleChanged(datum, visible){
  */
 pvc.data.Data.setSelected = function(datums, selected) {
     var anyChanged = 0;
-    if(datums) {
-     // data_onDatumSelectedChanged is called
-        def.query(datums).each(function(datum) { anyChanged |= datum.setSelected(selected); });
-    }
+    // data_onDatumSelectedChanged is called
+    if(datums) def.query(datums).each(function(datum) { anyChanged |= datum.setSelected(selected); });
+
     return !!anyChanged;
 };
 
@@ -228,14 +219,14 @@ pvc.data.Data.setSelected = function(datums, selected) {
  * @static
  */
 pvc.data.Data.toggleSelected = function(datums, any) {
-    if(!def.array.isLike(datums)) { datums = def.query(datums).array(); }
+    if(!def.array.isLike(datums)) datums = def.query(datums).array();
 
     /*global datum_isSelected:true, datum_isNullOrSelected:true */
 
     // Null datums are always unselected.
     // In 'all', their existence would impede on ever being true.
-    var q  = def.query(datums);
-    var on = any ? q.any(datum_isSelected) : q.all(datum_isNullOrSelected);
+    var q  = def.query(datums),
+        on = any ? q.any(datum_isSelected) : q.all(datum_isNullOrSelected);
 
     return this.setSelected(datums, !on);
 };
@@ -249,12 +240,10 @@ pvc.data.Data.toggleSelected = function(datums, any) {
  * @returns {boolean} true if at least one datum changed its visible state.
  * @static
  */
-pvc.data.Data.setVisible = function(datums, visible){
+pvc.data.Data.setVisible = function(datums, visible) {
     var anyChanged = 0;
-    if(datums) {
-        // data_onDatumVisibleChanged is called
-        def.query(datums).each(function(datum) { anyChanged |= datum.setVisible(visible); });
-    }
+    // data_onDatumVisibleChanged is called
+    if(datums) def.query(datums).each(function(datum) { anyChanged |= datum.setVisible(visible); });
     return !!anyChanged;
 };
 
@@ -269,7 +258,7 @@ pvc.data.Data.setVisible = function(datums, visible){
  * @static
  */
 pvc.data.Data.toggleVisible = function(datums) {
-    if(!def.array.isLike(datums)) { datums = def.query(datums).array(); }
+    if(!def.array.isLike(datums)) datums = def.query(datums).array();
 
     // Null datums are always visible. So they don't affect the result.
     var allVisible = def.query(datums).all(def.propGet('isVisible'));

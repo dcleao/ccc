@@ -28,22 +28,22 @@ def.type('pvc.data.SunburstChartTranslationOper')
      * @override
      */
     _configureTypeCore: function() {
-        var autoDimNames = [];
+        var autoDimNames = [],
         
-        // VItem Indexes of continuous columns not yet being read
-        var freeMeaIndexes = [];
+            // VItem Indexes of continuous columns not yet being read
+            freeMeaIndexes = [],
         
-        // Idem, but for discrete columns
-        var freeDisIndexes = [];
+            // Idem, but for discrete columns
+            freeDisIndexes = [];
         
         this.collectFreeDiscreteAndConstinuousIndexes(freeDisIndexes, freeMeaIndexes);
         
-        var D = freeDisIndexes.length;
-        var M = freeMeaIndexes.length;
+        var D = freeDisIndexes.length,
+            M = freeMeaIndexes.length;
         
-        if(D) { this._getUnboundRoleDefaultDimNames('category', D, autoDimNames); }
-        if(M) { this._getUnboundRoleDefaultDimNames('size', 1, autoDimNames); }
+        if(D) this._getUnboundRoleDefaultDimNames('category', D, autoDimNames);
+        if(M) this._getUnboundRoleDefaultDimNames('size',     1, autoDimNames);
         
-        if(autoDimNames.length) { this.defReader({names: autoDimNames}); }
+        if(autoDimNames.length) this.defReader({names: autoDimNames});
     }
 });

@@ -15,7 +15,7 @@ pvc.BaseChart
      * @virtual
      */
     clearSelections: function() {
-        if(this.data.owner.clearSelected()) { this.updateSelections(); }
+        if(this.data.owner.clearSelected()) this.updateSelections();
         return this;
     },
 
@@ -27,15 +27,14 @@ pvc.BaseChart
     },
 
     _suspendSelectionUpdate: function() {
-        if(this === this.root) { this._updateSelectionSuspendCount++; }
-        else                   { this.root._suspendSelectionUpdate(); }
+        if(this === this.root) this._updateSelectionSuspendCount++;
+        else                   this.root._suspendSelectionUpdate();
     },
 
     _resumeSelectionUpdate: function() {
         if(this === this.root) {
-            if(this._updateSelectionSuspendCount > 0) {
-                if(!(--this._updateSelectionSuspendCount)) { this.updateSelections(); }
-            }
+            if(this._updateSelectionSuspendCount > 0 && !(--this._updateSelectionSuspendCount))
+                this.updateSelections();
         } else {
             this.root._resumeSelectionUpdate();
         }
@@ -77,10 +76,10 @@ pvc.BaseChart
      */
     updateSelections: function(keyArgs) {
         if(this === this.root) {
-            if(this._inUpdateSelections || this._updateSelectionSuspendCount) { return this; }
+            if(this._inUpdateSelections || this._updateSelectionSuspendCount) return this;
 
             var selectedChangedDatumMap = this._calcSelectedChangedDatums();
-            if(!selectedChangedDatumMap) { return this; }
+            if(!selectedChangedDatumMap) return this;
 
             pvc.removeTipsyLegends();
 
@@ -93,8 +92,8 @@ pvc.BaseChart
                     // Can change selection further...although it's probably
                     // better to do that in userSelectionAction, called
                     // before chosen datums' selected state is actually affected.
-                    var selectedDatums = this.data.selectedDatums();
-                    var selectedChangedDatums = selectedChangedDatumMap.values();
+                    var selectedDatums = this.data.selectedDatums(),
+                        selectedChangedDatums = selectedChangedDatumMap.values();
                     action.call(
                         this.basePanel.context(),
                         selectedDatums,
@@ -102,9 +101,8 @@ pvc.BaseChart
                 }
 
                 // Rendering afterwards allows the action to change the selection in between
-                if(def.get(keyArgs, 'render', true)) {
+                if(def.get(keyArgs, 'render', true))
                     this.useTextMeasureCache(function() { this.basePanel.renderInteractive(); }, this);
-                }
             } finally {
                 this._inUpdateSelections = false;
             }
@@ -120,19 +118,19 @@ pvc.BaseChart
         // Calculate the ones that changed.
 
         // Caused by NoDataException ?
-        if(!this.data) { return; }
+        if(!this.data) return;
 
-        var selectedChangedDatums;
-        var nowSelectedDatums  = this.data.selectedDatumMap();
-        var lastSelectedDatums = this._lastSelectedDatums;
+        var selectedChangedDatums,
+            nowSelectedDatums  = this.data.selectedDatumMap(),
+            lastSelectedDatums = this._lastSelectedDatums;
         if(!lastSelectedDatums) {
-            if(!nowSelectedDatums.count) { return; }
+            if(!nowSelectedDatums.count) return;
 
             selectedChangedDatums = nowSelectedDatums.clone();
         } else {
             selectedChangedDatums = lastSelectedDatums.symmetricDifference(nowSelectedDatums);
 
-            if(!selectedChangedDatums.count) { return; }
+            if(!selectedChangedDatums.count) return;
         }
 
         this._lastSelectedDatums = nowSelectedDatums;
@@ -141,7 +139,7 @@ pvc.BaseChart
     },
 
     _onUserSelection: function(datums) {
-        if(!datums || !datums.length) { return datums; }
+        if(!datums || !datums.length) return datums;
 
         if(this === this.root) {
             // Fire action

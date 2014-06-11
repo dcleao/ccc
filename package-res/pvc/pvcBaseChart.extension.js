@@ -40,56 +40,49 @@ pvc.BaseChart
     },
     
     extend: function(mark, ids, keyArgs) {
-        if(def.array.is(ids)) {
+        if(def.array.is(ids))
             ids.forEach(function(id) { this._extendCore(mark, id, keyArgs); }, this);
-        } else {
+        else
             this._extendCore(mark, ids, keyArgs);
-        }
     },
     
     _extendCore: function(mark, id, keyArgs) {
         // if mark is null or undefined, skip
-        if (mark) {
+        if(mark) {
             var component = def.getOwn(this._components, id);
             if(component) {
-                if(mark.borderPanel) { mark = mark.borderPanel; }
+                if(mark.borderPanel) mark = mark.borderPanel;
                 
-                var logOut     = pvc.debug >= 3 ? [] : null;
-                var constOnly  = def.get(keyArgs, 'constOnly', false); 
-                var wrap       = mark.wrap;
-                var keyArgs2   = {tag: pvc.extensionTag};
-                var isRealMark = mark instanceof pv_Mark;
-                var isRealMarkAndWrapOrConstOnly = isRealMark && (wrap || constOnly);
+                var logOut     = pvc.debug >= 3 ? [] : null,
+                    constOnly  = def.get(keyArgs, 'constOnly', false),
+                    wrap       = mark.wrap,
+                    keyArgs2   = {tag: pvc.extensionTag},
+                    isRealMark = mark instanceof pv_Mark,
+                    isRealMarkAndWrapOrConstOnly = isRealMark && (wrap || constOnly),
+                    processValue = function(v, m) {
+                        // Extend object css and svg properties
+                        if(v != null) {
+                            var type = typeof v;
+                            if(type === 'object') {
+                                if(m === 'svg' || m === 'css') {
+                                    var v2 = mark.propertyValue(m);
+                                    if(v2) v = def.copy(v2, v);
+                                } else if(v instanceof Array) {
+                                    return v.map(function(vi) { return processValue(vi, m); });
+                                }
+                            } else if(isRealMarkAndWrapOrConstOnly && type === 'function') {
+                                if(constOnly) return;
 
-                var processValue = function(v, m) {
-                    // Extend object css and svg properties
-                    if(v != null) {
-                        var type = typeof v;
-                        if(type === 'object') {
-                            if(m === 'svg' || m === 'css') {
-                                var v2 = mark.propertyValue(m);
-                                if(v2) { v = def.copy(v2, v); }
-                            } else if(v instanceof Array) {
-                                return v.map(function(vi) { return processValue(vi, m); });
+                                // Don't wrap the "add" and "call" methods to support extension idioms.
+                                // "call" eliminates most use cases of renderCallback.
+                                if(m !== 'add' && m !== 'call') v = wrap.call(mark, v, m);
                             }
-                        } else if(isRealMarkAndWrapOrConstOnly && type === 'function') {
-                            if(constOnly) { return; }
-                            
-                            // Don't wrap the "add" and "call" methods to support extension idioms.
-                            // "call" eliminates most use cases of renderCallback.
-                            if(m !== 'add' && m !== 'call') { v = wrap.call(mark, v, m); }
                         }
-                    }
-                    return v;
-                };
-
-                var callMethod = function(mm, v) {
-                    if(v instanceof Array) {
-                        mm.apply(mark, v);
-                    } else {
-                        mm.call(mark, v);
-                    }
-                };
+                        return v;
+                    },
+                    callMethod = function(mm, v) {
+                        return (v instanceof Array) ? mm.apply(mark, v) : mm.call(mark, v);
+                    };
 
                 component.forEach(function(v, m) {
                     // Not everything that is passed to 'mark' argument
@@ -97,11 +90,11 @@ pvc.BaseChart
                     // Not locked and
                     // Not intercepted and
                     if(mark.isLocked && mark.isLocked(m)) {
-                        if(logOut) { logOut.push(m + ": locked extension point!"); }
+                        if(logOut) logOut.push(m + ": locked extension point!");
                     } else if(mark.isIntercepted && mark.isIntercepted(m)) {
-                        if(logOut) { logOut.push(m + ":" + pvc.stringify(v) + " (controlled)"); }
+                        if(logOut) logOut.push(m + ":" + pvc.stringify(v) + " (controlled)");
                     } else {
-                        if(logOut) { logOut.push(m + ": " + pvc.stringify(v)); }
+                        if(logOut) logOut.push(m + ": " + pvc.stringify(v));
 
                         v = processValue(v, m);
                         if(v !== undefined) {
@@ -113,11 +106,10 @@ pvc.BaseChart
                                 } else {
                                     // Not really a mark or not a real protovis property.
                                     // In this case, multiple calls and then multiple arguments are allowed in v.
-                                    if(v instanceof Array) {
+                                    if(v instanceof Array)
                                         v.forEach(function(vi) { callMethod(mm, vi); });
-                                    } else {
+                                    else
                                         callMethod(mm, v);
-                                    }
                                 }
                             } else {
                                 mark[m] = v;
@@ -127,11 +119,10 @@ pvc.BaseChart
                 });
 
                 if(logOut) {
-                    if(logOut.length) {
+                    if(logOut.length)
                         this._log("Applying Extension Points for: '" + id + "'\n\t* " + logOut.join("\n\t* "));
-                    } else if(pvc.debug >= 5) {
+                    else if(pvc.debug >= 5)
                         this._log("No Extension Points for: '" + id + "'");
-                    }
                 }
             }
         } else if(pvc.debug >= 4) {
@@ -146,15 +137,13 @@ pvc.BaseChart
         var component;
         if(!def.array.is(id)) {
             component = def.getOwn(this._components, id);
-            if(component) { return component.get(prop); }
+            if(component) return component.get(prop);
         } else {
             // Last extension points are applied last, and so have priority...
             var i = id.length - 1, value;
             while(i >= 0) {
                 component = def.getOwn(this._components, id[i--]);
-                if(component && (value = component.get(prop)) !== undefined) {
-                    return value;
-                }
+                if(component && (value = component.get(prop)) !== undefined) return value;
             }
         }
     },
@@ -165,7 +154,7 @@ pvc.BaseChart
     
     _getConstantExtension: function(id, prop) {
         var value = this._getExtension(id, prop);
-        if(!def.fun.is(value)) { return value; }
+        if(!def.fun.is(value)) return value;
     }
 });
 

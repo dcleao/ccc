@@ -41,25 +41,23 @@ pvc.BaseChart
     _interpolatable: false,
 
     _constructData: function(options) {
-        if(this.parent) {
+        if(this.parent)
             //noinspection JSDeprecatedSymbols
             this.dataEngine = this.data = options.data || def.fail.argumentRequired('options.data');
-        }
     },
 
     _checkNoDataI: function() {
         // Child charts are created to consume *existing* data
         // If we don't have data, we just need to set a "no data" message and go on with life.
-        if (!this.allowNoData && !this.resultset.length) {
+        if(!this.allowNoData && !this.resultset.length)
             /*global NoDataException:true */
             throw new NoDataException();
-        }
     },
 
     _checkNoDataII: function() {
         // Child charts are created to consume *existing* data
         // If we don't have data, we just need to set a "no data" message and go on with life.
-        if (!this.allowNoData && (!this.data || !this.data.count())) {
+        if(!this.allowNoData && (!this.data || !this.data.count())) {
 
             this.data = null;
 
@@ -98,31 +96,27 @@ pvc.BaseChart
         delete this._partsDataCache;
         delete this._visibleDataCache;
 
-        if(pvc.debug >= 3) { this._log(this.data.getInfo()); }
+        if(pvc.debug >= 3) this._log(this.data.getInfo());
     },
 
     _onLoadData: function() {
         /*jshint expr:true*/
-        var data = this.data;
-        var translation = this._translation;
+        var data = this.data,
+            translation = this._translation;
 
         (!data && !translation) || def.assert("Invalid state.");
 
-        var options = this.options;
-
-        var dataPartDimName = this._getDataPartDimName();
-        var complexTypeProj = this._complexTypeProj || def.assert("Invalid state.");
-        var dimsOptions     = this._createDimensionsOptions(options);
+        var options = this.options,
+            dataPartDimName = this._getDataPartDimName(),
+            complexTypeProj = this._complexTypeProj || def.assert("Invalid state."),
+            dimsOptions     = this._createDimensionsOptions(options);
 
         // If there are any columns in the supplied data
         if(this.metadata.length) {
             var translOptions = this._createTranslationOptions(options, dimsOptions, dataPartDimName);
             translation = this._translation = this._createTranslation(translOptions);
 
-            if (pvc.debug >= 3) {
-                this._log(translation.logSource());
-                this._log(translation.logTranslatorType());
-            }
+            if(pvc.debug >= 3) this._log(translation.logSource()), this._log(translation.logTranslatorType());
 
             // Now the translation can also configure the type
             translation.configureType();
@@ -130,9 +124,8 @@ pvc.BaseChart
 
         // If the the dataPart dimension isn't being read or calculated,
         // its value must be defaulted to 0.
-        if(dataPartDimName && !complexTypeProj.isReadOrCalc(dataPartDimName)) {
+        if(dataPartDimName && !complexTypeProj.isReadOrCalc(dataPartDimName))
             this._addDefaultDataPartCalculation(dataPartDimName);
-        }
 
         if(translation && pvc.debug >= 3) this._log(translation.logVItem());
 
@@ -149,10 +142,7 @@ pvc.BaseChart
 
         this._bindVisualRolesPostII(complexType);
 
-        if(pvc.debug >= 3) {
-            this._log(complexType.describe());
-            this._logVisualRoles();
-        }
+        if(pvc.debug >= 3) this._log(complexType.describe()), this._logVisualRoles();
 
         data =
             this.dataEngine = // V1 property
@@ -165,9 +155,8 @@ pvc.BaseChart
         // ----------
 
         if(translation) {
-            var loadKeyArgs = {where: this._getLoadFilter(), isNull: this._getIsNullDatum()};
-
-            var resultQuery = translation.execute(data);
+            var loadKeyArgs = {where: this._getLoadFilter(), isNull: this._getIsNullDatum()},
+                resultQuery = translation.execute(data);
 
             data.load(resultQuery, loadKeyArgs);
         }
@@ -176,32 +165,30 @@ pvc.BaseChart
     _onReloadData: function() {
         /*jshint expr:true*/
 
-        var data = this.data;
-        var translation = this._translation;
+        var data = this.data,
+            translation = this._translation;
 
         (data && translation) || def.assert("Invalid state.");
 
         // pass new resultset to the translation (metadata is maintained!).
         translation.setSource(this.resultset);
 
-        if(pvc.debug >= 3) { this._log(translation.logSource()); }
+        if(pvc.debug >= 3) this._log(translation.logSource());
 
-        var loadKeyArgs = {where: this._getLoadFilter(), isNull: this._getIsNullDatum()};
-
-        var resultQuery = translation.execute(data);
+        var loadKeyArgs = {where: this._getLoadFilter(), isNull: this._getIsNullDatum()},
+            resultQuery = translation.execute(data);
 
         data.load(resultQuery, loadKeyArgs);
     },
 
     _createComplexTypeProject: function() {
-        var options = this.options;
-        var complexTypeProj = new pvc.data.ComplexTypeProject(options.dimensionGroups);
+        var options = this.options,
+            complexTypeProj = new pvc.data.ComplexTypeProject(options.dimensionGroups),
+            // Add specified dimensions
+            userDimsSpec = options.dimensions;
 
-        // Add specified dimensions
-        var userDimsSpec = options.dimensions;
-        for(var dimName in userDimsSpec) { // userDimsSpec can be null; 'for' accepts null!
+        for(var dimName in userDimsSpec) // userDimsSpec can be null; 'for' accepts null!
             complexTypeProj.setDim(dimName, userDimsSpec[dimName]);
-        }
 
         // Add data part dimension and
         // dataPart calculation from series values
@@ -214,18 +201,16 @@ pvc.BaseChart
 
         // Add specified calculations
         var calcSpecs = options.calculations;
-        if(calcSpecs) {
-            calcSpecs.forEach(function(calcSpec) { complexTypeProj.setCalc(calcSpec); });
-        }
+        if(calcSpecs) calcSpecs.forEach(function(calcSpec) { complexTypeProj.setCalc(calcSpec); });
 
         return complexTypeProj;
     },
 
     _getLoadFilter: function() {
-        var options = this.options;
-        var dataOptions = options.dataOptions;
-        var dataWhere = options.dataWhere;
-        return dataWhere !== undefined ? dataWhere : (dataOptions && dataOptions.where);
+        var options = this.options,
+            dataWhere = options.dataWhere,
+            dataOptions;
+        return dataWhere !== undefined ? dataWhere : ((dataOptions = options.dataOptions) && dataOptions.where);
     },
 
     _getIsNullDatum: function() {
@@ -235,16 +220,13 @@ pvc.BaseChart
             // Must have all measure role dimensions = null
             return function(datum) {
                 var atoms = datum.atoms;
-                for(var i = 0 ; i < M ; i++) {
-                    if(atoms[measureDimNames[i]].value != null) { return false; }
-                }
-
+                for(var i = 0 ; i < M ; i++) if(atoms[measureDimNames[i]].value != null) return false;
                 return true;
             };
         }
     },
 
-    _createTranslation: function(translOptions){
+    _createTranslation: function(translOptions) {
         var TranslationClass = this._getTranslationClass(translOptions);
 
         return new TranslationClass(this, this._complexTypeProj, this.resultset, this.metadata, translOptions);
@@ -270,13 +252,13 @@ pvc.BaseChart
         var dataOptions = options.dataOptions || {};
 
         var dataMeasuresInColumns = options.dataMeasuresInColumns;
-        if(dataMeasuresInColumns === undefined) { dataMeasuresInColumns = dataOptions.measuresInColumns; }
+        if(dataMeasuresInColumns === undefined) dataMeasuresInColumns = dataOptions.measuresInColumns;
 
         var dataCategoriesCount = options.dataCategoriesCount;
-        if(dataCategoriesCount === undefined) { dataCategoriesCount = dataOptions.categoriesCount; }
+        if(dataCategoriesCount === undefined) dataCategoriesCount = dataOptions.categoriesCount;
 
         var dataIgnoreMetadataLabels = options.dataIgnoreMetadataLabels;
-        if(dataIgnoreMetadataLabels === undefined) { dataIgnoreMetadataLabels = dataOptions.ignoreMetadataLabels; }
+        if(dataIgnoreMetadataLabels === undefined) dataIgnoreMetadataLabels = dataOptions.ignoreMetadataLabels;
 
         var plot2Series, plot2DataSeriesIndexes;
         var plot2 = options.plot2;
@@ -296,9 +278,7 @@ pvc.BaseChart
                 }
             }
 
-            if(!plot2Series) {
-                plot2DataSeriesIndexes = pvc.parseDistinctIndexArray(plot2DataSeriesIndexes, -Infinity) || -1;
-            }
+            if(!plot2Series) plot2DataSeriesIndexes = pvc.parseDistinctIndexArray(plot2DataSeriesIndexes, -Infinity) || -1;
         }
 
         return def.create(dimsOptions, {
@@ -325,25 +305,22 @@ pvc.BaseChart
     },
 
     _addPlot2SeriesDataPartCalculation: function(complexTypeProj, dataPartDimName) {
-        if(this.compatVersion() <= 1) { return; }
+        if(this.compatVersion() <= 1) return;
 
-        var options = this.options;
-        var serRole = this.visualRoles.series;
-        var plot2Series = (serRole != null) &&
-                          options.plot2 &&
-                          options.plot2Series &&
-                          def.array.as(options.plot2Series);
+        var options = this.options,
+            serRole = this.visualRoles.series,
+            plot2Series = (serRole != null) && options.plot2 && options.plot2Series && def.array.as(options.plot2Series);
 
-        if(!plot2Series || !plot2Series.length) { return; }
+        if(!plot2Series || !plot2Series.length) return;
 
-        var inited = false;
-        var plot2SeriesSet = def.query(plot2Series).uniqueIndex();
-        var dimNames, dataPartDim, part1Atom, part2Atom;
+        var inited = false,
+            plot2SeriesSet = def.query(plot2Series).uniqueIndex(),
+            dimNames, dataPartDim, part1Atom, part2Atom;
 
         complexTypeProj.setCalc({
             names: dataPartDimName,
             calculation: function(datum, atoms) {
-                if(!inited){
+                if(!inited) {
                     // LAZY init
                     if(serRole.isBound()) {
                         dimNames    = serRole.grouping.dimensionNames();
@@ -363,13 +340,13 @@ pvc.BaseChart
         });
     },
 
-    _addDefaultDataPartCalculation: function(dataPartDimName){
+    _addDefaultDataPartCalculation: function(dataPartDimName) {
         var dataPartDim, part1Atom;
 
         this._complexTypeProj.setCalc({
             names: dataPartDimName,
             calculation: function(datum, atoms) {
-                if(!dataPartDim) { dataPartDim = datum.owner.dimensions(dataPartDimName); }
+                if(!dataPartDim) dataPartDim = datum.owner.dimensions(dataPartDimName);
 
                 atoms[dataPartDimName] = part1Atom || (part1Atom = dataPartDim.intern('0'));
             }
@@ -378,21 +355,19 @@ pvc.BaseChart
 
     partData: function(dataPartValues, baseData) {
         if(!baseData) baseData = this.data;
-        if(dataPartValues == null) { return baseData; }
+        if(dataPartValues == null) return baseData;
 
-        if(this.parent) { return this.root.partData(dataPartValues, baseData); }
+        if(this.parent) return this.root.partData(dataPartValues, baseData);
 
         // Is the visual role undefined or unbound?
+        // If so, ignore dataPartValues. It should be empty, but in some cases it comes with ['0'], due to shared code.
         var partRole = this.visualRoles.dataPart;
-        if(!partRole || !partRole.isBound()) {
-            // Ignore dataPartValues. It should be empty, but in some cases it comes with ['0'], due to shared code.
-            return baseData;
-        }
+        if(!partRole || !partRole.isBound()) return baseData;
 
         // Try get from cache.
-        var cacheKey = '\0' + baseData.id + ':' + def.nullyTo(dataPartValues, ''); // Counting on Array.toString() implementation, when an array.
-        var partitionedDataCache = def.lazy(this, '_partsDataCache');
-        var partData = partitionedDataCache[cacheKey];
+        var cacheKey = '\0' + baseData.id + ':' + def.nullyTo(dataPartValues, ''), // Counting on Array.toString() implementation, when an array.
+            partitionedDataCache = def.lazy(this, '_partsDataCache'),
+            partData = partitionedDataCache[cacheKey];
         if(!partData) {
             // Not in cache. Create the partData result.
             partData = this._createPartData(baseData, partRole, dataPartValues);
@@ -408,11 +383,9 @@ pvc.BaseChart
         //  and that ends changing the order of datums, to follow
         //  the group operation.
         // Changing order at this level is not acceptable.
-        var dataPartDimName = partRole.lastDimensionName();
-        var dataPartAtoms   = baseData.dimensions(dataPartDimName)
-            .getDistinctAtoms(def.array.to(dataPartValues));
-
-        var where = data_whereSpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
+        var dataPartDimName = partRole.lastDimensionName(),
+            dataPartAtoms   = baseData.dimensions(dataPartDimName).getDistinctAtoms(def.array.to(dataPartValues)),
+            where = data_whereSpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
 
         return baseData.where(null, {where: where});
     },
@@ -443,8 +416,7 @@ pvc.BaseChart
 
     visiblePlotData: function(plot, dataPartValue, ka) {
         var baseData = def.get(ka, 'baseData') || this.data;
-        if(this.parent) { 
-
+        if(this.parent) {
             // Caching is done at the root chart.
             ka = ka ? Object.create(ka) : {};
             ka.baseData = baseData;
@@ -452,14 +424,15 @@ pvc.BaseChart
         }
 
         // Normalize values for the cache key.
-        var inverted    = !!def.get(ka, 'inverted', false);
-        var ignoreNulls = !!(this.options.ignoreNulls || def.get(ka, 'ignoreNulls', true));
+        var inverted    = !!def.get(ka, 'inverted', false),
+            ignoreNulls = !!(this.options.ignoreNulls || def.get(ka, 'ignoreNulls', true)),
 
-        // dataPartValue: relying on Array#toString, when an array
-        var key = [plot.id, baseData.id, inverted, ignoreNulls, dataPartValue != null ? dataPartValue : null]
-                .join("|"),
+            // dataPartValue: relying on Array#toString, when an array
+            key = [plot.id, baseData.id, inverted, ignoreNulls, dataPartValue != null ? dataPartValue : null]
+                    .join("|"),
             cache = def.lazy(this, '_visibleDataCache'),
             data  = cache[key];
+
         if(!data) {
             var partData = this.partData(dataPartValue, baseData);
 
@@ -480,16 +453,12 @@ pvc.BaseChart
         chart.multiOptions = new pvc.visual.MultiChart(chart);
         chart.smallOptions = new pvc.visual.SmallChart(chart);
 
-        var multiOption = chart.multiOptions.option;
-        
-        var data = chart.visualRoles.multiChart
-            .flatten(chart.data, {visible: true, isNull: null});
-        
-        var smallDatas = data.childNodes;
-        
-        /* I - Determine how many small charts to create */
-        var colCount, rowCount, multiChartMax, colsMax;
+        var multiOption = chart.multiOptions.option,
+            data = chart.visualRoles.multiChart.flatten(chart.data, {visible: true, isNull: null}),
+            smallDatas = data.childNodes,
+            colCount, rowCount, multiChartMax, colsMax;
 
+        // I - Determine how many small charts to create
         if(chart._isMultiChartOverflowClipRetry) {
             rowCount = chart._clippedMultiChartRowsMax;
             colCount = chart._clippedMultiChartColsMax;
@@ -505,7 +474,7 @@ pvc.BaseChart
             // An empty chart, like when all series are hidden through the legend.
             colCount = rowCount = colsMax = 0;
         } else if(!chart._isMultiChartOverflowClipRetry) {
-            /* II - Determine basic layout (row and col count) */
+            // II - Determine basic layout (row and col count)
             colsMax = multiOption('ColumnsMax'); // Can be Infinity.
             colCount = Math.min(count, colsMax);
             
@@ -587,8 +556,7 @@ pvc.BaseChart
 
         for(var d = 0; d < D; d++) {
             var leafData = leafDatas[d];
-            for(var c = 0; c < C; c++)
-                f.call(x, dataCells[c], leafData, c, d);
+            for(var c = 0; c < C; c++) f.call(x, dataCells[c], leafData, c, d);
         }
     },
 
@@ -598,9 +566,7 @@ pvc.BaseChart
 
     _getTrendDataPartAtom: function() {
         var dataPartDimName = this._getDataPartDimName();
-        if(dataPartDimName) {
-            return this.data.owner.dimensions(dataPartDimName).intern('trend');
-        }
+        if(dataPartDimName) return this.data.owner.dimensions(dataPartDimName).intern('trend');
     },
 
     // ---------------
@@ -628,9 +594,7 @@ pvc.BaseChart
         !this.parent || def.fail.operationInvalid("Can only set resultset on root chart.");
 
         this.resultset = resultset || [];
-        if (!this.resultset.length) {
-            this._warn("Resultset is empty");
-        }
+        if(!this.resultset.length) this._warn("Resultset is empty");
 
         return this;
     },
@@ -644,9 +608,7 @@ pvc.BaseChart
         !this.parent || def.fail.operationInvalid("Can only set metadata on root chart.");
 
         this.metadata = metadata || [];
-        if (!this.metadata.length) {
-            this._warn("Metadata is empty");
-        }
+        if(!this.metadata.length) this._warn("Metadata is empty");
 
         return this;
     }

@@ -66,7 +66,7 @@ pvc.visual.HeatGridPlot.optionsDef = def.create(
         },
         
         ValuesVisible: { // override
-            getDefault: function(/*optionInfo*/){
+            getDefault: function(/*optionInfo*/) {
                 // Values do not work very well when UseShapes
                 return !this.option('UseShapes');
             },

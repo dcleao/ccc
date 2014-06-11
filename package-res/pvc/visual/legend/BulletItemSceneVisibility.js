@@ -31,9 +31,7 @@ def
      * @override
      */
     execute: function() {
-        if(pvc.data.Data.toggleVisible(this.datums())) {
-            // Re-render chart
-            this.chart().render(true, true, false);
-        }
+        // Re-render chart
+        if(pvc.data.Data.toggleVisible(this.datums())) this.chart().render(true, true, false);
     }
 });
