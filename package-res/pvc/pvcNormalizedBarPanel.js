@@ -15,11 +15,11 @@ def
     if(!chart.barChartPanel) chart.barChartPanel = this;
 })
 .add({
-    plotType: 'bar',
+    plotType: 'nbar',
 
     _barVerticalMode: function() {
         return 'expand';
     }
 });
 
-// TODO: pvc.PlotPanel.registerClass(pvc.NormalizedBarPanel);
+pvc.PlotPanel.registerClass(pvc.NormalizedBarPanel);

@@ -12,7 +12,7 @@
 def
 .type('pvc.visual.NormalizedBarPlot', pvc.visual.BarPlotAbstract)
 .add({
-    type: 'bar',
+    type: 'nbar',
 
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.NormalizedBarPlot.optionsDef; }
