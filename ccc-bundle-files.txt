@@ -82,12 +82,12 @@ ccc/core/cartesian/ortho-cart-dataCell
 ccc/core/cartesian/cart-plot
 ccc/core/cartesian/cart-chart
 ccc/core/cartesian/cart-dockingGrid-panel
-ccc/core/cartesian/cart-panel
+ccc/core/cartesian/cart-plot-panel
 
 
 ccc/core/categorical/categ-plot
 ccc/core/categorical/categ-chart
-ccc/core/categorical/categ-panel
+ccc/core/categorical/categ-plot-panel
 
 cdo/_data
 cdo/meta/dimensionType
@@ -122,66 +122,66 @@ cdo/format/date-format
 cdo/format/custom-format
 cdo/format/formatProvider
 
-ccc/plugin/abstract-metricxy/plot
-ccc/plugin/abstract-metricxy/chart
+ccc/plugin/abstract-metricxy/abstract-metricxy-plot
+ccc/plugin/abstract-metricxy/abstract-metricxy-chart
 
-ccc/plugin/abstract-bar/chart
-ccc/plugin/abstract-bar/plot
-ccc/plugin/abstract-bar/panel
+ccc/plugin/abstract-bar/abstract-bar-chart
+ccc/plugin/abstract-bar/abstract-bar-plot
+ccc/plugin/abstract-bar/abstract-bar-panel
 
-ccc/plugin/pie/slice-sign
-ccc/plugin/pie/plot
-ccc/plugin/pie/panel
-ccc/plugin/pie/chart
+ccc/plugin/pie/pie-slice-sign
+ccc/plugin/pie/pie-plot
+ccc/plugin/pie/pie-plot-panel
+ccc/plugin/pie/pie-chart
 
-ccc/plugin/bar/plot
-ccc/plugin/bar/panel
-ccc/plugin/bar/chart
+ccc/plugin/bar/bar-plot
+ccc/plugin/bar/bar-plot-panel
+ccc/plugin/bar/bar-chart
 
-ccc/plugin/nbar/plot
-ccc/plugin/nbar/panel
-ccc/plugin/nbar/chart
+ccc/plugin/nbar/nbar-plot
+ccc/plugin/nbar/nbar-plot-panel
+ccc/plugin/nbar/nbar-chart
 
-ccc/plugin/water/plot
-ccc/plugin/water/group-legend-scene
-ccc/plugin/water/panel
-ccc/plugin/water/chart
+ccc/plugin/water/water-plot
+ccc/plugin/water/water-group-legend-scene
+ccc/plugin/water/water-plot-panel
+ccc/plugin/water/water-chart
 
-ccc/plugin/point/plot
-ccc/plugin/point/panel
-ccc/plugin/point/chart
+ccc/plugin/point/point-plot
+ccc/plugin/point/point-plot-panel
+ccc/plugin/point/point-chart
 
-ccc/plugin/scatter/plot
-ccc/plugin/scatter/transl
-ccc/plugin/scatter/size-axis
-ccc/plugin/scatter/panel
-ccc/plugin/scatter/chart
+ccc/plugin/scatter/scatter-plot
+ccc/plugin/scatter/scatter-transl
+ccc/plugin/scatter/scatter-size-axis
+ccc/plugin/scatter/scatter-plot-panel
+ccc/plugin/scatter/scatter-chart
 
-ccc/plugin/heatGrid/plot
-ccc/plugin/heatGrid/panel
-ccc/plugin/heatGrid/chart
+ccc/plugin/heatGrid/hg-plot
+ccc/plugin/heatGrid/hg-plot-panel
+ccc/plugin/heatGrid/hg-chart
 
-ccc/plugin/box/plot
-ccc/plugin/box/transl
-ccc/plugin/box/panel
-ccc/plugin/box/chart
+ccc/plugin/box/box-plot
+ccc/plugin/box/box-transl
+ccc/plugin/box/box-plot-panel
+ccc/plugin/box/box-chart
 
-ccc/plugin/treemap/plot
-ccc/plugin/treemap/color-axis
-ccc/plugin/treemap/transl
-ccc/plugin/treemap/panel
-ccc/plugin/treemap/chart
+ccc/plugin/treemap/treemap-plot
+ccc/plugin/treemap/treemap-color-axis
+ccc/plugin/treemap/treemap-transl
+ccc/plugin/treemap/treemap-plot-panel
+ccc/plugin/treemap/treemap-chart
 
-ccc/plugin/sunburst/plot
-ccc/plugin/sunburst/color-axis
-ccc/plugin/sunburst/transl
-ccc/plugin/sunburst/panel
-ccc/plugin/sunburst/chart
-ccc/plugin/sunburst/slice-sign
+ccc/plugin/sunburst/sun-plot
+ccc/plugin/sunburst/sun-color-axis
+ccc/plugin/sunburst/sun-transl
+ccc/plugin/sunburst/sun-plot-panel
+ccc/plugin/sunburst/sun-chart
+ccc/plugin/sunburst/sun-slice-sign
 
-ccc/plugin/bullet/plot
-ccc/plugin/bullet/chart
+ccc/plugin/bullet/bullet-plot
+ccc/plugin/bullet/bullet-chart
 
-ccc/plugin/parallel/chart
+ccc/plugin/parallel/par-chart
 
-ccc/plugin/dataTree/chart
+ccc/plugin/dataTree/dt-chart
