@@ -3,9 +3,11 @@ define([
     'ccc/def'
 ], function(pvc, def) {
 
+    var cdo = pvc.data;
+
     function itMask(mask, value, result, options) {
         it("should format «" + mask + "» with «" + value + "» as «" + result + "»", function() {
-            var f = pvc.dateFormat(mask);
+            var f = cdo.dateFormat(mask);
             if(options)
                 for(var m in options)
                     f[m](options[m]);
@@ -21,7 +23,7 @@ define([
         });
     }
 
-    describe("pvc.dateFormat -", function() {
+    describe("cdo.dateFormat -", function() {
         describe("empty masks -", function() {
             describeSpecialValues("");
 
@@ -38,7 +40,7 @@ define([
 
         describe("formatting mask -", function() {
             it("can be configured", function() {
-                var f = pvc.dateFormat();
+                var f = cdo.dateFormat();
 
                 f.mask("%d");
 
@@ -49,7 +51,7 @@ define([
             });
 
             it("can be re-configured", function() {
-                var f = pvc.dateFormat();
+                var f = cdo.dateFormat();
 
                 f.mask("%d");
 
@@ -69,14 +71,14 @@ define([
 
             describe("a just created date format", function() {
                 it("should have a default undefined mask", function() {
-                    var f = pvc.dateFormat();
+                    var f = cdo.dateFormat();
                     expect(f.mask()).toBeUndefined();
                 });
             });
 
             describe("setting all the properties and reading them back", function() {
                 it("should obtain the set values", function() {
-                    var f = pvc.dateFormat();
+                    var f = cdo.dateFormat();
                     var config = {mask: "%m"};
 
                     def.configure(f, config);
@@ -88,7 +90,7 @@ define([
             describe("configuring the date format", function() {
                 describe("with a string", function() {
                     it("should set its mask to that string", function() {
-                        var f = pvc.dateFormat();
+                        var f = cdo.dateFormat();
                         var mask = "%m";
                         def.configure(f, mask);
                         expect(f.mask()).toBe(mask);
@@ -97,8 +99,8 @@ define([
 
                 describe("with another date format", function() {
                     it("should copy its properties", function() {
-                        var f1 = pvc.dateFormat();
-                        var f2 = pvc.dateFormat({mask: "%m"});
+                        var f1 = cdo.dateFormat();
+                        var f2 = cdo.dateFormat({mask: "%m"});
 
                         def.configure(f1, f2);
 

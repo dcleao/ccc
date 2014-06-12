@@ -5,12 +5,12 @@
 /**
  * Initializes a datum instance.
  *
- * @name pvc.data.Datum
+ * @name cdo.Datum
  *
  * @class A datum is a complex that contains atoms for all the
  * dimensions of the associated {@link #data}.
  *
- * @extends pvc.data.Complex
+ * @extends cdo.Complex
  *
  * @property {boolean} isNull Indicates if the datum is a null datum.
  * <p>
@@ -22,13 +22,13 @@
  * @property {boolean} isVisible The datum's visible state (read-only).
  *
  * @constructor
- * @param {pvc.data.Data} data The data instance to which the datum belongs.
+ * @param {cdo.Data} data The data instance to which the datum belongs.
  * Note that the datum will belong instead to the owner of this data.
  * However the datums atoms will inherit from the atoms of the specified data.
  * This is essentially to facilitate the creation of null datums.
  * @param {object<string,any>} [atomsByName] A map of atoms or raw values by dimension name.
  */
-def.type('pvc.data.Datum', pvc.data.Complex)
+def.type('cdo.Datum', cdo.Complex)
 .init(
 function(data, atomsByName) {
     this.base(
@@ -39,7 +39,7 @@ function(data, atomsByName) {
         /*wantLabel*/ false,
         /*calculate*/ true);
 })
-.add(/** @lends pvc.data.Datum# */{
+.add(/** @lends cdo.Datum# */{
 
     isSelected: false,
     isVisible:  true,
@@ -70,8 +70,8 @@ function(data, atomsByName) {
             if(!select) delete this.isSelected;
             else        this.isSelected = true;
 
-            /*global data_onDatumSelectedChanged:true */
-            data_onDatumSelectedChanged.call(this.owner, this, select);
+            /*global cdo_onDatumSelectedChanged:true */
+            cdo_onDatumSelectedChanged.call(this.owner, this, select);
         }
 
         return changed;
@@ -102,8 +102,8 @@ function(data, atomsByName) {
         if(changed) {
             this.isVisible = visible;
 
-            /*global data_onDatumVisibleChanged:true */
-            data_onDatumVisibleChanged.call(this.owner, this, visible);
+            /*global cdo_onDatumVisibleChanged:true */
+            cdo_onDatumVisibleChanged.call(this.owner, this, visible);
         }
 
         return changed;
@@ -119,12 +119,12 @@ function(data, atomsByName) {
 
 /**
  * Called by the owner data to clear the datum's selected state (internal).
- * @name pvc.data.Datum#_deselect
+ * @name cdo.Datum#_deselect
  * @function
  * @type undefined
  * @private
  *
- * @see pvc.data.Data#clearSelected
+ * @see cdo.Data#clearSelected
  */
 function datum_deselect() { delete this.isSelected; }
 
@@ -141,7 +141,7 @@ function datum_isNullF    (d) { return d.isNull      === false; }
 
 // -----------------
 
-def.type('pvc.data.TrendDatum', pvc.data.Datum)
+def.type('cdo.TrendDatum', cdo.Datum)
 .init(function(data, atomsByName, trend) {
     this.base(data, atomsByName);
 
@@ -152,7 +152,7 @@ def.type('pvc.data.TrendDatum', pvc.data.Datum)
     isTrend:   true
 });
 
-def.type('pvc.data.InterpolationDatum', pvc.data.Datum)
+def.type('cdo.InterpolationDatum', cdo.Datum)
 .init(function(data, atomsByName, interpolation) {
     this.base(data, atomsByName);
     

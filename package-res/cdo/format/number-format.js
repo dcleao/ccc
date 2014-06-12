@@ -49,7 +49,7 @@
  */
 
 /**
- * @class pvc.NumberFormat
+ * @class cdo.NumberFormat
  * @classdesc Represents a number format, converting between a <tt>number</tt> and a <tt>string</tt>.
  * This class allows numbers to be formatted by using a formatting mask,
  * mostly compatible with VB's format() function mask syntax.
@@ -62,18 +62,18 @@
 /**
  * Creates a new number format object.
  *
- * @name pvc.numberFormat
+ * @name cdo.numberFormat
  * @function
  * @variant factory
- * @param {string|object|pvc.NumberFormat} [config] A configuration value.
+ * @param {string|object|cdo.NumberFormat} [config] A configuration value.
  * Can be a format mask string, or a number format object (or alike) to copy from.
- * @param {pvc.NumberFormat} [proto] The prototype number format from which default
+ * @param {cdo.NumberFormat} [proto] The prototype number format from which default
  * property values are taken.
- * Defaults to {@link pvc.numberFormat.defaults}.
+ * Defaults to {@link cdo.numberFormat.defaults}.
  *
- * @return {pvc.NumberFormat} A new number format object.
+ * @return {cdo.NumberFormat} A new number format object.
  */
-var numForm = pvc.numberFormat = function() {
+var numForm = cdo.numberFormat = function() {
     var fields, formatter;
 
     function numFormat(value) {
@@ -83,7 +83,7 @@ var numForm = pvc.numberFormat = function() {
 
     /**
      * @function
-     * @name pvc.NumberFormat.prototype.format
+     * @name cdo.NumberFormat.prototype.format
      * @param {number} value The value to format.
      * @returns {string}
      */
@@ -91,7 +91,7 @@ var numForm = pvc.numberFormat = function() {
 
     numFormat.tryConfigure = numForm_tryConfigure;
 
-    fields = def.instance(numFormat, numForm, numForm_sharedProp, arguments, /** @lends  pvc.NumberFormat# */{
+    fields = def.instance(numFormat, numForm, numForm_sharedProp, arguments, /** @lends  cdo.NumberFormat# */{
         /**
          * Gets or sets the formatting mask.
          *
@@ -100,7 +100,7 @@ var numForm = pvc.numberFormat = function() {
          *
          * @function
          * @param {string} [_] The formatting mask.
-         * @return {pvc.NumberFormat} <tt>this</tt> or the current formatting mask.
+         * @return {cdo.NumberFormat} <tt>this</tt> or the current formatting mask.
          */
         mask: {
             cast:   String,
@@ -111,11 +111,11 @@ var numForm = pvc.numberFormat = function() {
          * Gets, sets or <i>configures</i> the number format style.
          *
          * @function
-         * @param {object|pvc.NumberFormatStyle} [_] The new value.
+         * @param {object|cdo.NumberFormatStyle} [_] The new value.
          * When a number format style object, it replaces the current style.
          * When an object is specified, it configures the <i>current</i> format object.
          *
-         * @return {pvc.NumberFormat|pvc.NumberFormatStyle} <tt>this</tt> or the number format style.
+         * @return {cdo.NumberFormat|cdo.NumberFormatStyle} <tt>this</tt> or the number format style.
          */
         style: {cast: def.createAs(NumFormStyle), factory: numFormStyle}
     });
@@ -126,7 +126,7 @@ var numForm = pvc.numberFormat = function() {
 /**
  * Tries to configure this object, given a value.
  * @alias tryConfigure
- * @memberOf pvc.NumberFormat#
+ * @memberOf cdo.NumberFormat#
  * @param {any} other A value, not identical to this, to configure from.
  * @return {boolean|undefined}
  * <tt>true</tt> if the specified value is a string or a number format,
@@ -142,8 +142,8 @@ function numForm_tryConfigure(other) {
 /**
  * The default prototype number format.
  * @alias defaults
- * @memberOf pvc.numberFormat
- * @type pvc.NumberFormat
+ * @memberOf cdo.numberFormat
+ * @type cdo.NumberFormat
  */
 numForm.defaults = numForm().style(numFormStyle());
 
@@ -151,7 +151,7 @@ numForm.defaults = numForm().style(numFormStyle());
 
 /**
  * The maximum number of cached number formatters.
- * @name pvc.numberFormat.cacheLimit
+ * @name cdo.numberFormat.cacheLimit
  * @type number
  */
 numForm.cacheLimit = 20;

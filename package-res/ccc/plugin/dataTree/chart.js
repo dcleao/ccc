@@ -48,7 +48,7 @@ def
     _createContent: function(parentPanel, contentOptions) {
         // Create DataEngine
         var structEngine  = this.structEngine;
-        var structType    = structEngine ? structEngine.type : new pvc.data.ComplexType();
+        var structType    = structEngine ? structEngine.type : new cdo.ComplexType();
         // Force the value dimension not to be a number
         structType.addDimension('value', {});
         
@@ -57,10 +57,10 @@ def
             crosstabMode: true
         };
         
-        var translation = new pvc.data.CrosstabTranslationOper(structType, this.structDataset, this.structMetadata, translOptions);
+        var translation = new cdo.CrosstabTranslationOper(structType, this.structDataset, this.structMetadata, translOptions);
         translation.configureType();
         if(!structEngine) {
-            structEngine = this.structEngine = new pvc.data.Data({type: structType});
+            structEngine = this.structEngine = new cdo.Data({type: structType});
         }
         
         structEngine.load(translation.execute(structEngine));

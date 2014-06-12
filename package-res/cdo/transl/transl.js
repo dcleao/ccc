@@ -5,20 +5,20 @@
 /**
  * Initializes a translation operation.
  * 
- * @name pvc.data.TranslationOper
+ * @name cdo.TranslationOper
  * @class Represents one translation operation 
  * from some data source format to the list of atoms format.
  * 
  * @property {pvc.BaseChart} chart The associated chart.
- * @property {pvc.data.ComplexType} complexType The complex type that represents the translated data.
- * @property {pvc.data.Data} data The data object which will be loaded with the translation result.
+ * @property {cdo.ComplexType} complexType The complex type that represents the translated data.
+ * @property {cdo.Data} data The data object which will be loaded with the translation result.
  * @property {object} source The source object, of some format, being translated.
  * @property {object} metadata A metadata object describing the source.
  * @property {object} options  An object with translation options.
  * 
  * @constructor
  * @param {pvc.BaseChart} chart The associated chart.
- * @param {pvc.data.ComplexTypeProject} complexTypeProj The complex type project that will represent
+ * @param {cdo.ComplexTypeProject} complexTypeProj The complex type project that will represent
  *      the translated data.
  * @param {object} source The source object, of some format, to be translated.
  * The source is not modified.
@@ -27,7 +27,7 @@
  * Options are translator specific.
  * TODO: missing common options here
  */
-def.type('pvc.data.TranslationOper')
+def.type('cdo.TranslationOper')
 .init(function(chart, complexTypeProj, source, metadata, options) {
     this.chart = chart;
     this.complexTypeProj = complexTypeProj;
@@ -42,7 +42,7 @@ def.type('pvc.data.TranslationOper')
         this._logItemCount = 0;
     }
 })
-.add(/** @lends pvc.data.TranslationOper# */{
+.add(/** @lends cdo.TranslationOper# */{
     
     _logItems: false,
     
@@ -130,7 +130,7 @@ def.type('pvc.data.TranslationOper')
      *    the consequences are undefined.
      * </p>
      *
-     * @name pvc.data.TranslationOper#configureType
+     * @name cdo.TranslationOper#configureType
      * @function
      * @type undefined
      * @virtual
@@ -278,9 +278,9 @@ def.type('pvc.data.TranslationOper')
      *    the consequences are undefined.
      * </p>
      * 
-     * @param {pvc.data.Data} data The data object in whose dimensions returned atoms are interned.
+     * @param {cdo.Data} data The data object in whose dimensions returned atoms are interned.
      * 
-     * @returns {def.Query} An enumerable of {@link pvc.data.Atom[]}
+     * @returns {def.Query} An enumerable of {@link cdo.Atom[]}
      */
     execute: function(data) {
         this.data = data;
@@ -301,7 +301,7 @@ def.type('pvc.data.TranslationOper')
      *    Override to apply a different one.
      * </p>
      * 
-     * @returns {def.Query} An enumerable of {@link pvc.data.Atom[]}
+     * @returns {def.Query} An enumerable of {@link cdo.Atom[]}
      * @virtual
      */
     _executeCore: function() {
@@ -332,7 +332,7 @@ def.type('pvc.data.TranslationOper')
      * It has the following signature:
      * </p>
      * <pre>
-     * function(item : any) : pvc.data.Atom[] | pvc.data.Atom
+     * function(item : any) : cdo.Atom[] | cdo.Atom
      * </pre>
      * 
      * <p>
@@ -383,7 +383,7 @@ def.type('pvc.data.TranslationOper')
     _logItemAfter: function(readAtoms) {
             // Log read names/values
         // Ensure we have a simple object of name -> value to log.
-        // Note that pvc.data.Atom objects may be returned by a read function.
+        // Note that cdo.Atom objects may be returned by a read function.
         var logAtoms = {};
         for(var dimName in readAtoms) {
             var atom = readAtoms[dimName];

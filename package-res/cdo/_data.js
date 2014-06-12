@@ -2,34 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*global cdo:true */
+var cdo = def.globalSpace('cdo', {});
+
 /**
- * Namespace with data related classes.
- * @name pvc.data
+ * Community Data Objects namespace.
+ * @name cdo
  * @namespace
  */
-
-/**
- * @name NoDataException
- * @class An error thrown when a chart has no data.
- */
-def.global.NoDataException = function() {};
-
-/**
- * @name InvalidDataException
- * @class An error thrown when data exists but the chart cannot be rendered from it.
- */
-def.global.InvalidDataException = function(msg) {
-    this.message = msg ? msg : "Invalid Data.";
-};
-
-pvc.data = {
-    visibleKeyArgs: {visible: true}
-};
+pvc.data = cdo; // TODO: temporary
 
 /**
  * Disposes a list of child objects.
  * 
- * @name pvc.data._disposeChildList
+ * @name cdo._disposeChildList
  * 
  * @param {Array} list The list with children to dispose.
  * @param {string} [parentProp] The child's parent property to reset.
@@ -37,7 +23,7 @@ pvc.data = {
  * @static
  * @private
  */
-function data_disposeChildList(list, parentProp) {
+function cdo_disposeChildList(list, parentProp) {
     var L = list && list.length;
     if(L) {
         for(var i = 0 ; i < L ; i++) {
@@ -56,7 +42,7 @@ function data_disposeChildList(list, parentProp) {
 /**
  * Adds a child object.
  * 
- * @name pvc.data._addColChild
+ * @name cdo._addColChild
  * 
  * @param {object} parent The parent.
  * @param {string} childrenProp A parent's children array property.
@@ -67,7 +53,7 @@ function data_disposeChildList(list, parentProp) {
  * @static
  * @private
  */
-function data_addColChild(parent, childrenProp, child, parentProp, index) {
+function cdo_addColChild(parent, childrenProp, child, parentProp, index) {
     // <Debug>
     /*jshint expr:true */
     //(child && !child[parentProp]) || def.assert("Must not have a '" + parentProp + "'.");
@@ -85,7 +71,7 @@ function data_addColChild(parent, childrenProp, child, parentProp, index) {
 /**
  * Removes a child object.
  * 
- * @name pvc.data._removeColChild
+ * @name cdo._removeColChild
  * 
  * @param {object} parent The parent.
  * @param {string} childrenProp A parent's children array property.
@@ -95,7 +81,7 @@ function data_addColChild(parent, childrenProp, child, parentProp, index) {
  * @static
  * @private
  */
-function data_removeColChild(parent, childrenProp, child, parentProp) {
+function cdo_removeColChild(parent, childrenProp, child, parentProp) {
     // <Debug>
     /*jshint expr:true */
     //(child && (!child[parentProp] || child[parentProp] === parent)) || def.assert("Not a child");

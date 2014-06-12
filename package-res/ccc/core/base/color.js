@@ -35,9 +35,9 @@ function pvc_colorIsGray(color) {
  * See {@link pvc.color.scale} for available arguments.
  * 
  * @param {def.Query} keyArgs.data
- * A {@link pvc.data.Data} that is the result of grouping datums along what are here called "category" dimensions.
+ * A {@link cdo.Data} that is the result of grouping datums along what are here called "category" dimensions.
  * <p>
- * One (possibly equal) color scale is returned per leaf data, indexed by the leaf's absolute key (see {@link pvc.data.Data#absKey}).  
+ * One (possibly equal) color scale is returned per leaf data, indexed by the leaf's absolute key (see {@link cdo.Data#absKey}).
  * </p>
  * @param {boolean} [keyArgs.normPerBaseCategory=false] Indicates that a different color scale should be computed per distinct data category.
  * 
@@ -66,7 +66,7 @@ function pvc_colorScales(keyArgs) {
  * @param {object} keyArgs Keyword arguments.
  * See {@link pvc.color.scales} for available arguments.
  * 
- * @param {def.Query} keyArgs.data A {@link pvc.data.Data} instance that 
+ * @param {def.Query} keyArgs.data A {@link cdo.Data} instance that
  * may be used to obtain the domain of the color scale.
  * 
  * @param {string} keyArgs.type The type of color scale.

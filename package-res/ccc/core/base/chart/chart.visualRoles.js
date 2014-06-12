@@ -24,7 +24,7 @@ pvc.BaseChart
      * An error is thrown if a role with the specified name is not defined.
      * 
      * @param {string} roleName The role name.
-     * @type pvc.data.VisualRole 
+     * @type cdo.VisualRole
      */
     visualRole: function(roleName) {
         var role = def.getOwn(this.visualRoles, roleName);
@@ -174,7 +174,7 @@ pvc.BaseChart
                 if(groupingSpec !== undefined) {
                     if(!groupingSpec) this._assertUnboundRoleIsOptional(role); // throws if required
                     
-                    var grouping = pvc.data.GroupingSpec.parse(groupingSpec);
+                    var grouping = cdo.GroupingSpec.parse(groupingSpec);
     
                     role.preBind(grouping);
     
@@ -289,7 +289,7 @@ pvc.BaseChart
                 markDimBoundTo(dimNames, role);
 
             role.setSourceRole(null); // if any
-            role.preBind(pvc.data.GroupingSpec.parse(dimNames));
+            role.preBind(cdo.GroupingSpec.parse(dimNames));
         }
         
         function preBindRoleToGroupDims(role, groupDimNames) {

@@ -35,8 +35,8 @@
  * @borrows pv.Dom.Node#nextSibling as #nextSibling
  *
  *
- * @property {pvc.data.Data}  group The data group that's present in the scene, or <tt>null</tt>, if none.
- * @property {pvc.data.Datum} datum The datum that's present in the scene, or <tt>null</tt>, if none.
+ * @property {cdo.Data}  group The data group that's present in the scene, or <tt>null</tt>, if none.
+ * @property {cdo.Datum} datum The datum that's present in the scene, or <tt>null</tt>, if none.
  * @property {object} atoms The map of atoms, by dimension name, that's present in the scene, or <tt>null</tt>, if none.
  * <p>
  * When there is a group, these are its atoms,
@@ -51,7 +51,7 @@
  * @constructor
  * @param {pvc.visual.Scene} [parent=null] The parent scene.
  * @param {object} [keyArgs] Keyword arguments.
- * @property {pvc.data.Datum | pvc.data.Data | pvc.data.Datum[] | pvc.data.Data[]}
+ * @property {cdo.Datum | cdo.Data | cdo.Datum[] | cdo.Data[]}
  *  [keyArgs.source=null]
  *  The data source(s) that are present in the scene.
  */
@@ -89,7 +89,7 @@ def.type('pvc.visual.Scene')
         this.source = dataSource;
 
         first = dataSource[0];
-        if(first instanceof pvc.data.Data) {
+        if(first instanceof cdo.Data) {
             // Group/groups
             group  = first;
             groups = dataSource;
@@ -104,7 +104,7 @@ def.type('pvc.visual.Scene')
             // datum may still be null!
         } else {
             /*jshint expr:true */
-            (first instanceof pvc.data.Datum) || def.assert("not a datum");
+            (first instanceof cdo.Datum) || def.assert("not a datum");
             datum  = first;
             datums = dataSource;
         }
@@ -396,7 +396,7 @@ def.type('pvc.visual.Scene')
                     if(chart.options.ctrlSelectMode && def.get(ka, 'replace', true))
                         chart.data.replaceSelected(datums);
                     else
-                        pvc.data.Data.toggleSelected(datums);
+                        cdo.Data.toggleSelected(datums);
                 }
             });
         }
@@ -414,7 +414,7 @@ def.type('pvc.visual.Scene')
     },
 
     toggleVisible: function() {
-        if(pvc.data.Data.toggleVisible(this.datums())) this.chart().render(true, true, false);
+        if(cdo.Data.toggleVisible(this.datums())) this.chart().render(true, true, false);
     }
 });
 

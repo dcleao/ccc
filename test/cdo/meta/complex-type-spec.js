@@ -3,9 +3,11 @@ define([
     'ccc/def'
 ], function(pvc, def) {
 
+    var cdo = pvc.data;
+
     describe('ComplexType', function() {
       
-        var complexType = new pvc.data.ComplexType();
+        var complexType = new cdo.ComplexType();
         var dimType1 = complexType.addDimension('dimension1');
         var dimType2 = complexType.addDimension('dimension2');
         var dimType3 = complexType.addDimension('series1');

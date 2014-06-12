@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 def
-.space('pvc.data')
+.space('cdo')
 .FlatteningMode =
     def.set(
         def.makeEnum([
@@ -24,9 +24,9 @@ def
  * A grouping specification supports the grouping operation.
  * </p>
  * 
- * @see pvc.data.GroupingOper
+ * @see cdo.GroupingOper
  * 
- * @name pvc.data.GroupingSpec
+ * @name cdo.GroupingSpec
  * 
  * @class Contains information about a grouping operation.
  * 
@@ -34,21 +34,21 @@ def
  * @property {boolean} isSingleDimension Indicates that there is only one level and dimension.
  * @property {boolean} isSingleLevel Indicates that there is only one level.
  * @property {boolean} hasCompositeLevels Indicates that there is at least one level with more than one dimension.
- * @property {pvc.data.ComplexType} type The complex type against which dimension names were resolved.
- * @property {pvc.data.GroupingLevelSpec} levels An array of level specifications.
- * @property {pvc.data.DimensionType} firstDimension The first dimension type, if any.
- * @property {pvc.data.DimensionType} lastDimension The last dimension type, if any.
- * @property {pvc.data.FlatteningMode} flatteningMode The flattening mode.
+ * @property {cdo.ComplexType} type The complex type against which dimension names were resolved.
+ * @property {cdo.GroupingLevelSpec} levels An array of level specifications.
+ * @property {cdo.DimensionType} firstDimension The first dimension type, if any.
+ * @property {cdo.DimensionType} lastDimension The last dimension type, if any.
+ * @property {cdo.FlatteningMode} flatteningMode The flattening mode.
  * @property {string} rootLabel The label of the resulting root node.
  *
  * @constructor
- * @param {def.Query} levelSpecs An enumerable of {@link pvc.data.GroupingLevelSpec}.
- * @param {pvc.data.ComplexType} [type] A complex type.
+ * @param {def.Query} levelSpecs An enumerable of {@link cdo.GroupingLevelSpec}.
+ * @param {cdo.ComplexType} [type] A complex type.
  * @param {object} [ka] Keyword arguments.
- * @param {pvc.data.FlatteningMode} [ka.flatteningMode=pvc.data.FlatteningMode.None] The flattening mode.
+ * @param {cdo.FlatteningMode} [ka.flatteningMode=cdo.FlatteningMode.None] The flattening mode.
  * @param {string} [ka.rootLabel=''] The label of the root node.
  */
-def.type('pvc.data.GroupingSpec')
+def.type('cdo.GroupingSpec')
 .init(function(levelSpecs, type, ka) {
     this.type = type || null;
     
@@ -84,12 +84,12 @@ def.type('pvc.data.GroupingSpec')
     this.lastDimension  = this.depth > 0 ? this.levels[this.depth - 1].lastDimension() : null;
 
     this.rootLabel = def.get(ka, 'rootLabel') || "";
-    this.flatteningMode = def.get(ka, 'flatteningMode') || pvc.data.FlatteningMode.None;
+    this.flatteningMode = def.get(ka, 'flatteningMode') || cdo.FlatteningMode.None;
     
     this._cacheKey = this._calcCacheKey();
     this.id = this._cacheKey + "##" + ids.join('||');
 })
-.add(/** @lends pvc.data.GroupingSpec# */{
+.add(/** @lends cdo.GroupingSpec# */{
     
     _calcCacheKey: function(ka) {
         return [def.get(ka, 'flatteningMode') || this.flatteningMode,
@@ -101,7 +101,7 @@ def.type('pvc.data.GroupingSpec')
 
     /**
      * Late binds a grouping specification to a complex type.
-     * @param {pvc.data.ComplexType} type A complex type.
+     * @param {cdo.ComplexType} type A complex type.
      */
     bind: function(type) {
         this.type = type || def.fail.argumentRequired('type');
@@ -130,7 +130,7 @@ def.type('pvc.data.GroupingSpec')
     
     /**
      * Obtains the dimension type of the first dimension spec., if any.
-     * @type pvc.visual.DimensionType
+     * @type cdo.DimensionType
      */
     firstDimensionType: function() {
         var d = this.firstDimension;
@@ -157,7 +157,7 @@ def.type('pvc.data.GroupingSpec')
 
     /**
      * Obtains the dimension type of the last dimension spec., if any.
-     * @type pvc.visual.DimensionType
+     * @type cdo.DimensionType
      */
     lastDimensionType: function() {
         var d = this.lastDimension;
@@ -199,7 +199,7 @@ def.type('pvc.data.GroupingSpec')
      * @param {boolean} [ka.reverse=false] Indicates that each dimension's order should be reversed.
      * @param {string}  [ka.rootLabel] The label of the resulting root node.
      * 
-     * @type pvc.data.GroupingSpec
+     * @type cdo.GroupingSpec
      */
     ensure: function(ka) {
         var result;
@@ -225,7 +225,7 @@ def.type('pvc.data.GroupingSpec')
             rootLabel      = def.get(ka, 'rootLabel') || me.rootLabel;
 
         if(flatteningMode !== me.flatteningMode || rootLabel !== me.rootLabel)
-            return new pvc.data.GroupingSpec(me.levels, me.type, { // Share Levels
+            return new cdo.GroupingSpec(me.levels, me.type, { // Share Levels
                 flatteningMode: flatteningMode,
                 rootLabel:      rootLabel
             });
@@ -239,19 +239,19 @@ def.type('pvc.data.GroupingSpec')
      * @param {object} [ka] Keyword arguments
      * @param {boolean} [ka.reverse=false] Indicates that each dimension's order should be reversed.
      * @param {string} [ka.rootLabel] The label of the resulting root node.
-     * @type pvc.data.GroupingSpec 
+     * @type cdo.GroupingSpec
      */
     _singleLevelGrouping: function(ka) {
         var reverse = !!def.get(ka, 'reverse'),
             dimSpecs = this .dimensions()
                 .select(function(dimSpec) {
                     return reverse
-                        ? new pvc.data.GroupingDimensionSpec(dimSpec.name, !dimSpec.reverse, dimSpec.type.complexType)
+                        ? new cdo.GroupingDimensionSpec(dimSpec.name, !dimSpec.reverse, dimSpec.type.complexType)
                         : dimSpec;
                 }),
-            levelSpec = new pvc.data.GroupingLevelSpec(dimSpecs, this.type);
+            levelSpec = new cdo.GroupingLevelSpec(dimSpecs, this.type);
         
-        return new pvc.data.GroupingSpec([levelSpec], this.type, {
+        return new cdo.GroupingSpec([levelSpec], this.type, {
             flatteningMode: null, // turns into singleLevel
             rootLabel:      def.get(ka, 'rootLabel') || this.rootLabel
         });
@@ -261,24 +261,24 @@ def.type('pvc.data.GroupingSpec')
      * Obtains a reversed version of this grouping specification.
      * @param {object} [ka] Keyword arguments
      * @param {string} [ka.rootLabel] The label of the resulting root node.
-     * @type pvc.data.GroupingSpec 
+     * @type cdo.GroupingSpec
      */
     _reverse: function(ka) {
         var levelSpecs = def.query(this.levels)
             .select(function(levelSpec) {
                 var dimSpecs = def.query(levelSpec.dimensions)
                         .select(function(dimSpec) {
-                            return new pvc.data.GroupingDimensionSpec(
+                            return new cdo.GroupingDimensionSpec(
                                 dimSpec.name,
                                 !dimSpec.reverse,
                                 dimSpec.type.complexType);
                         });
                 
                 //noinspection JSPotentiallyInvalidUsageOfThis
-                return new pvc.data.GroupingLevelSpec(dimSpecs, this.type);
+                return new cdo.GroupingLevelSpec(dimSpecs, this.type);
             }, this);
 
-        return new pvc.data.GroupingSpec(levelSpecs, this.type, {
+        return new cdo.GroupingSpec(levelSpecs, this.type, {
             flatteningMode: def.get(ka, 'flatteningMode') || this.flatteningMode,
             rootLabel:      def.get(ka, 'rootLabel'     ) || this.rootLabel
         });
@@ -292,7 +292,7 @@ def.type('pvc.data.GroupingSpec')
     }
 });
 
-def.type('pvc.data.GroupingLevelSpec')
+def.type('cdo.GroupingLevelSpec')
 .init(function(dimSpecs, type) {
     var ids = [],
         dimNames = [];
@@ -316,7 +316,7 @@ def.type('pvc.data.GroupingLevelSpec')
     var me = this;
     this.comparer = function(a, b) { return me.compare(a, b); };
 })
-.add( /** @lends pvc.data.GroupingLevelSpec */{
+.add( /** @lends cdo.GroupingLevelSpec */{
     _sortDimensions: function(type) {
         type.sortDimensionNames(
             this.dimensionsInDefOrder,
@@ -352,8 +352,8 @@ def.type('pvc.data.GroupingLevelSpec')
             keySep   = datum.owner.keySep,
             datoms   = datum.atoms;
 
-        // This builds a key compatible with that of pvc.data.Complex#key
-        // See also pvc.data.Complex.compositeKey
+        // This builds a key compatible with that of cdo.Complex#key
+        // See also cdo.Complex.compositeKey
         for(var i = 0 ; i < D ; i++) {
             var k = datoms[dimNames[i]].key;
             if(!i) key = k;
@@ -369,7 +369,7 @@ def.type('pvc.data.GroupingLevelSpec')
             D        = this.depth,
             datoms   = datum.atoms;
 
-        // See also pvc.data.Complex.compositeKey
+        // See also cdo.Complex.compositeKey
         for(var i = 0 ; i < D ; i++) {
             var dimName = dimNames[i];
             atoms[dimName] = datoms[dimName];
@@ -383,20 +383,20 @@ def.type('pvc.data.GroupingLevelSpec')
     }
 });
 
-def.type('pvc.data.GroupingDimensionSpec')
+def.type('cdo.GroupingDimensionSpec')
 .init(function(name, reverse, type) {
     this.name     = name;
     this.reverse  = !!reverse;
     this.id       = name + ":" + (reverse ? '0' : '1');
     if(type) this.bind(type);
 })
-.add( /** @lends pvc.data.GroupingDimensionSpec */ {
+.add( /** @lends cdo.GroupingDimensionSpec */ {
     type: null,
     comparer: null,
 
     /**
      * Late binds a dimension specification to a complex type.
-     * @param {pvc.data.ComplexType} type A complex type.
+     * @param {cdo.ComplexType} type A complex type.
      */
     bind: function(type) {
         /*jshint expr:true */
@@ -439,12 +439,12 @@ def.type('pvc.data.GroupingDimensionSpec')
  * "series1 asc|series2 desc, category"
  * </pre>
  * 
- * @param {pvc.data.ComplexType} [type] A complex type against which to resolve dimension names.
+ * @param {cdo.ComplexType} [type] A complex type against which to resolve dimension names.
  * 
- * @type pvc.data.GroupingSpec
+ * @type cdo.GroupingSpec
  */
-pvc.data.GroupingSpec.parse = function(specText, type) {
-    if(!specText) { return new pvc.data.GroupingSpec(null, type); }
+cdo.GroupingSpec.parse = function(specText, type) {
+    if(!specText) { return new cdo.GroupingSpec(null, type); }
     
     var levels = def.string.is(specText)
             ? specText.split(/\s*,\s*/)
@@ -453,10 +453,10 @@ pvc.data.GroupingSpec.parse = function(specText, type) {
         levelSpecs = def.query(levels)
             .select(function(levelText) {
                 var dimSpecs = groupSpec_parseGroupingLevel(levelText, type);
-                return new pvc.data.GroupingLevelSpec(dimSpecs, type);
+                return new cdo.GroupingLevelSpec(dimSpecs, type);
             });
     
-    return new pvc.data.GroupingSpec(levelSpecs, type);
+    return new cdo.GroupingSpec(levelSpecs, type);
 };
 
 var groupSpec_matchDimSpec = /^\s*(.+?)(?:\s+(asc|desc))?\s*$/i;
@@ -478,6 +478,6 @@ function groupSpec_parseGroupingLevel(groupLevelText, type) {
                 order   = (match[2] || '').toLowerCase(),
                 reverse = order === 'desc';
                
-            return new pvc.data.GroupingDimensionSpec(name, reverse, type);
+            return new cdo.GroupingDimensionSpec(name, reverse, type);
         });
 }

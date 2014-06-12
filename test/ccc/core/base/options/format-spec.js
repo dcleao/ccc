@@ -5,6 +5,8 @@ define([
     'test/data-1'
 ], function(pvc, def, utils, datas) {
 
+    var cdo = pvc.data;
+
     var When   = utils.describeTerm("when"),
         Then   = utils.describeTerm("then"),
         After  = utils.describeTerm("after"),
@@ -52,7 +54,7 @@ define([
             The("chart property 'format'", function() {
                 Should("have a format provider anyway", function() {
                     var chart = utils.createBaseChart();
-                    expect(def.classOf(chart.format())).toBe(pvc.format);
+                    expect(def.classOf(chart.format())).toBe(cdo.format);
                 });
             });
 
@@ -74,7 +76,7 @@ define([
                         });
 
                         var vf = chart.format().number();
-                        expect(def.is(vf, pvc.customFormat)).toBe(true);
+                        expect(def.is(vf, cdo.customFormat)).toBe(true);
 
                         expectNullWrappedABC(vf.formatter());
                     });
@@ -136,7 +138,7 @@ define([
                         });
 
                         var vf = chart.format().percent();
-                        expect(def.is(vf, pvc.customFormat)).toBe(true);
+                        expect(def.is(vf, cdo.customFormat)).toBe(true);
 
                         expectNullWrappedABC(vf.formatter());
                     });
@@ -162,7 +164,7 @@ define([
             With("a format provider,", function() {
                 The("chart property 'format'", function() {
                     Should("have that format provider", function() {
-                        var fp1 = pvc.format();
+                        var fp1 = cdo.format();
                         var chart = utils.createBaseChart({
                             format: fp1
                         });
@@ -186,7 +188,7 @@ define([
                         });
 
                         var fp = chart.format();
-                        expect(def.classOf(fp)).toBe(pvc.format);
+                        expect(def.classOf(fp)).toBe(cdo.format);
 
                         expect(fp.number ().formatter()).toBe(formatterABC);
                         expect(fp.percent().formatter()).toBe(formatterABC);

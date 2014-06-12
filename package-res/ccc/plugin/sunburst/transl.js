@@ -20,7 +20,7 @@
  * +----------+----------+--------------+
  * </pre>
  * 
- * @extends pvc.data.MatrixTranslationOper
+ * @extends cdo.MatrixTranslationOper
  */
 def.type('pvc.data.SunburstChartTranslationOper')
 .add(/** @lends pvc.data.SunburstChartTranslationOper# */{

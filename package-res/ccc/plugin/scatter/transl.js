@@ -26,7 +26,7 @@
  * an explicit dimension valueType definition must be provided.
  * </p>
  * 
- * @extends pvc.data.MatrixTranslationOper
+ * @extends cdo.MatrixTranslationOper
  */
 def.type('pvc.data.MetricPointChartTranslationOper')
 .add(/** @lends pvc.data.MetricPointChartTranslationOper# */{

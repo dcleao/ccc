@@ -1,6 +1,6 @@
 
 /**
- * @class pvc.CustomFormat
+ * @class cdo.CustomFormat
  * @classdesc Represents a custom format, converting arbitrary values to a <tt>string</tt>.
  * This class allows values to be formatted using an externally provided formatting function.
  */
@@ -8,16 +8,16 @@
 /**
  * Creates a new custom format object.
  *
- * @name pvc.customFormat
+ * @name cdo.customFormat
  * @function
  * @param {object|function} [config] A configuration value.
- * A function is taken to be the value {@link pvc.CustomFormat#formatter} function.
- * @param {pvc.CustomFormat} [proto] The prototype custom format from which default
+ * A function is taken to be the value {@link cdo.CustomFormat#formatter} function.
+ * @param {cdo.CustomFormat} [proto] The prototype custom format from which default
  * property values are taken.
- * Defaults to {@link pvc.customFormat.defaults}.
- * @return {pvc.CustomFormat} A new custom format object.
+ * Defaults to {@link cdo.customFormat.defaults}.
+ * @return {cdo.CustomFormat} A new custom format object.
  */
-var customForm = pvc.customFormat = function() {
+var customForm = cdo.customFormat = function() {
     var fields;
 
     function customFormat(v) {
@@ -28,7 +28,7 @@ var customForm = pvc.customFormat = function() {
     /**
      *
      * @function
-     * @name pvc.CustomFormat.prototype.format
+     * @name cdo.CustomFormat.prototype.format
      * @param {number} value The value to format.
      * @returns {string}
      */
@@ -36,7 +36,7 @@ var customForm = pvc.customFormat = function() {
 
     customFormat.tryConfigure = customForm_tryConfigure;
 
-    fields = def.instance(customFormat, customForm, numForm_sharedProp, arguments, /** @lends  pvc.CustomFormat# */{
+    fields = def.instance(customFormat, customForm, numForm_sharedProp, arguments, /** @lends  cdo.CustomFormat# */{
         /**
          * Gets or sets the formatting function.
          *
@@ -51,7 +51,7 @@ var customForm = pvc.customFormat = function() {
          *
          * @function
          * @param {function} [_] The formatting function.
-         * @return {pvc.CustomFormat|function} <tt>this</tt> or the current formatting mask.
+         * @return {cdo.CustomFormat|function} <tt>this</tt> or the current formatting mask.
          */
         formatter: {
             cast: def.fun.as
@@ -64,14 +64,14 @@ var customForm = pvc.customFormat = function() {
 /**
  * Tries to configure this object, given a value.
  * @alias tryConfigure
- * @memberOf pvc.CustomFormat#
+ * @memberOf cdo.CustomFormat#
  * @param {any} other A value, not identical to this, to configure from.
  * @return {boolean|undefined}
  * <tt>true</tt> if the specified value is a function or a custom format,
  * <tt>undefined</tt> otherwise.
  */
 function customForm_tryConfigure(other) {
-    // Must test this first. cause a pvc.CustomFormat is a function as well...
+    // Must test this first. cause a cdo.CustomFormat is a function as well...
     if(def.is(other, customForm)) return !!this.formatter(other.formatter());
     if(def.fun.is(other))         return !!this.formatter(other);
 }
@@ -86,8 +86,8 @@ function customForm_defaultFormatter(v) {
 /**
  * The default prototype custom format.
  * @alias defaults
- * @memberOf pvc.customFormat
- * @type pvc.CustomFormat
+ * @memberOf cdo.customFormat
+ * @type cdo.CustomFormat
  */
 customForm.defaults = customForm().formatter(customForm_defaultFormatter);
 

@@ -4,6 +4,8 @@ define([
     'test/data-1'
 ], function(pvc, utils, datas) {
 
+    var cdo = pvc.data;
+
     describe('Categorical linear interpolation', function() {
 
         it('should work over visible and invisible categories', function() {
@@ -68,7 +70,7 @@ define([
             // Should have 2 visible datums
             expect(visibleData.childCount()).toBe(2);
 
-            new pvc.data.LinearInterpolationOper(
+            new cdo.LinearInterpolationOper(
                 baseData,
                 partData,
                 visibleData,
@@ -131,7 +133,7 @@ define([
             // Should have 3 visible datums
             expect(visibleData.childCount()).toBe(3);
 
-            new pvc.data.LinearInterpolationOper(
+            new cdo.LinearInterpolationOper(
                 baseData,
                 partData,
                 visibleData,
@@ -207,7 +209,7 @@ define([
             // Should have 2 P1-visible datums
             expect(visibleData.childCount()).toBe(2);
 
-            new pvc.data.LinearInterpolationOper(
+            new cdo.LinearInterpolationOper(
                 baseData,
                 partData,
                 visibleData,
@@ -283,7 +285,7 @@ define([
                 isNull:  false
             });
 
-            new pvc.data.LinearInterpolationOper(
+            new cdo.LinearInterpolationOper(
                 baseData,
                 partData,
                 visibleData,

@@ -83,10 +83,10 @@ def
      *
      * <p>The default implementation groups data by series visual role.</p>
      *
-     * @param {pvc.data.Data} [baseData=null] The base data.
+     * @param {cdo.Data} [baseData=null] The base data.
      * @param {object} [ka] Keyword arguments.
      *
-     * @return {pvc.data.Data} The visible data.
+     * @return {cdo.Data} The visible data.
      * @virtual
      */
     createVisibleData: function(baseData, ka) {

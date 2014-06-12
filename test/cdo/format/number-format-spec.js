@@ -3,9 +3,11 @@ define([
     'ccc/def'
 ], function(pvc, def) {
 
+    var cdo = pvc.data;
+
     function itMask(mask, value, result, options) {
         it("should format «" + mask + "» with «" + value + "» as «" + result + "»", function() {
-            var f = pvc.numberFormat(mask);
+            var f = cdo.numberFormat(mask);
             if(options)
                 for(var m in options)
                     f[m](options[m]);
@@ -24,7 +26,7 @@ define([
         });
     }
 
-    describe("pvc.numberFormat -", function() {
+    describe("cdo.numberFormat -", function() {
         describe("empty masks -", function() {
             describeSpecialValues("");
 
@@ -205,7 +207,7 @@ define([
 
         describe("formatting mask -", function() {
             it("can be configured", function() {
-                var f = pvc.numberFormat();
+                var f = cdo.numberFormat();
 
                 f.mask("00.0");
 
@@ -215,7 +217,7 @@ define([
             });
 
             it("can be re-configured", function() {
-                var f = pvc.numberFormat();
+                var f = cdo.numberFormat();
 
                 f.mask("00.0");
 
@@ -333,7 +335,7 @@ define([
 
             describe("A mask with more than 4 sections", function() {
                 it("should throw an error", function() {
-                    var f = pvc.numberFormat("x;y;z;w;v");
+                    var f = cdo.numberFormat("x;y;z;w;v");
                     expect(function() {
                         f(123);
                     }).toThrow();
@@ -583,13 +585,13 @@ define([
 
             describe("a just created number format", function() {
                 it("should have a default undefined mask", function() {
-                    var f = pvc.numberFormat();
+                    var f = cdo.numberFormat();
                     expect(f.mask()).toBeUndefined();
                 });
 
                 it("should have a default inherited number style, one that is shared by all instances", function() {
-                    var f1 = pvc.numberFormat();
-                    var f2 = pvc.numberFormat();
+                    var f1 = cdo.numberFormat();
+                    var f2 = cdo.numberFormat();
                     expect(f1).not.toBe(f2);
 
                     var s1 = f1.style();
@@ -604,10 +606,10 @@ define([
             describe("setting the number style to a different instance", function() {
                 describe("and getting the number style", function() {
                     it("should obtain the new instance", function() {
-                        var f = pvc.numberFormat();
+                        var f = cdo.numberFormat();
                         var s1 = f.style();
 
-                        var s2 = pvc.numberFormatStyle();
+                        var s2 = cdo.numberFormatStyle();
                         expect(!s2).toBe(false);
 
                         expect(s1).not.toBe(s2);
@@ -620,11 +622,11 @@ define([
 
                 describe("and configuring its properties", function() {
                     it("should not affect the original instance", function() {
-                        var f = pvc.numberFormat();
+                        var f = cdo.numberFormat();
                         var s1 = f.style();
                         var d1 = s1.decimal();
 
-                        var s2 = pvc.numberFormatStyle();
+                        var s2 = cdo.numberFormatStyle();
                         f.style(s2);
 
                         s2.decimal("x" + d1);
@@ -635,9 +637,9 @@ define([
 
                 describe("and then setting it to null", function() {
                     it("should reset the number style to the initial default style", function() {
-                        var f = pvc.numberFormat();
+                        var f = cdo.numberFormat();
                         var s1 = f.style();
-                        var s2 = pvc.numberFormatStyle();
+                        var s2 = cdo.numberFormatStyle();
 
                         f.style(s2);
                         expect(s2).toBe(f.style());
@@ -649,7 +651,7 @@ define([
 
             describe("configuring the number style through the number format, with a plain object", function() {
                 it("should auto/ create a local number style that inherits from the original one", function() {
-                    var f = pvc.numberFormat();
+                    var f = cdo.numberFormat();
                     var s1 = f.style();
 
                     // Change with something unique that we can detect later.
@@ -675,7 +677,7 @@ define([
                 });
 
                 it("should preserve an already local number style", function() {
-                    var f = pvc.numberFormat();
+                    var f = cdo.numberFormat();
                     f.style({group: "  "});
 
                     var s2 = f.style();
@@ -690,7 +692,7 @@ define([
 
             describe("setting all the properties and reading them back", function() {
                 it("should obtain the set values", function() {
-                    var f = pvc.numberFormat();
+                    var f = cdo.numberFormat();
                     var config = {
                         mask: "00.0",
                         style: {
@@ -723,7 +725,7 @@ define([
             describe("configuring the number format", function() {
                 describe("with a string", function() {
                     it("should set its mask to that string", function() {
-                        var f = pvc.numberFormat();
+                        var f = cdo.numberFormat();
                         var mask = "ABCD";
                         def.configure(f, mask);
                         expect(f.mask()).toBe(mask);
@@ -732,8 +734,8 @@ define([
 
                 describe("with another number format", function() {
                     it("should copy its properties", function() {
-                        var f1 = pvc.numberFormat();
-                        var f2 = pvc.numberFormat({
+                        var f1 = cdo.numberFormat();
+                        var f2 = cdo.numberFormat({
                             mask: "00.0",
                             style: {decimal: ";"}
                         });

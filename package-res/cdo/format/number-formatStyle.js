@@ -1,13 +1,13 @@
 /**
  * Creates a number format style,
  * optionally initialized from an existing style or style-like object.
- * @name pvc.numberFormatStyle
- * @param {pvc.NumberFormatStyle|object} [config] A configuration value.
+ * @name cdo.numberFormatStyle
+ * @param {cdo.NumberFormatStyle|object} [config] A configuration value.
  * It can be another instance of number format style, or a generic object, alike.
- * @param {pvc.NumberFormatStyle} [proto=null] The prototype instance to connect to, for obtaining default values.
- * @return {pvc.NumberFormatStyle} The new number format style.
+ * @param {cdo.NumberFormatStyle} [proto=null] The prototype instance to connect to, for obtaining default values.
+ * @return {cdo.NumberFormatStyle} The new number format style.
  */
-var numFormStyle = pvc.numberFormatStyle = function(other, proto) {
+var numFormStyle = cdo.numberFormatStyle = function(other, proto) {
     return new NumFormStyle(other, proto);
 };
 
@@ -18,28 +18,28 @@ var numForm_sharedProp = def.shared().property('safe');
  * optionally initialized from an existing style or style-like object.
  *
  * Normally, this constructor will not be used directly,
- * and the factory {@link pvc.numberFormatStyle} is used instead.
+ * and the factory {@link cdo.numberFormatStyle} is used instead.
  *
- * @name pvc.NumberFormatStyle
+ * @name cdo.NumberFormatStyle
  * @constructor
- * @param {pvc.NumberFormatStyle|object} [config] A configuration value.
+ * @param {cdo.NumberFormatStyle|object} [config] A configuration value.
  * It can be another instance of number format style, or a generic object, alike.
- * @param {pvc.NumberFormatStyle} [proto=null] The prototype instance to connect to, for obtaining default values.
+ * @param {cdo.NumberFormatStyle} [proto=null] The prototype instance to connect to, for obtaining default values.
  */
 function NumFormStyle() {
     def.instance(this, numFormStyle, numForm_sharedProp, arguments);
 }
 
-pvc.NumberFormatStyle = NumFormStyle;
+cdo.NumberFormatStyle = NumFormStyle;
 
-def.classAccessors(NumFormStyle, numForm_sharedProp, /** @lends pvc.NumberFormatStyle# */{
+def.classAccessors(NumFormStyle, numForm_sharedProp, /** @lends cdo.NumberFormatStyle# */{
     /**
      * Gets or sets the character to use in place of the `.` mask character.
      * The decimal point separates the integer and fraction parts of the number.
      * The default is ".".
      * @function
      * @param {string} [_] The new decimal separator.
-     * @return {pvc.NumberFormatStyle} <tt>this</tt> or the current decimal separator.
+     * @return {cdo.NumberFormatStyle} <tt>this</tt> or the current decimal separator.
      */
     decimal: {cast: String, fail: def.falsy},
 
@@ -51,7 +51,7 @@ def.classAccessors(NumFormStyle, numForm_sharedProp, /** @lends pvc.NumberFormat
      *
      * @function
      * @param {string} [_] The new group separator.
-     * @return {pvc.NumberFormatStyle} <tt>this</tt> or the current group separator.
+     * @return {cdo.NumberFormatStyle} <tt>this</tt> or the current group separator.
      */
     group:  {cast: String},
 
@@ -62,7 +62,7 @@ def.classAccessors(NumFormStyle, numForm_sharedProp, /** @lends pvc.NumberFormat
      *
      * @function
      * @param {number[]} [_] The new array of group sizes.
-     * @return {pvc.NumberFormatStyle} <tt>this</tt> or the current array of group sizes.
+     * @return {cdo.NumberFormatStyle} <tt>this</tt> or the current array of group sizes.
      */
     groupSizes: {fail: def.array.empty},
 
@@ -76,7 +76,7 @@ def.classAccessors(NumFormStyle, numForm_sharedProp, /** @lends pvc.NumberFormat
      * The default is "-".
      * @function
      * @param {string} [_] The new negative sign character.
-     * @return {pvc.NumberFormatStyle} <tt>this</tt> or the current negative sign character.
+     * @return {cdo.NumberFormatStyle} <tt>this</tt> or the current negative sign character.
      */
     negativeSign: {cast: String, fail: def.falsy},
 
@@ -93,7 +93,7 @@ def.classAccessors(NumFormStyle, numForm_sharedProp, /** @lends pvc.NumberFormat
      * more information on the currency sign character.
      * @function
      * @param {string} [_] The new currency symbol.
-     * @return {pvc.NumberFormatStyle} <tt>this</tt> or the current currency symbol.
+     * @return {cdo.NumberFormatStyle} <tt>this</tt> or the current currency symbol.
      */
     currency: {cast: String, fail: def.falsy},
 
@@ -102,7 +102,7 @@ def.classAccessors(NumFormStyle, numForm_sharedProp, /** @lends pvc.NumberFormat
      * The default pad character is "0" (zero).
      * @function
      * @param {string} [_] the new integer pad character.
-     * @returns {pvc.NumberFormatStyle} <tt>this</tt> or the current integer pad character.
+     * @returns {cdo.NumberFormatStyle} <tt>this</tt> or the current integer pad character.
      */
     integerPad: {cast: String, fail: def.falsy},
 
@@ -111,12 +111,12 @@ def.classAccessors(NumFormStyle, numForm_sharedProp, /** @lends pvc.NumberFormat
      * The default pad character is "0" (zero).
      * @function
      * @param {string} [_] the new fractional pad character.
-     * @returns {pvc.NumberFormatStyle} <tt>this</tt> or the current fractional pad character.
+     * @returns {cdo.NumberFormatStyle} <tt>this</tt> or the current fractional pad character.
      */
     fractionPad: {cast: String, fail: def.falsy}
 });
 
-def.copyOwn(NumFormStyle.prototype, /** @lends pvc.NumberFormatStyle# */ {
+def.copyOwn(NumFormStyle.prototype, /** @lends cdo.NumberFormatStyle# */ {
     /**
      * Tries to configure this object, given a value.
      *
@@ -135,13 +135,13 @@ def.copyOwn(NumFormStyle.prototype, /** @lends pvc.NumberFormatStyle# */ {
 });
 
 /**
- * Default number format style used by instances of {@link pvc.formatNumber.Style}.
+ * Default number format style used by instances of {@link cdo.formatNumber.Style}.
  *
  * The properties of this format object can be changed and
  * will be used for providing defaults for style objects created afterwards.
  *
- * @name pvc.formatNumber.style.defaults
- * @type pvc.formatNumber.Style
+ * @name cdo.formatNumber.style.defaults
+ * @type cdo.formatNumber.Style
  */
 numFormStyle.defaults = numFormStyle({
     integerPad:   "0",

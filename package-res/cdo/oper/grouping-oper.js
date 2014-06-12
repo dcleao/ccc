@@ -5,19 +5,19 @@
 /**
  * Initializes a grouping operation.
  *
- * @name pvc.data.GroupingOper
+ * @name cdo.GroupingOper
  *
  * @class Performs one grouping operation according to a grouping specification.
- * @extends pvc.data.DataOper
+ * @extends cdo.DataOper
  *
  * @constructor
  *
- * @param {pvc.data.Data} linkParent The link parent data.
+ * @param {cdo.Data} linkParent The link parent data.
  *
- * @param {string|string[]|pvc.data.GroupingSpec|pvc.data.GroupingSpec[]} groupingSpecs A grouping specification as a string, an object or array of either.
+ * @param {string|string[]|cdo.GroupingSpec|cdo.GroupingSpec[]} groupingSpecs A grouping specification as a string, an object or array of either.
  *
  * @param {object} [keyArgs] Keyword arguments.
- * See {@link pvc.data.DataOper} for any additional arguments.
+ * See {@link cdo.DataOper} for any additional arguments.
  *
  * @param {boolean} [keyArgs.isNull=null]
  *      Only considers datums with the specified isNull attribute.
@@ -44,7 +44,7 @@
  * in order to not collide with keys generated internally.
  * </p>
  */
-def.type('pvc.data.GroupingOper', pvc.data.DataOper)
+def.type('cdo.GroupingOper', cdo.DataOper)
 .init(function(linkParent, groupingSpecs, keyArgs) {
     /*jshint expr:true */
     groupingSpecs || def.fail.argumentRequired('groupingSpecs');
@@ -76,12 +76,12 @@ def.type('pvc.data.GroupingOper', pvc.data.DataOper)
     // grouping spec ids are semantic keys, although the name is not 'key'
     var ids = [];
     this._groupSpecs = def.array.as(groupingSpecs).map(function(groupSpec) {
-        if(groupSpec instanceof pvc.data.GroupingSpec) {
+        if(groupSpec instanceof cdo.GroupingSpec) {
             if(groupSpec.type !== linkParent.type)
                 throw def.error.argumentInvalid('groupingSpecText', "Invalid associated complex type.");
         } else {
             // Must be a non-empty string, or throws
-            groupSpec = pvc.data.GroupingSpec.parse(groupSpec, linkParent.type);
+            groupSpec = cdo.GroupingSpec.parse(groupSpec, linkParent.type);
         }
 
         ids.push(groupSpec.id);
@@ -92,18 +92,18 @@ def.type('pvc.data.GroupingOper', pvc.data.DataOper)
     /* Operation key */
     if(hasKey) this.key = ids.join('!!') + [this._visible, this._isNull, whereKey].join('||'); // this._selected
 }).
-add(/** @lends pvc.data.GroupingOper */{
+add(/** @lends cdo.GroupingOper */{
 
     /**
      * Performs the grouping operation.
      *
-     * @returns {pvc.data.Data} The resulting root data.
+     * @returns {cdo.Data} The resulting root data.
      */
     execute: function() {
         /* Setup a priori datum filters */
 
-        /*global data_whereState: true */
-        var datumsQuery = data_whereState(def.query(this._linkParent._datums), {
+        /*global cdo_whereState: true */
+        var datumsQuery = cdo_whereState(def.query(this._linkParent._datums), {
                     visible:  this._visible,
                     selected: this._selected,
                     where:    this._where
@@ -117,8 +117,8 @@ add(/** @lends pvc.data.GroupingOper */{
 
     executeAdd: function(rootData, datums) {
 
-        /*global data_whereState: true */
-        var datumsQuery = data_whereState(def.query(datums), {
+        /*global cdo_whereState: true */
+        var datumsQuery = cdo_whereState(def.query(datums), {
                     visible:  this._visible,
                     selected: this._selected,
                     where:    this._where
@@ -225,7 +225,7 @@ add(/** @lends pvc.data.GroupingOper */{
     },
 
     _groupSpecRecursiveFlattened: function(realGroupParentNode, groupDatums, group, groupIndex) {
-        var isPostOrder = group.flatteningMode === pvc.data.FlatteningMode.DfsPost,
+        var isPostOrder = group.flatteningMode === cdo.FlatteningMode.DfsPost,
             levels = group.levels,
             L      = levels.length,
             isLastGroup = (groupIndex === this._groupSpecs.length - 1),
@@ -420,7 +420,7 @@ add(/** @lends pvc.data.GroupingOper */{
         if(levelParentNode.dimNames.length) {
             var absKey = levelParentNode.absKey + keySep + key;
             childNode.absKey = absKey;
-            childNode.key    = pvc.data.Complex.rightTrimKeySep(absKey, keySep);
+            childNode.key    = cdo.Complex.rightTrimKeySep(absKey, keySep);
         } else {
             childNode.absKey = key;
         }
@@ -432,13 +432,13 @@ add(/** @lends pvc.data.GroupingOper */{
             // Root node
             if(rootData) {
                 data = rootData;
-                /*global data_addDatumsLocal:true*/
-                data_addDatumsLocal.call(data, node.datums);
+                /*global cdo_addDatumsLocal:true*/
+                cdo_addDatumsLocal.call(data, node.datums);
             } else {
                 isNew = true;
 
                 // Create a *linked* rootNode data
-                data = new pvc.data.Data({
+                data = new cdo.Data({
                     linkParent: parentData,
                     datums:     node.datums
                 });
@@ -450,8 +450,8 @@ add(/** @lends pvc.data.GroupingOper */{
                 data = parentData.child(node.key);
                 // Add the datums to the data, and its atoms to its dimensions
                 // Should also update linkedChildren (not children).
-                /*global data_addDatumsSimple:true*/
-                if(data) data_addDatumsSimple.call(data, node.datums);
+                /*global cdo_addDatumsSimple:true*/
+                if(data) cdo_addDatumsSimple.call(data, node.datums);
             }
 
             if(!data) {
@@ -465,7 +465,7 @@ add(/** @lends pvc.data.GroupingOper */{
                         node.datums[0], 
                         parentNode.groupLevelSpec.comparer);
 
-                data = new pvc.data.Data({
+                data = new cdo.Data({
                     parent:   parentData,
                     atoms:    node.atoms,
                     atomsDimNames: node.dimNames,

@@ -26,7 +26,7 @@ def
         this.smallRowIndex = options.smallRowIndex;
     } else {
         this.root = this;
-        this._format = pvc.format();
+        this._format = cdo.format();
     }
 
     this.base();
@@ -456,7 +456,7 @@ def
     _processFormatOption: function(options, formatProvider, formatName, optionName) {
         // Was the format explicitly set through the new interface?
         var format = formatProvider[formatName]();
-        if(format !== pvc.format.defaults[formatName]()) {
+        if(format !== cdo.format.defaults[formatName]()) {
             // The new interface takes precedence over the legacy options property.
             options[optionName] = format;
         } else {
@@ -493,11 +493,11 @@ def
      *
      * Always affects the root chart's format provider.
      *
-     * @param {pvc.FormatProvider|object|any} [_] The new format provider,
+     * @param {cdo.FormatProvider|object|any} [_] The new format provider,
      * a configuration object, or any other configuration value supported by
      * the format provider class.
      *
-     * @return {pvc.BaseChart|pvc.FormatProvider} <tt>this</tt> or the current format provider.
+     * @return {pvc.BaseChart|cdo.FormatProvider} <tt>this</tt> or the current format provider.
      */
     format: function(_) {
         var r = this.root;
@@ -748,8 +748,8 @@ def
         },
 
         // Initialized lazily, upon first chart creation.
-        //valueFormat:        pvc.numberFormat("#,0.##"),
-        //percentValueFormat: pvc.numberFormat("#,0.#%"),
+        //valueFormat:        cdo.numberFormat("#,0.##"),
+        //percentValueFormat: cdo.numberFormat("#,0.#%"),
         
         //interactive: true,
         

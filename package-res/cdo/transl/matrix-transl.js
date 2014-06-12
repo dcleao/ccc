@@ -3,18 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * @name pvc.data.MatrixTranslationOper
+ * @name cdo.MatrixTranslationOper
  * @class Represents one translation operation, 
  * from a source matrix in some format to 
  * an enumerable of atom arrays.
  * 
- * @extends pvc.data.TranslationOper
+ * @extends cdo.TranslationOper
  * @abstract
  * 
  * @constructor
  * @param {pvc.BaseChart} chart The associated chart.
- * @param {pvc.data.ComplexType} complexType The complex type that will represent the translated data.
- * @param {pvc.data.Data} data The data object which will be loaded with the translation result.
+ * @param {cdo.ComplexType} complexType The complex type that will represent the translated data.
+ * @param {cdo.Data} data The data object which will be loaded with the translation result.
  * @param {object} source The source matrix, in some format, to be translated.
  * The source is not modified.
  * @param {object} [metadata] A metadata object describing the source.
@@ -38,8 +38,8 @@
  * determines its index.
  * </p>
  */
-def.type('pvc.data.MatrixTranslationOper', pvc.data.TranslationOper)
-.add(/** @lends pvc.data.MatrixTranslationOper# */{
+def.type('cdo.MatrixTranslationOper', cdo.TranslationOper)
+.add(/** @lends cdo.MatrixTranslationOper# */{
     
     _initType: function() {
         this.J = this.metadata.length;

@@ -3,6 +3,8 @@ define([
     'ccc/def'
 ], function(pvc, def) {
 
+    var cdo = pvc.data;
+
     describe('DimensionType', function() {
 
         var spec = {
@@ -12,8 +14,8 @@ define([
             isDiscrete : true
         };
       
-        var complexType = new pvc.data.ComplexType();
-        var dimensionType = new pvc.data.DimensionType(complexType, 'dimension1', spec);
+        var complexType = new cdo.ComplexType();
+        var dimensionType = new cdo.DimensionType(complexType, 'dimension1', spec);
       
         describe('method isHidden()', function() {
             it('expects to return true', function() {
@@ -40,35 +42,35 @@ define([
         
         describe('method valueTypeName(Boolean)', function() {
           it('should be Boolean', function() {
-              expect(pvc.data.DimensionType.valueTypeName(Boolean)).toBe('Boolean');
+              expect(cdo.DimensionType.valueTypeName(Boolean)).toBe('Boolean');
           });
         });
         
         describe('method valueTypeName(Number)', function() {
           it('should be Number', function() {
-              expect(pvc.data.DimensionType.valueTypeName(Number)).toBe('Number');
+              expect(cdo.DimensionType.valueTypeName(Number)).toBe('Number');
           });
         });
         
         describe('method dimensionGroupName(series1234)', function() {
           it('should be series1234', function() {
-              expect(pvc.data.DimensionType.dimensionGroupName('series1234')).toBe('series');
+              expect(cdo.DimensionType.dimensionGroupName('series1234')).toBe('series');
           });
         });
         
-        describe('method pvc.data.DimensionType.extendSpec()', function() {
+        describe('method cdo.DimensionType.extendSpec()', function() {
           it('should extend with the label new_dimension', function() {
               var spec = {
                   label : 'new_dimension'
               }
-              var newDimension = pvc.data.DimensionType.extendSpec('dimension2', spec);
+              var newDimension = cdo.DimensionType.extendSpec('dimension2', spec);
               expect(newDimension.label).toBe('new_dimension');
           });
         });
         
-        describe('method pvc.data.DimensionType.cast.Number(1)', function() {
+        describe('method cdo.DimensionType.cast.Number(1)', function() {
           it('should return 1000', function() {
-              expect(pvc.data.DimensionType.cast.Number('1000')).toBe(1000);
+              expect(cdo.DimensionType.cast.Number('1000')).toBe(1000);
           });
         });
         

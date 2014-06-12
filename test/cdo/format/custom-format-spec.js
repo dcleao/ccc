@@ -3,6 +3,8 @@ define([
     'ccc/def'
 ], function(pvc, def) {
 
+    var cdo = pvc.data;
+
     function formatterABC(value) {
         return "ABC" + value;
     }
@@ -11,10 +13,10 @@ define([
         return "CDE" + value;
     }
 
-    describe("pvc.customFormat -", function() {
+    describe("cdo.customFormat -", function() {
         describe("formatter -", function() {
             it("can be configured", function() {
-                var f = pvc.customFormat();
+                var f = cdo.customFormat();
 
                 f.formatter(formatterABC);
 
@@ -26,7 +28,7 @@ define([
             });
 
             it("can be re-configured", function() {
-                var f = pvc.customFormat();
+                var f = cdo.customFormat();
 
                 f.formatter(formatterABC);
 
@@ -45,7 +47,7 @@ define([
 
             describe("a just created custom format", function() {
                 it("should have a default formatter that formats nully values as the empty string", function() {
-                    var f = pvc.customFormat();
+                    var f = cdo.customFormat();
 
                     expect(!f.formatter()).toBe(false);
 
@@ -54,7 +56,7 @@ define([
                 });
 
                 it("should have a default formatter that formats non-nully values by calling toString on them", function() {
-                    var f = pvc.customFormat();
+                    var f = cdo.customFormat();
 
                     expect(f(123)).toBe("123");
                     expect(f({toString: function() { return "QUACK!"; }})).toBe("QUACK!");
@@ -64,7 +66,7 @@ define([
             describe("creating a custom format", function() {
                 describe("with a function as first argument", function() {
                     it("should set its formatter function", function() {
-                        var f = pvc.customFormat(formatterABC);
+                        var f = cdo.customFormat(formatterABC);
                         expect(f.formatter()).toBe(formatterABC);
                     });
                 });
@@ -73,7 +75,7 @@ define([
             describe("configuring the custom format", function() {
                 describe("with a function", function() {
                     it("should set its formatter to that function", function() {
-                        var f = pvc.customFormat();
+                        var f = cdo.customFormat();
 
                         def.configure(f, formatterABC);
                         expect(f.formatter()).toBe(formatterABC);
@@ -82,8 +84,8 @@ define([
 
                 describe("with another custom format", function() {
                     it("should copy its properties", function() {
-                        var f1 = pvc.customFormat();
-                        var f2 = pvc.customFormat().formatter(formatterABC);
+                        var f1 = cdo.customFormat();
+                        var f2 = cdo.customFormat().formatter(formatterABC);
 
                         def.configure(f1, f2);
 

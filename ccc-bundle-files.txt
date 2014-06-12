@@ -10,12 +10,6 @@ ccc/core/base/context
 ccc/core/base/text
 ccc/core/base/trends
 
-ccc/core/base/format/number-formatStyle
-ccc/core/base/format/number-format
-ccc/core/base/format/date-format
-ccc/core/base/format/custom-format
-ccc/core/base/format/formatProvider
-
 ccc/core/base/scene/scene
 ccc/core/base/scene/var
 
@@ -95,7 +89,6 @@ ccc/core/categorical/categ-plot
 ccc/core/categorical/categ-chart
 ccc/core/categorical/categ-panel
 
-
 cdo/_data
 cdo/meta/dimensionType
 cdo/meta/complexType
@@ -109,6 +102,7 @@ cdo/data/data
 cdo/data/data.selected
 cdo/data/data.operations
 cdo/data/data.compat
+
 cdo/oper/abstract-oper
 cdo/oper/grouping-oper
 cdo/oper/groupingSpec
@@ -116,10 +110,17 @@ cdo/oper/linear-interp-oper
 cdo/oper/linear-interp-seriesState
 cdo/oper/zero-interp-oper
 cdo/oper/zero-interp-seriesState
+
 cdo/transl/transl
 cdo/transl/matrix-transl
 cdo/transl/crosstab-transl
 cdo/transl/relational-transl
+
+cdo/format/number-formatStyle
+cdo/format/number-format
+cdo/format/date-format
+cdo/format/custom-format
+cdo/format/formatProvider
 
 ccc/plugin/abstract-metricxy/plot
 ccc/plugin/abstract-metricxy/chart

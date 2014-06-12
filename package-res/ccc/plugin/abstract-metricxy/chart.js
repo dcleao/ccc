@@ -89,7 +89,7 @@ def
                                 yDimName, trendY,
                                 dataPartDimName, dataPartAtom);
 
-                        newDatums.push(new pvc.data.TrendDatum(data.owner, atoms, trendOptions));
+                        newDatums.push(new cdo.TrendDatum(data.owner, atoms, trendOptions));
                     }
                 });
             }

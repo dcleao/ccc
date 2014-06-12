@@ -32,6 +32,6 @@ def
      */
     execute: function() {
         // Re-render chart
-        if(pvc.data.Data.toggleVisible(this.datums())) this.chart().render(true, true, false);
+        if(cdo.Data.toggleVisible(this.datums())) this.chart().render(true, true, false);
     }
 });

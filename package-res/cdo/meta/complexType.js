@@ -5,7 +5,7 @@
 /**
  * Initializes a complex type instance.
  * 
- * @name pvc.data.ComplexType
+ * @name cdo.ComplexType
  * 
  * @class A complex type is, essentially, a named set of dimension types.
  *
@@ -14,9 +14,9 @@
  * @param {object} [dimTypeSpecs]
  * A map of dimension names to dimension type constructor's keyword arguments.
  *
- * @see pvc.data.DimensionType
+ * @see cdo.DimensionType
  */
-def.type('pvc.data.ComplexType')
+def.type('cdo.ComplexType')
 .init(
 function(dimTypeSpecs) {
     /**
@@ -30,7 +30,7 @@ function(dimTypeSpecs) {
     /**
      * A list of the dimension types.
      * 
-     * @type pvc.data.DimensionType[]
+     * @type cdo.DimensionType[]
      * @private
      */
     this._dimsList = [];
@@ -87,7 +87,7 @@ function(dimTypeSpecs) {
     
     if(dimTypeSpecs) for(var name in dimTypeSpecs) this.addDimension(name, dimTypeSpecs[name]);
 })
-.add(/** @lends pvc.data.ComplexType# */{
+.add(/** @lends cdo.ComplexType# */{
     describe: function() {
 
         var out = ["COMPLEX TYPE INFORMATION", pvc.logSeparator];
@@ -123,7 +123,7 @@ function(dimTypeSpecs) {
      * @param {boolean} [keyArgs.assertExists=true] Indicates that an error is signaled 
      * if a dimension type with the specified name does not exist.
      * 
-     * @type pvc.data.DimensionType | pvc.data.DimensionType[] | null
+     * @type cdo.DimensionType | cdo.DimensionType[] | null
      */
     dimensions: function(name, keyArgs) {
         if(name == null) return this._dims;
@@ -141,7 +141,7 @@ function(dimTypeSpecs) {
      * <p>
      * Do <b>NOT</b> modify the returned array. 
      * </p>
-     * @type pvc.data.DimensionType[]
+     * @type cdo.DimensionType[]
      */
     dimensionsList: function() {
         return this._dimsList;
@@ -154,7 +154,7 @@ function(dimTypeSpecs) {
      * <p>
      * Do <b>NOT</b> modify the returned array. 
      * </p>
-     * @type pvc.data.DimensionType[]
+     * @type cdo.DimensionType[]
      */
     calculatedDimensionsList: function() {
         return this._calcDimsList;
@@ -183,7 +183,7 @@ function(dimTypeSpecs) {
      * @param {object} [keyArgs] Keyword arguments.
      * @param {boolean} [keyArgs.assertExists=true] Indicates if an error is signaled when the specified group name is undefined.
      * 
-     * @type pvc.data.DimensionType[]
+     * @type cdo.DimensionType[]
      */
     groupDimensions: function(group, keyArgs) {
         var dims = def.getOwn(this._dimsByGroup, group);
@@ -221,10 +221,10 @@ function(dimTypeSpecs) {
      * @param {string} name The name of the dimension type.
      * @param {object} [dimTypeSpec] The dimension type specification.
      * Essentially its a <i>keyArgs</i> object.
-     * See {@link pvc.data.DimensionType}'s <i>keyArgs</i> constructor
+     * See {@link cdo.DimensionType}'s <i>keyArgs</i> constructor
      * to know about available arguments.
      *  
-     * @type {pvc.data.DimensionType}
+     * @type {cdo.DimensionType}
      */
     addDimension: function(name, dimTypeSpec) {
         // <Debug>
@@ -233,7 +233,7 @@ function(dimTypeSpecs) {
         !def.hasOwn(this._dims, name) || def.fail.operationInvalid("A dimension type with name '{0}' is already defined.", [name]);
         // </Debug>
         
-        var dimension = new pvc.data.DimensionType(this, name, dimTypeSpec);
+        var dimension = new cdo.DimensionType(this, name, dimTypeSpec);
         this._dims[name] = dimension;
         
         this._dimsIndexByName = null; // reset
@@ -334,7 +334,7 @@ function(dimTypeSpecs) {
                     // Dimension need to be created?
                     var dimType = this._dims[name];
                     if(!dimType) {
-                        var dimSpec = pvc.data.DimensionType.extendSpec(name, null, dimsOptions);
+                        var dimSpec = cdo.DimensionType.extendSpec(name, null, dimsOptions);
                         this.addDimension(name, dimSpec);
                     }
                     
@@ -422,9 +422,9 @@ function(dimTypeSpecs) {
 /**
  * Called by a dimension type to indicate that its assigned roles have changed.
  * 
- * @name pvc.data.ComplexType#_dimensionRolesChanged
+ * @name cdo.ComplexType#_dimensionRolesChanged
  * @function
- * @param {pvc.data.DimensionType} dimType The affected dimension type.
+ * @param {cdo.DimensionType} dimType The affected dimension type.
  * @type undefined
  * @private
  * @internal

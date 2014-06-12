@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * @name pvc.data.RelationalTranslationOper
+ * @name cdo.RelationalTranslationOper
  *
  * @class Represents one translation operation,
  * from a source matrix in relational format to
@@ -38,17 +38,17 @@
  * then a dummy 'series' column, with the constant null value, is added automatically.
  * </p>
  *
- * @extends pvc.data.MatrixTranslationOper
+ * @extends cdo.MatrixTranslationOper
  *
  * @constructor
  * @param {pvc.BaseChart} chart The associated chart.
- * @param {pvc.data.ComplexType} complexType The complex type that will represent the translated data.
+ * @param {cdo.ComplexType} complexType The complex type that will represent the translated data.
  * @param {object} source The matrix-relational array to be translated.
  * The source is not modified.
  * @param {object} [metadata] A metadata object describing the source.
  *
  * @param {object} [options] An object with translation options.
- * See additional available options in {@link pvc.data.MatrixTranslationOper}.
+ * See additional available options in {@link cdo.MatrixTranslationOper}.
  *
  * @param {(number|string)[]|number|string} [options.measuresIndexes]
  * An array of indexes of columns of the source matrix
@@ -69,8 +69,8 @@
  * </p>
  */
 def
-.type('pvc.data.RelationalTranslationOper', pvc.data.MatrixTranslationOper)
-.add(/** @lends pvc.data.RelationalTranslationOper# */{
+.type('cdo.RelationalTranslationOper', cdo.MatrixTranslationOper)
+.add(/** @lends cdo.RelationalTranslationOper# */{
     M: 0, // number of measures
     C: 0, // number of categories
     S: 0, // number of series
@@ -276,7 +276,7 @@ def
 /**
  * Obtains the dimension reader for dimension 'dataPart'.
  *
- * @name pvc.data.RelationalTranslationOper#_dataPartGet
+ * @name cdo.RelationalTranslationOper#_dataPartGet
  * @function
  * @param {Array} plot2DataSeriesIndexes The indexes of series that are to be shown on the second axis.
  * @param {function} seriesReader Dimension series atom getter.

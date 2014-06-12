@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-pvc.data.Data.add(/** @lends pvc.data.Data# */{
+cdo.Data.add(/** @lends cdo.Data# */{
     /**
      * Obtains the number of not-null selected datums.
      * <p>
@@ -22,12 +22,12 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
      * Obtains the not-null selected datums, in an unspecified order.
      * <p>
      * If the datums should be sorted,
-     * they can be sorted by their {@link pvc.data.Datum#id}.
+     * they can be sorted by their {@link cdo.Datum#id}.
      *
      * Alternatively, {@link #datums} can be called,
      * with the <tt>selected</tt> keyword argument.
      * </p>
-     * @type pvc.data.Datum[]
+     * @type cdo.Datum[]
      */
     selectedDatums: function() {
         // NOTE: isNull: false is not required here, because null datums cannot be selected
@@ -39,7 +39,7 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
     /**
      * Obtains a map containing the not-null selected datums, indexed by id.
      *
-     * @type def.Map(pvc.data.Datum)
+     * @type def.Map(cdo.Datum)
      */
     selectedDatumMap: function() {
         if(this.isOwner()) return this._selectedNotNullDatums.clone();
@@ -58,7 +58,7 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
     /**
      * Replaces currently selected datums with the specified datums.
      *
-     * @param {pvc.data.Datum[]|def.query<pvc.data.Datum>} [datums] The new datums to be selected.
+     * @param {cdo.Datum[]|def.query<cdo.Datum>} [datums] The new datums to be selected.
      * @returns {boolean} Returns <tt>true</tt> if any datum was selected and <tt>false</tt> otherwise.
      */
     replaceSelected: function(datums) {
@@ -76,7 +76,7 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
                     return !def.hasOwn(alreadySelectedById, datum.id);
                 });
 
-        changed |= pvc.data.Data.setSelected(datums, true);
+        changed |= cdo.Data.setSelected(datums, true);
 
         return changed;
     },
@@ -84,7 +84,7 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
     /**
      * Clears the selected state of any selected datum.
      *
-     * @param {pvc.data.Datum} [funFilter] Allows excluding atoms from the clear operation.
+     * @param {cdo.Datum} [funFilter] Allows excluding atoms from the clear operation.
      * @returns {boolean} Returns <tt>true</tt> if any datum was selected and <tt>false</tt> otherwise.
      */
     clearSelected: function(funFilter) {
@@ -117,14 +117,14 @@ pvc.data.Data.add(/** @lends pvc.data.Data# */{
  * Called by a datum on its owner data
  * when its selected state changes.
  *
- * @name pvc.data.Data#_onDatumSelectedChanged
+ * @name cdo.Data#_onDatumSelectedChanged
  * @function
- * @param {pvc.data.Datum} datum The datum whose selected state changed.
+ * @param {cdo.Datum} datum The datum whose selected state changed.
  * @param {boolean} selected The new datum selected state.
  * @type undefined
  * @internal
  */
-function data_onDatumSelectedChanged(datum, selected) {
+function cdo_onDatumSelectedChanged(datum, selected) {
     // <Debug>
     /*jshint expr:true */
     !datum.isNull || def.assert("Null datums do not notify selected changes");
@@ -140,14 +140,14 @@ function data_onDatumSelectedChanged(datum, selected) {
  * Called by a datum on its owner data
  * when its visible state changes.
  *
- * @name pvc.data.Data#_onDatumVisibleChanged
+ * @name cdo.Data#_onDatumVisibleChanged
  * @function
- * @param {pvc.data.Datum} datum The datum whose visible state changed.
+ * @param {cdo.Datum} datum The datum whose visible state changed.
  * @param {boolean} visible The new datum visible state.
  * @type undefined
  * @internal
  */
-function data_onDatumVisibleChanged(datum, visible) {
+function cdo_onDatumVisibleChanged(datum, visible) {
     var did = datum.id,
         me  = this,
         hasOwn = def.hasOwnProp;
@@ -174,12 +174,12 @@ function data_onDatumVisibleChanged(datum, visible) {
         list = me.childNodes;
         i = 0;
         L = list.length;
-        while(i < L) data_onDatumVisibleChanged.call(list[i++], datum, visible);
+        while(i < L) cdo_onDatumVisibleChanged.call(list[i++], datum, visible);
         
         list = me._linkChildren;
         if(list && (L = list.length)) {
             i = 0;
-            while(i < L) data_onDatumVisibleChanged.call(list[i++], datum, visible);
+            while(i < L) cdo_onDatumVisibleChanged.call(list[i++], datum, visible);
         }
     }
 }
@@ -188,15 +188,15 @@ function data_onDatumVisibleChanged(datum, visible) {
  * Sets the selected state of the given datums
  * to the state 'select'.
  *
- * @param {def.Query} datums An enumerable of {@link pvc.data.Datum} to set.
+ * @param {def.Query} datums An enumerable of {@link cdo.Datum} to set.
  * @param {boolean} selected The desired selected state.
  *
  * @returns {boolean} true if at least one datum changed its selected state.
  * @static
  */
-pvc.data.Data.setSelected = function(datums, selected) {
+cdo.Data.setSelected = function(datums, selected) {
     var anyChanged = 0;
-    // data_onDatumSelectedChanged is called
+    // cdo_onDatumSelectedChanged is called
     if(datums) def.query(datums).each(function(datum) { anyChanged |= datum.setSelected(selected); });
 
     return !!anyChanged;
@@ -211,14 +211,14 @@ pvc.data.Data.setSelected = function(datums, selected) {
  * if any is selected, clears their selected state.
  * Otherwise, if all are not selected, select all.
  *
- * @param {def.Query} datums An enumerable of {@link pvc.data.Datum} to toggle.
+ * @param {def.Query} datums An enumerable of {@link cdo.Datum} to toggle.
  * @param {boolean} [any=false] If only some must be selected to consider
  *  the set currently selected or if all must be so.
  *
  * @returns {boolean} true if at least one datum changed its selected state.
  * @static
  */
-pvc.data.Data.toggleSelected = function(datums, any) {
+cdo.Data.toggleSelected = function(datums, any) {
     if(!def.array.isLike(datums)) datums = def.query(datums).array();
 
     /*global datum_isSelected:true, datum_isNullOrSelected:true */
@@ -234,15 +234,15 @@ pvc.data.Data.toggleSelected = function(datums, any) {
 /**
  * Sets the visible state of the given datums to the value of argument 'visible'.
  *
- * @param {def.Query} datums An enumerable of {@link pvc.data.Datum} to set.
+ * @param {def.Query} datums An enumerable of {@link cdo.Datum} to set.
  * @param {boolean} visible The desired visible state.
  *
  * @returns {boolean} true if at least one datum changed its visible state.
  * @static
  */
-pvc.data.Data.setVisible = function(datums, visible) {
+cdo.Data.setVisible = function(datums, visible) {
     var anyChanged = 0;
-    // data_onDatumVisibleChanged is called
+    // cdo_onDatumVisibleChanged is called
     if(datums) def.query(datums).each(function(datum) { anyChanged |= datum.setVisible(visible); });
     return !!anyChanged;
 };
@@ -252,15 +252,15 @@ pvc.data.Data.setVisible = function(datums, visible) {
  * If all are visible, hides them.
  * Otherwise, shows them all.
  *
- * @param {def.Query} datums An enumerable of {@link pvc.data.Datum} to toggle.
+ * @param {def.Query} datums An enumerable of {@link cdo.Datum} to toggle.
  *
  * @returns {boolean} true if at least one datum changed its visible state.
  * @static
  */
-pvc.data.Data.toggleVisible = function(datums) {
+cdo.Data.toggleVisible = function(datums) {
     if(!def.array.isLike(datums)) datums = def.query(datums).array();
 
     // Null datums are always visible. So they don't affect the result.
     var allVisible = def.query(datums).all(def.propGet('isVisible'));
-    return pvc.data.Data.setVisible(datums, !allVisible);
+    return cdo.Data.setVisible(datums, !allVisible);
 };

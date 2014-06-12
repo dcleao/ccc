@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 def
-.type('pvc.data.ZeroInterpolationOper')
+.type('cdo.ZeroInterpolationOper')
 .init(function(baseData, partData, visibleData, catRole, serRole, valRole, stretchEnds) {
     this._newDatums = [];
 
@@ -55,7 +55,7 @@ def
 
     this._serCount  = serDatas1.length;
     this._serStates = def.range(0, this._serCount)
-        .select(function(serIndex) { return new pvc.data.ZeroInterpolationOperSeriesState(this, serIndex); }, this)
+        .select(function(serIndex) { return new cdo.ZeroInterpolationOperSeriesState(this, serIndex); }, this)
         .array();
 })
 .add({

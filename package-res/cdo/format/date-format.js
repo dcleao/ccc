@@ -1,5 +1,5 @@
 /**
- * @class pvc.DateFormat
+ * @class cdo.DateFormat
  * @classdesc Represents a date format, converting between a <tt>Date</tt> and a <tt>string</tt>.
  * The format mask is the same as that expected by the <tt>strftime</tt> function in C.
  * See the protovis' documentation of <tt>pv.Format.date</tt> for the actual format mask syntax.
@@ -19,17 +19,17 @@
  *
  * The <tt>null</tt> value is formatted as an empty string.
  *
- * @name pvc.dateFormat
+ * @name cdo.dateFormat
  * @function
  * @variant factory
- * @param {string|object|pvc.DateFormat} [config] A configuration value.
+ * @param {string|object|cdo.DateFormat} [config] A configuration value.
  * Can be a format mask string, or a date format object (or alike) to copy from.
- * @param {pvc.DateFormat} [proto] The prototype date format from which default
+ * @param {cdo.DateFormat} [proto] The prototype date format from which default
  * property values are taken.
- * Defaults to {@link pvc.dateFormat.defaults}.
- * @return {pvc.DateFormat} A new date format object.
+ * Defaults to {@link cdo.dateFormat.defaults}.
+ * @return {cdo.DateFormat} A new date format object.
  */
-var dateForm = pvc.dateFormat = function() {
+var dateForm = cdo.dateFormat = function() {
     var fields, formatter;
 
     function dateFormat(value) {
@@ -39,7 +39,7 @@ var dateForm = pvc.dateFormat = function() {
 
     /**
      * @function
-     * @name pvc.DateFormat.prototype.format
+     * @name cdo.DateFormat.prototype.format
      * @param {Date} value The value to format.
      * @returns {string}
      */
@@ -47,7 +47,7 @@ var dateForm = pvc.dateFormat = function() {
 
     dateFormat.tryConfigure = dateForm_tryConfigure;
 
-    fields = def.instance(dateFormat, dateForm, numForm_sharedProp, arguments, /** @lends  pvc.DateFormat# */{
+    fields = def.instance(dateFormat, dateForm, numForm_sharedProp, arguments, /** @lends  cdo.DateFormat# */{
         /**
          * Gets or sets the formatting mask.
          *
@@ -58,7 +58,7 @@ var dateForm = pvc.dateFormat = function() {
          *
          * @function
          * @param {string} [_] The formatting mask.
-         * @return {pvc.DateFormat} <tt>this</tt> or the current formatting mask.
+         * @return {cdo.DateFormat} <tt>this</tt> or the current formatting mask.
          */
         mask: {
             cast:   String,
@@ -74,7 +74,7 @@ var dateForm = pvc.dateFormat = function() {
 /**
  * Tries to configure this object, given a value.
  * @alias tryConfigure
- * @memberOf pvc.DateFormat#
+ * @memberOf cdo.DateFormat#
  * @param {any} other A value, not identical to this, to configure from.
  * @return {boolean|undefined}
  * <tt>true</tt> if the specified value is a string or a date format,
@@ -94,7 +94,7 @@ function dateForm_createFormatter(mask) {
 /**
  * The default prototype date format.
  * @alias defaults
- * @memberOf pvc.dateFormat
- * @type pvc.DateFormat
+ * @memberOf cdo.dateFormat
+ * @type cdo.DateFormat
  */
 dateForm.defaults = dateForm();

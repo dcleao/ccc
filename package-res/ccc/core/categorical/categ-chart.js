@@ -50,8 +50,8 @@ def
 
     _getNullInterpolationOperType: function(nim) {
         switch(nim) {
-            case 'linear': return pvc.data.LinearInterpolationOper;
-            case 'zero':   return pvc.data.ZeroInterpolationOper;
+            case 'linear': return cdo.LinearInterpolationOper;
+            case 'zero':   return cdo.ZeroInterpolationOper;
             case 'none':   break;
             default: throw def.error.argumentInvalid('nullInterpolationMode', '' + nim);
         }
@@ -139,7 +139,7 @@ def
                         atoms[yDimName] = trendY;
                         atoms[dataPartDimName] = dataPartAtom;
 
-                        newDatums.push(new pvc.data.TrendDatum(efCatData.owner, atoms, trendOptions));
+                        newDatums.push(new cdo.TrendDatum(efCatData.owner, atoms, trendOptions));
                     }
                 }, this);
             }

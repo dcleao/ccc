@@ -38,7 +38,7 @@ def
             var chart = this.chart();
             chart._updatingSelections(function() {
                 datums = chart._onUserSelection(datums);
-                if(datums && datums.length) pvc.data.Data.toggleSelected(datums, /*any*/true);
+                if(datums && datums.length) cdo.Data.toggleSelected(datums, /*any*/true);
             });
         }
     }

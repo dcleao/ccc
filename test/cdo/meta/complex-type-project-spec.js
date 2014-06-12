@@ -1,9 +1,9 @@
-var deps = [
+define([
     'ccc/pvc',
     'ccc/def'
-];
+], function(pvc, def) {
 
-define(deps, function(pvc, def) {
+    var cdo = pvc.data;
 
     describe('ComplexTypeProject', function() {
         var complexTypeProject = null;
@@ -14,7 +14,7 @@ define(deps, function(pvc, def) {
 
         describe('constructor', function() {
             it('should create a ComplexTypeProject with no arguments', function() {
-                complexTypeProject = new pvc.data.ComplexTypeProject();
+                complexTypeProject = new cdo.ComplexTypeProject();
 
                 expect(complexTypeProject).toBeDefined();
                 expect(complexTypeProject._dims).toEqual([]);
@@ -25,7 +25,7 @@ define(deps, function(pvc, def) {
 
             it('should create a ComplexTypeProject with a _dimGroupSpecs parameter', function() {
                 var _dimGroupSpecs = { 'test' : 1 };
-                complexTypeProject = new pvc.data.ComplexTypeProject(_dimGroupSpecs);
+                complexTypeProject = new cdo.ComplexTypeProject(_dimGroupSpecs);
 
                 expect(complexTypeProject._dimGroupSpecs).toEqual(_dimGroupSpecs);
             })
@@ -33,7 +33,7 @@ define(deps, function(pvc, def) {
 
         describe('default constructor', function() {
             beforeEach(function() {
-                complexTypeProject = new pvc.data.ComplexTypeProject();
+                complexTypeProject = new cdo.ComplexTypeProject();
             })
 
             it('should test the "hasDim" function', function() {
@@ -173,7 +173,7 @@ define(deps, function(pvc, def) {
                 })
 
                 it('should test the "configureComplexType" function', function() {
-                    var complexType = new pvc.data.ComplexType();
+                    var complexType = new cdo.ComplexType();
 
                     complexTypeProject.setCalc({
                         calculation : 'calcuation',

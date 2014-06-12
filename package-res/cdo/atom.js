@@ -5,19 +5,19 @@
 /**
  * Initializes an atom instance.
  * 
- * @name pvc.data.Atom
+ * @name cdo.Atom
  * 
  * @class An atom represents a unit of information.
  * 
  * <p>
  * To create an atom, 
  * call the corresponding dimension's
- * {@link pvc.data.Dimension#intern} method.
+ * {@link cdo.Dimension#intern} method.
  * 
- * Usually this is done by a {@link pvc.data.TranslationOper}.
+ * Usually this is done by a {@link cdo.TranslationOper}.
  * </p>
  * 
- * @property {pvc.data.Dimension} dimension The owner dimension.
+ * @property {cdo.Dimension} dimension The owner dimension.
  * 
  * @property {number} id
  *           A unique object identifier.
@@ -35,7 +35,7 @@
  *           </p>
  * 
  * @property {any} value The typed value of the atom.
- *           It must be consistent with the corresponding {@link pvc.data.DimensionType#valueType}.
+ *           It must be consistent with the corresponding {@link cdo.DimensionType#valueType}.
  * 
  * @property {string} label The formatted value.
  *           <p>
@@ -51,13 +51,13 @@
  * 
  * @constructor
  * @private
- * @param {pvc.data.Dimension} dimension The dimension that the atom belongs to.
+ * @param {cdo.Dimension} dimension The dimension that the atom belongs to.
  * @param {any} value The typed value.
  * @param {string} label The formatted value.
  * @param {any} rawValue The source value.
  * @param {string} key The key.
  */
-def.type('pvc.data.Atom')
+def.type('cdo.Atom')
 .init(
 function(dimension, value, label, rawValue, key) {
     this.dimension = dimension;
@@ -67,7 +67,7 @@ function(dimension, value, label, rawValue, key) {
     if(rawValue !== undefined) this.rawValue = rawValue;
     this.key = key;
 })
-.add( /** @lends pvc.data.Atom */{
+.add( /** @lends cdo.Atom */{
     isVirtual: false,
     
     rawValue: undefined,

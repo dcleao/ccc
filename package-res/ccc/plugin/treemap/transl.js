@@ -20,7 +20,7 @@
  * +----------+----------+--------------+
  * </pre>
  * 
- * @extends pvc.data.MatrixTranslationOper
+ * @extends cdo.MatrixTranslationOper
  */
 def.type('pvc.data.TreemapChartTranslationOper')
 .add(/** @lends pvc.data.TreemapChartTranslationOper# */{

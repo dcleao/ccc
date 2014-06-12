@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 def
-.type('pvc.data.LinearInterpolationOperSeriesState')
+.type('cdo.LinearInterpolationOperSeriesState')
 .init(function(interpolation, serIndex) {
     this.interpolation = interpolation;
     this.index = serIndex;
@@ -137,6 +137,6 @@ def
         atoms[valueAtom.dimension.name] = valueAtom;
         
         // Create datum with collected atoms
-        interpolation._newDatums.push(new pvc.data.InterpolationDatum(group.owner, atoms, 'linear'));
+        interpolation._newDatums.push(new cdo.InterpolationDatum(group.owner, atoms, 'linear'));
     }
 });

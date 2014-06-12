@@ -5,12 +5,12 @@
 /**
  * Initializes a complex type project.
  * 
- * @name pvc.data.ComplexType
+ * @name cdo.ComplexType
  * 
  * @class A complex type project is a work in progress set of dimension specifications.
  */
 def
-.type('pvc.data.ComplexTypeProject')
+.type('cdo.ComplexTypeProject')
 .init(function(dimGroupSpecs) {
     this._dims = {};
     this._dimList = [];
@@ -19,7 +19,7 @@ def
     
     this._calcList = [];
 })
-.add(/** @lends pvc.data.ComplexTypeProject# */{
+.add(/** @lends cdo.ComplexTypeProject# */{
     _ensureDim: function(name, spec) {
         /*jshint expr:true*/
         name || def.fail.argumentInvalid('name', "Invalid dimension name '{0}'.", [name]);
@@ -54,7 +54,7 @@ def
     },
     
     _createDim: function(name, spec) {
-        var dimGroupName = pvc.data.DimensionType.dimensionGroupName(name),
+        var dimGroupName = cdo.DimensionType.dimensionGroupName(name),
             dimGroupSpec = this._dimGroupSpecs[dimGroupName];
         if(dimGroupSpec) spec = def.create(dimGroupSpec, spec /* Can be null */);
         return {
@@ -113,7 +113,7 @@ def
             //if(!complexType.dimensions(dimName, keyArgs)) {
                 spec = dimInfo.spec;
             
-            spec = pvc.data.DimensionType.extendSpec(dimName, spec, dimsOptions);
+            spec = cdo.DimensionType.extendSpec(dimName, spec, dimsOptions);
             
             complexType.addDimension(dimName, spec);
             //} // TODO: else assert has not changed?

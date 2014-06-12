@@ -5,18 +5,18 @@
 /**
  * Initializes a complex view instance.
  * 
- * @name pvc.data.ComplexView
+ * @name cdo.ComplexView
  * 
  * @class Represents a view of certain dimensions over a given source complex instance.
- * @extends pvc.data.Complex
+ * @extends cdo.Complex
  * 
- * @property {pvc.data.Complex} source The source complex instance.
+ * @property {cdo.Complex} source The source complex instance.
  * @property {string} label The composite label of the own atoms in the view.
  * @constructor
- * @param {pvc.data.Complex} source The source complex instance.
+ * @param {cdo.Complex} source The source complex instance.
  * @param {string[]} viewDimNames The dimensions that should be revealed by the view.
  */
-def.type('pvc.data.ComplexView', pvc.data.Complex)
+def.type('cdo.ComplexView', cdo.Complex)
 .init(function(source, viewDimNames) {
 
     this.source = source;
@@ -28,9 +28,9 @@ def.type('pvc.data.ComplexView', pvc.data.Complex)
 })
 .add({
     values: function() {
-        return pvc.data.Complex.values(this, this.viewDimNames);
+        return cdo.Complex.values(this, this.viewDimNames);
     },
     labels: function() {
-        return pvc.data.Complex.labels(this, this.viewDimNames);
+        return cdo.Complex.labels(this, this.viewDimNames);
     }
 });

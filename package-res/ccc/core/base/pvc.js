@@ -134,6 +134,22 @@ function pvc_installLog(o, pto, pfrom, prompt) {
 
 pvc.setDebug(pvc.debug);
 
+// TODO: don't publish this globally!
+/**
+ * @name NoDataException
+ * @class An error thrown when a chart has no data.
+ */
+def.global.NoDataException = function() {};
+
+/**
+ * @name InvalidDataException
+ * @class An error thrown when data exists but the chart cannot be rendered from it.
+ */
+def.global.InvalidDataException = function(msg) {
+    this.message = msg ? msg : "Invalid Data.";
+};
+
+
 /**
  * Gets or sets the default CCC compatibility mode.
  * <p>

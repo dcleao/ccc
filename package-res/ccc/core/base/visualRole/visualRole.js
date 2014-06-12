@@ -25,17 +25,17 @@ def
  * The label of this role.
  * The label <i>should</i> be unique on a visualization.
  *
- * @property {pvc.data.GroupingSpec} grouping The grouping specification currently bound to the visual role.
+ * @property {cdo.GroupingSpec} grouping The grouping specification currently bound to the visual role.
  * 
  * @property {boolean} isRequired Indicates that the role is required and must be satisfied.
  * 
  * @property {boolean} requireSingleDimension Indicates that the role can only be satisfied by a single dimension.
- * A {@link pvc.visual.Role} of this type must have an associated {@link pvc.data.GroupingSpec}
- * that has {@link pvc.data.GroupingSpec#isSingleDimension} equal to <tt>true</tt>.
+ * A {@link pvc.visual.Role} of this type must have an associated {@link cdo.GroupingSpec}
+ * that has {@link cdo.GroupingSpec#isSingleDimension} equal to <tt>true</tt>.
  * 
  * @property {boolean} valueType When not nully, 
  * restricts the allowed value type of the single dimension of the 
- * associated {@link pvc.data.GroupingSpec} to this type.
+ * associated {@link cdo.GroupingSpec} to this type.
  * 
  * @property {boolean|null} requireIsDiscrete
  * Indicates if 
@@ -147,7 +147,7 @@ def
     
     /** 
      * Obtains the first dimension type that is bound to the role.
-     * @type pvc.data.DimensionType
+     * @type cdo.DimensionType
      */
     firstDimensionType: function() {
         var g = this.grouping;
@@ -174,7 +174,7 @@ def
 
     /** 
      * Obtains the last dimension type that is bound to the role.
-     * @type pvc.data.DimensionType
+     * @type cdo.DimensionType
      */
     lastDimensionType: function() {
         var g = this.grouping;
@@ -240,11 +240,11 @@ def
      * Applies this role's grouping to the specified data
      * after ensuring the grouping is of a certain type.
      *
-     * @param {pvc.data.Data} data The data on which to apply the operation.
+     * @param {cdo.Data} data The data on which to apply the operation.
      * @param {object} [keyArgs] Keyword arguments.
      * ...
      * 
-     * @type pvc.data.Data
+     * @type cdo.Data
      */
     flatten: function(data, keyArgs) {
         var grouping = this.flattenedGrouping(keyArgs) || def.fail.operationInvalid("Role is unbound.");
@@ -268,7 +268,7 @@ def
 
     _flatteningMode: function() {
         var T = pvc.visual.TraversalMode,
-            F = pvc.data.FlatteningMode;
+            F = cdo.FlatteningMode;
         switch(this.traversalMode) {
             case T.FlattenDfsPre:  return F.DfsPre;
             case T.FlattenDfsPost: return F.DfsPost;
@@ -279,7 +279,7 @@ def
     select: function(data, keyArgs) {
         var grouping = this.grouping;
         if(grouping) {
-            def.setUDefaults(keyArgs, 'flatteningMode', pvc.data.FlatteningMode.None);
+            def.setUDefaults(keyArgs, 'flatteningMode', cdo.FlatteningMode.None);
             return data.groupBy(grouping.ensure(keyArgs), keyArgs); 
         }
     },
@@ -292,7 +292,7 @@ def
     /**
      * Pre-binds a grouping specification to playing this role.
      * 
-     * @param {pvc.data.GroupingSpec} groupingSpec The grouping specification of the visual role.
+     * @param {cdo.GroupingSpec} groupingSpec The grouping specification of the visual role.
      */
     preBind: function(groupingSpec) {
         this.__grouping = groupingSpec;
@@ -308,7 +308,7 @@ def
     /**
      * Finalizes a binding initiated with {@link #preBind}.
      *
-     * @param {pvc.data.ComplexType} type The complex type with which
+     * @param {cdo.ComplexType} type The complex type with which
      * to bind the pre-bound grouping and then validate the
      * grouping and role binding.
      */
@@ -328,7 +328,7 @@ def
     /**
      * Binds a grouping specification to playing this role.
      * 
-     * @param {pvc.data.GroupingSpec} groupingSpec The grouping specification of the visual role.
+     * @param {cdo.GroupingSpec} groupingSpec The grouping specification of the visual role.
      */
     bind: function(groupingSpec) {
         
@@ -358,7 +358,7 @@ def
                     if(valueType && dimType.valueType !== valueType)
                         throw def.error.operationInvalid(
                                 "Role '{0}' cannot be bound to dimension '{1}'. \nIt only accepts dimensions of type '{2}' and not of type '{3}'.",
-                                [this.name, dimType.name, pvc.data.DimensionType.valueTypeName(valueType), dimType.valueTypeName]);
+                                [this.name, dimType.name, cdo.DimensionType.valueTypeName(valueType), dimType.valueTypeName]);
 
                     if(requireIsDiscrete != null && dimType.isDiscrete !== requireIsDiscrete) {
                         if(!requireIsDiscrete)

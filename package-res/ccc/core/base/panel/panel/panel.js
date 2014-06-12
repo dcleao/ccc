@@ -206,7 +206,7 @@ def
     
     /**
      * The data that the panel uses to obtain "data".
-     * @type pvc.data.Data
+     * @type cdo.Data
      */
     data: null,
 
@@ -1700,11 +1700,11 @@ def
                 var clearBefore = (!ev.ctrlKey && chart.options.ctrlSelectMode);
                 if(clearBefore) {
                     chart.data.owner.clearSelected();
-                    pvc.data.Data.setSelected(datums, true);
+                    cdo.Data.setSelected(datums, true);
                 } else if(ka.toggle) {
-                    pvc.data.Data.toggleSelected(datums);
+                    cdo.Data.toggleSelected(datums);
                 } else {
-                    pvc.data.Data.setSelected(datums, true);
+                    cdo.Data.setSelected(datums, true);
                 }
             });
         }

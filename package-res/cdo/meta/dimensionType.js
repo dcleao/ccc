@@ -5,7 +5,7 @@
 /**
  * Initializes a dimension type
  * 
- * @name pvc.data.DimensionType
+ * @name cdo.DimensionType
  * 
  * @class A dimension type describes a dimension of a complex type.
  * <p>
@@ -15,7 +15,7 @@
  * related to a specific data translation usage.
  * </p>
  *
- * @property {pvc.data.ComplexType} complexType
+ * @property {cdo.ComplexType} complexType
  * The complex type that this dimension type belongs to.
  * 
  * @property {string} name
@@ -67,7 +67,7 @@
  * 
  * @constructor
  *
- * @param {pvc.data.ComplexType} complexType The complex type that this dimension belongs to.
+ * @param {cdo.ComplexType} complexType The complex type that this dimension belongs to.
  * @param {string} name The name of the dimension type.
  *
  * @param {object} [keyArgs] Keyword arguments.
@@ -160,7 +160,7 @@
 /**
  * Cache of reverse order context-free value comparer function.
  * 
- * @name pvc.data.DimensionType#_rc
+ * @name cdo.DimensionType#_rc
  * @field
  * @type function
  * @private
@@ -169,7 +169,7 @@
 /**
  * Cache of reverse order context-free atom comparer function.
  * 
- * @name pvc.data.DimensionType#_rac
+ * @name cdo.DimensionType#_rac
  * @field
  * @type function
  * @private
@@ -178,7 +178,7 @@
 /**
  * Cache of normal order context-free value comparer function.
  * 
- * @name pvc.data.DimensionType#_dc
+ * @name cdo.DimensionType#_dc
  * @field
  * @type function
  * @private
@@ -187,12 +187,12 @@
 /**
  * Cache of normal order context-free atom comparer function.
  * 
- * @name pvc.data.DimensionType#_dac
+ * @name cdo.DimensionType#_dac
  * @field
  * @type function
  * @private
  */
-def.type('pvc.data.DimensionType')
+def.type('cdo.DimensionType')
 .init(
 function(complexType, name, keyArgs) {
     this.complexType = complexType;
@@ -209,8 +209,8 @@ function(complexType, name, keyArgs) {
     this.isHidden = !!def.get(keyArgs, 'isHidden');
     
     var valueType = def.get(keyArgs, 'valueType') || null,
-        valueTypeName = pvc.data.DimensionType.valueTypeName(valueType),
-        cast = def.getOwn(pvc.data.DimensionType.cast, valueTypeName, null);
+        valueTypeName = cdo.DimensionType.valueTypeName(valueType),
+        cast = def.getOwn(cdo.DimensionType.cast, valueTypeName, null);
     
     this.valueType = valueType;
     this.valueTypeName = valueTypeName;
@@ -233,7 +233,7 @@ function(complexType, name, keyArgs) {
     /** 
      * @private
      * @internal
-     * @see pvc.data.Dimension#convert
+     * @see cdo.Dimension#convert
      */
     this._converter = def.get(keyArgs, 'converter') || null;
     if(!this._converter) {
@@ -256,7 +256,7 @@ function(complexType, name, keyArgs) {
     /** 
      * @private
      * @internal
-     * @see pvc.data.Dimension#key
+     * @see cdo.Dimension#key
      */
     this._key = def.get(keyArgs, 'key') || null;
     
@@ -323,7 +323,7 @@ function(complexType, name, keyArgs) {
     /**
      * @private
      * @internal
-     * @see pvc.data.Dimension#format
+     * @see cdo.Dimension#format
      */
     this._formatter = formatter || null;
 
@@ -334,7 +334,7 @@ function(complexType, name, keyArgs) {
      */
     this._format = format || null;
 })
-.add(/** @lends pvc.data.DimensionType# */{
+.add(/** @lends cdo.DimensionType# */{
     
     isCalculated: false,
     
@@ -465,7 +465,7 @@ function(complexType, name, keyArgs) {
     }
 });
 
-pvc.data.DimensionType.cast = {
+cdo.DimensionType.cast = {
     'Date': function(value) {
         return value instanceof Date ? value : new Date(value);
     },
@@ -488,12 +488,12 @@ pvc.data.DimensionType.cast = {
  * 
  *  @type string
  */
-pvc.data.DimensionType.dimensionGroupName = function(dimName) {
+cdo.DimensionType.dimensionGroupName = function(dimName) {
     return dimName.replace(/^(.*?)(\d*)$/, "$1");
 };
 
 // TODO: Docs
-pvc.data.DimensionType.valueTypeName = function(valueType) {
+cdo.DimensionType.valueTypeName = function(valueType) {
     if(valueType == null) return "Any";
     switch(valueType) {
         case Boolean: return 'Boolean';
@@ -519,9 +519,9 @@ pvc.data.DimensionType.valueTypeName = function(valueType) {
  * 
  *  @returns {object} The extended dimension type specification.
  */
-pvc.data.DimensionType.extendSpec = function(dimName, dimSpec, keyArgs) {
+cdo.DimensionType.extendSpec = function(dimName, dimSpec, keyArgs) {
     
-    var dimGroup = pvc.data.DimensionType.dimensionGroupName(dimName),
+    var dimGroup = cdo.DimensionType.dimensionGroupName(dimName),
         userDimGroupsSpec = def.get(keyArgs, 'dimensionGroups');
     
     if(userDimGroupsSpec) {
@@ -556,7 +556,7 @@ pvc.data.DimensionType.extendSpec = function(dimName, dimSpec, keyArgs) {
 /**
  * Adds a visual role to the dimension type.
  * 
- * @name pvc.data.DimensionType#_addVisualRole
+ * @name cdo.DimensionType#_addVisualRole
  * @function
  * @param {pvc.visual.Role} visualRole The visual role.
  * @type undefined
@@ -572,7 +572,7 @@ function dimType_addVisualRole(visualRole) {
 /**
  * Removes a visual role from the dimension type.
  * 
- * @name pvc.data.DimensionType#_removeVisualRole
+ * @name cdo.DimensionType#_removeVisualRole
  * @function
  * @param {pvc.visual.Role} visualRole The visual role.
  * @type undefined

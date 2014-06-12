@@ -5,7 +5,7 @@
 /**
  * Initializes a data instance.
  * 
- * @name pvc.data.Data
+ * @name cdo.Data
  * 
  * @class A data represents a set of datums of the same complex type {@link #type}.
  * <p>
@@ -21,7 +21,7 @@
  * A data may have child data instances.
  * </p>
  * 
- * @extends pvc.data.Complex
+ * @extends cdo.Complex
  * 
  * @borrows pv.Dom.Node#visitBefore as #visitBefore
  * @borrows pv.Dom.Node#visitAfter as #visitAfter
@@ -32,15 +32,15 @@
  * @borrows pv.Dom.Node#previousSibling as #previousSibling
  * @borrows pv.Dom.Node#nextSibling as #nextSibling
  * 
- * @property {pvc.data.ComplexType} type The type of the datums of this data.
+ * @property {cdo.ComplexType} type The type of the datums of this data.
  * 
- * @property {pvc.data.Data} root The root data. 
+ * @property {cdo.Data} root The root data.
  * The {@link #root} of a root data is itself.
  * 
- * @property {pvc.data.Data} parent The parent data. 
+ * @property {cdo.Data} parent The parent data.
  * A root data has a no parent.
  * 
- * @property {pvc.data.Data} linkParent The link parent data.
+ * @property {cdo.Data} linkParent The link parent data.
  * 
  * @property {Number} depth The depth of the data relative to its root data.
  * @property {string} label The composite label of the (common) atoms in the data.
@@ -54,22 +54,22 @@
  * 
  * @constructor
  * @param {object} keyArgs Keyword arguments
- * @param {pvc.data.Data}   [keyArgs.parent]      The parent data.
- * @param {pvc.data.Data}   [keyArgs.linkParent]  The link parent data.
- * @param {map(string union(any pvc.data.Atom))} [keyArgs.atoms] The atoms shared by contained datums.
+ * @param {cdo.Data}   [keyArgs.parent]      The parent data.
+ * @param {cdo.Data}   [keyArgs.linkParent]  The link parent data.
+ * @param {map(string union(any cdo.Atom))} [keyArgs.atoms] The atoms shared by contained datums.
  * @param {string[]} [keyArgs.atomsDimNames] The dimension names of atoms in {@link keyArgs.atoms}.
  * This argument must be specified whenever {@link keyArgs.atoms} is.
- * @param {pvc.data.Datum[]|def.Query} [keyArgs.datums] The contained datums array or enumerable.
- * @param {pvc.data.Data}    [keyArgs.owner] The owner data.
+ * @param {cdo.Datum[]|def.Query} [keyArgs.datums] The contained datums array or enumerable.
+ * @param {cdo.Data}    [keyArgs.owner] The owner data.
  * The topmost root data is its own owner.
  * An intermediate root data must specify its owner data.
  * 
- * @param {pvc.data.ComplexType} [keyArgs.type] The complex type.
+ * @param {cdo.ComplexType} [keyArgs.type] The complex type.
  * Required when no parent or owner are specified.
  * 
  * @param {number} [index=null] The index at which to insert the child in its parent or linked parent.
  */
-def.type('pvc.data.Data', pvc.data.Complex)
+def.type('cdo.Data', cdo.Complex)
 .init(function(keyArgs) {
     /* NOTE: this function is a hot spot and as such is performance critical */
     
@@ -123,7 +123,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
             
             index = def.get(keyArgs, 'index', null);
             
-            data_addLinkChild.call(linkParent, this, index);
+            cdo_addLinkChild.call(linkParent, this, index);
         } else {
             // Topmost root - an owner
             owner = this;
@@ -140,8 +140,8 @@ def.type('pvc.data.Data', pvc.data.Complex)
         }
     }
     
-    /*global data_setDatums:true */
-    if(datums) data_setDatums.call(this, datums);
+    /*global cdo_setDatums:true */
+    if(datums) cdo_setDatums.call(this, datums);
     
     // Must anticipate setting this (and not wait for the base constructor)
     // because otherwise new Dimension( ... ) fails.
@@ -164,7 +164,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
     if(parent) {
         index = def.get(keyArgs, 'index', null);
         
-        data_addChild.call(parent, this, index);
+        cdo_addChild.call(parent, this, index);
 
         this.absLabel = parent.absLabel
             ? def.string.join(owner.labelSep, parent.absLabel, this.label)
@@ -182,19 +182,19 @@ def.type('pvc.data.Data', pvc.data.Complex)
 // Mix pv.Dom.Node.prototype
 .add(pv.Dom.Node)
 
-.add(/** @lends pvc.data.Data# */{
+.add(/** @lends cdo.Data# */{
     parent:       null,
     linkParent:   null,
     
     /**
      * The dimension instances of this data.
-     * @type object<string, pvc.data.Dimension>
+     * @type object<string, cdo.Dimension>
      */
     _dimensions: null,
 
     /**
      * The dimension instances of this data.
-     * @type pvc.data.Dimension[]
+     * @type cdo.Dimension[]
      */
     _dimensionsList: null, 
 
@@ -207,13 +207,13 @@ def.type('pvc.data.Data', pvc.data.Complex)
     /**
      * The child data instances of this data.
      * @name childNodes
-     * @type pvc.data.Data[]
+     * @type cdo.Data[]
      * @internal
      */
     
     /**
      * The link child data instances of this data.
-     * @type pvc.data.Data[]
+     * @type cdo.Data[]
      * @internal
      */
     _linkChildren: null,
@@ -221,7 +221,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
     /**
      * The leaf data instances of this data.
      * 
-     * @type pvc.data.Data[] 
+     * @type cdo.Data[]
      * @internal
      */
     _leafs: null,
@@ -269,7 +269,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
     /**
      * The grouping operation object used to create this data. 
      * Only defined in root datas.
-     * @type pvc.data.GroupingOper
+     * @type cdo.GroupingOper
      */
     _groupOper: null,
     
@@ -285,7 +285,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
      * along with {@link #groupLevel}. 
      * Only defined in datas that have children.
      * 
-     * @type pvc.data.GroupingSpec
+     * @type cdo.GroupingSpec
      */
     _groupSpec: null,
     
@@ -294,13 +294,13 @@ def.type('pvc.data.Data', pvc.data.Complex)
      * along with {@link #groupSpec}. 
      * Only defined in datas that have children.
      * 
-     * @type pvc.data.GroupingLevelSpec
+     * @type cdo.GroupingLevelSpec
      */
     _groupLevel: null,
     
     /** 
      * The datums of this data.
-     * @type pvc.data.Datum[]
+     * @type cdo.Datum[]
      * @internal
      */
     _datums: null,
@@ -340,7 +340,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
     _isDegenerateFlattenGroup: false,
     
     _initDimension: function(dimType) {
-        var dim = new pvc.data.Dimension(this, dimType);
+        var dim = new cdo.Dimension(this, dimType);
         this._dimensions[dimType.name] =  dim;
         this._dimensionsList.push(dim);
     },
@@ -373,7 +373,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
      * @param {object} [keyArgs] Keyword arguments.
      * @param {string} [keyArgs.assertExists=true} Indicates that a missing child should be signaled as an error.
      * 
-     * @type pvc.data.Dimension
+     * @type cdo.Dimension
      */
     dimensions: function(name, keyArgs) {
         if(name == null) { return this._dimensions; }
@@ -397,7 +397,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
             this._freeDimensionNames = free = this.type.dimensionsNames()
                 .filter(function(dimName) {
                     var atom = this.atoms[dimName];
-                    return !(atom instanceof pvc.data.Atom) || (atom.value == null);
+                    return !(atom instanceof cdo.Atom) || (atom.value == null);
                 }, this);
         }
         return free;
@@ -424,7 +424,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
      * Obtains a child data given its key.
      * 
      * @param {string} key The key of the child data.
-     * @type pvc.data.Data | null
+     * @type cdo.Data | null
      */
     child: function(key) { return def.getOwn(this._childrenByKey, key, null); },
     
@@ -450,7 +450,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
     
     /**
      * Obtains the first datum of this data, if any.
-     * @return {pvc.data.Datum} The first datum or <i>null</i>.
+     * @return {cdo.Datum} The first datum or <i>null</i>.
      * @see #singleDatum 
      */
     firstDatum: function() { return this._datums.length ? this._datums[0] : null; },
@@ -466,7 +466,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
      * Obtains the single datum of this data, 
      * or null, when the has data no datums or has more than one.
      * 
-     * @type pvc.data.Datum
+     * @type cdo.Datum
      * @see #firstDatum
      */
     singleDatum: function() {
@@ -481,7 +481,7 @@ def.type('pvc.data.Data', pvc.data.Complex)
     dispose: function() {
         var me = this;
         if(!me._disposed) {
-            data_disposeChildLists.call(me);
+            cdo_disposeChildLists.call(me);
 
             var v;
             (v = me._selectedNotNullDatums) && v.clear();
@@ -499,8 +499,8 @@ def.type('pvc.data.Data', pvc.data.Complex)
             }
             
             if((v = me.linkParent))
-                /*global data_removeLinkChild:true */
-                data_removeLinkChild.call(v, me);
+                /*global cdo_removeLinkChild:true */
+                cdo_removeLinkChild.call(v, me);
             
             me._disposed = true;
         }
@@ -511,22 +511,22 @@ def.type('pvc.data.Data', pvc.data.Complex)
      * @type undefined
      */
     disposeChildren: function() {
-        /*global data_disposeChildLists:true */
-        data_disposeChildLists.call(this);
+        /*global cdo_disposeChildLists:true */
+        cdo_disposeChildLists.call(this);
     }
 });
 
 /**
  * Adds a child data.
  * 
- * @name pvc.data.Data#_addChild
+ * @name cdo.Data#_addChild
  * @function
- * @param {pvc.data.Data} child The child data to add.
+ * @param {cdo.Data} child The child data to add.
  * @param {number} [index=null] The index at which to insert the child.
  * @type undefined
  * @private
  */
-function data_addChild(child, index) {
+function cdo_addChild(child, index) {
     // this   -> ((pv.Dom.Node#)child).parentNode
     // child  -> ((pv.Dom.Node#)this).childNodes
     // ...
@@ -538,46 +538,46 @@ function data_addChild(child, index) {
 /**
  * Adds a link child data.
  * 
- * @name pvc.data.Data#_addLinkChild
+ * @name cdo.Data#_addLinkChild
  * @function
- * @param {pvc.data.Data} linkChild The link child data to add.
+ * @param {cdo.Data} linkChild The link child data to add.
  * @param {number} [index=null] The index at which to insert the child.
  * @type undefined
  * @private
  */
-function data_addLinkChild(linkChild, index) {
-    /*global data_addColChild:true */
-    data_addColChild(this, '_linkChildren', linkChild, 'linkParent', index);
+function cdo_addLinkChild(linkChild, index) {
+    /*global cdo_addColChild:true */
+    cdo_addColChild(this, '_linkChildren', linkChild, 'linkParent', index);
 }
 
 /**
  * Removes a link child data.
  *
- * @name pvc.data.Data#_removeLinkChild
+ * @name cdo.Data#_removeLinkChild
  * @function
- * @param {pvc.data.Data} linkChild The link child data to remove.
+ * @param {cdo.Data} linkChild The link child data to remove.
  * @type undefined
  * @private
  */
-function data_removeLinkChild(linkChild) {
-    /*global data_removeColChild:true */
-    data_removeColChild(this, '_linkChildren', linkChild, 'linkParent');
+function cdo_removeLinkChild(linkChild) {
+    /*global cdo_removeColChild:true */
+    cdo_removeColChild(this, '_linkChildren', linkChild, 'linkParent');
 }
 
 /**
  * Disposes the child datas and the link child datas.
  * 
- * @name pvc.data.Data#_disposeChildLists
+ * @name cdo.Data#_disposeChildLists
  * @function
  * @type undefined
  * @private
  */
-function data_disposeChildLists() {
-    /*global data_disposeChildList:true */
-    data_disposeChildList(this.childNodes, 'parent');
+function cdo_disposeChildLists() {
+    /*global cdo_disposeChildList:true */
+    cdo_disposeChildList(this.childNodes, 'parent');
     this._childrenByKey = null;
     
-    data_disposeChildList(this._linkChildren, 'linkParent');
+    cdo_disposeChildList(this._linkChildren, 'linkParent');
     this._groupByCache = null;  
     
     // ~ datums.{isSelected, isVisible, isNull}, children
@@ -589,7 +589,7 @@ function data_disposeChildLists() {
  *  
  * @private
  */
-function data_assertIsOwner() {
+function cdo_assertIsOwner() {
     /*jshint expr:true */
     this.isOwner() || def.fail("Can only be called on the owner data.");
 }

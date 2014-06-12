@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * @name pvc.data.CrosstabTranslationOper
+ * @name cdo.CrosstabTranslationOper
  * @class A translation from a matrix in crosstab format.
  * <p>
  *    The default <i>matrix-crosstab</i> format is:
@@ -25,10 +25,10 @@
  *
  * TODO: document crosstab options
  *
- * @extends pvc.data.MatrixTranslationOper
+ * @extends cdo.MatrixTranslationOper
  */
-def.type('pvc.data.CrosstabTranslationOper', pvc.data.MatrixTranslationOper)
-.add(/** @lends pvc.data.CrosstabTranslationOper# */{
+def.type('cdo.CrosstabTranslationOper', cdo.MatrixTranslationOper)
+.add(/** @lends cdo.CrosstabTranslationOper# */{
     /* LEGEND
      * ======
      *
@@ -234,7 +234,7 @@ def.type('pvc.data.CrosstabTranslationOper', pvc.data.MatrixTranslationOper)
                         // Naive approach...
                         // Call all readers every time
                         // Dimensions that consume rows and/or columns may be evaluated many times.
-                        // So, it's very important that pvc.data.Dimension#intern is as fast as possible
+                        // So, it's very important that cdo.Dimension#intern is as fast as possible
                         //  detecting already interned values.
                         return this._readItem(item, dimsReaders);
                     }, this);

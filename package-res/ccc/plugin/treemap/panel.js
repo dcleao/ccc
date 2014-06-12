@@ -217,7 +217,7 @@ def
             // of a data hierarchy, 
             // each data's local key is compatible to the role key
             // (the one obtained by using:
-            // pvc.data.Complex.compositeKey(complex, role.dimensionNames())
+            // cdo.Complex.compositeKey(complex, role.dimensionNames())
             // That key will be the concatenation of the keys of all atoms 
             // (corresponding to the single level's dimensions).
             // If any of these keys is empty, the key will contain 

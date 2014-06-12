@@ -315,8 +315,8 @@ def
                         var group = context.scene.group;
                         if(!group) return ""; // null scene
 
-                        var s = pvc.data.Complex.values(group, seriesDimsNames),
-                            c = pvc.data.Complex.values(group, categDimsNames),
+                        var s = cdo.Complex.values(group, seriesDimsNames),
+                            c = cdo.Complex.values(group, categDimsNames),
                             d = [],
                             vars = context.scene.vars;
 

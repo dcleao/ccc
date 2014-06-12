@@ -20,7 +20,7 @@
  * +----------+----------+--------------+--------------+------------+-------------+
  * </pre>
  * 
- * @extends pvc.data.MatrixTranslationOper
+ * @extends cdo.MatrixTranslationOper
  */
 def.type('pvc.data.BoxplotChartTranslationOper')
 .add(/** @lends pvc.data.BoxplotChartTranslationOper# */{

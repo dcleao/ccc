@@ -7,7 +7,7 @@ var complex_nextId = 1;
 /**
  * Initializes a complex instance.
  *
- * @name pvc.data.Complex
+ * @name cdo.Complex
  *
  * @class A complex is a set of atoms,
  *        of distinct dimensions,
@@ -19,14 +19,14 @@ var complex_nextId = 1;
  * @property {number} key
  *           A semantic identifier.
  *
- * @property {pvc.data.Data} owner
+ * @property {cdo.Data} owner
  *           The owner data instance.
  *
  * @property {object} atoms
- *           A index of {@link pvc.data.Atom} by the name of their dimension type.
+ *           A index of {@link cdo.Atom} by the name of their dimension type.
  *
  * @constructor
- * @param {pvc.data.Complex} [source]
+ * @param {cdo.Complex} [source]
  *        A complex that provides for an owner and default base atoms.
  *
  * @param {object<string,any>} [atomsByName]
@@ -52,7 +52,7 @@ var complex_nextId = 1;
  *        </p>
  */
 def
-.type('pvc.data.Complex')
+.type('cdo.Complex')
 .init(function(source, atomsByName, dimNames, atomsBase, wantLabel, calculate) {
     /*jshint expr:true */
 
@@ -144,7 +144,7 @@ def
         if(wantLabel) me.label = label;
     }
 })
-.add(/** @lends pvc.data.Complex# */{
+.add(/** @lends cdo.Complex# */{
 
     /**
      * The separator used between labels of dimensions of a complex.
@@ -185,7 +185,7 @@ def
     },
 
     view: function(dimNames) {
-        return new pvc.data.ComplexView(this, dimNames);
+        return new cdo.ComplexView(this, dimNames);
     },
 
     toString : function() {
@@ -201,7 +201,7 @@ def
    },
 
    rightTrimKeySep: function(key) {
-        return key && pvc.data.Complex.rightTrimKeySep(key, this.owner.keySep);
+        return key && cdo.Complex.rightTrimKeySep(key, this.owner.keySep);
     },
 
     absKeyTrimmed: function() {
@@ -213,7 +213,7 @@ def
     }
 });
 
-pvc.data.Complex.rightTrimKeySep = function(key, keySep) {
+cdo.Complex.rightTrimKeySep = function(key, keySep) {
     if(key && keySep) {
         var j, K = keySep.length;
         while(key.lastIndexOf(keySep) === (j = key.length - K) && j >= 0)
@@ -222,19 +222,19 @@ pvc.data.Complex.rightTrimKeySep = function(key, keySep) {
     return key;
 };
 
-pvc.data.Complex.values = function(complex, dimNames) {
+cdo.Complex.values = function(complex, dimNames) {
     var atoms = complex.atoms;
     return dimNames.map(function(dimName) { return atoms[dimName].value; });
 };
 
-pvc.data.Complex.compositeKey = function(complex, dimNames) {
+cdo.Complex.compositeKey = function(complex, dimNames) {
     var atoms = complex.atoms;
     return dimNames
         .map(function(dimName) { return atoms[dimName].key; })
         .join(complex.owner.keySep);
 };
 
-pvc.data.Complex.labels = function(complex, dimNames) {
+cdo.Complex.labels = function(complex, dimNames) {
     var atoms = complex.atoms;
     return dimNames.map(function(dimName) { return atoms[dimName].label; });
 };

@@ -5,35 +5,35 @@
 /**
  * Initializes a dimension instance.
  * 
- * @name pvc.data.Dimension
+ * @name cdo.Dimension
  * 
  * @class A dimension holds unique atoms,
  * of a given dimension type,
  * and for a given data instance.
  *
- * @property {pvc.data.Data} data The data that owns this dimension.
- * @property {pvc.data.DimensionType} type The dimension type of this dimension.
+ * @property {cdo.Data} data The data that owns this dimension.
+ * @property {cdo.DimensionType} type The dimension type of this dimension.
  * @property {string} name Much convenient property with the name of {@link #type}.
  * 
- * @property {pvc.data.Dimension} parent The parent dimension.
+ * @property {cdo.Dimension} parent The parent dimension.
  * A root dimension has a null parent.
  * 
- * @property {pvc.data.Dimension} linkParent The link parent dimension.
+ * @property {cdo.Dimension} linkParent The link parent dimension.
  * 
- * @property {pvc.data.Dimension} root The root dimension.
+ * @property {cdo.Dimension} root The root dimension.
  * A root dimension has itself as the value of {@link #root}.
  * 
- * @property {pvc.data.Dimension} owner The owner dimension.
+ * @property {cdo.Dimension} owner The owner dimension.
  * An owner dimension is the topmost root dimension (accessible from this one).
  * An owner dimension owns its atoms, while others simply contain them.
- * The value of {@link pvc.data.Atom#dimension} is an atom's <i>owner</i> dimension.
+ * The value of {@link cdo.Atom#dimension} is an atom's <i>owner</i> dimension.
  * 
  * @constructor
  * 
- * @param {pvc.data.Data} data The data that owns this dimension.
- * @param {pvc.data.DimensionType} type The type of this dimension.
+ * @param {cdo.Data} data The data that owns this dimension.
+ * @param {cdo.DimensionType} type The type of this dimension.
  */
-def.type('pvc.data.Dimension')
+def.type('cdo.Dimension')
 .init(function(data, type) {
     /* NOTE: this function is a hot spot and as such is performance critical */
     this.data  = data;
@@ -105,7 +105,7 @@ def.type('pvc.data.Dimension')
         };
     }
 })
-.add(/** @lends pvc.data.Dimension# */{
+.add(/** @lends cdo.Dimension# */{
     
     parent: null,
     
@@ -114,17 +114,17 @@ def.type('pvc.data.Dimension')
     /**
      * The array of child dimensions.
      * @name childNodes
-     * @type pvc.data.Dimension[] 
+     * @type cdo.Dimension[]
      */
     
     /**
      * The array of link child dimensions.
-     * @type pvc.data.Dimension[] 
+     * @type cdo.Dimension[]
      */
     _linkChildren: null,
     
     /**
-     * A map of the contained atoms by their {@link pvc.data.Atom#key} property.
+     * A map of the contained atoms by their {@link cdo.Atom#key} property.
      * 
      * Supports the intern(...), atom(.), and the control of the visible atoms cache.
      *
@@ -133,7 +133,7 @@ def.type('pvc.data.Dimension')
     _atomsByKey: null,
     
     /**
-     * A map of the count of visible datums per atom {@link pvc.data.Atom#key} property.
+     * A map of the count of visible datums per atom {@link cdo.Atom#key} property.
      *
      * @type object
      */
@@ -150,7 +150,7 @@ def.type('pvc.data.Dimension')
     /**
      * The atom with a null value.
      *
-     * @type pvc.data.Atom
+     * @type cdo.Atom
      * @private
      */
     _nullAtom: null,
@@ -164,17 +164,17 @@ def.type('pvc.data.Dimension')
      * When a null <i>datum</i> is built, it may not specify
      * all dimensions. When such an unspecified dimension
      * is accessed the virtual null atom is returned by 
-     * lookup of the atoms prototype chain (see {@link pvc.data.Data#_atomsBase}.
+     * lookup of the atoms prototype chain (see {@link cdo.Data#_atomsBase}.
      * </p>
      * 
-     * @type pvc.data.Atom
+     * @type cdo.Atom
      * @private
      */
     _virtualNullAtom: null,
     
     /**
      * Cache of sorted visible and invisible atoms.
-     * A map from visible state to {@link pvc.data.Atom[]}.
+     * A map from visible state to {@link cdo.Atom[]}.
      * <p>
      * Cleared whenever any atom's "visible state" changes.
      * </p>
@@ -218,7 +218,7 @@ def.type('pvc.data.Dimension')
      * of the link parent's array.
      * </p>
      * 
-     * @type pvc.data.Atom[]
+     * @type cdo.Atom[]
      * @see #_nullAtom
      */
     _atoms: null,
@@ -239,8 +239,8 @@ def.type('pvc.data.Dimension')
      *
      * @returns {Number} The number of contained atoms.
      *
-     * @see pvc.data.Dimension#root
-     * @see pvc.data.Dimension#owner
+     * @see cdo.Dimension#root
+     * @see cdo.Dimension#owner
      */
     count: function() {
         if(this._lazyInit) this._lazyInit();
@@ -257,7 +257,7 @@ def.type('pvc.data.Dimension')
      * that has the atom and is visible.
      * </p>
      *
-     * @param {pvc.data.Atom} atom The atom of this dimension whose visible state is desired.
+     * @param {cdo.Atom} atom The atom of this dimension whose visible state is desired.
      * 
      * @type boolean
      */
@@ -285,11 +285,11 @@ def.type('pvc.data.Dimension')
      *      Only considers atoms that  
      *      have the specified visible state.
      * 
-     * @returns {pvc.data.Atom[]} An array with the requested atoms.
+     * @returns {cdo.Atom[]} An array with the requested atoms.
      * Do <b>NOT</b> modify the returned array.
      * 
-     * @see pvc.data.Dimension#root
-     * @see pvc.data.Dimension#owner
+     * @see cdo.Dimension#root
+     * @see cdo.Dimension#owner
      */
     atoms: function(keyArgs) {
         if(this._lazyInit) this._lazyInit();
@@ -334,13 +334,13 @@ def.type('pvc.data.Dimension')
     /**
      * Obtains an atom that represents the specified value, if one exists.
      * 
-     * @param {any} value A value of the dimension type's {@link pvc.data.DimensionType#valueType}.
+     * @param {any} value A value of the dimension type's {@link cdo.DimensionType#valueType}.
      * 
-     * @returns {pvc.data.Atom} The existing atom with the specified value, or null if there isn't one.
+     * @returns {cdo.Atom} The existing atom with the specified value, or null if there isn't one.
      */
     atom: function(value) {
         if(value == null || value === '') return this._nullAtom; // may be null
-        if(value instanceof pvc.data.Atom) return value;
+        if(value instanceof cdo.Atom) return value;
         
         if(this._lazyInit) this._lazyInit();
         var typeKey = this.type._key,
@@ -393,7 +393,7 @@ def.type('pvc.data.Dimension')
      * @see #root
      * @see #owner
      * @see #atoms
-     * @see pvc.data.DimensionType.isComparable
+     * @see cdo.DimensionType.isComparable
      */
     extent: function(keyArgs) {
         // Assumes atoms are sorted (null, if existent is the first).
@@ -468,13 +468,13 @@ def.type('pvc.data.Dimension')
      * @param {object} [keyArgs] Keyword arguments.
      * See {@link #atoms} for a list of available filtering keyword arguments. 
      *
-     * @returns {pvc.data.Atom} The minimum atom satisfying the selection;
+     * @returns {cdo.Atom} The minimum atom satisfying the selection;
      * undefined if none.
      * 
      * @see #root
      * @see #owner
      * @see #atoms
-     * @see pvc.data.DimensionType.isComparable
+     * @see cdo.DimensionType.isComparable
      */
     min: function(keyArgs) {
         // Assumes atoms are sorted.
@@ -505,14 +505,14 @@ def.type('pvc.data.Dimension')
      * @param {object} [keyArgs] Keyword arguments.
      * See {@link #atoms} for a list of available filtering keyword arguments. 
      *
-     * @returns {pvc.data.Atom} The maximum atom satisfying the selection;
+     * @returns {cdo.Atom} The maximum atom satisfying the selection;
      * undefined if none.
      * 
      * @see #root
      * @see #owner
      * @see #atoms
      * 
-     * @see pvc.data.DimensionType.isComparable
+     * @see cdo.DimensionType.isComparable
      */
     max: function(keyArgs) {
         // Assumes atoms are sorted.
@@ -526,7 +526,7 @@ def.type('pvc.data.Dimension')
      * possibly after filtering.
      * 
      * <p>
-     * Assumes that the dimension type {@link pvc.data.DimensionType#valueType} is "Number".
+     * Assumes that the dimension type {@link cdo.DimensionType#valueType} is "Number".
      * </p>
      * 
      * <p>
@@ -534,7 +534,7 @@ def.type('pvc.data.Dimension')
      * </p>
      * 
      * @param {object} [keyArgs] Keyword arguments.
-     * See {@link pvc.data.Data#datums} for a list of available filtering keyword arguments. 
+     * See {@link cdo.Data#datums} for a list of available filtering keyword arguments.
      *
      * @param {boolean} [keyArgs.zeroIfNone=true] Indicates that zero should be returned when there are no datums
      * or no datums with non-null values.
@@ -553,7 +553,7 @@ def.type('pvc.data.Dimension')
      * It is the sum of the values of the datums of the data. 
      * 
      * <p>
-     * Assumes that the dimension type {@link pvc.data.DimensionType#valueType} is "Number".
+     * Assumes that the dimension type {@link cdo.DimensionType#valueType} is "Number".
      * </p>
      * 
      * <p>
@@ -561,7 +561,7 @@ def.type('pvc.data.Dimension')
      * </p>
      * 
      * @param {object} [keyArgs] Keyword arguments.
-     * See {@link pvc.data.Data#datums} for a list of available filtering keyword arguments. 
+     * See {@link cdo.Data#datums} for a list of available filtering keyword arguments.
      *
      * @param {boolean} [keyArgs.zeroIfNone=true] Indicates that zero should be returned when there are no datums
      * or no datums with non-null values.
@@ -581,7 +581,7 @@ def.type('pvc.data.Dimension')
      * It is the absolute value of the sum of the values of the datums of the data.
      * 
      * <p>
-     * Assumes that the dimension type {@link pvc.data.DimensionType#valueType} is "Number".
+     * Assumes that the dimension type {@link cdo.DimensionType#valueType} is "Number".
      * </p>
      * 
      * <p>
@@ -589,7 +589,7 @@ def.type('pvc.data.Dimension')
      * </p>
      * 
      * @param {object} [keyArgs] Keyword arguments.
-     * See {@link pvc.data.Data#datums} for a list of available filtering keyword arguments. 
+     * See {@link cdo.Data#datums} for a list of available filtering keyword arguments.
      *
      * @param {boolean} [keyArgs.zeroIfNone=true] Indicates that zero should be returned when there are no datums
      * or no datums with non-null values.
@@ -610,7 +610,7 @@ def.type('pvc.data.Dimension')
      * possibly after filtering.
      * 
      * <p>
-     * Assumes that the dimension type {@link pvc.data.DimensionType#valueType} is "Number".
+     * Assumes that the dimension type {@link cdo.DimensionType#valueType} is "Number".
      * </p>
      * 
      * <p>
@@ -618,7 +618,7 @@ def.type('pvc.data.Dimension')
      * </p>
      * 
      * @param {object} [keyArgs] Keyword arguments.
-     * See {@link pvc.data.Data#datums} for a list of available filtering keyword arguments. 
+     * See {@link cdo.Data#datums} for a list of available filtering keyword arguments.
      *
      * @param {boolean} [keyArgs.abs=false] Indicates if it is the sum of the absolute value that is desired.
      * @param {boolean} [keyArgs.zeroIfNone=true] Indicates that zero should be returned when there are no datums
@@ -660,17 +660,17 @@ def.type('pvc.data.Dimension')
      * of this dimension.
      * 
      * <p>
-     * Assumes that the dimension type {@link pvc.data.DimensionType#valueType} is "Number".
+     * Assumes that the dimension type {@link cdo.DimensionType#valueType} is "Number".
      * </p>
      * 
      * <p>
      * Does not consider the null atom.
      * </p>
      * 
-     * @param {pvc.data.Atom|any} [atomOrValue] The atom or value on which to calculate the percent.
+     * @param {cdo.Atom|any} [atomOrValue] The atom or value on which to calculate the percent.
      * 
      * @param {object} [keyArgs] Keyword arguments.
-     * See {@link pvc.data.Dimension#sum} for a list of available filtering keyword arguments. 
+     * See {@link cdo.Dimension#sum} for a list of available filtering keyword arguments.
      *
      * @returns {number} The calculated percentage.
      * 
@@ -678,7 +678,7 @@ def.type('pvc.data.Dimension')
      * @see #owner
      */
     percent: function(atomOrValue, keyArgs) {
-        var value = (atomOrValue instanceof pvc.data.Atom) ? atomOrValue.value : atomOrValue;
+        var value = (atomOrValue instanceof cdo.Atom) ? atomOrValue.value : atomOrValue;
         // nully or zero
         if(!value) return 0;
         
@@ -693,7 +693,7 @@ def.type('pvc.data.Dimension')
      * over the <i>sum</i> of the absolute values of an analogous selection in the parent data.
      * 
      * <p>
-     * Assumes that the dimension type {@link pvc.data.DimensionType#valueType} is "Number".
+     * Assumes that the dimension type {@link cdo.DimensionType#valueType} is "Number".
      * </p>
      * 
      * <p>
@@ -701,7 +701,7 @@ def.type('pvc.data.Dimension')
      * </p>
      * 
      * @param {object} [keyArgs] Keyword arguments.
-     * See {@link pvc.data.Dimension#sum} for a list of available filtering keyword arguments. 
+     * See {@link cdo.Dimension#sum} for a list of available filtering keyword arguments.
      *
      * @returns {number} The calculated percentage.
      * 
@@ -755,11 +755,11 @@ def.type('pvc.data.Dimension')
      * <p>
      * An empty string value is considered equal to a null value. 
      * </P>
-     * @param {any | pvc.data.Atom} sourceValue The source value.
+     * @param {any | cdo.Atom} sourceValue The source value.
      * @param {boolean} [isVirtual=false] Indicates that 
      * the (necessarily non-null) atom is the result of interpolation or regression.
      * 
-     * @type pvc.data.Atom
+     * @type cdo.Atom
      */
     intern: function(sourceValue, isVirtual) {
         // NOTE: This function is performance critical!
@@ -771,7 +771,7 @@ def.type('pvc.data.Dimension')
         if(sourceValue == null || sourceValue === '')
             return this._nullAtom || dim_createNullAtom.call(this, sourceValue);
         
-        if(sourceValue instanceof pvc.data.Atom) {
+        if(sourceValue instanceof cdo.Atom) {
             if(sourceValue.dimension !== this) throw def.error.operationInvalid("Atom is of a different dimension.");
             return sourceValue;
         }
@@ -905,13 +905,13 @@ def.type('pvc.data.Dimension')
     dispose: function() {
         var me = this, v;
         if(!me._disposed) {
-            /*global data_disposeChildList:true */
-            data_disposeChildList(me.childNodes,    'parent');
-            data_disposeChildList(me._linkChildren, 'linkParent');
+            /*global cdo_disposeChildList:true */
+            cdo_disposeChildList(me.childNodes,    'parent');
+            cdo_disposeChildList(me._linkChildren, 'linkParent');
 
-            /*global data_removeColChild:true */
-            if((v = me.parent))     data_removeColChild(v, 'childNodes',    /*child*/me,     'parent');
-            if((v = me.linkParent)) data_removeColChild(v, '_linkChildren', /*linkChild*/me, 'linkParent');
+            /*global cdo_removeColChild:true */
+            if((v = me.parent))     cdo_removeColChild(v, 'childNodes',    /*child*/me,     'parent');
+            if((v = me.linkParent)) cdo_removeColChild(v, '_linkChildren', /*linkChild*/me, 'linkParent');
             
             dim_clearVisiblesCache.call(me);
             
@@ -932,16 +932,16 @@ def.type('pvc.data.Dimension')
  * 
  * The atom must not exist in the present dimension.
  * 
- * @name pvc.data.Dimension#_createAtom
+ * @name cdo.Dimension#_createAtom
  * @function
- * @param {pvc.data.DimensionType} type The dimension type of this dimension.
+ * @param {cdo.DimensionType} type The dimension type of this dimension.
  * @param {any} sourceValue The source value.
  * @param {string} key The key of the value.
  * @param {any} value The typed value.
  * @param {string} [label] The label, if it is present directly
  * in {@link sourceValue}, in Google format.
  * @param {boolean} [isVirtual=false] Indicates if the atom is virtual.
- * @type pvc.data.Atom
+ * @type cdo.Atom
  */
 function dim_createAtom(type, sourceValue, key, value, label, isVirtual) {
     var atom;
@@ -959,7 +959,7 @@ function dim_createAtom(type, sourceValue, key, value, label, isVirtual) {
         if(!label && pvc.debug >= 2) pvc.log("Only the null value should have an empty label.");
         
         // - ATOM! -
-        atom = new pvc.data.Atom(this, value, label, sourceValue, key);
+        atom = new cdo.Atom(this, value, label, sourceValue, key);
         if(isVirtual) atom.isVirtual = true;
     } else {
         var source = this.parent || this.linkParent;
@@ -991,11 +991,11 @@ function dim_createAtom(type, sourceValue, key, value, label, isVirtual) {
  * If the virtual null atom is found it is replaced by the null atom,
  * meaning that, after all, the null is really present in the data.
  * 
- * @param {pvc.data.Atom} atom the atom to intern.
+ * @param {cdo.Atom} atom the atom to intern.
  * 
- * @name pvc.data.Dimension#_internAtom
+ * @name cdo.Dimension#_internAtom
  * @function
- * @type pvc.data.Atom
+ * @type cdo.Atom
  */
 function dim_internAtom(atom) {
     var key = atom.key,
@@ -1052,12 +1052,12 @@ function dim_internAtom(atom) {
 }
 
 /**
- * Builds a key string suitable for identifying a call to {@link pvc.data.Data#datums}
+ * Builds a key string suitable for identifying a call to {@link cdo.Data#datums}
  * with no where specification.
  *
- * @name pvc.data.Dimension#_buildDatumsFilterKey
+ * @name cdo.Dimension#_buildDatumsFilterKey
  * @function
- * @param {object} [keyArgs] The keyword arguments used in the call to {@link pvc.data.Data#datums}.
+ * @param {object} [keyArgs] The keyword arguments used in the call to {@link cdo.Data#datums}.
  * @type string
  */
 function dim_buildDatumsFilterKey(keyArgs) {
@@ -1069,7 +1069,7 @@ function dim_buildDatumsFilterKey(keyArgs) {
 /**
  * Creates the null atom if it isn't created yet.
  * 
- * @name pvc.data.Dimension#_createNullAtom
+ * @name cdo.Dimension#_createNullAtom
  * @function
  * @param {any} [sourceValue] The source value of null. Can be used to obtain the null format.
  * @type undefined
@@ -1082,7 +1082,7 @@ function dim_createNullAtom(sourceValue) {
             var typeFormatter = this.type._formatter,
                 label = typeFormatter ? def.string.to(typeFormatter.call(null, null, sourceValue)) : "";
             
-            nullAtom = new pvc.data.Atom(this, null, label, null, '');
+            nullAtom = new cdo.Atom(this, null, label, null, '');
             
             this.data._atomsBase[this.name] = nullAtom; 
         } else {
@@ -1103,7 +1103,7 @@ function dim_createNullAtom(sourceValue) {
 /**
  * Creates the virtual null atom if it isn't created yet.
  * 
- * @name pvc.data.Dimension#_createNullAtom
+ * @name cdo.Dimension#_createNullAtom
  * @function
  * @type undefined
  * @private
@@ -1118,7 +1118,7 @@ function dim_createVirtualNullAtom() {
         // The virtual null's label is always "".
         // Don't bother the formatter with a value that
         // does not exist in the data.
-        this._virtualNullAtom = new pvc.data.Atom(this, null, "", null, '');
+        this._virtualNullAtom = new cdo.Atom(this, null, "", null, '');
 
         this.data._atomsBase[this.name] = this._virtualNullAtom; 
     }
@@ -1129,9 +1129,9 @@ function dim_createVirtualNullAtom() {
 /**
  * Uninternalizes the specified atom from the dimension (internal).
  * 
- * @name pvc.data.Dimension#_unintern
+ * @name cdo.Dimension#_unintern
  * @function
- * @param {pvc.data.Atom} atom The atom to uninternalize.
+ * @param {cdo.Atom} atom The atom to uninternalize.
  * @type undefined
  * @private
  * @internal
@@ -1223,7 +1223,7 @@ function dim_uninternVirtualAtoms() {
 /**
  * Clears all caches affected by datum/atom visibility.
  * 
- * @name pvc.data.Dimension#_clearVisiblesCache
+ * @name cdo.Dimension#_clearVisiblesCache
  * @function
  * @type undefined
  * @private
@@ -1239,7 +1239,7 @@ function dim_clearVisiblesCache() {
 /**
  * Called by a dimension's data when its datums have changed.
  * 
- * @name pvc.data.Dimension#_onDatumsChanged
+ * @name cdo.Dimension#_onDatumsChanged
  * @function
  * @type undefined
  * @private
@@ -1252,15 +1252,15 @@ function dim_onDatumsChanged() {
 /**
  * Adds a child dimension.
  * 
- * @name pvc.data.Dimension#_addChild
+ * @name cdo.Dimension#_addChild
  * @function
- * @param {pvc.data.Dimension} child The child to add.
+ * @param {cdo.Dimension} child The child to add.
  * @type undefined
  * @private
  */
 function dim_addChild(child) {
-    /*global data_addColChild:true */
-    data_addColChild(this, 'childNodes', child, 'parent');
+    /*global cdo_addColChild:true */
+    cdo_addColChild(this, 'childNodes', child, 'parent');
     
     child.owner = this.owner;
 }
@@ -1269,14 +1269,14 @@ function dim_addChild(child) {
 /**
  * Adds a link child dimension.
  * 
- * @name pvc.data.Dimension#_addLinkChild
+ * @name cdo.Dimension#_addLinkChild
  * @function
- * @param {pvc.data.Dimension} linkChild The link child to add.
+ * @param {cdo.Dimension} linkChild The link child to add.
  * @type undefined
  * @private
  */
 function dim_addLinkChild(linkChild) {
-    data_addColChild(this, '_linkChildren', linkChild, 'linkParent');
+    cdo_addColChild(this, '_linkChildren', linkChild, 'linkParent');
     
     linkChild.owner = this.owner;
 }
@@ -1285,7 +1285,7 @@ function dim_addLinkChild(linkChild) {
  * Called by the data of this dimension when 
  * the visible state of a datum has changed. 
  * 
- * @name pvc.data.Dimension#_onDatumVisibleChanged
+ * @name cdo.Dimension#_onDatumVisibleChanged
  * @function
  * @type undefined
  * @private
@@ -1321,7 +1321,7 @@ function dim_onDatumVisibleChanged(datum, visible) {
  * Obtains the map of visible datums count per atom, 
  * creating the map if necessary.
  * 
- * @name pvc.data.Dimension#_getVisibleDatumsCountMap
+ * @name cdo.Dimension#_getVisibleDatumsCountMap
  * @function
  * @type undefined
  * @private
@@ -1349,7 +1349,7 @@ function dim_getVisibleDatumsCountMap() {
  * Does not include the null atom.
  * </p>
  * 
- * @name pvc.data.Dimension#_calcVisibleIndexes
+ * @name cdo.Dimension#_calcVisibleIndexes
  * @function
  * @param {boolean} visible The desired atom visible state.
  * @type number[]
@@ -1371,7 +1371,7 @@ function dim_calcVisibleIndexes(visible) {
  * Does not include the null atom.
  * </p>
  * 
- * @name pvc.data.Dimension#_calcVisibleAtoms
+ * @name cdo.Dimension#_calcVisibleAtoms
  * @function
  * @param {boolean} visible The desired atom visible state.
  * @type number[]

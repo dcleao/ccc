@@ -7,14 +7,14 @@ pvc.BaseChart
 
     /**
      * The data that the chart is to show.
-     * @type pvc.data.Data
+     * @type cdo.Data
      * @deprecated
      */
     dataEngine: null,
 
     /**
      * The data that the chart is to show.
-     * @type pvc.data.Data
+     * @type cdo.Data
      */
     data: null,
 
@@ -137,7 +137,7 @@ pvc.BaseChart
         this._bindVisualRolesPostI();
 
         // Setup the complex type from complexTypeProj;
-        var complexType = new pvc.data.ComplexType();
+        var complexType = new cdo.ComplexType();
         complexTypeProj.configureComplexType(complexType, dimsOptions);
 
         this._bindVisualRolesPostII(complexType);
@@ -146,7 +146,7 @@ pvc.BaseChart
 
         data =
             this.dataEngine = // V1 property
-            this.data = new pvc.data.Data({
+            this.data = new cdo.Data({
                 type:     complexType,
                 labelSep: options.groupedLabelSep,
                 keySep:   options.dataSeparator
@@ -183,7 +183,7 @@ pvc.BaseChart
 
     _createComplexTypeProject: function() {
         var options = this.options,
-            complexTypeProj = new pvc.data.ComplexTypeProject(options.dimensionGroups),
+            complexTypeProj = new cdo.ComplexTypeProject(options.dimensionGroups),
             // Add specified dimensions
             userDimsSpec = options.dimensions;
 
@@ -234,11 +234,11 @@ pvc.BaseChart
 
     _getTranslationClass: function(translOptions) {
         return translOptions.crosstabMode ?
-               pvc.data.CrosstabTranslationOper :
-               pvc.data.RelationalTranslationOper;
+               cdo.CrosstabTranslationOper :
+               cdo.RelationalTranslationOper;
     },
 
-    // Creates the arguments required for pvc.data.DimensionType.extendSpec
+    // Creates the arguments required for cdo.DimensionType.extendSpec
     _createDimensionsOptions: function(options) {
         return {
             isCategoryTimeSeries: options.timeSeries,
@@ -330,7 +330,7 @@ pvc.BaseChart
                 }
 
                 if(dataPartDim) {
-                    var seriesKey = pvc.data.Complex.compositeKey(datum, dimNames);
+                    var seriesKey = cdo.Complex.compositeKey(datum, dimNames);
                     atoms[dataPartDimName] =
                         def.hasOwnProp.call(plot2SeriesSet, seriesKey) ?
                            (part2Atom || (part2Atom = dataPartDim.intern('1'))) :
@@ -385,7 +385,7 @@ pvc.BaseChart
         // Changing order at this level is not acceptable.
         var dataPartDimName = partRole.lastDimensionName(),
             dataPartAtoms   = baseData.dimensions(dataPartDimName).getDistinctAtoms(def.array.to(dataPartValues)),
-            where = data_whereSpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
+            where = cdo_whereSpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
 
         return baseData.where(null, {where: where});
     },
@@ -403,9 +403,9 @@ pvc.BaseChart
      * @param {boolean} [ka.ignoreNulls=true] Indicates that null datums should be ignored.
      * Only takes effect if the global option {@link pvc.options.charts.Chart#ignoreNulls} is false.
      * @param {boolean} [ka.inverted=false] Indicates that the inverted data grouping is desired.
-     * @param {pvc.data.Data} [baseData] The base data to use. By default the chart's {@link #data} is used.
+     * @param {cdo.Data} [baseData] The base data to use. By default the chart's {@link #data} is used.
      *
-     * @type pvc.data.Data
+     * @type cdo.Data
      */
     visibleData: function(dataPartValue, ka) {
         var mainPlot = this.plots.main || 
