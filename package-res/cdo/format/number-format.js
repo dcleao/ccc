@@ -588,10 +588,10 @@ function numForm_buildFormatSectionPosNeg(section) {
             scale -= exponent;
         }
 
-        if(scale) value = pvc.mult10(value, scale);
+        if(scale) value = def.mult10(value, scale);
 
         // 3) round fractional part
-        value = pvc.round10(value, section.fractional.digits);
+        value = def.round10(value, section.fractional.digits);
 
         // 4) if 0 and zeroFormat, fall back to zeroFormat
         return (!value && zeroFormat)

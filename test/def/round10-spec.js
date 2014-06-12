@@ -1,6 +1,6 @@
 define([
-    'ccc/pvc'
-], function(pvc) {
+    'ccc/def'
+], function(def) {
 
     function round10Naive(value, places) {
         var scale  = Math.pow(10, places);
@@ -37,7 +37,7 @@ define([
                 expect(round10Naive(test.value, test.places))
                     .toBe(test.naiveResult);
 
-                expect(pvc.round10(test.value, test.places))
+                expect(def.round10(test.value, test.places))
                     .toBe(test.result);
             });
         });
@@ -49,7 +49,7 @@ define([
                 expect(mult10Naive(test.value, test.places))
                     .toBeCloseTo(test.naiveResult, 15);
 
-                expect(pvc.mult10(test.value, test.places))
+                expect(def.mult10(test.value, test.places))
                     .toBe(test.result);
             });
         });
