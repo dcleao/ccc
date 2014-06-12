@@ -78,7 +78,7 @@ def
 .type('pvc.visual.Role')
 .init(function(name, keyArgs) {
     this.name  = name;
-    this.label = def.get(keyArgs, 'label') || pvc.buildTitleFromName(name);
+    this.label = def.get(keyArgs, 'label') || def.titleFromName(name);
     this.index = def.get(keyArgs, 'index') || 0;
     
     this.dimensionDefaults = def.get(keyArgs, 'dimensionDefaults') || {};

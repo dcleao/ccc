@@ -549,36 +549,8 @@ pv.Format.createFormatter = function(format) {
     return safeFormat;
 };
 
-pvc.buildTitleFromName = function(name) {
-    // TODO: i18n
-    return def.firstUpperCase(name).replace(/([a-z\d])([A-Z])/, "$1 $2");
-};
-
-pvc.buildIndexedId = function(prefix, index) {
-    return (index > 0)
-        ? (prefix + "" + (index + 1)) // base2, ortho3,..., legend2
-        : prefix; // base, ortho, legend
-};
-
-/**
- * Splits an indexed id into its prefix and index.
- *
- * @param {string} indexedId The indexed id.
- *
- * @type Array
- */
-pvc.splitIndexedId = function(indexedId) {
-    var match = /^(.*?)(\d*)$/.exec(indexedId),
-        index = null;
-    if(match[2]) {
-        index = Number(match[2]);
-        if(index <= 1)
-            index = 1;
-        else
-            index--;
-    }
-    return [match[1], index];
-};
+// TODO: ccc_wrapper still uses this
+pvc.buildIndexedId = def.indexedId;
 
 function pvc_unwrapExtensionOne(id, prefix) {
     if(id) {

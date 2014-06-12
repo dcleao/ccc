@@ -224,7 +224,7 @@ def
         function add(dimGroupName, colGroupName, level, count) {
             var groupEndIndex = me._itemCrossGroupIndex[colGroupName] + count; // exclusive
             while(count > 0) {
-                var dimName = pvc.buildIndexedId(dimGroupName, level);
+                var dimName = def.indexedId(dimGroupName, level);
                 if(!me.complexTypeProj.isReadOrCalc(dimName)) { // Skip name if occupied and continue with next name
 
                     // use first available slot for auto dims readers as long as within the group slots

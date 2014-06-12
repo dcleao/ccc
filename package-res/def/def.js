@@ -657,7 +657,31 @@ var def = /** @lends def */{
         return s;
     },
 
-    /**
+    titleFromName: function(name) {
+        // TODO: i18n
+        return def.firstUpperCase(name).replace(/([a-z\d])([A-Z])/, "$1 $2");
+    },
+
+    indexedId: function(prefix, index) {
+        return (index > 0)
+            ? (prefix + "" + (index + 1)) // base2, ortho3,..., legend2
+            : prefix; // base, ortho, legend
+    },
+
+    splitIndexedId: function(indexedId) {
+        var match = /^(.*?)(\d*)$/.exec(indexedId),
+            index = null;
+        if(match[2]) {
+            index = Number(match[2]);
+            if(index <= 1)
+                index = 1;
+            else
+                index--;
+        }
+        return [match[1], index];
+    },
+
+/**
      * Formats a string by replacing
      * place-holder markers, of the form "{foo}",
      * with the value of corresponding properties
@@ -2804,6 +2828,8 @@ def.round10 = function(value, places) {
 def.mult10 = function(value, exponent) {
     return !exponent ? value : mult10(+value, exponent);
 };
+
+// ---------------------
 
 // Reset namespace to global, instead of 'def'
 currentNamespace = def.global;

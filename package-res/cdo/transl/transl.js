@@ -220,12 +220,12 @@ def.type('cdo.TranslationOper')
         if(L < N) {
             // TODO: make a single reader that reads all atoms??
             // Last is a *group* START name
-            var splitGroupName = pvc.splitIndexedId(dimNames[N - 1]),
+            var splitGroupName = def.splitIndexedId(dimNames[N - 1]),
                 groupName = splitGroupName[0],
                 level     = def.nullyTo(splitGroupName[1], 0);
 
             for(var i = L ; i < I ; i++, level++) {
-                dimName = pvc.buildIndexedId(groupName, level);
+                dimName = def.indexedId(groupName, level);
                 index = indexes[i];
                 this._userIndexesToSingleDim[index] = dimName;
                 this._userRead(this._propGet(dimName, index), dimName);
@@ -433,7 +433,7 @@ def.type('cdo.TranslationOper')
                 
                 // Already bound dimensions count
                 while(count--) {
-                    var dimName = pvc.buildIndexedId(dimGroupName, level++);
+                    var dimName = def.indexedId(dimGroupName, level++);
                     if(!this.complexTypeProj.isReadOrCalc(dimName)) dims.push(dimName);
                 }
                 

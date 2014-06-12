@@ -663,7 +663,7 @@ def.type('cdo.CrosstabTranslationOper', cdo.MatrixTranslationOper)
         function add(dimGroupName, level, count) {
             var crossEndIndex = itemLogicalGroupIndex[dimGroupName] + count; // exclusive
             while(count > 0) {
-                var dimName = pvc.buildIndexedId(dimGroupName, level);
+                var dimName = def.indexedId(dimGroupName, level);
                 if(!me.complexTypeProj.isReadOrCalc(dimName)) { // Skip name if occupied and continue with next name
 
                     // use first available slot for auto dims readers as long as within crossIndex and crossIndex + count

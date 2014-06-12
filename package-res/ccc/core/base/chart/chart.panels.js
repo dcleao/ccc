@@ -250,7 +250,7 @@ pvc.BaseChart
                         source:    cellData,
                         colorAxis: axis,
                         clickMode: getCellClickMode(axis, cellData),
-                        extensionPrefix: pvc.buildIndexedId('', legendIndex++)
+                        extensionPrefix: def.indexedId('', legendIndex++)
                     });
 
                 // For later binding of an appropriate bullet renderer

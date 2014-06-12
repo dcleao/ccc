@@ -33,7 +33,7 @@ def
     this.type  = type;
     this.index = index == null ? 0 : index;
     this.name  = def.get(keyArgs, 'name');
-    this.id    = pvc.buildIndexedId(this.type, this.index);
+    this.id    = def.indexedId(this.type, this.index);
     this.optionId = this._buildOptionId(keyArgs);
     
     var rs = this._resolvers = [];

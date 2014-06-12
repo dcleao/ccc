@@ -197,9 +197,9 @@ def.type('cdo.DimensionType')
 function(complexType, name, keyArgs) {
     this.complexType = complexType;
     this.name  = name;
-    this.label = def.get(keyArgs, 'label') || pvc.buildTitleFromName(name);
+    this.label = def.get(keyArgs, 'label') || def.titleFromName(name);
 
-    var groupAndLevel = pvc.splitIndexedId(name);
+    var groupAndLevel = def.splitIndexedId(name);
     this.group = groupAndLevel[0];
     this.groupLevel = def.nullyTo(groupAndLevel[1], 0);
 

@@ -137,7 +137,7 @@ pvc.BaseChart
                 // Was created at this level?
                 if((this._axisCreateChartLevel[type] & chartLevel)) {
                     dataCellsByAxisIndex.forEach(function(dataCells, index) {
-                        var axis = this.axes[pvc.buildIndexedId(type, index)];
+                        var axis = this.axes[def.indexedId(type, index)];
                         if(!axis.isBound()) axis.bind(dataCells);
                     }, this);
                 }
