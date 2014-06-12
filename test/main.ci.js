@@ -19,7 +19,7 @@
         baseUrl: baseUrl,
         paths: {
             'ccc':    'bin/stage/ccc/amd',
-            'jquery': 'package-res/cdf/jquery',
+            'jquery': 'package-res/lib/jquery',
             'test':   'test'
         },
         shim: {

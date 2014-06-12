@@ -129,14 +129,14 @@
  * </p>
  * When this keyword is specified, the keyword <i>format</i> is ignored.
  *
- * @param {pvc.FormatProvider} [keyArgs.formatProto]
- * A {@link pvc.FormatProvider} to be the prototype of the dimension's format provider,
+ * @param {cdo.FormatProvider} [keyArgs.formatProto]
+ * A {@link cdo.FormatProvider} to be the prototype of the dimension's format provider,
  * in case one is created.
  *
- * @param {string|pvc.FormatProvider|any} [keyArgs.format]
+ * @param {string|cdo.FormatProvider|any} [keyArgs.format]
  * A format mask string, adequate to the specified value type,
- * a {@link pvc.FormatProvider}, or
- * any other configuration value suitable for {@link pvc.FormatProvider}.
+ * a {@link cdo.FormatProvider}, or
+ * any other configuration value suitable for {@link cdo.FormatProvider}.
  *
  * This keyword is ignored when the keyword <i>formatter</i> is specified.
  *
@@ -285,7 +285,7 @@ function(complexType, name, keyArgs) {
 
     if(formatter) {
         // Creates a custom format for the formatName format kind.
-        format = pvc.format(def.set({}, formatName, formatter), formatProto);
+        format = cdo.format(def.set({}, formatName, formatter), formatProto);
     } else {
         if(this.isDiscreteValueType) {
             // TODO: Leaving the formatter unchanged in this case, for now.
@@ -328,7 +328,7 @@ function(complexType, name, keyArgs) {
     this._formatter = formatter || null;
 
     /**
-     * @type pvc.FormatProvider
+     * @type cdo.FormatProvider
      * @private
      * @internal
      */
@@ -432,7 +432,7 @@ function(complexType, name, keyArgs) {
 
     /**
      * Gets the dimension type's format provider object.
-     * @type pvc.FormatProvider
+     * @type cdo.FormatProvider
      */
     format: function() {
         return this._format;
@@ -514,7 +514,7 @@ cdo.DimensionType.valueTypeName = function(valueType) {
  * @param {object} [keyArgs] Keyword arguments.
  * @param {function} [keyArgs.isCategoryTimeSeries=false] Indicates if category dimensions are to be considered time series.
  * @param {string} [keyArgs.timeSeriesFormat] The parsing format to use to parse a Date dimension when the converter and rawFormat options are not specified.
- * @param {pvc.FormatProvider} [keyArgs.formatProto] The format provider to be the prototype of the dimension's own format provider.
+ * @param {cdo.FormatProvider} [keyArgs.formatProto] The format provider to be the prototype of the dimension's own format provider.
  * @param {object} [keyArgs.dimensionGroups] A map of dimension group names to dimension type specifications to be used as prototypes of corresponding dimensions.
  * 
  *  @returns {object} The extended dimension type specification.
