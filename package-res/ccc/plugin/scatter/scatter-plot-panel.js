@@ -438,8 +438,8 @@ def
         var data = this.visibleData({ignoreNulls: false}),
             rootScene = new pvc.visual.Scene(null, {panel: this, source: data}),
             roles = this.visualRoles,
-            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.color, {roleVar: 'color'}),
-            sizeVarHelper  = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size' }),
+            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', roles.color),
+            sizeVarHelper  = new pvc.visual.RoleVarHelper(rootScene, 'size',  roles.size),
             xDim = data.owner.dimensions(roles.x.lastDimensionName()),
             yDim = data.owner.dimensions(roles.y.lastDimensionName());
 

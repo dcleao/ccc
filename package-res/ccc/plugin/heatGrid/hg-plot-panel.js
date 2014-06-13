@@ -351,8 +351,8 @@ def
             rootScene  = new pvc.visual.Scene(null, {panel: me, source: data}),
             categDatas = data.childNodes,
             roles = me.visualRoles,
-            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.color, {roleVar: 'color'}),
-            sizeVarHelper  = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size' });
+            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', roles.color),
+            sizeVarHelper  = new pvc.visual.RoleVarHelper(rootScene, 'size',  roles.size);
 
         rootScene.cellSize = cellSize;
 

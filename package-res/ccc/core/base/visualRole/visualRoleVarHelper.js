@@ -6,9 +6,8 @@
 
 def
 .type('pvc.visual.RoleVarHelper')
-.init(function(rootScene, role, keyArgs) {
+.init(function(rootScene, roleName, role, keyArgs) {
     var hasPercentSubVar = def.get(keyArgs, 'hasPercentSubVar', false),
-        roleVarName = def.get(keyArgs, 'roleVar'),
         g = this.grouping = role && role.grouping,
         panel;
     if(g) {
@@ -23,22 +22,22 @@ def
         }
     }
     
-    if(!roleVarName) {
-        if(!role) throw def.error.operationInvalid("Role is not defined, so the roleVar argument is required.");
-        
-        roleVarName = role.name;
+    if(!roleName) {
+        if(!role) throw def.error.operationInvalid("Role is not defined, so the roleName argument is required.");
+
+        roleName = role.name;
     }
     
     if(!g) {
         // Unbound role
         // Place a null variable in the root scene
-        var roleVar = rootScene.vars[roleVarName] = new pvc_ValueLabelVar(null, "");
+        var roleVar = rootScene.vars[roleName] = new pvc_ValueLabelVar(null, "");
         if(hasPercentSubVar) roleVar.percent = new pvc_ValueLabelVar(null, "");
     }
     
-    this.roleVarName = roleVarName;
+    this.roleName = roleName;
     
-    rootScene['is' + def.firstUpperCase(roleVarName) + 'Bound'] = !!g;
+    rootScene['is' + def.firstUpperCase(roleName) + 'Bound'] = !!g;
     
     if(def.get(keyArgs, 'allowNestedVars')) this.allowNestedVars = true;
 })
@@ -52,15 +51,15 @@ def
     onNewScene: function(scene, isLeaf) {
         if(!this.grouping) return;
         
-        var roleVarName = this.roleVarName;
+        var roleName = this.roleName;
         if(this.allowNestedVars ? 
-           def.hasOwnProp.call(scene.vars, roleVarName) : 
-           scene.vars[roleVarName])
+           def.hasOwnProp.call(scene.vars, roleName) :
+           scene.vars[roleName])
             return;
         
         var sourceName = this.sourceRoleName, sourceVar;
         if(sourceName && (sourceVar = def.getOwn(scene.vars, sourceName))) {
-            scene.vars[roleVarName] = sourceVar.clone();
+            scene.vars[roleName] = sourceVar.clone();
             return;
         }
         
@@ -124,7 +123,7 @@ def
                 if(this.percentFormatter) roleVar.percent = new pvc_ValueLabelVar(null, "");
             }
             
-            scene.vars[roleVarName] = roleVar;
+            scene.vars[roleName] = roleVar;
         }
     }
 });

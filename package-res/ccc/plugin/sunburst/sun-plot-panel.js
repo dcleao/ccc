@@ -181,7 +181,7 @@ def
         var roles = this.visualRoles,
             rootScene = new pvc.visual.SunburstScene(null, {panel: this, source: data}),
             sizeIsBound = roles.size.isBound(),
-            sizeVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size',  allowNestedVars: true, hasPercentSubVar: true}),
+            sizeVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'size', roles.size,  {allowNestedVars: true, hasPercentSubVar: true}),
             colorGrouping = roles.color && roles.color.grouping,
             colorAxis = this.axes.color,
             colorBrightnessFactor = colorAxis.option('SliceBrightnessFactor'),

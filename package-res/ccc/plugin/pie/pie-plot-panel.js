@@ -487,7 +487,7 @@ def
 
     this.base(null, {panel: panel, source: categRootData});
 
-    var colorVarHelper = new pvc.visual.RoleVarHelper(this, panel.visualRoles.color, {roleVar: 'color'}),
+    var colorVarHelper = new pvc.visual.RoleVarHelper(this, 'color', panel.visualRoles.color),
         valueDimName = panel.visualRoles[panel.valueRoleName].lastDimensionName(),
         valueDim     = categRootData.dimensions(valueDimName),
         pctValueFormat = panel.chart.options.percentValueFormat,

@@ -203,7 +203,7 @@ def
         
         var roles = this.visualRoles,
             rootScene     = new pvc.visual.Scene(null, {panel: this, source: data}),
-            sizeVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.size,  {roleVar: 'size',  allowNestedVars: true, hasPercentSubVar: true}),
+            sizeVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'size', roles.size, {allowNestedVars: true, hasPercentSubVar: true}),
             sizeIsBound   = roles.size.isBound(),
             colorGrouping = roles.color && roles.color.grouping,
             colorByParent = colorGrouping && this.plot.option('ColorMode') === 'byparent';

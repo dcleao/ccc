@@ -445,8 +445,8 @@ def
             serRole   = this.visualRoles.series,
             valueRole = this.visualRoles.value,
             isStacked = this.stacked,
-            valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, valueRole, {roleVar: 'value', hasPercentSubVar: isStacked}),
-            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, this.visualRoles.color, {roleVar: 'color'}),
+            valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'value', valueRole, {hasPercentSubVar: isStacked}),
+            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', this.visualRoles.color),
             valueDimName  = valueRole.lastDimensionName(),
             valueDim = data.owner.dimensions(valueDimName),
 

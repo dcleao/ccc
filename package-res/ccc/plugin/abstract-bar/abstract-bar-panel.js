@@ -476,8 +476,8 @@ def
     _buildScene: function(data, axisSeriesDatas, axisCategDatas) {
         var rootScene  = new pvc.visual.Scene(null, {panel: this, source: data}),
             roles = this.visualRoles,
-            valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.value, {roleVar: 'value', hasPercentSubVar: this.stacked}),
-            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, roles.color, {roleVar: 'color'});
+            valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'value', roles.value, {hasPercentSubVar: this.stacked}),
+            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', roles.color);
 
         // Create starting scene tree
         axisSeriesDatas.forEach(createSeriesScene);
