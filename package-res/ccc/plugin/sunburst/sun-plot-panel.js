@@ -35,7 +35,7 @@ def
 
         // Not possible to represent a sunburst if rootScene.vars.size.value = 0.
         // If this is a small chart, don't show message, which results in a blank plot.
-        if(!rootScene.childNodes.length && !this.visualRoles.multiChart.isBound())
+        if(!rootScene.childNodes.length && !this.chart.visualRoles.multiChart.isBound())
            throw new InvalidDataException("Unable to create a sunburst chart, please check the data values.");
 
         // Does not use sceneScale on purpose because of the 'nullToZero'

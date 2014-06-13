@@ -15,14 +15,10 @@ def
     // This only helps in default bindings...
     var dimGroups = options.dimensionGroups || (options.dimensionGroups = {});
     var rangeDimGroup = dimGroups.range  || (dimGroups.range  = {});
-    if(rangeDimGroup.valueType === undefined) {
-        rangeDimGroup.valueType = Number;
-    }
+    if(rangeDimGroup.valueType === undefined) rangeDimGroup.valueType = Number;
 
     var markerDimGroup = dimGroups.marker || (dimGroups.marker = {});
-    if(markerDimGroup.valueType === undefined) {
-        markerDimGroup.valueType = Number;
-    }
+    if(markerDimGroup.valueType === undefined) markerDimGroup.valueType = Number;
 
     this.base(options);
 })
@@ -41,37 +37,6 @@ def
         
         this.base(options);
     },
-    
-    /**
-     * Initializes each chart's specific roles.
-     * @override
-     */
-    _initVisualRoles: function() {
-
-        this.base();
-
-        this._addVisualRole('title',    { defaultDimension: 'title*'    });
-        this._addVisualRole('subTitle', { defaultDimension: 'subTitle*' });
-        this._addVisualRole('value', {
-                //isRequired: true, // due to the no data mode
-                isMeasure:  true,
-                requireIsDiscrete: false,
-                valueType: Number,
-                defaultDimension: 'value*'
-            });
-        this._addVisualRole('marker', {
-                isMeasure:  true,
-                requireIsDiscrete: false,
-                valueType: Number,
-                defaultDimension: 'marker*'
-            });
-        this._addVisualRole('range', {
-                isMeasure:  true,
-                requireIsDiscrete: false,
-                valueType: Number,
-                defaultDimension: 'range*'
-            });
-    },
 
     _createTranslation: function(translOptions) {
         
@@ -80,8 +45,7 @@ def
              * By now the translation has already been initialized
              * and its virtualItemSize is determined.
              */
-            size = translation.virtualItemSize()
-            ;
+            size = translation.virtualItemSize();
 
         /* Configure the translation with default dimensions.
          *  1       Value
@@ -325,8 +289,7 @@ def
                     var s = d.title;
                     var c = d.subtitle;
                     return chart.options.tooltipFormat.call(myself,s,c,v);
-                })
-                ;
+                });
 
             this.pvBulletMarker
                 .localProperty('tooltip')
@@ -334,8 +297,7 @@ def
                     var s = d.title;
                     var c = d.subtitle;
                     return chart.options.tooltipFormat.call(myself,s,c,v);
-                })
-                ;
+                });
       
             this.pvBulletMeasure.event("mouseover", pv.Behavior.tipsy(this.chart._tooltipOptions));
             this.pvBulletMarker .event("mouseover", pv.Behavior.tipsy(this.chart._tooltipOptions));
@@ -452,8 +414,7 @@ def
         def.set(defaultData,
             'formattedRanges',   defaultData.ranges  .map(String),
             'formattedMeasures', defaultData.measures.map(String),
-            'formattedMarkers',  defaultData.markers .map(String)
-            );
+            'formattedMarkers',  defaultData.markers .map(String));
         
         if(!valueGrouping    &&
            !titleGrouping    &&

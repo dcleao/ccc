@@ -544,7 +544,7 @@ def
 
         // Not possible to represent as pie if sumAbs = 0.
         // If this is a small chart, don't show message, which results in a pie with no slices..., a blank plot.
-        if(!rootScene.childNodes.length && !panel.visualRoles.multiChart.isBound())
+        if(!rootScene.childNodes.length && !panel.chart.visualRoles.multiChart.isBound())
            throw new InvalidDataException("Unable to create a pie chart, please check the data values.");
     }
 

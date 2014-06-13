@@ -177,12 +177,14 @@ def
     },
 
     _getColorDataCell: function() {
-        return new pvc.visual.ColorDataCell(
-                this,
-                /*axisType*/'color',
-                this.option('ColorAxis') - 1,
-                this._visualRoles.color,
-                this.option('DataPart'));
+        var colorRole = this._visualRoles.color;
+        if(colorRole)
+            return new pvc.visual.ColorDataCell(
+                    this,
+                    /*axisType*/'color',
+                    this.option('ColorAxis') - 1,
+                    colorRole,
+                    this.option('DataPart'));
     }
 })
 .addStatic({

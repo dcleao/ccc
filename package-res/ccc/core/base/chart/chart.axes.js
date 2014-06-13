@@ -80,8 +80,7 @@ pvc.BaseChart
 
         // Filter only bound dataCells
         var dataCellsByAxisTypeThenIndex = this._dataCellsByAxisTypeThenIndex;
-
-        def.eachOwn(dataCellsByAxisTypeThenIndex, function(dataCellsByAxisIndex, type) {
+        if(!this.parent) def.eachOwn(dataCellsByAxisTypeThenIndex, function(dataCellsByAxisIndex, type) {
             var i = 0, I = dataCellsByAxisIndex.length;
             while(i < I) {
                 var dataCells = dataCellsByAxisIndex[i]

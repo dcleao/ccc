@@ -23,6 +23,8 @@ pvc.BaseChart
             this.plotList = parent.plotList;
             this.plotsByType = parent.plotsByType;
         }
+
+        this._initPlotsDataCells();
     },
     
     // Any plots enforced by the chart type.

@@ -210,62 +210,63 @@ def
         this.isCreated = false;
         
         if(pvc.debug >= 3) this._log("Creating");
-        
-        this.children = [];
 
-        // Now's as good a time as any to completely clear out all tipsy tooltips
-        if(!this.parent) pvc.removeTipsyLegends();
-        
+        var isRoot = !this.parent,
+            isOverflowRetry = this._isMultiChartOverflowClipRetry,
+            isRootInit = isRoot && !isOverflowRetry && !this.data;
+
         // Options may be changed between renders
-        this._processOptions();
-        
-        // Any data exists or throws
-        // (must be done AFTER processing options
-        //  because of width, height properties and noData extension point...)
-        if(!this.parent) this._checkNoDataI();
+        if(!isRoot || !isOverflowRetry) this._processOptions();
 
-        // Initialize chart-level/root visual roles.
-        if(!this.parent && !this.data) this._initVisualRoles();
+        if(isRootInit) {
+            // Now's a good time as any other to clear out all tipsy tooltips
+            pvc.removeTipsyLegends();
+
+            // Any data exists or throws
+            // (must be done AFTER processing options
+            //  because of width, height properties and noData extension point...)
+            this._checkNoDataI();
+
+            // Initialize chart-level/root visual roles.
+            this._initVisualRoles();
+        }
 
         // Initialize plots. These also define own visualRoles.
-        this._initPlots();
-
-        // Gather potential plots' data cells:
-        //   {plot, visualRole, dataPart, axisType, axisIndex}
-        //  The visual role of some may not become bound.
-        this._initPlotsDataCells();
+        if(isRootInit || !isRoot) this._initPlots();
 
         // The Complex Type gets defined on the first load of data.
-        if(!this.parent && !this.data) {
+        if(isRootInit) {
             this._bindVisualRolesPreI();
-            
+
             this._complexTypeProj = this._createComplexTypeProject();
-            
+
             this._bindVisualRolesPreII();
         }
-        
+
         // Initialize the data (and _bindVisualRolesPost)
-        this._initData(keyArgs);
+        if(!isOverflowRetry) {
+            this._initData(keyArgs);
 
-        // When data is excluded, there may be no data after all
-        if(!this.parent) this._checkNoDataII();
+            // When data is excluded, there may be no data after all
+            if(isRoot) this._checkNoDataII();
+        }
+
+        var hasMultiRole = this.visualRoles.multiChart.isBound();
         
-        var hasMultiRole = this.visualRoles.multiChart.isBound(),
-            // 1 = root, 2 = leaf, 1 | 2 = 3 = everywhere
-            chartLevel = this._chartLevel();
-        
-        this._initAxes(hasMultiRole);
+        if(!isOverflowRetry) this._initAxes(hasMultiRole);
 
-        if(hasMultiRole && !this.parent) this._initMultiCharts();
+        if(isRoot) {
+            this.children = [];
 
-        // Trends and Interpolation on Root Chart only
-        if(!this.parent) {
+            if(hasMultiRole) this._initMultiCharts();
+
+            // Trends and Interpolation on Root Chart only.
             // Interpolated data affects generated trends
             this._interpolate(hasMultiRole);
             this._generateTrends(hasMultiRole);
         }
         
-        this._setAxesScales(chartLevel);
+        this._setAxesScales(this._chartLevel());
     },
 
     _createPhase2: function(/*keyArgs*/) {

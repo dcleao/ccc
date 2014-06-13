@@ -29,7 +29,7 @@ def
 
         // Not possible to represent a treemap if rootScene.vars.size.value = 0.
         // If this is a small chart, don't show message, which results in a blank plot.
-        if(!rootScene.childNodes.length && !this.visualRoles.multiChart.isBound())
+        if(!rootScene.childNodes.length && !this.chart.visualRoles.multiChart.isBound())
            throw new InvalidDataException("Unable to create a treemap chart, please check the data values.");
 
         var lw0 = def.number.to(me._getConstantExtension('leaf', 'lineWidth'), 1),
