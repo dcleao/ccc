@@ -30,7 +30,7 @@ def
     /** @override */
     onAdded: function() {
         // TODO: while visual roles are shared, this messes up visual roles of other plot types :-)
-        var catRole  = this.chart.visualRoles.category,
+        var catRole  = this.visualRole('category'),
             travProp = this.isFalling() ? 'FlattenDfsPre' : 'FlattenDfsPost';
 
         catRole.setTraversalMode(pvc.visual.TraversalMode[travProp]);

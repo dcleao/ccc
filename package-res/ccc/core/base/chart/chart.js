@@ -223,12 +223,20 @@ def
         // (must be done AFTER processing options
         //  because of width, height properties and noData extension point...)
         if(!this.parent) this._checkNoDataI();
-        
-        // Initialize root visual roles.
+
+        // Initialize chart-level/root visual roles.
+        if(!this.parent && !this.data) this._initVisualRoles();
+
+        // Initialize plots. These also define own visualRoles.
+        this._initPlots();
+
+        // Gather potential plots' data cells:
+        //   {plot, visualRole, dataPart, axisType, axisIndex}
+        //  The visual role of some may not become bound.
+        this._initPlotsDataCells();
+
         // The Complex Type gets defined on the first load of data.
         if(!this.parent && !this.data) {
-            this._initVisualRoles();
-            
             this._bindVisualRolesPreI();
             
             this._complexTypeProj = this._createComplexTypeProject();
@@ -246,13 +254,8 @@ def
             // 1 = root, 2 = leaf, 1 | 2 = 3 = everywhere
             chartLevel = this._chartLevel();
         
-        // Initialize plots
-        this._initPlots(hasMultiRole);
-        
-        // Initialize axes
         this._initAxes(hasMultiRole);
 
-        // Initialize multi-charts
         if(hasMultiRole && !this.parent) this._initMultiCharts();
 
         // Trends and Interpolation on Root Chart only
@@ -262,7 +265,6 @@ def
             this._generateTrends(hasMultiRole);
         }
         
-        // Set axes scales
         this._setAxesScales(chartLevel);
     },
 

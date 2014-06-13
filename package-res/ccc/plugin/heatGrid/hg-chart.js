@@ -35,69 +35,6 @@ def
             
             // Has no meaning in the current implementation
             'panelSizeRatio', 1);
-        
-        // TODO: get a translator for this!!
-        
-        var colorDimName = 'value',
-            sizeDimName  = 'value2';
-
-        if(this.compatVersion() <= 1) {
-            switch(this.options.colorValIdx) {
-                case 0:  colorDimName = 'value';  break;
-                case 1:  colorDimName = 'value2'; break;
-                default: colorDimName = 'value';
-            }
-    
-            switch(this.options.sizeValIdx) {
-                case 0:  sizeDimName = 'value' ; break;
-                case 1:  sizeDimName = 'value2'; break;
-                default: sizeDimName = 'value' ;
-            }
-        }
-        
-        this._colorDimName = colorDimName;
-        this._sizeDimName  = sizeDimName ;
-    },
-
-    /** @override */    
-    _hasDataPartRole: def.retFalse,
-
-    /* @override */
-    _getCategoryRoleSpec: function() {
-        var catRoleSpec = this.base();
-        
-        // Force dimension to be discrete!
-        catRoleSpec.requireIsDiscrete = true;
-        
-        return catRoleSpec;
-    },
-    
-    /* @override */
-    _getColorRoleSpec: function() {
-        return {
-            isMeasure: true,
-            requireSingleDimension: true,
-            requireIsDiscrete: false,
-            valueType: Number,
-            defaultDimension: this._colorDimName
-        };
-    },
-    
-    /**
-     * Initializes each chart's specific roles.
-     * @override
-     */
-    _initVisualRoles: function() {
-        
-        this.base();
-        
-        this._addVisualRole('size', {
-            isMeasure: true,
-            requireSingleDimension: true,
-            requireIsDiscrete: false,
-            valueType: Number,
-            defaultDimension: this._sizeDimName
-        });
     },
 
     /* @override */

@@ -32,42 +32,6 @@ def
         return a;
     }()),
 
-    pieChartPanel: null,
-
-    _getColorRoleSpec: function() {
-        return {
-            isRequired: true,
-            defaultSourceRole: 'category',
-            defaultDimension: 'color*',
-            requireIsDiscrete: true
-        };
-    },
-    
-    /**
-     * Initializes each chart's specific roles.
-     * @override
-     */
-    _initVisualRoles: function() {
-        
-        this.base();
-        
-        this._addVisualRole('category', {
-            isRequired: true, 
-            defaultDimension: 'category*', 
-            autoCreateDimension: true 
-        });
-            
-        this._addVisualRole('value', {
-            isMeasure:  true,
-            isRequired: true,
-            isPercent:  true,
-            requireSingleDimension: true, 
-            requireIsDiscrete: false,
-            valueType: Number, 
-            defaultDimension: 'value' 
-        });
-    },
-    
     _createPlotsInternal: function() {
         this._addPlot(new pvc.visual.PiePlot(this));
     },
@@ -100,8 +64,5 @@ def
         // ----------------
 
         this.base(parentPanel, contentOptions);
-        
-        // Legacy names
-        this.pieChartPanel = this.plotPanels.pie;
     }
 });

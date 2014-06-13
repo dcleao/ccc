@@ -11,32 +11,57 @@
  */
 def
 .type('pvc.visual.TreemapPlot', pvc.visual.Plot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    this._addVisualRole('category', {
+        isRequired: true,
+        defaultDimension: 'category*',
+        autoCreateDimension: true
+    });
+
+    this._addVisualRole('size', {
+        isMeasure:  true,
+        isRequired: false,
+        isPercent:  true,
+        requireSingleDimension: true,
+        requireIsDiscrete: false,
+        valueType: Number,
+        defaultDimension: 'size'
+    });
+})
 .add({
     type: 'treemap',
     
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.TreemapPlot.optionsDef; },
-   
+
     /** @override */
-    createVisibleData: function(baseData, ka) {
-        return this.chart.visualRoles.category.select(baseData, ka);
+    _getColorRoleSpec: function() {
+        return {
+            defaultSourceRole: 'category',
+            defaultDimension:  'color*'
+            /*, requireIsDiscrete: true*/
+        };
     },
 
     /** @override */
-    collectDataCells: function(dataCells) {
+    createVisibleData: function(baseData, ka) {
+        return this.visualRole('category').select(baseData, ka);
+    },
+
+    /** @override */
+    collectDataCells: function(addDataCell) {
         
-        this.base(dataCells);
-        
-        // Add Size DataCell
-        var sizeRoleName = this.option('SizeRole');
-        if(sizeRoleName) {
-            dataCells.push(new pvc.visual.DataCell(
-                    this,
-                    /*axisType*/ 'size', 
-                    this.option('SizeAxis') - 1, 
-                    sizeRoleName, 
-                    this.option('DataPart')));
-        }
+        this.base(addDataCell);
+
+        addDataCell(new pvc.visual.DataCell(
+                this,
+                /*axisType*/ 'size',
+                this.option('SizeAxis') - 1,
+                this.visualRole('size'),
+                this.option('DataPart')));
     }
 });
 

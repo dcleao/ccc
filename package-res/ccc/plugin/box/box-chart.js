@@ -24,32 +24,6 @@ def
         options.stacked = false;
     },
 
-    /**
-     * Initializes each chart's specific roles.
-     * @override
-     */
-    _initVisualRoles: function() {
-
-        this.base();
-
-        var roleSpecBase = {
-            isMeasure: true,
-            requireSingleDimension: true,
-            requireIsDiscrete: false,
-            valueType: Number
-        };
-
-        [
-            {name: 'median',       label: 'Median',        defaultDimension: 'median', isRequired: true},
-            {name: 'lowerQuartil', label: 'Lower Quartil', defaultDimension: 'lowerQuartil'},
-            {name: 'upperQuartil', label: 'Upper Quartil', defaultDimension: 'upperQuartil'},
-            {name: 'minimum',      label: 'Minimum',       defaultDimension: 'minimum' },
-            {name: 'maximum',      label: 'Maximum',       defaultDimension: 'maximum'}
-        ].forEach(function(info) {
-            this._addVisualRole(info.name, def.create(roleSpecBase, info));
-        }, this);
-    },
-    
     _getTranslationClass: function(translOptions) {
         return def
             .type(this.base(translOptions))
@@ -63,10 +37,14 @@ def
             // Line Plot
             this._addPlot(new pvc.visual.PointPlot(this, {
                 name: 'plot2',
+                spec: {
+                    visualRoles: {
+                        'value': {from: 'median'}
+                    }
+                },
                 defaults: {
                     LinesVisible: true,
                     DotsVisible:  true,
-                    OrthoRole:    'median',
                     ColorAxis:    2
                 },
                 fixed: {
@@ -92,7 +70,4 @@ def
         crosstabMode: false
         // panelSizeRatio
     }
-})
-.addStatic({
-    measureRolesNames: ['median', 'lowerQuartil', 'upperQuartil', 'minimum', 'maximum']
 });

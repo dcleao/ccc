@@ -13,34 +13,64 @@
  */
 def
 .type('pvc.visual.PiePlot', pvc.visual.Plot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    this._addVisualRole('category', {
+        isRequired: true,
+        defaultDimension: 'category*',
+        autoCreateDimension: true
+    });
+
+    this._addVisualRole('value', {
+        isMeasure:  true,
+        isRequired: true,
+        isPercent:  true,
+        requireSingleDimension: true,
+        requireIsDiscrete: false,
+        valueType: Number,
+        defaultDimension: 'value'
+    });
+})
 .add({
     /** @override */
     type: 'pie',
 
     /** @override */
-    createVisibleData: function(baseData, ka) {
-        return this.chart.visualRoles.category.flatten(baseData, ka);
+    _getColorRoleSpec: function() {
+        return {
+            isRequired: true,
+            defaultSourceRole: 'category',
+            defaultDimension: 'color*',
+            requireIsDiscrete: true
+        };
     },
 
     /** @override */
-    collectDataCells: function(dataCells) {
+    createVisibleData: function(baseData, ka) {
+        return this.visualRole('category').flatten(baseData, ka);
+    },
+
+    /** @override */
+    collectDataCells: function(addDataCell) {
         
-        this.base(dataCells);
+        this.base(addDataCell);
 
         var dataPartValue = this.option('DataPart');
-        
-        dataCells.push(new pvc.visual.DataCell(
+
+        addDataCell(new pvc.visual.DataCell(
             this,
             /*axisType*/'category',
             /*axisIndex*/0,
-            /*roleName*/'category',
+            /*role*/this.visualRole('category'),
             dataPartValue));
 
-        dataCells.push(new pvc.visual.DataCell(
+        addDataCell(new pvc.visual.DataCell(
             this,
             /*axisType*/'angle',
             /*axisIndex*/0,
-            /*roleName*/'value',
+            /*role*/this.visualRole('value'),
             dataPartValue));
     },
 

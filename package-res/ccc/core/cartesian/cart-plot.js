@@ -11,43 +11,67 @@
  */
 def
 .type('pvc.visual.CartesianPlot', pvc.visual.Plot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    var roleSpec = this._getSeriesRoleSpec();
+    if(roleSpec) this._addVisualRole('series', roleSpec);
+})
 .add({
-    collectDataCells: function(dataCells) {
-        
-        this.base(dataCells);
+    /** @override */
+    _getColorRoleSpec: function() {
+        return {isRequired: true, defaultDimension: 'color*', defaultSourceRole: 'series', requireIsDiscrete: true};
+    },
 
-        // Configure Base Axis Data Cell
-        dataCells.push(new pvc.visual.DataCell(
-            this,
-            /*axisType*/'base',
-            this.option('BaseAxis') - 1, 
-            this.option('BaseRole'), // Single role
-            this.option('DataPart')));
-        
-        // Configure Ortho Axis Data Cell
-        var orthoRoleNames = def.array.to(this.option('OrthoRole')),
-            dataPartValue  = this.option('DataPart' ),
-            orthoAxisIndex = this.option('OrthoAxis') - 1,
-            isStacked = this.option.isDefined('Stacked') ? this.option('Stacked') : undefined,
-            nullInterpolationMode = this.option('NullInterpolationMode'),
-            trend = this.option('Trend');
+    _getSeriesRoleSpec: function() {
+        return {isRequired: true, defaultDimension: 'series*', autoCreateDimension: true, requireIsDiscrete: true};
+    },
 
-        orthoRoleNames.forEach(function(orthoRoleName) {
-             dataCells.push(new pvc.visual.CartesianOrthoDataCell(
+    collectDataCells: function(addDataCell) {
+        
+        this.base(addDataCell);
+
+        var dataPartValue = this.option('DataPart'),
+            baseRole   = this._getBaseRole(),
+            orthoRoles = this._getOrthoRoles();
+
+        if(baseRole)
+            addDataCell(new pvc.visual.DataCell(
                 this,
-                /*axisType*/'ortho',
-                orthoAxisIndex, 
-                orthoRoleName,
-                dataPartValue,
-                isStacked,
-                nullInterpolationMode,
-                trend));
-        }, this);
+                /*axisType*/'base',
+                this.option('BaseAxis') - 1,
+                baseRole, // Single role
+                dataPartValue));
+
+        // Configure Ortho Axis Data Cell
+        if(orthoRoles) {
+            var orthoAxisIndex = this.option('OrthoAxis') - 1,
+                isStacked = this.option.isDefined('Stacked') ? this.option('Stacked') : undefined,
+                nullInterpolationMode = this.option('NullInterpolationMode'),
+                trend = this.option('Trend');
+
+            orthoRoles.forEach(function (orthoRole) {
+                addDataCell(new pvc.visual.CartesianOrthoDataCell(
+                    this,
+                    /*axisType*/'ortho',
+                    orthoAxisIndex,
+                    orthoRole,
+                    dataPartValue,
+                    isStacked,
+                    nullInterpolationMode,
+                    trend));
+            }, this);
+        }
     },
 
     _getOptionsDefinition: function() {
         return pvc.visual.CartesianPlot.optionsDef;
-    }
+    },
+
+    _getOrthoRoles: function() {},
+
+    _getBaseRole: function() {}
 });
 
 function pvc_castTrend(trend) {
@@ -77,12 +101,7 @@ pvc.visual.CartesianPlot.optionsDef = def.create(
         BaseAxis: {
             value: 1
         },
-        
-        BaseRole: {
-            resolve: '_resolveFixed',
-            cast:    String
-        },
-        
+
         OrthoAxis: {
             resolve: function(optionInfo) {
                 return this.globalIndex === 0
@@ -106,14 +125,6 @@ pvc.visual.CartesianPlot.optionsDef = def.create(
                 return value != null ? def.between(value, 1, 10) : 1;
             },
             value: 1
-        },
-        
-        OrthoRole: {
-            resolve: pvc.options.resolvers([
-                  '_resolveFixed',
-                  '_resolveDefault'
-                ])
-            // String or string array
         },
         
         Trend: {

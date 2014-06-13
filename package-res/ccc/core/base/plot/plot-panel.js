@@ -29,10 +29,7 @@ def
     this.valuesOverflow = plot.option('ValuesOverflow');
     this.valuesOptimizeLegibility = plot.option('ValuesOptimizeLegibility');
     
-    var roles = this.visualRoles = Object.create(chart.visualRoles),
-        colorRoleName = plot.option('ColorRole');
-
-    roles.color = colorRoleName ? chart.visualRole(colorRoleName) : null;
+    this.visualRoles = plot._visualRoles;
 })
 .add({
     anchor:  'fill',

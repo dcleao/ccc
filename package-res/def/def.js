@@ -397,6 +397,12 @@ var def = /** @lends def */{
             : keys.map(function(key) { return o[key]; });
     },
 
+    firstDefined: function(funs, args, x) {
+        var v, i = 0, L = funs.length;
+        if(!args) args = [];
+        while(i < L) if((v = funs[i++].apply(x, args)) !== undefined) return v;
+    },
+
     scope: function(scopeFun, ctx) {
         return scopeFun.call(ctx);
     },

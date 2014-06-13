@@ -15,35 +15,6 @@ def
         'color': true
     },
     
-    _getColorRoleSpec: function() {
-        return { 
-            defaultSourceRole: 'category', 
-            defaultDimension:  'color*'
-            /*, requireIsDiscrete: true*/
-        };
-    },
-    
-    _initVisualRoles: function() {
-        
-        this.base();
-        
-        this._addVisualRole('category', { 
-                isRequired: true, 
-                defaultDimension: 'category*', 
-                autoCreateDimension: true 
-            });
-            
-        this._addVisualRole('size', {
-                isMeasure:  true,
-                isRequired: false,
-                isPercent:  true,
-                requireSingleDimension: true, 
-                requireIsDiscrete: false,
-                valueType: Number, 
-                defaultDimension: 'size' 
-            });
-    },
-    
     _getTranslationClass: function(translOptions) {
         return def.type(this.base(translOptions)).add(pvc.data.TreemapChartTranslationOper);
     },

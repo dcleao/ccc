@@ -16,23 +16,7 @@ def
         
         this.base(options);
     },
-    
-    /** @override */
-    _initVisualRoles: function() {
-        
-        this.base();
-        
-        this._addVisualRole('value', { 
-            isMeasure: true, 
-            isRequired: true, 
-            isPercent: this.options.stacked,
-            requireSingleDimension: true, 
-            requireIsDiscrete: false, 
-            valueType: Number, 
-            defaultDimension: 'value' 
-        });
-    },
-    
+
     /** @override */
     _createPlotsInternal: function() {
 
@@ -57,10 +41,15 @@ def
     _createPlotTrend: function() {
         this._addPlot(new pvc.visual.PointPlot(this, {
             name: 'trend',
+            spec: {
+                visualRoles: {
+                    color: {from: 'series'}
+                }
+            },
             fixed: {
                 DataPart: 'trend',
                 TrendType: 'none',
-                ColorRole: 'series', // one trend per series
+                //ColorRole: 'series', // one trend per series
                 NullInterpolatioMode: 'none'
             },
             defaults: {

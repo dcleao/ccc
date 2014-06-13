@@ -4,9 +4,9 @@
 
 def
 .type('pvc.visual.ColorDataCell', pvc.visual.DataCell)
-.init(function(plot, axisType, axisIndex, roleName, dataPartValue) {
+.init(function(plot, axisType, axisIndex, role, dataPartValue) {
 
-    this.base(plot, axisType, axisIndex, roleName, dataPartValue);
+    this.base(plot, axisType, axisIndex, role, dataPartValue);
 
     this._legendGroupScene = null;
 })

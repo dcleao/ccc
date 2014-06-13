@@ -42,7 +42,7 @@ def.type('pvc.data.BoxplotChartTranslationOper')
         
         // Try to bind as much measure roles as there are free measures
         def
-        .query(pvc.BoxplotChart.measureRolesNames)
+        .query(pvc.visual.BoxPlot.measureRolesNames)
         .take (freeMeaIndexes.length) // first free measures
         .each(function(roleName) {
             this._getUnboundRoleDefaultDimNames(roleName, 1, autoDimNames);

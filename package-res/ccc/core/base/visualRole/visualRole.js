@@ -20,7 +20,7 @@ def
  * @class Represents a role that is somehow played by a visualization.
  * 
  * @property {string} name The name of the role.
- *
+ * @property {pvc.visual.Plot} plot The owner plot of the visual role, when there is one.
  * @property {string} label
  * The label of this role.
  * The label <i>should</i> be unique on a visualization.
@@ -50,8 +50,9 @@ def
  * should be created when the role has not been read by a translator (required or not).
  *
  * @constructor
- * @param {string} name The name of the role.
+ * @param {string} name The local name of the role.
  * @param {object} [keyArgs] Keyword arguments.
+ * @param {string} [keyArgs.plot] The owner plot of the visual role, when there is one.
  * @param {string} [keyArgs.label] The label of this role.
  *
  * @param {boolean} [keyArgs.isRequired=false] Indicates a required role.
@@ -80,7 +81,8 @@ def
     this.name  = name;
     this.label = def.get(keyArgs, 'label') || def.titleFromName(name);
     this.index = def.get(keyArgs, 'index') || 0;
-    
+    this.plot  = def.get(keyArgs, 'plot');
+
     this.dimensionDefaults = def.get(keyArgs, 'dimensionDefaults') || {};
     
     if(def.get(keyArgs, 'isRequired', false)) this.isRequired = true;
@@ -144,7 +146,11 @@ def
     label: null,
     sourceRole: null,
     isDefaultSourceRole: false,
-    
+
+    prettyId: function() {
+        return (this.plot ? (this.plot.prettyId + ".") : "") + this.name;
+    },
+
     /** 
      * Obtains the first dimension type that is bound to the role.
      * @type cdo.DimensionType
@@ -401,6 +407,35 @@ def
                 dimType_addVisualRole.call(dimSpec.type, this);  
             }, this);
         }
+    }
+})
+.addStatic(/** @lends pvc.visual.Role */{
+    parse: function(chart, name, config) {
+        // Process the visual role configuration.
+        // * a string with the grouping dimensions, or
+        // * {dimensions: "product", isReversed:true, from: "series"}
+        var parsed = {isReversed: false, source: null, grouping: null},
+            groupSpec;
+
+        if(def.object.is(config)) {
+            if(config.isReversed) parsed.isReversed = true;
+
+            var sourceName = config.from;
+            if(sourceName) {
+                if(sourceName === name) throw def.error.operationInvalid("Invalid source role.");
+
+                parsed.source = chart.visualRoles[sourceName] ||
+                    def.fail.operationInvalid("Source visual role '{0}' is not defined.", [sourceName]);
+            } else {
+                groupSpec = config.dimensions;
+            }
+        } else if(config === null || def.string.is(config)) {
+            groupSpec = config;
+        }
+
+        if(groupSpec !== undefined) parsed.grouping = cdo.GroupingSpec.parse(groupSpec);
+
+        return parsed;
     }
 });
 

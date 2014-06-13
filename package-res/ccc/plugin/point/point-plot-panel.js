@@ -35,12 +35,6 @@ def
         plot.option.specify({'LinesVisible': true});
     }
 
-    var valueRoleName = plot.option('OrthoRole');
-    this.visualRoles.value = chart.visualRole(valueRoleName);
-    
-    // V1 support
-    this._v1DimRoleName = def.create(this._v1DimRoleName, {value: valueRoleName});
-
     // Legacy fields
     if(!chart.scatterChartPanel) chart.scatterChartPanel = this;
 })

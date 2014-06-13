@@ -64,6 +64,9 @@ def
         this.linkLabelSize       = plot.option('LinkLabelSize'      );
         this.linkLabelSpacingMin = plot.option('LinkLabelSpacingMin');
     }
+
+    // Legacy name
+    if(!chart.pieChartPanel) chart.pieChartPanel = this;
 })
 .add({
     plotType: 'pie',

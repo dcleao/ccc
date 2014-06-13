@@ -92,8 +92,8 @@ pvc.BaseChart
             ]
         }
     */
-    _defPlotExternal: function(name, plotDef) {
-        var plot, type = plotDef.type;
+    _defPlotExternal: function(name, plotSpec) {
+        var plot, type = plotSpec.type;
 
         // Convert names to first lower case.
         // "main" is an alias name for referring to the main plot.
@@ -110,16 +110,24 @@ pvc.BaseChart
         }
 
         var isNew = !plot;
-        if(isNew) plot = this._createPlotExternal(name, type, plotDef);
+        if(isNew) plot = this._createPlotExternal(name, type, plotSpec);
 
         // Process extension points and publish options with the plot's optionId prefix.
         // Must define options before _addPlot, because it reads option 'Trend'.
         var options = this.options;
-        this._processExtensionPointsIn(plotDef, plot.optionId, function(optValue, optId, optName) {
+        this._processExtensionPointsIn(plotSpec, plot.optionId, function(optValue, optId, optName) {
             // Not an extension point => it's an option
             switch(optName) {
                 // Already handled
-                case 'name': case 'type': break;
+                case 'name':
+                case 'type':
+                    break;
+
+                // Handled specially
+                case 'visualRoles':
+                    if(!isNew) plot._visualRolesOptions = optValue;
+                    break;
+
                 default: options[optId] = optValue; break;
             }
         });
@@ -127,7 +135,7 @@ pvc.BaseChart
         if(isNew) this._addPlot(plot);
     },
 
-    _createPlotExternal: function(name, type, plotDef) {
+    _createPlotExternal: function(name, type, plotSpec) {
         if(!type) throw def.error.argumentInvalid("plots", "Plot 'type' option is required.");
         
         var PlotClass = pvc.visual.Plot.getClass(type);
@@ -139,6 +147,7 @@ pvc.BaseChart
         return new PlotClass(this, {
             name:       name,
             isInternal: false,
+            spec:       plotSpec,
             defaults: {
                 ColorAxis: isFirst ? 1 : 2
             }
@@ -167,40 +176,66 @@ pvc.BaseChart
             throw def.error.operationInvalid("Plot index '{0}' of type '{1}' already taken.", [index, plot.type]);
         
         plot.globalIndex = this.plotList.length;
-        
+
+        var isMain = !plot.globalIndex;
+
         typePlots[index] = plot;
         
         this.plotList.push(plot);
         
         plots[id] = plot;
         if(name) plots[name] = plot;
-        if(!plot.globalIndex) plots.main = plot;
+        if(isMain) plots.main = plot;
 
         this._needsTrendPlot = this._needsTrendPlot ||
             (plot.option.isDefined('Trend') && !!plot.option('Trend'));
 
+        // Register the plot's visual roles.
+        plot.visualRoles().forEach(function(role) {
+            var rname = role.name, names = [];
+
+            if(isMain) {
+                // Prevent collision with chart level roles.
+                if(!(rname in this.visualRoles)) names.push(rname);
+                names.push("main." + rname);
+            }
+            names.push(id + "." + rname);
+            if(name) names.push(name + "." + rname);
+
+            this._addVisualRoleCore(role, names);
+        }, this);
+
+        // Callback
         plot.onAdded();
     },
-    
-    _collectPlotAxesDataCells: function(plot, dataCellsByAxisTypeThenIndex) {
-        /* Configure Color Axis Data Cell */
-        var dataCells = [];
-        
-        plot.collectDataCells(dataCells);
-        
-        if(dataCells.length) {
-            def
-            .query(dataCells)
-            .where(function(dataCell) { return dataCell.role.isBound(); })
-            .each (function(dataCell) {
+
+    _initPlotsDataCells: function() {
+        // type -> index -> [datacell array]
+
+        var dataCellsByAxisTypeThenIndex = this.parent
+                ? this.parent._dataCellsByAxisTypeThenIndex
+                : this._collectPlotsDataCells();
+
+        return (this._dataCellsByAxisTypeThenIndex = dataCellsByAxisTypeThenIndex);
+    },
+
+    _collectPlotsDataCells: function() {
+        var dataCellsByAxisTypeThenIndex = {},
+            addDataCell = function(dataCell) {
                 // Index DataCell in dataCellsByAxisTypeThenIndex
-                var dataCellsByAxisIndex = 
+                var dataCellsByAxisIndex =
                     def.array.lazy(dataCellsByAxisTypeThenIndex, dataCell.axisType);
-                
-                def.array.lazy(dataCellsByAxisIndex, dataCell.axisIndex)
-                    .push(dataCell);
-            });
-        }
+
+                def.array.lazy(dataCellsByAxisIndex, dataCell.axisIndex).push(dataCell);
+            };
+
+        // Ask potential DataCells to each plot.
+        // Only effective if its visual role becomes bound.
+        this.plotList.forEach(function(plot) {
+            plot.collectDataCells(addDataCell);
+        });
+
+        return dataCellsByAxisTypeThenIndex;
     }
 });
 

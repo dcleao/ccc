@@ -31,17 +31,6 @@ def
     yScale: null,
     xScale: null,
 
-    /** @override */    
-    _hasDataPartRole: def.retTrue,
-
-    _getSeriesRoleSpec: function() {
-        return {isRequired: true, defaultDimension: 'series*', autoCreateDimension: true, requireIsDiscrete: true};
-    },
-    
-    _getColorRoleSpec: function() {
-        return {isRequired: true, defaultDimension: 'color*', defaultSourceRole: 'series', requireIsDiscrete: true};
-    },
-    
     /**
      * Creates a scale for a given axis, with domain applied, but no range yet,
      * assigns it to the axis and assigns the scale to special v1 chart instance fields.

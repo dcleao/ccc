@@ -11,12 +11,18 @@
  */
 def
 .type('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot)
-.add({
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    this._addVisualRole('category', this._getCategoryRoleSpec());
+})
+.add(/** @lends pvc.visual.CategoricalPlot# */{
     /** @override */
     createVisibleData: function(baseData, ka) {
-        var serRole = this.chart.visualRoles.series,
+        var serRole = this.visualRole('series'),
             serGrouping = serRole && serRole.flattenedGrouping(),
-            catGrouping = this.chart.visualRoles.category.flattenedGrouping();
+            catGrouping = this.visualRole('category').flattenedGrouping();
 
         return serGrouping 
             // <=> One multi-dimensional, two-levels data grouping
@@ -29,6 +35,14 @@ def
 
     _getOptionsDefinition: function() { return pvc.visual.CategoricalPlot.optionsDef; },
 
+    /** @virtual */
+    _getCategoryRoleSpec: function() {
+        return {
+            isRequired: true,
+            defaultDimension: 'category*',
+            autoCreateDimension: true
+        };
+    },
 
     /**
      * Obtains the extent of the specified value axis' role
@@ -157,7 +171,13 @@ def
      */
     _reduceStackedCategoryValueExtent: function(chart, result, catRange, catGroup) {
         return pvc.unionExtents(result, catRange);
-    }
+    },
+
+    /** @override */
+    _getBaseRole: function() { return this.visualRole('category'); },
+
+    /** @override */
+    _getOrthoRoles: function() { return [this.visualRole('value')]; }
 });
 
 pvc.visual.CategoricalPlot.optionsDef = def.create(
@@ -167,13 +187,5 @@ pvc.visual.CategoricalPlot.optionsDef = def.create(
         resolve: '_resolveFull',
         cast:    Boolean,
         value:   false
-    },
-    
-    BaseRole: {
-        value: 'category'
-    },
-    
-    OrthoRole: { // override 
-        value: 'value'
     }
 });

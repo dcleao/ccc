@@ -15,13 +15,11 @@
  */
 def
 .type('pvc.visual.DataCell')
-.init(function(plot, axisType, axisIndex, roleName, dataPartValue) {
+.init(function(plot, axisType, axisIndex, role, dataPartValue) {
     this.plot = plot;
     this.axisType = axisType;
     this.axisIndex = axisIndex;
-    this.role = plot.chart.visualRoles[roleName] ||
-        def.fail.argumentInvalid('roleName', "Role is not defined.");
-
+    this.role = role;
     this.dataPartValue = dataPartValue;
 });
 

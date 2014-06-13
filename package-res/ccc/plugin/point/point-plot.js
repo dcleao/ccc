@@ -11,6 +11,20 @@
  */
 def
 .type('pvc.visual.PointPlot', pvc.visual.CategoricalPlot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    this._addVisualRole('value', {
+        isMeasure: true,
+        isRequired: true,
+        isPercent: chart.options.stacked,
+        requireSingleDimension: true,
+        requireIsDiscrete: false,
+        valueType: Number,
+        defaultDimension: 'value'
+    });
+})
 .add({
     type: 'point',
     

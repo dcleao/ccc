@@ -30,10 +30,11 @@ def
         // Elements of the first plot (of any type) can be accessed without prefix.
         // Peek chart's plotList (globalIndex is only set afterwards in addPlot).
         globalIndex = chart.plotList.length,
+        isMain      = !globalIndex,
         internalPlot = def.get(keyArgs, 'isInternal', true);
 
     keyArgs = def.setDefaults(keyArgs, 
-        'byNaked', !globalIndex,
+        'byNaked', isMain,
         'byName',  internalPlot,
         'byV1',    internalPlot);
     
@@ -43,7 +44,13 @@ def
         keyArgs.optionId = '_' + ((new Date()).getTime() + Math.floor(Math.random() * 100000));
 
     this.base(chart, this.type, index, keyArgs);
-    
+
+    this.prettyId    = this.name || this.id;
+    this.isInternal  = !!internalPlot;
+    this.isMain      = isMain;
+
+    this._visualRolesOptions = def.getPath(keyArgs, 'spec.visualRoles');
+
     // -------------
     
     // Last prefix has higher precedence.
@@ -53,11 +60,19 @@ def
     
     if(internalPlot) {
         // Elements of the first plot of the chart (the main plot) can be accessed without prefix.
-        if(!globalIndex) prefixes.push('');
+        if(isMain) prefixes.push('');
         
         // The plot name is a valid prefix.
         if(this.name) prefixes.push(this.name);
     }
+
+    this._visualRoles = {};
+    this._visualRoleList = [];
+
+    // -------------
+
+    var roleSpec = this._getColorRoleSpec();
+    if(roleSpec) this._addVisualRole('color', roleSpec);
 })
 .add({
     /** @override */
@@ -65,10 +80,33 @@ def
 
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.Plot.optionsDef; },
-    
-    collectDataCells: function(dataCells) {
+
+    /** @virtual */
+    _getColorRoleSpec: def.fun.constant(null),
+
+    _addVisualRole: function(name, spec) {
+        var roleList = this._visualRoleList;
+        spec = def.set(spec,
+            'index', roleList.length,
+            'plot',  this);
+
+        var role = new pvc.visual.Role(name, spec);
+        this._visualRoles[name] = role;
+        roleList.push(role);
+        return role;
+    },
+
+    visualRoles: function() {
+        return this._visualRoleList;
+    },
+
+    visualRole: function(name) {
+        return def.getOwn(this._visualRoles, name);
+    },
+
+    collectDataCells: function(addDataCell) {
         var dataCell = this._getColorDataCell();
-        if(dataCell) dataCells.push(dataCell);
+        if(dataCell) addDataCell(dataCell);
     },
 
     /** 
@@ -90,7 +128,7 @@ def
      * @virtual
      */
     createVisibleData: function(baseData, ka) {
-        var serRole = this.chart.visualRoles.series;
+        var serRole = this.visualRole('series');
         return serRole && serRole.isBound() 
             ? serRole.flatten(baseData, ka) 
             : baseData.where(null, ka); // Used?
@@ -98,7 +136,7 @@ def
     
     /**
      * Gets the extent of the values of the specified role
-     * over all datums of the visible data of this plot on the specfied chart.
+     * over all datums of the visible data of this plot on the specified chart.
      * 
      * @param {pvc.visual.BaseChart} chart The chart requesting the cell extent.
      * @param {pvc.visual.Axis} valueAxis The value axis.
@@ -139,14 +177,12 @@ def
     },
 
     _getColorDataCell: function() {
-        var colorRoleName = this.option('ColorRole');
-        if(colorRoleName)
-            return new pvc.visual.ColorDataCell(
-                    this,
-                    /*axisType*/ 'color',
-                    this.option('ColorAxis') - 1, 
-                    colorRoleName, 
-                    this.option('DataPart'));
+        return new pvc.visual.ColorDataCell(
+                this,
+                /*axisType*/'color',
+                this.option('ColorAxis') - 1,
+                this._visualRoles.color,
+                this.option('DataPart'));
     }
 })
 .addStatic({
@@ -227,12 +263,13 @@ pvc.visual.Plot.optionsDef = {
     },
     
     // ---------------
-    
+    /*
     ColorRole: {
         resolve: '_resolveFixed',
         cast:    String,
         value:   'color'
     },
+    */
     
     ColorAxis: {
         resolve: pvc.options.resolvers([

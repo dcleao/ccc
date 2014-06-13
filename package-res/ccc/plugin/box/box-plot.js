@@ -11,16 +11,45 @@
  */
 def
 .type('pvc.visual.BoxPlot', pvc.visual.CategoricalPlot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    var roleSpecBase = {
+        isMeasure: true,
+        requireSingleDimension: true,
+        requireIsDiscrete: false,
+        valueType: Number
+    };
+
+    [
+        {name: 'median',       label: 'Median',        defaultDimension: 'median', isRequired: true},
+        {name: 'lowerQuartil', label: 'Lower Quartil', defaultDimension: 'lowerQuartil'},
+        {name: 'upperQuartil', label: 'Upper Quartil', defaultDimension: 'upperQuartil'},
+        {name: 'minimum',      label: 'Minimum',       defaultDimension: 'minimum' },
+        {name: 'maximum',      label: 'Maximum',       defaultDimension: 'maximum'}
+    ].forEach(function(info) {
+        this._addVisualRole(info.name, def.create(roleSpecBase, info));
+    }, this);
+})
 .add({
     type: 'box',
-    
-    _getOptionsDefinition: function() { return pvc.visual.BoxPlot.optionsDef; }
+
+    /** @override */
+    _getOptionsDefinition: function() { return pvc.visual.BoxPlot.optionsDef; },
+
+    /** @override */
+    _getOrthoRoles: function() {
+        return pvc.visual.BoxPlot.measureRolesNames.map(this.visualRole, this);
+    }
 });
 
-pvc.visual.Plot.registerClass(pvc.visual.BoxPlot);
+pvc.visual.BoxPlot.addStatic({
+    measureRolesNames: ['median', 'lowerQuartil', 'upperQuartil', 'minimum', 'maximum']
+});
 
 pvc.visual.BoxPlot.optionsDef = def.create(
-    pvc.visual.CategoricalPlot.optionsDef, 
+    pvc.visual.CategoricalPlot.optionsDef,
     {
         // NO Values Label!
 
@@ -28,11 +57,7 @@ pvc.visual.BoxPlot.optionsDef = def.create(
             resolve: null,
             value:   false
         },
-        
-        OrthoRole: {
-            value:   ['median', 'lowerQuartil', 'upperQuartil', 'minimum', 'maximum'] // content of pvc.BoxplotChart.measureRolesNames
-        },
-        
+
         BoxSizeRatio: {
             resolve: '_resolveFull',
             cast: function(value) {
@@ -62,3 +87,5 @@ pvc.visual.BoxPlot.optionsDef = def.create(
             value: Infinity
         }
     });
+
+pvc.visual.Plot.registerClass(pvc.visual.BoxPlot);

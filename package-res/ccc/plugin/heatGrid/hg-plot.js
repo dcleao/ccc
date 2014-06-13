@@ -11,27 +11,70 @@
  */
 def
 .type('pvc.visual.HeatGridPlot', pvc.visual.CategoricalPlot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    // TODO: get a translator for this!!
+
+    var sizeDimName = (chart.compatVersion() <= 1 && chart.options.sizeValIdx === 1)
+            ? 'value2'
+            : 'value';
+
+    this._addVisualRole('size', {
+        isMeasure: true,
+        requireSingleDimension: true,
+        requireIsDiscrete: false,
+        valueType: Number,
+        defaultDimension: sizeDimName
+    });
+})
 .add({
     type: 'heatGrid',
 
-    collectDataCells: function(dataCells) {
+    /* @override */
+    _getColorRoleSpec: function() {
+        var chart = this.chart,
+            colorDimName = (chart.compatVersion() <= 1 && chart.options.colorValIdx === 1)
+                ? 'value2'
+                : 'value';
+
+        return {
+            isMeasure: true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number,
+            defaultDimension: colorDimName
+        };
+    },
+
+    /* @override */
+    _getCategoryRoleSpec: function() {
+        var catRoleSpec = this.base();
+        // Force dimension to be discrete!
+        catRoleSpec.requireIsDiscrete = true;
+        return catRoleSpec;
+    },
+
+    collectDataCells: function(addDataCell) {
         
-        this.base(dataCells);
+        this.base(addDataCell);
 
         if(this.option('UseShapes')) {
-            var sizeRole = this.chart.visualRole(this.option('SizeRole'));
-            if(sizeRole.isBound()) {
-                dataCells.push(new pvc.visual.DataCell(
-                    this,
-                    /*axisType*/ 'size',
-                    this.option('SizeAxis') - 1, 
-                    sizeRole.name,
-                    this.option('DataPart')));
-            }
+            addDataCell(new pvc.visual.DataCell(
+                this,
+                /*axisType*/ 'size',
+                this.option('SizeAxis') - 1,
+                this.visualRole('size'),
+                this.option('DataPart')));
         }
     },
 
-    _getOptionsDefinition: function() { return pvc.visual.HeatGridPlot.optionsDef; }
+    /** @override */
+    _getOptionsDefinition: function() { return pvc.visual.HeatGridPlot.optionsDef; },
+
+    /** @override */
+    _getOrthoRoles: function() { return [this.visualRole('series')]; }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.HeatGridPlot);
@@ -81,10 +124,6 @@ pvc.visual.HeatGridPlot.optionsDef = def.create(
             value: 'center'
         },
 
-        OrthoRole: { // override
-            value: 'series'
-        },
-        
         OrthoAxis: { // override
             resolve: null
         },

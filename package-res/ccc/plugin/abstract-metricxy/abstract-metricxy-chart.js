@@ -19,35 +19,6 @@ def
         options.panelSizeRatio = 1;
     },
 
-    /**
-     * Initializes each chart's specific roles.
-     * @override
-     */
-    _initVisualRoles: function() {
-
-        this.base();
-
-        this._addVisualRole('x', {
-            isMeasure:  true,
-            isRequired: true,
-            requireSingleDimension: true,
-            requireIsDiscrete: false,
-            defaultDimension: 'x',
-            dimensionDefaults: {
-                valueType: this.options.timeSeries ? Date : Number
-            }
-        });
-
-        this._addVisualRole('y', {
-            isMeasure:  true,
-            isRequired: true,
-            requireSingleDimension: true,
-            requireIsDiscrete: false,
-            defaultDimension: 'y',
-            dimensionDefaults: {valueType: Number}
-        });
-    },
-
     _generateTrendsDataCell: function(newDatums, dataCell, baseData) {
         var serRole = this.visualRoles.series,
             xRole   = this.visualRoles.x,

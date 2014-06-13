@@ -139,7 +139,7 @@ def
     ibits = def.bit.set(ibits, I.Clickable,       (chart._ibits & I.Clickable      ) && !!this.clickAction      );
     ibits = def.bit.set(ibits, I.DoubleClickable, (chart._ibits & I.DoubleClickable) && !!this.doubleClickAction);
 
-    // Animatible should not be inherited. Reset to chart's value.
+    // Animatable should not be inherited. Reset to chart's value.
     ibits = def.bit.set(ibits, I.Animatable,      (chart._ibits & I.Animatable));
 
     // Mask inherited bits with the Class capabilities.
@@ -1263,7 +1263,7 @@ def
         var dimNames = this._v1DimName || (this._v1DimNameCache = {}),
             dimName  = dimNames[v1Dim];
         if(dimName == null) {
-            var role = this.chart.visualRoles[this._v1DimRoleName[v1Dim]];
+            var role = this.visualRoles[this._v1DimRoleName[v1Dim]];
             dimName = role ? role.lastDimensionName() : '';
             dimNames[v1Dim] = dimName;
         }

@@ -28,7 +28,8 @@ def
     structDataset:  null,
 
     DataTreePanel : null,
-    
+
+    /** @override */
     _getColorRoleSpec: function() {
         return { isRequired: true, defaultSourceRole: 'category', requireIsDiscrete: true };
     },

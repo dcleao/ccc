@@ -11,22 +11,6 @@ def
     _interpolatable: true,
 
     /** @override */
-    _initVisualRoles: function() {
-        
-        this.base();
-
-        this._addVisualRole('category', this._getCategoryRoleSpec());
-    },
-
-    _getCategoryRoleSpec: function() {
-        return {
-            isRequired: true,
-            defaultDimension: 'category*',
-            autoCreateDimension: true
-        };
-    },
-
-    /** @override */
     _interpolateDataCell: function(dataCell, baseData) {
         var InterpType = this._getNullInterpolationOperType(dataCell.nullInterpolationMode);
         if(InterpType) {

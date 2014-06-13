@@ -11,24 +11,46 @@
  */
 def
 .type('pvc.visual.MetricPointPlot', pvc.visual.MetricXYPlot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    this._addVisualRole('size', {
+        isMeasure: true,
+        requireSingleDimension: true,
+        requireIsDiscrete: false,
+        defaultDimension: 'size',
+        dimensionDefaults: {
+            valueType: Number
+        }
+    });
+})
 .add({
     type: 'scatter',
 
-    collectDataCells: function(dataCells) {
-        
-        this.base(dataCells);
-
-        if(this.option('DotsVisible')) {
-            var sizeRole = this.chart.visualRole(this.option('SizeRole'));
-            if(sizeRole.isBound()) {
-                dataCells.push(new pvc.visual.DataCell(
-                    this,
-                    /*axisType*/ 'size',
-                    this.option('SizeAxis') - 1, 
-                    sizeRole.name,
-                    this.option('DataPart')));
+    /** @override */
+    _getColorRoleSpec: function() {
+        return {
+            //isMeasure: true, // TODO: not being set as measure when continuous...
+            defaultSourceRole: 'series',
+            defaultDimension:  'color*',
+            dimensionDefaults: {
+                valueType: Number
             }
-        }
+        };
+    },
+
+    collectDataCells: function(addDataCell) {
+        
+        this.base(addDataCell);
+
+        if(this.option('DotsVisible'))
+            addDataCell(new pvc.visual.DataCell(
+                this,
+                /*axisType*/ 'size',
+                this.option('SizeAxis') - 1,
+                this.visualRole('size'),
+                this.option('DataPart')));
     },
     
     _getOptionsDefinition: function() { return pvc.visual.MetricPointPlot.optionsDef; }

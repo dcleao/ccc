@@ -24,11 +24,16 @@ def
     _createPlotTrend: function() {
         this._addPlot(new pvc.visual.MetricPointPlot(this, {
             name: 'trend',
+            spec: {
+                visualRoles: {
+                    color: {from: 'series'}
+                }
+            },
             fixed: {
-                DataPart: 'trend',
+                DataPart:  'trend',
                 TrendType: 'none',
                 NullInterpolatioMode: 'none',
-                ColorRole: 'series', // one trend per series
+                //ColorRole: 'series', // one trend per series
                 SizeRole:  null,
                 SizeAxis:  null,
                 OrthoAxis: 1
@@ -40,35 +45,7 @@ def
             }
         }));
     },
-    
-    /** @override */
-    _getColorRoleSpec: function() {
-        return {
-            //isMeasure: true, // TODO: not being set as measure when continuous...
-            defaultSourceRole: 'series',
-            defaultDimension:  'color*',
-            dimensionDefaults: {
-                valueType: Number
-            }
-        };
-    },
-    
-    /** @override */
-    _initVisualRoles: function() {
-        
-        this.base();
-        
-        this._addVisualRole('size', {
-            isMeasure: true,
-            requireSingleDimension: true,
-            requireIsDiscrete: false,
-            defaultDimension: 'size',
-            dimensionDefaults: {
-                valueType: Number
-            }
-        });
-    },
-    
+
     /** @override */
     _getTranslationClass: function(translOptions) {
         return def

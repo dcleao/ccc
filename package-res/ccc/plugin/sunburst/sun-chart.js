@@ -8,42 +8,14 @@ def
 .type('pvc.SunburstChart', pvc.BaseChart)
 .add({
     _axisClassByType: {
-        'size': pvc.visual.NormalizedAxis
+        'size':  pvc.visual.NormalizedAxis,
+        'color': pvc.visual.SunburstDiscreteColorAxis
     },
 
     // Create color axis, even if the role is unbound
     // cause we need to check the axis options any way
     _axisCreateIfUnbound: {
         'color': true
-    },
-
-    _getColorRoleSpec: function() {
-        return {
-            defaultSourceRole: 'category',
-            defaultDimension:  'color*',
-            requireIsDiscrete: true
-        };
-    },
-
-    _initVisualRoles: function() {
-
-        this.base();
-
-        this._addVisualRole('category', {
-            isRequired: true,
-            defaultDimension: 'category*',
-            autoCreateDimension: true
-        });
-
-        this._addVisualRole('size', {
-            isMeasure:  true,
-            isRequired: false,
-            isPercent:  true,
-            requireSingleDimension: true,
-            requireIsDiscrete: false,
-            valueType: Number,
-            defaultDimension: 'size'
-        });
     },
 
     _getTranslationClass: function(translOptions) {
@@ -66,17 +38,5 @@ def
         var rootCategoryLabel = sunburstPlot.option('RootCategoryLabel');
         this.visualRoles.category.setRootLabel(rootCategoryLabel);
         this.visualRoles.color   .setRootLabel(rootCategoryLabel);
-    },
-
-    _initAxes: function(hasMultiRole) {
-        // Switch to custom Sunburst color-axis class
-        //  that handles derived colors calculation.
-        // Class shared object. Take care to inherit from it before changing.
-        if(!def.hasOwnProp.call(this, '_axisClassByType'))
-            this._axisClassByType = Object.create(this._axisClassByType);
-
-        this._axisClassByType.color = pvc.visual.SunburstDiscreteColorAxis;
-
-        return this.base(hasMultiRole);
     }
 });

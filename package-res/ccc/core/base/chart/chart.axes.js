@@ -78,20 +78,26 @@ pvc.BaseChart
         // Clear any previous global color scales
         delete this._rolesColorScale;
 
-        // type -> index -> [datacell array]
-        // Used by sub classes.
-        var dataCellsByAxisTypeThenIndex;
-        if(!this.parent) {
-            dataCellsByAxisTypeThenIndex = {};
+        // Filter only bound dataCells
+        var dataCellsByAxisTypeThenIndex = this._dataCellsByAxisTypeThenIndex;
 
-            this.plotList.forEach(function(plot) {
-                this._collectPlotAxesDataCells(plot, dataCellsByAxisTypeThenIndex);
-            }, this);
+        def.eachOwn(dataCellsByAxisTypeThenIndex, function(dataCellsByAxisIndex, type) {
+            var i = 0, I = dataCellsByAxisIndex.length;
+            while(i < I) {
+                var dataCells = dataCellsByAxisIndex[i]
+                    .filter(function(dataCell) { return dataCell.role.isBound(); });
 
-            this._dataCellsByAxisTypeThenIndex = dataCellsByAxisTypeThenIndex;
-        } else {
-            dataCellsByAxisTypeThenIndex = this.root._dataCellsByAxisTypeThenIndex;
-        }
+                if(dataCells.length) {
+                    dataCellsByAxisIndex[i] = dataCells;
+                    i++;
+                } else {
+                    dataCellsByAxisIndex.splice(i, 1);
+                    I--;
+                }
+            }
+
+            if(!dataCellsByAxisIndex.length) delete dataCellsByAxisTypeThenIndex[type];
+        });
 
         /* NOTE: Cartesian axes are created even when hasMultiRole && !parent
          * because it is needed to read axis options in the root chart.
