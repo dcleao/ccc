@@ -74,10 +74,10 @@ pvc.BaseChart
         if(!this.parent) {
             var data = this.data;
             if(!data) {
-                this._onLoadData();
+                this._loadData();
             } else if(def.get(ka, 'reloadData', true)) {
                 // This **replaces** existing data (datums also existing in the new data are kept)
-                this._onReloadData();
+                this._reloadData();
             } else {
                 // Existing data is kept.
                 // This is used for re-layouting only.
@@ -99,118 +99,86 @@ pvc.BaseChart
         if(pvc.debug >= 3) this._log(this.data.getInfo());
     },
 
-    _onLoadData: function() {
+    _loadData: function() {
         /*jshint expr:true*/
-        var data = this.data,
-            translation = this._translation;
+        var data, translation;
 
-        (!data && !translation) || def.assert("Invalid state.");
+        if(DEBUG) (!this.data && !this._translation) || def.assert("Invalid state.");
 
         var options = this.options,
-            dataPartDimName = this._getDataPartDimName(),
-            complexTypeProj = this._complexTypeProj || def.assert("Invalid state."),
-            dimsOptions     = this._createDimensionsOptions(options);
+            dimsOptions = this._createDimensionsOptions(options),
+            binder = this._visualRolesBinder(dimsOptions);
 
-        // If there are any columns in the supplied data
-        if(this.metadata.length) {
-            var translOptions = this._createTranslationOptions(options, dimsOptions, dataPartDimName);
-            translation = this._translation = this._createTranslation(translOptions);
+        // If there are any columns in the supplied data.
+        if(this.metadata.length)
+            translation = this._translation =
+                this._createTranslation(binder.complexTypeProject(), dimsOptions, binder.dataPartDimName());
 
-            if(pvc.debug >= 3) this._log(translation.logSource()), this._log(translation.logTranslatorType());
-
-            // Now the translation can also configure the type
-            translation.configureType();
-        }
-
-        // If the the dataPart dimension isn't being read or calculated,
-        // its value must be defaulted to 0.
-        if(dataPartDimName && !complexTypeProj.isReadOrCalc(dataPartDimName))
-            this._addDefaultDataPartCalculation(dataPartDimName);
-
-        if(translation && pvc.debug >= 3) this._log(translation.logVItem());
-
-        // ----------
-        // Roles are bound before actually loading data.
-        // i) roles add default properties to dimensions bound to them
-        // ii) in order to be able to filter datums
-        //     whose "every dimension in a measure role is null".
-        this._bindVisualRolesPostI();
-
-        // Setup the complex type from complexTypeProj;
-        var complexType = new cdo.ComplexType();
-        complexTypeProj.configureComplexType(complexType, dimsOptions);
-
-        this._bindVisualRolesPostII(complexType);
-
-        if(pvc.debug >= 3) this._log(complexType.describe()), this._logVisualRoles();
+        var complexType = binder.end();
 
         data =
             this.dataEngine = // V1 property
             this.data = new cdo.Data({
                 type:     complexType,
                 labelSep: options.groupedLabelSep,
-                keySep:   options.dataSeparator
+                keySep:   options.dataOptions.separator
             });
 
         // ----------
 
-        if(translation) {
-            var loadKeyArgs = {where: this._getLoadFilter(), isNull: this._getIsNullDatum()},
-                resultQuery = translation.execute(data);
-
-            data.load(resultQuery, loadKeyArgs);
-        }
+        if(translation) this._loadDataCore(data, translation);
     },
 
-    _onReloadData: function() {
+    _reloadData: function() {
         /*jshint expr:true*/
 
-        var data = this.data,
-            translation = this._translation;
+        var data = this.data, translation = this._translation;
 
         (data && translation) || def.assert("Invalid state.");
 
-        // pass new resultset to the translation (metadata is maintained!).
+        // Pass new resultset to the translation (metadata is maintained!).
         translation.setSource(this.resultset);
 
         if(pvc.debug >= 3) this._log(translation.logSource());
 
-        var loadKeyArgs = {where: this._getLoadFilter(), isNull: this._getIsNullDatum()},
-            resultQuery = translation.execute(data);
-
-        data.load(resultQuery, loadKeyArgs);
+        this._loadDataCore(data, translation);
     },
 
+    _loadDataCore: function(data, translation) {
+        var loadKeyArgs = {where: this.options.dataOptions.where, isNull: this._getIsNullDatum()},
+            readQuery = translation.execute(data);
+
+        data.load(readQuery, loadKeyArgs);
+    },
+
+    /**
+     * Creates a complex type project and
+     * configures it with the chart options
+     * `dimensions`, `dimensionsGroups` and `calculations`.
+     *
+     * Must be called after pre-binding visual roles with
+     * dimension names specified in visual roles' options.
+     */
     _createComplexTypeProject: function() {
         var options = this.options,
             complexTypeProj = new cdo.ComplexTypeProject(options.dimensionGroups),
-            // Add specified dimensions
             userDimsSpec = options.dimensions;
 
-        for(var dimName in userDimsSpec) // userDimsSpec can be null; 'for' accepts null!
-            complexTypeProj.setDim(dimName, userDimsSpec[dimName]);
-
-        // Add data part dimension and
-        // dataPart calculation from series values
+        /**
+         * The chart-level `dataPart` visual role can be explicitly bound
+         * to a dimension whose name is not "dataPart".
+         * By now, the actual name of the dimension playing the `dataPart` role is already known.
+         */
         var dataPartDimName = this._getDataPartDimName();
-        if(dataPartDimName) {
-            complexTypeProj.setDim(dataPartDimName);
+        if(dataPartDimName) complexTypeProj.setDim(dataPartDimName);
 
-            this._addPlot2SeriesDataPartCalculation(complexTypeProj, dataPartDimName);
-        }
+        // `userDimsSpec` can be null.
+        for(var dimName in userDimsSpec) complexTypeProj.setDim(dimName, userDimsSpec[dimName]);
 
-        // Add specified calculations
         var calcSpecs = options.calculations;
-        if(calcSpecs) calcSpecs.forEach(function(calcSpec) { complexTypeProj.setCalc(calcSpec); });
+        if(calcSpecs) calcSpecs.forEach(complexTypeProj.setCalc, complexTypeProj);
 
         return complexTypeProj;
-    },
-
-    _getLoadFilter: function() {
-        var options = this.options,
-            dataWhere = options.dataWhere,
-            dataOptions;
-        return dataWhere !== undefined ? dataWhere : ((dataOptions = options.dataOptions) && dataOptions.where);
     },
 
     _getIsNullDatum: function() {
@@ -226,10 +194,24 @@ pvc.BaseChart
         }
     },
 
-    _createTranslation: function(translOptions) {
+    _createTranslation: function(complexTypeProj, dimsOptions, dataPartDimName) {
+        var translOptions = this._createTranslationOptions(dimsOptions, dataPartDimName);
+
+        var translation = this._createTranslationCore(complexTypeProj, translOptions);
+
+        if(pvc.debug >= 3) this._log(translation.logSource()), this._log(translation.logTranslatorType());
+
+        translation.configureType();
+
+        if(pvc.debug >= 3) this._log(translation.logVItem());
+
+        return translation;
+    },
+
+    _createTranslationCore: function(complexTypeProj, translOptions) {
         var TranslationClass = this._getTranslationClass(translOptions);
 
-        return new TranslationClass(this, this._complexTypeProj, this.resultset, this.metadata, translOptions);
+        return new TranslationClass(this, complexTypeProj, this.resultset, this.metadata, translOptions);
     },
 
     _getTranslationClass: function(translOptions) {
@@ -248,42 +230,13 @@ pvc.BaseChart
         };
     },
 
-    _createTranslationOptions: function(options, dimsOptions, dataPartDimName) {
-        var dataOptions = options.dataOptions || {};
-
-        var dataMeasuresInColumns = options.dataMeasuresInColumns;
-        if(dataMeasuresInColumns === undefined) dataMeasuresInColumns = dataOptions.measuresInColumns;
-
-        var dataCategoriesCount = options.dataCategoriesCount;
-        if(dataCategoriesCount === undefined) dataCategoriesCount = dataOptions.categoriesCount;
-
-        var dataIgnoreMetadataLabels = options.dataIgnoreMetadataLabels;
-        if(dataIgnoreMetadataLabels === undefined) dataIgnoreMetadataLabels = dataOptions.ignoreMetadataLabels;
-
-        var plot2Series, plot2DataSeriesIndexes;
-        var plot2 = options.plot2;
-        if(plot2) {
-            if(this._allowV1SecondAxis && (this.compatVersion() <= 1)) {
-                plot2DataSeriesIndexes = options.secondAxisIdx;
-            } else {
-                plot2Series = (this.visualRoles.series != null) &&
-                              options.plot2Series &&
-                              def.array.as(options.plot2Series);
-
-                // TODO: temporary implementation based on V1s secondAxisIdx's implementation
-                // until a real "series visual role" based implementation exists.
-                if(!plot2Series || !plot2Series.length) {
-                    plot2Series = null;
-                    plot2DataSeriesIndexes = options.plot2SeriesIndexes;
-                }
-            }
-
-            if(!plot2Series) plot2DataSeriesIndexes = pvc.parseDistinctIndexArray(plot2DataSeriesIndexes, -Infinity) || -1;
-        }
+    _createTranslationOptions: function(dimsOptions, dataPartDimName) {
+        var options = this.options,
+            dataOptions = options.dataOptions;
 
         return def.create(dimsOptions, {
             compatVersion:     this.compatVersion(),
-            plot2DataSeriesIndexes: plot2DataSeriesIndexes,
+            plot2DataSeriesIndexes: options.plot2SeriesIndexes,
             seriesInRows:      options.seriesInRows,
             crosstabMode:      options.crosstabMode,
             isMultiValued:     options.isMultiValued,
@@ -291,59 +244,80 @@ pvc.BaseChart
             readers:           options.readers,
             measuresIndexes:   options.measuresIndexes, // relational multi-valued
             multiChartIndexes: options.multiChartIndexes,
-            ignoreMetadataLabels: dataIgnoreMetadataLabels,
+            ignoreMetadataLabels: dataOptions.ignoreMetadataLabels,
 
             // crosstab
-            separator:         options.dataSeparator,
-            measuresInColumns: dataMeasuresInColumns,
-            categoriesCount:   dataCategoriesCount,
+            separator:         dataOptions.separator,
+            measuresInColumns: dataOptions.measuresInColumns,
+            categoriesCount:   dataOptions.categoriesCount,
 
             // TODO: currently measuresInRows is not implemented...
-            measuresIndex:     dataOptions.measuresIndex || dataOptions.measuresIdx, // measuresInRows
-            measuresCount:     dataOptions.measuresCount || dataOptions.numMeasures  // measuresInRows
+            measuresIndex:     dataOptions.measuresIndex,
+            measuresCount:     dataOptions.measuresCount
         });
     },
 
-    _addPlot2SeriesDataPartCalculation: function(complexTypeProj, dataPartDimName) {
-        if(this.compatVersion() <= 1) return;
+    _maybeAddPlot2SeriesDataPartCalc: function(complexTypeProj, dataPartDimName) {
+        if(this.compatVersion() <= 1) return false;
 
         var options = this.options,
-            serRole = this.visualRoles.series,
-            plot2Series = (serRole != null) && options.plot2 && options.plot2Series && def.array.as(options.plot2Series);
+            plot2Series = options.plot2Series;
 
-        if(!plot2Series || !plot2Series.length) return;
+        if(!plot2Series) return false;
 
-        var inited = false,
+        var serRole = this.visualRoles.series, // plot2Series => serRole as by _processDataOptions
             plot2SeriesSet = def.query(plot2Series).uniqueIndex(),
-            dimNames, dataPartDim, part1Atom, part2Atom;
+            hasOwnProp = def.hasOwnProp,
+            seriesDimNames, dataPartDim, part1Atom, part2Atom, buildSeriesKey,
+            init = function(datum) {
+                // LAZY init
+                if(serRole.isBound()) {
+                    seriesDimNames = serRole.grouping.dimensionNames();
+                    dataPartDim    = datum.owner.dimensions(dataPartDimName);
+                    if(seriesDimNames.length > 1) {
+                        buildSeriesKey = cdo.Complex.compositeKey;
+                    } else {
+                        seriesDimNames = seriesDimNames[0];
+                        buildSeriesKey = function(dat, serDimName) { return dat.atoms[serDimName].key; };
+                    }
+                }
+                init = null;
+            };
 
         complexTypeProj.setCalc({
             names: dataPartDimName,
             calculation: function(datum, atoms) {
-                if(!inited) {
-                    // LAZY init
-                    if(serRole.isBound()) {
-                        dimNames    = serRole.grouping.dimensionNames();
-                        dataPartDim = datum.owner.dimensions(dataPartDimName);
-                    }
-                    inited = true;
-                }
-
-                if(dataPartDim) {
-                    var seriesKey = cdo.Complex.compositeKey(datum, dimNames);
+                init && init(datum);
+                if(dataPartDim) { // when serRole is unbound
+                    var seriesKey = buildSeriesKey(datum, seriesDimNames);
                     atoms[dataPartDimName] =
-                        def.hasOwnProp.call(plot2SeriesSet, seriesKey) ?
-                           (part2Atom || (part2Atom = dataPartDim.intern('1'))) :
-                           (part1Atom || (part1Atom = dataPartDim.intern('0')));
+                        hasOwnProp.call(plot2SeriesSet, seriesKey)
+                            ? (part2Atom || (part2Atom = dataPartDim.intern('1')))
+                            : (part1Atom || (part1Atom = dataPartDim.intern('0')));
                 }
             }
         });
+
+        return true;
     },
 
-    _addDefaultDataPartCalculation: function(dataPartDimName) {
+    /**
+     * Adds a calculation to the complex type project,
+     * for the specified data part dimension name,
+     * that always evaluates to '0'.
+     *
+     * This is used to initialize the data part dimension
+     * (the one to which the `dataPart` visual role is bound)
+     * when there is no "by series" partitioning configuration,
+     * or a user defined calculation for it.
+     *
+     * @param {cdo.ComplexTypeProject} complexTypeProject The complex type project to configure.
+     * @param {string} dataPartDimName The dimension to which the `dataPart` visual role is bound.
+     */
+    _addDefaultDataPartCalculation: function(complexTypeProj, dataPartDimName) {
         var dataPartDim, part1Atom;
 
-        this._complexTypeProj.setCalc({
+        complexTypeProj.setCalc({
             names: dataPartDimName,
             calculation: function(datum, atoms) {
                 if(!dataPartDim) dataPartDim = datum.owner.dimensions(dataPartDimName);

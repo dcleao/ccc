@@ -38,9 +38,9 @@ def
         this.base(options);
     },
 
-    _createTranslation: function(translOptions) {
+    _createTranslationCore: function(complexTypeProj, translOptions) {
         
-        var translation = this.base(translOptions),
+        var translation = this.base(complexTypeProj, translOptions),
             /*
              * By now the translation has already been initialized
              * and its virtualItemSize is determined.

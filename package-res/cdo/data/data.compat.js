@@ -16,7 +16,7 @@ cdo.Data
                 type = dimension.type,
                 features = [];
             
-            features.push('"' + type.label + '"');
+            features.push();
             features.push(type.valueTypeName);
             
             if(type.isComparable) features.push("comparable");
@@ -26,8 +26,7 @@ cdo.Data
             out.push(
                 "  " + 
                 name +
-                " (" + features.join(', ') + ")" +
-                " (" + count + ")\n\t" + 
+                ' ("' + type.label + '", #' + count + ')\n\t' +
                 dimension.atoms().slice(0, 10).map(function(atom) { return atom.label; }).join(", ") +
                 (count > 10 ? "..." : ""));
         });

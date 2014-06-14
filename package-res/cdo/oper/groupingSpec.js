@@ -285,10 +285,7 @@ def.type('cdo.GroupingSpec')
     },
 
     toString: function() {
-        return def.query(this.levels)
-            .select(function(level) { return '' + level; })
-            .array()
-            .join(', ');
+        return this.levels.map(String).join(', ');
     }
 });
 
@@ -416,7 +413,11 @@ def.type('cdo.GroupingDimensionSpec')
         return this.reverse ? (b.id - a.id) : (a.id - b.id);
     },
 
-    toString: function() { return this.name + (this.reverse ? ' desc' : ''); }
+    toString: function() {
+        return this.name +
+            (this.type    ? (' ("' + this.type.label + '")') : '') +
+            (this.reverse ? ' desc'                          : '');
+    }
 });
 
 /**

@@ -200,7 +200,7 @@ def
      */
     _create: function(keyArgs) {
         this._createPhase1(keyArgs);
-        this._createPhase2(keyArgs);
+        this._createPhase2();
     },
     
     _createPhase1: function(keyArgs) {
@@ -213,12 +213,15 @@ def
 
         var isRoot = !this.parent,
             isOverflowRetry = this._isMultiChartOverflowClipRetry,
-            isRootInit = isRoot && !isOverflowRetry && !this.data;
+            isRootInit = isRoot && !isOverflowRetry && !this.data,
+            hasMultiRole;
 
         // Options may be changed between renders
         if(!isRoot || !isOverflowRetry) this._processOptions();
 
         if(isRootInit) {
+            this._processDataOptions(this.options);
+
             // Now's a good time as any other to clear out all tipsy tooltips
             pvc.removeTipsyLegends();
 
@@ -228,20 +231,11 @@ def
             this._checkNoDataI();
 
             // Initialize chart-level/root visual roles.
-            this._initVisualRoles();
+            this._initChartVisualRoles();
         }
 
         // Initialize plots. These also define own visualRoles.
         if(isRootInit || !isRoot) this._initPlots();
-
-        // The Complex Type gets defined on the first load of data.
-        if(isRootInit) {
-            this._bindVisualRolesPreI();
-
-            this._complexTypeProj = this._createComplexTypeProject();
-
-            this._bindVisualRolesPreII();
-        }
 
         // Initialize the data (and _bindVisualRolesPost)
         if(!isOverflowRetry) {
@@ -251,7 +245,7 @@ def
             if(isRoot) this._checkNoDataII();
         }
 
-        var hasMultiRole = this.visualRoles.multiChart.isBound();
+        hasMultiRole = this.visualRoles.multiChart.isBound();
         
         if(!isOverflowRetry) this._initAxes(hasMultiRole);
 
@@ -261,15 +255,16 @@ def
             if(hasMultiRole) this._initMultiCharts();
 
             // Trends and Interpolation on Root Chart only.
-            // Interpolated data affects generated trends
             this._interpolate(hasMultiRole);
+
+            // Interpolated data affects generated trends.
             this._generateTrends(hasMultiRole);
         }
         
         this._setAxesScales(this._chartLevel());
     },
 
-    _createPhase2: function(/*keyArgs*/) {
+    _createPhase2: function() {
         var hasMultiRole = this.visualRoles.multiChart.isBound();
         
         // Initialize chart panels
@@ -319,8 +314,6 @@ def
         if(this.compatVersion() <= 1) options.plot2 = this._allowV1SecondAxis && !!options.secondAxis;
 
         this._processFormatOptions(options);
-
-        this._processDataOptions(options);
 
         this._processOptionsCore(options);
 
@@ -479,14 +472,48 @@ def
     },
 
     _processDataOptions: function(options) {
-        if(!this.parent) {
-            var dataSeparator = options.dataSeparator;
-            if(dataSeparator === undefined) {
-                var dataOptions = options.dataOptions;
-                if(dataOptions) dataSeparator = dataOptions.separator;
-            }
-            options.dataSeparator = dataSeparator || '~';
+        var dataOptions = options.dataOptions || (options.dataOptions = {});
+
+        function processDataOption(globalName, localName, dv) {
+            var v = options[globalName];
+            if(v !== undefined) dataOptions[localName] = (v == null || v === '' ? dv : v);
+            else if(dv != undefined && dataOptions[localName] === undefined) dataOptions[localName] = dv;
         }
+
+        processDataOption('dataSeparator',            'separator', '~');
+        processDataOption('dataMeasuresInColumns',    'measuresInColumns');
+        processDataOption('dataCategoriesCount',      'categoriesCount');
+        processDataOption('dataIgnoreMetadataLabels', 'ignoreMetadataLabels');
+        processDataOption('dataWhere',                'where');
+
+        var plot2 = options.plot2,
+            plot2Series, plot2SeriesIndexes;
+        if(plot2) {
+            if(this._allowV1SecondAxis && (this.compatVersion() <= 1)) {
+                plot2SeriesIndexes = options.secondAxisIdx;
+            } else {
+                // The visual role series must exist in the main plot, or in the chart.
+                // It may not become bound though.
+                plot2Series = (this.visualRoles.series != null) && options.plot2Series
+                    ? def.array.as(options.plot2Series)
+                    : null;
+
+                // TODO: temporary implementation based on V1s secondAxisIdx's implementation
+                // until a real "series visual role" based implementation exists.
+                if(!plot2Series || !plot2Series.length) {
+                    plot2Series = null;
+                    plot2SeriesIndexes = options.plot2SeriesIndexes;
+                }
+            }
+            if(!plot2Series) plot2SeriesIndexes = pvc.parseDistinctIndexArray(plot2SeriesIndexes, -Infinity) || -1;
+        }
+
+        options.plot2Series = plot2Series;
+        options.plot2SeriesIndexes = plot2SeriesIndexes;
+
+        // measuresInRows
+        dataOptions.measuresIndex = dataOptions.measuresIndex || dataOptions.measuresIdx;
+        dataOptions.measuresCount = dataOptions.measuresCount || dataOptions.numMeasures;
     },
 
     // --------------

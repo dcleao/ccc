@@ -83,15 +83,21 @@ pvc.BaseChart
         if(!this.parent) def.eachOwn(dataCellsByAxisTypeThenIndex, function(dataCellsByAxisIndex, type) {
             var i = 0, I = dataCellsByAxisIndex.length;
             while(i < I) {
-                var dataCells = dataCellsByAxisIndex[i]
-                    .filter(function(dataCell) { return dataCell.role.isBound(); });
+                var dataCells = dataCellsByAxisIndex[i];
+                if(dataCells) {
+                    dataCells = dataCells.filter(function (dataCell) {
+                        return dataCell.role.isBound();
+                    });
 
-                if(dataCells.length) {
-                    dataCellsByAxisIndex[i] = dataCells;
-                    i++;
+                    if(dataCells.length) {
+                        dataCellsByAxisIndex[i] = dataCells;
+                        i++;
+                    } else {
+                        dataCellsByAxisIndex.splice(i, 1);
+                        I--;
+                    }
                 } else {
-                    dataCellsByAxisIndex.splice(i, 1);
-                    I--;
+                    i++;
                 }
             }
 

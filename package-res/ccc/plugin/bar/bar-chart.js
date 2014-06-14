@@ -18,10 +18,8 @@ def
             // Line Plot
             this._addPlot(new pvc.visual.PointPlot(this, {
                 name: 'plot2',
-                fixed: {
-                    DataPart: '1'
-                },
                 defaults: {
+                    DataPart:    '1',
                     ColorAxis:    2,
                     LinesVisible: true,
                     DotsVisible:  true

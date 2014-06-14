@@ -94,7 +94,8 @@ function(dimTypeSpecs) {
         
         this._dimsList.forEach(function(type) {
             var features = [];
-            
+
+            features.push('"' + type.label + '"');
             features.push(type.valueTypeName);
             if(type.isComparable) features.push("comparable");
             if(!type.isDiscrete)  features.push("continuous");
