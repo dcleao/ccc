@@ -90,7 +90,7 @@ def.type('cdo.GroupingOper', cdo.DataOper)
     });
 
     /* Operation key */
-    if(hasKey) this.key = ids.join('!!') + [this._visible, this._isNull, whereKey].join('||'); // this._selected
+    if(hasKey) this.key = ids.join('!!') + "$" + [this._visible, this._isNull, whereKey].join('||'); // this._selected
 }).
 add(/** @lends cdo.GroupingOper */{
 
@@ -102,8 +102,8 @@ add(/** @lends cdo.GroupingOper */{
     execute: function() {
         /* Setup a priori datum filters */
 
-        /*global cdo_whereState: true */
-        var datumsQuery = cdo_whereState(def.query(this._linkParent._datums), {
+        /*global data_whereState: true */
+        var datumsQuery = data_whereState(def.query(this._linkParent._datums), {
                     visible:  this._visible,
                     selected: this._selected,
                     where:    this._where
@@ -117,8 +117,8 @@ add(/** @lends cdo.GroupingOper */{
 
     executeAdd: function(rootData, datums) {
 
-        /*global cdo_whereState: true */
-        var datumsQuery = cdo_whereState(def.query(datums), {
+        /*global data_whereState: true */
+        var datumsQuery = data_whereState(def.query(datums), {
                     visible:  this._visible,
                     selected: this._selected,
                     where:    this._where

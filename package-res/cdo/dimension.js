@@ -1297,16 +1297,11 @@ function dim_onDatumVisibleChanged(datum, visible) {
         var atom = datum.atoms[this.name],
             key = atom.key;
         
-        // <Debug>
-        /*jshint expr:true */
-        def.hasOwn(this._atomsByKey, key) || def.assert("Atom must exist in this dimension.");
-        // </Debug>
-        
+        if(DEBUG) def.hasOwn(this._atomsByKey, key) || def.assert("Atom must exist in this dimension.");
+
         var count = map[key];
-        
-        // <Debug>
-        (visible || (count > 0)) || def.assert("Must have had accounted for at least one visible datum."); 
-        // </Debug>
+
+        if(DEBUG) (visible || (count > 0)) || def.assert("Must have had accounted for at least one visible datum.");
         
         map[key] = (count || 0) + (visible ? 1 : -1);
         

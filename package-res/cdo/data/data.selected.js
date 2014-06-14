@@ -124,7 +124,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
  * @type undefined
  * @internal
  */
-function cdo_onDatumSelectedChanged(datum, selected) {
+function data_onDatumSelectedChanged(datum, selected) {
     // <Debug>
     /*jshint expr:true */
     !datum.isNull || def.assert("Null datums do not notify selected changes");
@@ -147,7 +147,7 @@ function cdo_onDatumSelectedChanged(datum, selected) {
  * @type undefined
  * @internal
  */
-function cdo_onDatumVisibleChanged(datum, visible) {
+function data_onDatumVisibleChanged(datum, visible) {
     var did = datum.id,
         me  = this,
         hasOwn = def.hasOwnProp;
@@ -169,17 +169,17 @@ function cdo_onDatumVisibleChanged(datum, visible) {
             i = 0,
             L = list.length;
         while(i < L) dim_onDatumVisibleChanged.call(list[i++], datum, visible);
-        
+
         // Notify child and link child datas
         list = me.childNodes;
         i = 0;
         L = list.length;
-        while(i < L) cdo_onDatumVisibleChanged.call(list[i++], datum, visible);
-        
+        while(i < L) data_onDatumVisibleChanged.call(list[i++], datum, visible);
+
         list = me._linkChildren;
         if(list && (L = list.length)) {
             i = 0;
-            while(i < L) cdo_onDatumVisibleChanged.call(list[i++], datum, visible);
+            while(i < L) data_onDatumVisibleChanged.call(list[i++], datum, visible);
         }
     }
 }
@@ -196,7 +196,7 @@ function cdo_onDatumVisibleChanged(datum, visible) {
  */
 cdo.Data.setSelected = function(datums, selected) {
     var anyChanged = 0;
-    // cdo_onDatumSelectedChanged is called
+    // data_onDatumSelectedChanged is called
     if(datums) def.query(datums).each(function(datum) { anyChanged |= datum.setSelected(selected); });
 
     return !!anyChanged;
@@ -242,7 +242,7 @@ cdo.Data.toggleSelected = function(datums, any) {
  */
 cdo.Data.setVisible = function(datums, visible) {
     var anyChanged = 0;
-    // cdo_onDatumVisibleChanged is called
+    // data_onDatumVisibleChanged is called
     if(datums) def.query(datums).each(function(datum) { anyChanged |= datum.setVisible(visible); });
     return !!anyChanged;
 };

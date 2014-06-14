@@ -70,8 +70,8 @@ function(data, atomsByName) {
             if(!select) delete this.isSelected;
             else        this.isSelected = true;
 
-            /*global cdo_onDatumSelectedChanged:true */
-            cdo_onDatumSelectedChanged.call(this.owner, this, select);
+            /*global data_onDatumSelectedChanged:true */
+            data_onDatumSelectedChanged.call(this.owner, this, select);
         }
 
         return changed;
@@ -102,8 +102,8 @@ function(data, atomsByName) {
         if(changed) {
             this.isVisible = visible;
 
-            /*global cdo_onDatumVisibleChanged:true */
-            cdo_onDatumVisibleChanged.call(this.owner, this, visible);
+            /*global data_onDatumVisibleChanged:true */
+            data_onDatumVisibleChanged.call(this.owner, this, visible);
         }
 
         return changed;

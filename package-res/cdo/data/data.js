@@ -140,8 +140,8 @@ def.type('cdo.Data', cdo.Complex)
         }
     }
     
-    /*global cdo_setDatums:true */
-    if(datums) cdo_setDatums.call(this, datums);
+    /*global data_setDatums:true */
+    if(datums) data_setDatums.call(this, datums);
     
     // Must anticipate setting this (and not wait for the base constructor)
     // because otherwise new Dimension( ... ) fails.

@@ -39,7 +39,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
                     return datum;
                 }, this);
 
-        cdo_setDatums.call(this, datums, {isAdditive: false, doAtomGC: true});
+        data_setDatums.call(this, datums, {isAdditive: false, doAtomGC: true});
     },
 
     clearVirtuals: function() {
@@ -109,11 +109,11 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * @param {cdo.Datum[]|def.Query} datums The datums to add.
      */
     add: function(datums) {
-        /*global cdo_assertIsOwner:true, cdo_setDatums:true*/
+        /*global cdo_assertIsOwner:true, data_setDatums:true*/
 
         cdo_assertIsOwner.call(this);
 
-        cdo_setDatums.call(this, datums, {isAdditive: true, doAtomGC: true});
+        data_setDatums.call(this, datums, {isAdditive: true, doAtomGC: true});
     },
 
     /**
@@ -210,13 +210,13 @@ cdo.Data.add(/** @lends cdo.Data# */{
         if(!whereSpec) {
             if(!keyArgs) return def.query(this._datums);
 
-            datums = cdo_whereState(def.query(this._datums), keyArgs);
+            datums = data_whereState(def.query(this._datums), keyArgs);
         } else {
-            whereSpec = cdo_processWhereSpec.call(this, whereSpec, keyArgs);
-            datums = cdo_where.call(this, whereSpec, keyArgs);
+            whereSpec = data_processWhereSpec.call(this, whereSpec, keyArgs);
+            datums = data_where.call(this, whereSpec, keyArgs);
         }
 
-        var where = cdo_wherePredicate(whereSpec, keyArgs);
+        var where = data_wherePredicate(whereSpec, keyArgs);
 
         return new cdo.Data({linkParent: this, datums: datums, where: where});
     },
@@ -299,12 +299,12 @@ cdo.Data.add(/** @lends cdo.Data# */{
         if(!whereSpec) {
             if(!keyArgs) return def.query(this._datums);
 
-            return cdo_whereState(def.query(this._datums), keyArgs);
+            return data_whereState(def.query(this._datums), keyArgs);
         }
 
-        whereSpec = cdo_processWhereSpec.call(this, whereSpec, keyArgs);
+        whereSpec = data_processWhereSpec.call(this, whereSpec, keyArgs);
 
-        return cdo_where.call(this, whereSpec, keyArgs);
+        return data_where.call(this, whereSpec, keyArgs);
     },
 
     /**
@@ -327,9 +327,9 @@ cdo.Data.add(/** @lends cdo.Data# */{
         /*jshint expr:true */
         whereSpec || def.fail.argumentRequired('whereSpec');
 
-        whereSpec = cdo_processWhereSpec.call(this, whereSpec, keyArgs);
+        whereSpec = data_processWhereSpec.call(this, whereSpec, keyArgs);
 
-        return cdo_where.call(this, whereSpec, keyArgs).first() || null;
+        return data_where.call(this, whereSpec, keyArgs).first() || null;
     },
 
     
@@ -400,7 +400,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
  * @type undefined
  * @private
  */
-function cdo_setDatums(addDatums, keyArgs) {
+function data_setDatums(addDatums, keyArgs) {
     // But may be an empty list
     /*jshint expr:true */
     addDatums || def.fail.argumentRequired('addDatums');
@@ -445,7 +445,7 @@ function cdo_setDatums(addDatums, keyArgs) {
             //  cause, now, these may already contain new atoms
             //  used (or not) by the new datums.
             oldDatums.forEach(function(oldDatum) {
-                cdo_processDatumAtoms.call(
+                data_processDatumAtoms.call(
                         this,
                         oldDatum,
                         /* intern */      false,
@@ -540,7 +540,7 @@ function cdo_setDatums(addDatums, keyArgs) {
         
         if(/*isAdditive && */newDatums) newDatums.push(newDatum);
 
-        cdo_processDatumAtoms.call(
+        data_processDatumAtoms.call(
                 this,
                 newDatum,
                 /* intern      */ internNewAtoms,
@@ -568,7 +568,7 @@ function cdo_setDatums(addDatums, keyArgs) {
  * @type undefined
  * @internal
  */
-function cdo_processDatumAtoms(datum, intern, markVisited) {
+function data_processDatumAtoms(datum, intern, markVisited) {
     // Avoid using for(var dimName in datum.atoms), 
     // cause it needs to traverse the whole, long scope chain
 
@@ -645,7 +645,7 @@ function cdo_addDatumsLocal(newDatums) {
 
         dsById[id] = newDatum;
 
-        cdo_processDatumAtoms.call(
+        data_processDatumAtoms.call(
                 me,
                 newDatum,
                 /* intern      */ true,
@@ -698,7 +698,7 @@ function cdo_addDatumsLocal(newDatums) {
  *
  * @private
  */
-function cdo_processWhereSpec(whereSpec) {
+function data_processWhereSpec(whereSpec) {
     var whereProcSpec = [];
 
     whereSpec = def.array.as(whereSpec);
@@ -744,7 +744,7 @@ function cdo_processWhereSpec(whereSpec) {
  * @private
  * @static
  */
-function cdo_whereState(q, keyArgs) {
+function data_whereState(q, keyArgs) {
     var visible  = def.get(keyArgs, 'visible'),
         isNull   = def.get(keyArgs, 'isNull'),
         selected = def.get(keyArgs, 'selected'),
@@ -758,7 +758,7 @@ function cdo_whereState(q, keyArgs) {
     return q;
 }
 
-function cdo_wherePredicate(whereSpec, keyArgs) {
+function data_wherePredicate(whereSpec, keyArgs) {
     var visible  = def.get(keyArgs, 'visible' ),
         isNull   = def.get(keyArgs, 'isNull'  ),
         selected = def.get(keyArgs, 'selected'),
@@ -769,7 +769,7 @@ function cdo_wherePredicate(whereSpec, keyArgs) {
     if(isNull   != null) ps.unshift(isNull   ? datum_isNullT     : datum_isNullF    );
     if(selected != null) ps.unshift(selected ? datum_isSelectedT : datum_isSelectedF);
     if(where           ) ps.unshift(where);
-    if(whereSpec       ) ps.unshift(cdo_whereSpecPredicate(whereSpec));
+    if(whereSpec       ) ps.unshift(data_whereSpecPredicate(whereSpec));
 
     var P = ps.length;
     if(P) {
@@ -786,7 +786,7 @@ function cdo_wherePredicate(whereSpec, keyArgs) {
     }
 }
 
-function cdo_whereSpecPredicate(whereSpec) {
+function data_whereSpecPredicate(whereSpec) {
     var L = whereSpec.length;
 
     return datumWhereSpecPredicate;
@@ -828,7 +828,7 @@ function cdo_whereSpecPredicate(whereSpec) {
  * @returns {def.Query} A query object that enumerates the desired {@link cdo.Datum}.
  * @private
  */
-function cdo_where(whereSpec, keyArgs) {
+function data_where(whereSpec, keyArgs) {
 
     var orderBys = def.array.as(def.get(keyArgs, 'orderBy')),
         datumKeyArgs = def.create(keyArgs || {}, {orderBy: null}),
@@ -836,7 +836,7 @@ function cdo_where(whereSpec, keyArgs) {
                    .selectMany(function(datumFilter, index) {
                       if(orderBys) datumKeyArgs.orderBy = orderBys[index];
 
-                      return cdo_whereDatumFilter.call(this, datumFilter, datumKeyArgs);
+                      return data_whereDatumFilter.call(this, datumFilter, datumKeyArgs);
                    }, this);
 
     return query.distinct(def.propGet('id'));
@@ -883,7 +883,7 @@ function cdo_where(whereSpec, keyArgs) {
  *
  * @private
  */
-function cdo_whereDatumFilter(datumFilter, keyArgs) {
+function data_whereDatumFilter(datumFilter, keyArgs) {
      var groupingSpecText = keyArgs.orderBy; // keyArgs is required
      if(!groupingSpecText) {
          // Choose the most convenient one.
