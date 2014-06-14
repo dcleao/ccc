@@ -164,14 +164,6 @@ pvc.BaseChart
             complexTypeProj = new cdo.ComplexTypeProject(options.dimensionGroups),
             userDimsSpec = options.dimensions;
 
-        /**
-         * The chart-level `dataPart` visual role can be explicitly bound
-         * to a dimension whose name is not "dataPart".
-         * By now, the actual name of the dimension playing the `dataPart` role is already known.
-         */
-        var dataPartDimName = this._getDataPartDimName();
-        if(dataPartDimName) complexTypeProj.setDim(dataPartDimName);
-
         // `userDimsSpec` can be null.
         for(var dimName in userDimsSpec) complexTypeProj.setDim(dimName, userDimsSpec[dimName]);
 
@@ -265,7 +257,7 @@ pvc.BaseChart
 
         if(!plot2Series) return false;
 
-        var serRole = this.visualRoles.series, // plot2Series => serRole as by _processDataOptions
+        var serRole = this.visualRoles.series, // plot2Series => serRole as by _processDataOptions (but possibly unbound)
             plot2SeriesSet = def.query(plot2Series).uniqueIndex(),
             hasOwnProp = def.hasOwnProp,
             seriesDimNames, dataPartDim, part1Atom, part2Atom, buildSeriesKey,
@@ -359,7 +351,7 @@ pvc.BaseChart
         // Changing order at this level is not acceptable.
         var dataPartDimName = partRole.lastDimensionName(),
             dataPartAtoms   = baseData.dimensions(dataPartDimName).getDistinctAtoms(def.array.to(dataPartValues)),
-            where = cdo_whereSpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
+            where = data_whereSpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
 
         return baseData.where(null, {where: where});
     },

@@ -208,26 +208,21 @@ pvc.BaseChart
         var colorAxes = this.axesByType.color;
         if(!colorAxes) return;
 
-        var _dataPartAtom, _dataPartDimName, _rootScene,
+        var dataPartDimName = this._getDataPartDimName(), // null when role unbound
+            rootScene,
             // Always index from 0 (independently of the first color axis' index)
             legendIndex = 0,
-            me = this,
             getCellClickMode = function(axis, cellData) {
                 // Trend series cannot be set to invisible.
-                // They are created each time that visible changes.
-                // So trend legend groups are created locked (clickMode = 'none')
-                if(axis.option('LegendClickMode') === 'togglevisible') {
-                    if(_dataPartAtom === undefined) {
-                        _dataPartAtom = me._getTrendDataPartAtom() || null;
-                        if(_dataPartAtom) _dataPartDimName = _dataPartAtom.dimension.name;
-                    }
-
-                    if(_dataPartAtom && (cellData.firstAtoms()[_dataPartDimName] === _dataPartAtom))
-                        return 'none';
-                }
+                // They are re-created each time that visible changes.
+                // So trend legend groups are created locked (clickMode = 'none').
+                if(dataPartDimName &&
+                   axis.option('LegendClickMode') === 'togglevisible' &&
+                   cellData.firstAtoms()[dataPartDimName].value === 'trend')
+                    return 'none';
             },
             getRootScene = function() {
-                return _rootScene || (_rootScene = legendPanel._getBulletRootScene());
+                return rootScene || (rootScene = legendPanel._getBulletRootScene());
             };
 
         colorAxes.forEach(function(axis) {

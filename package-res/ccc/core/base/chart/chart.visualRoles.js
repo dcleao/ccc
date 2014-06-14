@@ -231,9 +231,17 @@ pvc.BaseChart
 
             // -----------------------
 
+            // The chart-level `dataPart` visual role can be explicitly bound
+            // to a dimension whose name is not "dataPart".
+            // By now, the actual name of the dimension playing the `dataPart` role is already known.
             // Add data part dimension and dataPart calculation from series values.
-            dataPartDimName = me._getDataPartDimName();
-            if(dataPartDimName) me._maybeAddPlot2SeriesDataPartCalc(complexTypeProj, dataPartDimName);
+            dataPartDimName = me._getDataPartDimName(/*useDefault*/true);
+            if(!me._maybeAddPlot2SeriesDataPartCalc(complexTypeProj, dataPartDimName)) {
+                if(!visualRoles.dataPart.isPreBound() && me.plots.trend) {
+                    // Check if dataPart dimension needed for trend plot
+                    complexTypeProj.setDim(dataPartDimName);
+                }
+            }
 
             // -----------------------
 
@@ -355,9 +363,10 @@ pvc.BaseChart
         // whose "every dimension in a measure role is null".
         function end() {
 
-            // If the the dataPart dimension isn't being read or calculated,
-            // its value must be defaulted to 0.
-            if(dataPartDimName && !complexTypeProj.isReadOrCalc(dataPartDimName))
+            // If the the dataPart dimension is defined, but is not being read or calculated,
+            // then default its value '0'.
+            // If the dataPart role is not yet pre-bound to it, it will become so, in autoPreBindUnbound.
+            if(complexTypeProj.hasDim(dataPartDimName) && !complexTypeProj.isReadOrCalc(dataPartDimName))
                 me._addDefaultDataPartCalculation(complexTypeProj, dataPartDimName);
 
             visualRoleList.forEach(function(r) {
@@ -482,12 +491,12 @@ pvc.BaseChart
         this._log(out.join("\n"));
     },
     
-    _getDataPartDimName: function() {
+    _getDataPartDimName: function(useDefault) {
         var role = this.visualRoles.dataPart, preGrouping;
-        if(role)
-            return role.isBound()                          ? role.lastDimensionName()        :
-                   (preGrouping = role.preBoundGrouping()) ? preGrouping.lastDimensionName() :
-                   role.defaultDimensionName;
+        return role.isBound()                          ? role.lastDimensionName()        :
+               (preGrouping = role.preBoundGrouping()) ? preGrouping.lastDimensionName() :
+               useDefault                              ? role.defaultDimensionName       :
+               null;
     }
 });
 
