@@ -48,6 +48,9 @@ define([
                 d.setVisible(false);
             });
 
+            // Changing visible invalidates it all...
+            baseData.disposeChildren();
+
             // The datum we expect to be the result of interpolation
             // must not be present before.
             expect(baseData.datums([{series: 'S1', category: 'CB'}]).count())

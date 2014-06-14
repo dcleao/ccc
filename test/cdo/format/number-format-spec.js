@@ -653,27 +653,32 @@ define([
                 it("should auto/ create a local number style that inherits from the original one", function() {
                     var f = cdo.numberFormat();
                     var s1 = f.style();
+                    var groupSizes0 = s1.groupSizes();
+                    try {
+                        // Change with something unique that we can detect later.
+                        var groupSizes1 = [1, 2, 3];
+                        s1.groupSizes(groupSizes1);
 
-                    // Change with something unique that we can detect later.
-                    var groupSizes1 = [1, 2, 3];
-                    s1.groupSizes(groupSizes1);
+                        var group1 = s1.group();
+                        var group2 = " " + s1;
+                        f.style({group: group2});
 
-                    var group1 = s1.group();
-                    var group2 = " " + s1;
-                    f.style({group: group2});
+                        var s2 = f.style();
 
-                    var s2 = f.style();
+                        expect(s2).not.toBe(s1);
 
-                    expect(s2).not.toBe(s1);
+                        expect(s2.groupSizes()).toBe(groupSizes1);
+                        expect(s2.group()).toBe(group2);
+                        expect(s1.group()).toBe(group1);
 
-                    expect(s2.groupSizes()).toBe(groupSizes1);
-                    expect(s2.group()).toBe(group2);
-                    expect(s1.group()).toBe(group1);
+                        groupSizes1 = [1, 2, 3, 4];
+                        s1.groupSizes(groupSizes1);
 
-                    groupSizes1 = [1, 2, 3, 4];
-                    s1.groupSizes(groupSizes1);
-
-                    expect(s2.groupSizes()).toBe(groupSizes1);
+                        expect(s2.groupSizes()).toBe(groupSizes1);
+                    } finally {
+                        // Clean up global changes
+                        s1.groupSizes(groupSizes0);
+                    }
                 });
 
                 it("should preserve an already local number style", function() {

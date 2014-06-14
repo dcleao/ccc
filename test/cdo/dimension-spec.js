@@ -8,14 +8,11 @@ define([
 
         it('should keep the dimension list aligned with the dimensions', function(){
             var dimensionList = data.dimensionsList();
-            var dimensionSeries = data.dimensions('series'),
-                dimensionCategory = data.dimensions("category"),
-                dimensionValue = data.dimensions("value");
 
             expect(dimensionList.length).toBe(3);
-            expect(dimensionSeries).toBe(dimensionList[0]);
-            expect(dimensionCategory).toBe(dimensionList[1]);
-            expect(dimensionValue).toBe(dimensionList[2]);
+            expect(dimensionList[0].name).toBe('series');
+            expect(dimensionList[1].name).toBe('category');
+            expect(dimensionList[2].name).toBe('value');
         });
 
         it('should get indexes correctly', function(){

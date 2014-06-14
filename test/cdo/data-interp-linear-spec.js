@@ -22,9 +22,9 @@ define([
                         ["S1", "CC", 70]
                     ],
                     metadata: [
-                        {colType: "String",  colName: "Series"},
+                        {colType: "String",  colName: "Series"  },
                         {colType: "String",  colName: "Category"},
-                        {colType: "Numeric", colName: "Value"}
+                        {colType: "Numeric", colName: "Value"   }
                     ]
                 },
                 {
@@ -47,6 +47,9 @@ define([
             baseData.datums([{series: 'S2'}]).each(function(d) {
                 d.setVisible(false);
             });
+
+            // Changing visible invalidates it all...
+            baseData.disposeChildren();
 
             // The datum we expect to be the result of interpolation
             // must not be present before.
