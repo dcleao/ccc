@@ -492,11 +492,8 @@ def
             if(this._allowV1SecondAxis && (this.compatVersion() <= 1)) {
                 plot2SeriesIndexes = options.secondAxisIdx;
             } else {
-                // The visual role series must exist in the main plot, or in the chart.
-                // It may not become bound though.
-                plot2Series = (this.visualRoles.series != null) && options.plot2Series
-                    ? def.array.as(options.plot2Series)
-                    : null;
+                // Visual roles are not yet defined at this stage. For now just process the option.
+                plot2Series = options.plot2Series ? def.array.as(options.plot2Series) : null;
 
                 // TODO: temporary implementation based on V1s secondAxisIdx's implementation
                 // until a real "series visual role" based implementation exists.

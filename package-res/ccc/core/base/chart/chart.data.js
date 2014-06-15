@@ -319,13 +319,15 @@ pvc.BaseChart
     _maybeAddPlot2SeriesDataPartCalc: function(complexTypeProj, dataPartDimName) {
         if(this.compatVersion() <= 1) return false;
 
+        // The visual role series must exist in the main plot, or in the chart.
+        // It may not become bound though.
         var options = this.options,
-            plot2Series = options.plot2Series;
+            serRole = this.visualRoles.series,
+            plot2Series = serRole ? options.plot2Series : null;
 
         if(!plot2Series) return false;
 
-        var serRole = this.visualRoles.series, // plot2Series => serRole as by _processDataOptions (but possibly unbound)
-            plot2SeriesSet = def.query(plot2Series).uniqueIndex(),
+        var plot2SeriesSet = def.query(plot2Series).uniqueIndex(),
             hasOwnProp = def.hasOwnProp,
             seriesDimNames, dataPartDim, part1Atom, part2Atom, buildSeriesKey,
             init = function(datum) {

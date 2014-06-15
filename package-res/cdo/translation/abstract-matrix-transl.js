@@ -233,15 +233,15 @@ def.type('cdo.MatrixTranslationOper', cdo.TranslationOper)
             // Validate
             var seriesIndex = +indexText; // + -> convert to number
             if(isNaN(seriesIndex))
-                throw def.error.argumentInvalid('plot2DataSeriesIndexes', "Element is not a number '{0}'.", [indexText]);
+                throw def.error.argumentInvalid('plot2SeriesIndexes', "Element is not a number '{0}'.", [indexText]);
 
             if(seriesIndex < 0) {
                 if(seriesIndex <= -seriesCount)
-                    throw def.error.argumentInvalid('plot2DataSeriesIndexes', "Index is out of range '{0}'.", [seriesIndex]);
+                    throw def.error.argumentInvalid('plot2SeriesIndexes', "Index is out of range '{0}'.", [seriesIndex]);
 
                 seriesIndex = seriesCount + seriesIndex;
             } else if(seriesIndex >= seriesCount) {
-                throw def.error.argumentInvalid('plot2DataSeriesIndexes', "Index is out of range '{0}'.", [seriesIndex]);
+                throw def.error.argumentInvalid('plot2SeriesIndexes', "Index is out of range '{0}'.", [seriesIndex]);
             }
 
             // Set

@@ -195,7 +195,7 @@ pvc.visual.rolesBinder = function() {
             r.setIsReversed(false);
 
             var opts = context.getOptions(r);
-            if(opts) configure(r)
+            if(opts) configure(r, opts);
         });
 
         // -----------------------
@@ -277,7 +277,7 @@ pvc.visual.rolesBinder = function() {
             // Reached the end of the string.
             // If this r is preBound, then we can preBind all sourced roles on the stack.
             // Otherwise, all remain unbound.
-            return source.isPreBound() ? source.preBoundGrouping() : null;
+            return r.isPreBound() ? r.preBoundGrouping() : null;
 
         var sourcePreGrouping = tryPreBindSourcedRole(source, visited);
         if(sourcePreGrouping) {
