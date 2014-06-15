@@ -410,7 +410,7 @@ def
     }
 })
 .addStatic(/** @lends pvc.visual.Role */{
-    parse: function(chart, name, config) {
+    parse: function(lookup, name, config) {
         // Process the visual role configuration.
         // * a string with the grouping dimensions, or
         // * {dimensions: "product", isReversed:true, from: "series"}
@@ -424,7 +424,7 @@ def
             if(sourceName) {
                 if(sourceName === name) throw def.error.operationInvalid("Invalid source role.");
 
-                parsed.source = chart.visualRoles[sourceName] ||
+                parsed.source = lookup(sourceName) ||
                     def.fail.operationInvalid("Source visual role '{0}' is not defined.", [sourceName]);
             } else {
                 groupSpec = config.dimensions;

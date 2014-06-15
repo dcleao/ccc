@@ -72,6 +72,7 @@
     'ccc/core/base/scene/scene',
     'ccc/core/base/scene/var',
     'ccc/core/base/visualRole/visualRole',
+    'ccc/core/base/visualRole/visualRolesBinder',
     'ccc/core/base/visualRole/visualRoleVarHelper',
     'ccc/core/base/dataCell/dataCell',
     'ccc/core/base/dataCell/color-dataCell',

@@ -2297,8 +2297,8 @@ def.type('Query')
         return false;
     },
 
-    array: function() {
-        var array = [], me = this;
+    array: function(to) {
+        var array = to || [], me = this;
         while(me.next()) array.push(me.item);
         return array;
     },

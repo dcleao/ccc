@@ -101,23 +101,54 @@ pvc.BaseChart
 
     _loadData: function() {
         /*jshint expr:true*/
-        var data, translation;
-
         if(DEBUG) (!this.data && !this._translation) || def.assert("Invalid state.");
 
         var options = this.options,
             dimsOptions = this._createDimensionsOptions(options),
-            binder = this._visualRolesBinder(dimsOptions);
+
+            // Create and configure the complex type project
+            ctp = this._createComplexTypeProject(),
+
+            // Create, configure and begin the visual roles binder.
+            binder = pvc.visual.rolesBinder()
+                .dimensionsOptions(dimsOptions)
+                .logger (this._createLogger())
+                .context(this._createVisualRolesContext())
+                .complexTypeProject(ctp)
+                .begin(),
+
+            // The chart-level `dataPart` visual role may have been explicitly bound
+            // to a dimension whose name is not "dataPart".
+            //
+            // By now, the actual name of the dimension playing the `dataPart` role is already known.
+            // Check if data part dimension is actually needed:
+            // a) calculated by series values to satisfy plot2,
+            // b) for trending.
+            dataPartDimName = this._getDataPartDimName(/*useDefault*/true),
+
+            complexType, data, translation;
+
+        if(!this._maybeAddPlot2SeriesDataPartCalc(ctp, dataPartDimName)) {
+            if(!this.visualRoles.dataPart.isPreBound() && this.plots.trend)
+                ctp.setDim(dataPartDimName);
+        }
 
         // If there are any columns in the supplied data.
+        // TODO: the complexTypeProj instance remains alive in the persisted translation object,
+        // although probably it is not needed anymore, even for reloads...
         if(this.metadata.length)
             translation = this._translation =
-                this._createTranslation(binder.complexTypeProject(), dimsOptions, binder.dataPartDimName());
+                this._createTranslation(ctp, dimsOptions, dataPartDimName);
 
-        var complexType = binder.end();
+        // If the the dataPart dimension is defined, but is not being read or calculated,
+        // then default its value '0'.
+        if(ctp.hasDim(dataPartDimName) && !ctp.isReadOrCalc(dataPartDimName))
+            this._addDefaultDataPartCalculation(ctp, dataPartDimName);
+
+        complexType = binder.end();
 
         data =
-            this.dataEngine = // V1 property
+            this.dataEngine = // Legacy V1 property
             this.data = new cdo.Data({
                 type:     complexType,
                 labelSep: options.groupedLabelSep,
@@ -149,6 +180,42 @@ pvc.BaseChart
             readQuery = translation.execute(data);
 
         data.load(readQuery, loadKeyArgs);
+    },
+
+    _createVisualRolesContext: function() {
+        var options  = this.options,
+            chartRolesOptions = options.visualRoles,
+            roles    = this.visualRoles,
+            roleList = this.visualRoleList,
+            context  = function(rn) { return def.getOwn(roles, rn); };
+
+        context.query = function() { return def.query(roleList); };
+
+        // Accept visual roles directly in the options as <roleName>Role,
+        // for chart roles or for the main plot roles.
+        context.getOptions = function(r) {
+            var plot = r.plot, name = r.name;
+
+            return def.firstDefined([
+                function() { if(!plot || plot.isMain) return options[name + 'Role']; },
+                function() { return def.get(chartRolesOptions, name); },
+                function() { if(plot) return def.get(plot._visualRolesOptions, name); }
+            ]);
+        };
+
+        return context;
+    },
+
+    _createLogger: function() {
+        var me = this;
+
+        function logger() {
+            me._log.apply(me, arguments);
+        }
+
+        logger.level = function() { return pvc.debug; };
+
+        return logger;
     },
 
     /**
