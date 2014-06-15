@@ -89,9 +89,11 @@ function(dimTypeSpecs) {
 })
 .add(/** @lends cdo.ComplexType# */{
     describe: function() {
+        var table = def.textTable(2)
+            .rowSep()
+            .row("Dimension", "Properties")
+            .rowSep();
 
-        var out = ["COMPLEX TYPE INFORMATION", pvc.logSeparator];
-        
         this._dimsList.forEach(function(type) {
             var features = [];
 
@@ -101,12 +103,12 @@ function(dimTypeSpecs) {
             if(!type.isDiscrete)  features.push("continuous");
             if(type.isHidden)     features.push("hidden");
 
-            out.push("  " + type.name + " (" + features.join(', ') + ")");
+            table.row(type.name, features.join(', '));
         });
-        
-        //out.push(pvc.logSeparator);
 
-        return out.join("\n");
+        table.rowSep();
+
+        return "COMPLEX TYPE INFORMATION\n" + table() + "\n";
     },
     
     /**

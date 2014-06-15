@@ -77,7 +77,7 @@ pvc.visual.rolesBinder = function() {
          * This logger is a function that receives one or more arguments and logs them unconditionally.
          * Used this way, the logged information is assumed to be of the "information" level.
          * It has a method `level` that returns the current log level
-         * (0-none; 1-error; 2-warning; 3-info; 4-debug; ...).
+         * (0-off; 1-error; 2-warning; 3-info; 4-debug; ...).
          *
          * Can only be set before calling {@link pvc.visual.RolesBinder#begin}.
          *
@@ -182,20 +182,16 @@ pvc.visual.rolesBinder = function() {
         state = 1; // beginning
         doLog = !!logger && logger.level() >= 3;
 
-        // Process the visual roles with options
+        // Process the visual roles with options.
         // It is important to process them in visual role definition order
-        // cause the processing that is done generally
-        // depends on the processing order, and
-        // a chart definition must behave the same
+        // cause the binding process depends on the processing order.
+        // A chart definition must behave the same
         // in every environment, independently of the order in which
         // object properties are enumerated.
         context.query().each(function(r) {
-            // Clear reversed status of visual role
-            // TODO: why is this needed. Isn't this done only once?
-            r.setIsReversed(false);
-
             var opts = context.getOptions(r);
-            if(opts) configure(r, opts);
+            if(!opts || !configure(r, opts))
+                trySourceIfSecondaryRole(r);
         });
 
         // -----------------------
@@ -205,7 +201,7 @@ pvc.visual.rolesBinder = function() {
             tryPreBindSourcedRole(r);
         }, this);
 
-        // Some may bow be bound, so reset. Rebuilt on `end` phase.
+        // Some may now be bound, so reset. This is rebuilt on the `end` phase.
         unboundSourcedRoles = [];
 
         // -----------------------
@@ -213,20 +209,30 @@ pvc.visual.rolesBinder = function() {
         applySingleRoleDefaults();
 
         state = 2; // began
-
         return this;
     }
 
+    /**
+     * Configures a visual role,
+     * on its reversed property,
+     * on being sourced by another visual role,
+     * or on being bound to dimensions.
+     *
+     * @param {pvc.visual.Role} r The visual role.
+     * @param {object} opts The visual role options.
+     * @see pvc.visual.Role.parse
+     */
     function configure(r, opts) {
         var parsed = pvc.visual.Role.parse(context, r.name, opts),
             grouping;
         if(parsed.isReversed) r.setIsReversed(true);
         if(parsed.source) {
             r.setSourceRole(parsed.source);
-            addUnboundSourced(r);
+            return addUnboundSourced(r), 1;
         } else if((grouping = parsed.grouping)) {
-            preBindToGrouping(r, grouping);
+            return preBindToGrouping(r, grouping), 1;
         }
+        return 0;
     }
 
     function addUnboundSourced(r) {
@@ -257,6 +263,19 @@ pvc.visual.rolesBinder = function() {
         } else {
             // Two or more roles.
             delete singleRoleByDimName[n];
+        }
+    }
+
+    function trySourceIfSecondaryRole(r) {
+        // No options, or none that explicitly source or bind the role.
+        // Check if it is a main or secondary role.
+        // Secondary roles have the same name as the main role,
+        //  but are not returned by `context`.
+        var mainRole = context(r.name);
+        if(mainRole !== r && r.canHaveSource(mainRole)) {
+            // It's a secondary role and can be source by mainRole.
+            r.setSourceRole(mainRole);
+            addUnboundSourced(r);
         }
     }
 
@@ -364,14 +383,12 @@ pvc.visual.rolesBinder = function() {
         // Try to bind automatically to defaultDimensionName.
         var dimName = r.defaultDimensionName;
         if(dimName) {
-            /* An asterisk at the end of the name indicates
-             * that any dimension of that group is allowed.
-             * If the role allows multiple dimensions,
-             * then the meaning is greedy - use them all.
-             * Otherwise, use only one.
-             *
-             *   "product*"
-             */
+            // An asterisk at the end of the name indicates
+            // that any dimension of that group is allowed.
+            // If the role allows multiple dimensions,
+            // then the meaning is greedy - use them all.
+            // Otherwise, use only one.
+            // Ex:  "product*"
             var match = dimName.match(/^(.*?)(\*)?$/) || def.fail.argumentInvalid('defaultDimensionName'),
                 defaultName =  match[1],
                 greedy = /*!!*/match[2];
@@ -426,23 +443,21 @@ pvc.visual.rolesBinder = function() {
     }
 
     function logVisualRoles() {
-        var maxLen = Math.max(10, context.query().select(function(r) { return r.prettyId().length; }).max()),
-            header = def.string.padRight("VisualRole", maxLen) + " < Dimension(s)",
-            out = [
-                "VISUAL ROLES MAP SUMMARY",
-                pvc.logSeparator,
-                header,
-                    def.string.padRight('', maxLen + 1, '-') + '+--------------'
-            ];
+        var table = def.textTable(3)
+            .rowSep()
+            .row("Visual Role", "Source/From", "Bound to Dimension(s)")
+            .rowSep();
 
-        context.query()
-            .select(function(role) {
-                return def.string.padRight(role.prettyId(), maxLen) + ' | ' + (role.grouping || '-');
-            })
-            .array(out)
-            .push("");
+        context.query().each(function(r) {
+            table.row(
+                r.prettyId(),
+                r.sourceRole ? r.sourceRole.prettyId() : "-",
+                String(r.grouping || "-"));
+        });
 
-        logger(out.join("\n"));
+        table.rowSep();
+
+        logger("VISUAL ROLES MAP SUMMARY\n" + table() + "\n");
     }
 }
 

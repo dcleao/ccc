@@ -2809,6 +2809,48 @@ def.range = function(start, count, step) { return new def.RangeQuery(start, coun
 
 // -------------------
 
+def.textTable = function(C) {
+    var rows = [],
+        contPad = " ",
+        colsMaxLen = new Array(C),
+        rowSepMarker = def.array.create(C, ""),
+        rowSep;
+
+    function table() {
+        return rows.map(function(r) {
+            return r === rowSepMarker
+                ? (rowSep || (rowSep = renderRow(r, "+", "-")))
+                : renderRow(r, "|", " ");
+        }).join("\n");
+    }
+
+    table.row = function() {
+        var args = arguments, i = -1, v, s, r = new Array(C);
+        while(++i < C) {
+            v = args[i];
+            s = r[i] = contPad + (v === undefined ? "" : String(v)) + contPad;
+            colsMaxLen[i] = Math.max(colsMaxLen[i] || 0, s.length);
+        }
+        rows.push(r);
+        return table;
+    };
+
+    table.rowSep = function() {
+        rows.push(rowSepMarker);
+        return table;
+    };
+
+    function renderRow(r, colSep, pad) {
+        return r.map(function(s, i) {
+            return def.string.padRight(s || "", colsMaxLen[i], pad);
+        }).join(colSep);
+    }
+
+    return table;
+};
+
+// -------------------
+
 function mult10(value, exponent) {
     if(!exponent) return value;
     value = value.toString().split('e');

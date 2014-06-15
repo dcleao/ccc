@@ -382,6 +382,11 @@ def
         return groupingSpec;
     },
 
+    canHaveSource: function(source) {
+        var tvt = this.valueType;
+        return tvt == null || tvt === source.valueType;
+    },
+
     _updateBind: function(groupingSpec) {
         if(this.grouping) {
             // unregister from current dimension types

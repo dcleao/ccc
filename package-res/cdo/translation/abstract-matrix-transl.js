@@ -132,82 +132,55 @@ def.type('cdo.MatrixTranslationOper', cdo.TranslationOper)
     },
     
     logSource: function() {
-        var out = [
-            "DATA SOURCE SUMMARY",
-            pvc.logSeparator,
-            "ROWS (" + Math.min(10, this.I) + "/" + this.I + ")"
-        ];
-        
+        var R = 15,
+            md = this.metadata,
+            prepend = def.array.prepend,
+            table = def.textTable(md.length + 1)
+                .rowSep()
+                .row.apply(table, prepend(md.map(function(col) { return col.colName; }), ["Name"]))
+                .rowSep()
+                .row.apply(table, prepend(md.map(function(col) { return col.colLabel ? ('"' + col.colLabel + '"') : ""; }),["Label"]))
+                .row.apply(table, prepend(md.map(function(col) { return col.colType; }), ["Type" ]))
+                .rowSep();
+
         def.query(this.source)
-        .take(10)
-        .each(function(row, index) { out.push("  [" + index + "] " + pvc.stringify(row)); });
-        
-        if(this.I > 10) out.push('  ...');
-        
-        out.push("COLS (" + this.J + ")");
-        
-        var colTypes = this._columnTypes;
-        this.metadata
-        .forEach(function(col, j) {
-            out.push(
-                "  [" + j + "] " + 
-                "'" + col.colName + "' (" +
-                "type: "      + col.colType + ", " + 
-                "inspected: " + (colTypes[j] ? 'number' : 'string') +
-                 (col.colLabel ? (", label: '" + col.colLabel + "'") : "")  + 
-                ")");
-        });
-        
-        out.push("");
-        
-        return out.join('\n');
+            .take(R)
+            .each(function(row, index) {
+                table.row.apply(table, prepend(row.map(function(v) { return pvc.stringify(v); }), [index + 1]));
+            });
+
+        table
+            .rowSep()
+            .row("(" + Math.min(R, this.I) + "/" + this.I + ")")
+            .rowSep();
+
+        return "DATA SOURCE SUMMARY\n" + table() + "\n";
     },
     
     _logVItem: function(kindList, kindScope) {
-        var out = ["VIRTUAL ITEM ARRAY", pvc.logSeparator],
-            maxName  = 4,// length of column header
-            maxLabel = 5,// idem
-            maxDim   = 9;// idem
-        this._itemInfos.forEach(function(info, index) {
-            maxName  = Math.max(maxName , (info.name  ||'').length);
-            maxLabel = Math.max(maxLabel, (info.label ||'').length);
-            var dimName = this._userIndexesToSingleDim[index];
-            if(dimName) maxDim = Math.max(maxDim, dimName.length);
-        }, this);
-        
-        // TODO: would be better off with a generic ASCII table layout code...
-        
-        // Headers
-        out.push("Index | Kind | Type   | " + 
-                 def.string.padRight("Name",  maxName ) + " | " + 
-                 def.string.padRight("Label", maxLabel) + " > " + 
-                 "Dimension",
-                 
-                 "------+------+--------+-" + 
-                 def.string.padRight("", maxName,  "-") + "-+-" +
-                 def.string.padRight("", maxLabel, "-") + "-+-" +
-                 def.string.padRight("", maxDim,   "-") + "-");
+        var table = def.textTable(6)
+            .rowSep()
+            .row("Index", "Kind", "Type", "Name", "Label", "Dimension")
+            .rowSep();
 
         var index = 0;
         kindList.forEach(function(kind) {
             for(var i = 0, L = kindScope[kind] ; i < L ; i++) {
-                var info = this._itemInfos[index],
-                    dimName = this._userIndexesToSingleDim[index];
-                if(dimName === undefined) dimName = '';
-                out.push(
-                    " " + index + "    | " + 
-                          kind  + "    | " +
-                          (info.type ? 'number' : 'string') + " | " +
-                          def.string.padRight(info.name  || '', maxName ) + " | " +
-                          def.string.padRight(info.label || '', maxLabel) + " | " +
-                          dimName);
+                var info = this._itemInfos[index];
+                table.row(
+                    index,
+                    kind,
+                    (info.type ? 'number' : 'string'),
+                    info.name  || "",
+                    info.label || "",
+                    this._userIndexesToSingleDim[index] || "");
                 index++;
             }
         }, this);
-        
-        out.push("");
-        
-        return out.join("\n");
+
+        table.rowSep();
+
+        return "VIRTUAL ITEM ARRAY\n" + table() + "\n";
     },
     
     /**
