@@ -110,7 +110,7 @@ def.type('pvc.visual.Scene')
         }
 
         atoms      = first.atoms; // firstDataSourceAtoms
-        firstAtoms = (datum && datum.atoms) || first.atoms; // firstDatumAtoms
+        firstAtoms = (datum && datum.atoms) || atoms; // firstDatumAtoms
     } else if(parent) {
         atoms = firstAtoms = Object.create(parent.atoms);
     } else {

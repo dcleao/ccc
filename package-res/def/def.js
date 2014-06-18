@@ -1922,7 +1922,7 @@ def.copyOwn(def.array, /** @lends def.array */{
         var a = arguments, S = a.length, source;
         if(S > 1) {
             for(var s = 1 ; s < S ; s++) {
-                if((source = a[s])) {
+                if((source = def.array.to(a[s]))) {
                     var i = 0, L = source.length;
                     while(i < L) target.push(source[i++]);
                 }
@@ -2246,8 +2246,49 @@ def.html = {
             .replace(/</gm, "&lt;")
             .replace(/>/gm, "&gt;")
             .replace(/"/gm, "&quot;");
+    },
+
+    tag: function(name, attrs) {
+        if(attrs)
+            attrs = def.ownKeys(attrs).map(function(n) {
+                var v = attrs[n];
+                return def.empty(v) ?  '' : (' ' + n + '="' + String(v) + '"');
+            }).join('');
+        else
+            attrs = '';
+
+        var content = arguments.length > 2
+            ? arraySlice.call(arguments, 2).map(function(cont) {
+                    if(cont != null) {
+                        if(def.fun.is(cont)) cont = cont();
+
+                        if(def.array.is(cont)) cont = cont.map(def.string.to).join('');
+                        else cont = def.string.to(cont);
+                    }
+                    return cont || '';
+                }).join('')
+            : '';
+
+        return '<' + name + attrs + '>' + content + '</' + name + '>';
+    },
+
+    classes: function(prefix) {
+        prefix = prefix ? (prefix + '-') : '';
+        var out = [];
+        arraySlice.call(arguments, 1)
+            .forEach(function(s, i) {
+                if(!def.empty(s)) out.push(prefix + def.css.escapeClass(s));
+            });
+        return out.join(' ');
     }
 };
+
+def.css = {
+    // TODO: very basic implementation
+    escapeClass: function(name) {
+        return (name||'').replace(/\s/g, "_");
+    }
+}
 
 // --------------------
 

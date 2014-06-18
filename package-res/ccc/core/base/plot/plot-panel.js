@@ -30,6 +30,7 @@ def
     this.valuesOptimizeLegibility = plot.option('ValuesOptimizeLegibility');
     
     this.visualRoles = plot._visualRoles;
+    this.visualRoleList = plot._visualRoleList;
 })
 .add({
     anchor:  'fill',
@@ -54,6 +55,42 @@ def
                 .select(function(dataCell) { return dataCell.legendGroupScene(); })
                 .first(def.notNully);
         }
+    },
+
+    /**
+     * Obtains the visual roles owned by the panel that are played by a given dimension name,
+     * in definition order.
+     * Optionally, returns the chart-level visual roles as well.
+     *
+     * Do NOT modify the returned array.
+     *
+     * @param {string} dimName The name of the dimension.
+     * @param {boolean} [includeChart=false] Indicates wether chart visual roles should be included as well.
+     * @return {pvc.visual.Role[]} The array of visual roles or <tt>null</tt>, if none.
+     * @see pvc.BaseChart#visualRolesOf
+     * @virtual
+     */
+    visualRolesOf: function(dimName, includeChart) {
+        var visualRolesByDim = this._visRolesByDim;
+        if(!visualRolesByDim) {
+            visualRolesByDim = this._visRolesByDim = {};
+            this.visualRoleList.forEach(function(r) {
+                var g = r.grouping;
+                if(g) g.dimensionNames().forEach(function(n) {
+                    def.array.lazy(visualRolesByDim, n).push(r);
+                });
+            });
+        }
+
+        var plotVisRoles  = def.getOwn(visualRolesByDim, dimName, null),
+            chartVisRoles = includeChart ? this.chart.visualRolesOf(dimName) : null;
+
+        return plotVisRoles && chartVisRoles ? plotVisRoles.concat(chartVisRoles) : (plotVisRoles || chartVisRoles);
+    },
+
+    /** @override */
+    _getTooltipPanelClasses: function() {
+        return ['plot', 'plot-' + this.plot.type];
     },
 
     /* @override */

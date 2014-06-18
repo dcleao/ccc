@@ -87,20 +87,21 @@ def
         }
         
         // -----------
-        
-        // Multi, series, ... atoms, other measures besides valDim.
-        var atoms = Object.create(group._datums[0].atoms);
+
+        // Multi, dataPart, series atoms, but not of other measures or not-grouped dimensions.
+        var atoms = Object.create(group.atoms);
         
         // Category atoms
         def.copyOwn(atoms, catInfo.data.atoms);
         
         // Value atom
-        var zeroAtom = interpolation._zeroAtom ||
-            (interpolation._zeroAtom = interpolation._valDim.intern(0, /* isVirtual */ true));
+        var valDim = interpolation._valDim,
+            zeroAtom = interpolation._zeroAtom ||
+            (interpolation._zeroAtom = valDim.intern(0, /* isVirtual */ true));
         
-        atoms[zeroAtom.dimension.name] = zeroAtom;
+        atoms[valDim.name] = zeroAtom;
         
         // Create datum with collected atoms
-        interpolation._newDatums.push(new cdo.InterpolationDatum(group.owner, atoms, 'zero'));
+        interpolation._newDatums.push(new cdo.InterpolationDatum(group.owner, atoms, 'zero', valDim.name));
     }
 });

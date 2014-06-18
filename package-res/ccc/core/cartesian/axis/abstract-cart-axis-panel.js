@@ -1196,13 +1196,18 @@ def
             };
 
             var autoContent = this.axis.option('TooltipAutoContent');
-            if(autoContent === 'summary') return this._summaryTooltipFormatter;
+            if(autoContent === 'summary') return this._summaryTooltipFormatter.bind(this);
 
             if(autoContent === 'value') {
                 tipOptions.isLazy = false;
                 return function(context) { return context.scene.vars.tick.label; };
             }
         }
+    },
+
+    /** @override */
+    _getTooltipPanelClasses: function() {
+        return ['cart-axis'];
     },
 
     _debugTicksPanel: function(pvTicksPanel) {

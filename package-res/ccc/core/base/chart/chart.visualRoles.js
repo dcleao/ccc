@@ -62,7 +62,29 @@ pvc.BaseChart
            .where(def.notNully)
            .array();
     },
-    
+
+    /**
+     * Obtains the chart-level visual roles played by a given dimension name, in definition order.
+     * Do NOT modify the returned array.
+     * @param {string} dimName The name of the dimension.
+     * @return {pvc.visual.Role[]} The array of visual roles or <tt>null</tt>, if none.
+     */
+    visualRolesOf: function(dimName) {
+        var visualRolesByDim = this._visRolesByDim;
+        if(!visualRolesByDim) {
+            visualRolesByDim = this._visRolesByDim = {};
+            this.visualRoleList.forEach(function(r) {
+                if(!r.plot) {
+                    var g = r.grouping;
+                    if (g) g.dimensionNames().forEach(function (n) {
+                        def.array.lazy(visualRolesByDim, n).push(r);
+                    });
+                }
+            });
+        }
+        return def.getOwn(visualRolesByDim, dimName, null);
+    },
+
     _constructVisualRoles: function(/*options*/) {
         var parent = this.parent;
         if(parent) {

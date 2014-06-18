@@ -91,30 +91,28 @@ def
         this._initInterpData();
         
         var next = this.__nextNonNull,
-            last = this.__lastNonNull,
-            one  = next || last;
+            prev = this.__lastNonNull,
+            one  = next || prev;
         if(!one) return;
         
         var value, group,
             interpolation = this.interpolation,
             catInfo = catSerInfo.catInfo;
         
-        if(next && last) {
+        if(next && prev) {
             if(interpolation._isCatDiscrete) {
-                var groupIndex = (catInfo.index - last.catInfo.index);
-                value = last.value + this._stepValue * groupIndex;
+                var groupIndex = (catInfo.index - prev.catInfo.index);
+                value = prev.value + this._stepValue * groupIndex;
                 
-                if(this._isOdd)
-                    group = groupIndex < this._middleIndex ? last.group : next.group;
-                else
-                    group = groupIndex <= this._middleIndex ? last.group : next.group;
-                
+                group = (this._isOdd ? (groupIndex <  this._middleIndex) : (groupIndex <= this._middleIndex))
+                    ? prev.group
+                    : next.group;
             } else {
                 var cat     = +catInfo.value,
-                    lastCat = +last.catInfo.value;
+                    lastCat = +prev.catInfo.value;
                 
-                value = last.value + this._steep * (cat - lastCat);
-                group = cat < this._middleCat ? last.group : next.group;
+                value = prev.value + this._steep * (cat - lastCat);
+                group = cat < this._middleCat ? prev.group : next.group;
             }
         } else {
             // Only "stretch" ends on stacked visualization
@@ -126,17 +124,18 @@ def
         
         // -----------
         
-        // Multi, series, ... atoms, other measures besides valDim.
-        var atoms = Object.create(group._datums[0].atoms);
-        
+        // Multi, dataPart, series atoms, but not of other measures or not-grouped dimensions.
+        var atoms = Object.create(group.atoms);
+
         // Category atoms
         def.copyOwn(atoms, catInfo.data.atoms);
 
         // Value atom
-        var valueAtom = interpolation._valDim.intern(value, /* isVirtual */ true);
-        atoms[valueAtom.dimension.name] = valueAtom;
+        var valDim = interpolation._valDim,
+            valueAtom = valDim.intern(value, /* isVirtual */ true);
+        atoms[valDim.name] = valueAtom;
         
         // Create datum with collected atoms
-        interpolation._newDatums.push(new cdo.InterpolationDatum(group.owner, atoms, 'linear'));
+        interpolation._newDatums.push(new cdo.InterpolationDatum(group.owner, atoms, 'linear', valDim.name));
     }
 });

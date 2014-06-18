@@ -18,7 +18,7 @@ def
     this._addVisualRole('value', {
         isMeasure: true,
         isRequired: true,
-        isPercent: chart.options.stacked,
+        isPercent: this.option('Stacked'),
         requireSingleDimension: true,
         requireIsDiscrete: false,
         valueType: Number,

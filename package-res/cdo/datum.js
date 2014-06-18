@@ -153,10 +153,11 @@ def.type('cdo.TrendDatum', cdo.Datum)
 });
 
 def.type('cdo.InterpolationDatum', cdo.Datum)
-.init(function(data, atomsByName, interpolation) {
+.init(function(data, atomsByName, interpolation, dimName) {
     this.base(data, atomsByName);
     
     this.interpolation = interpolation;
+    this.interpDimName = dimName;
 })
 .add({
     isVirtual: true,
