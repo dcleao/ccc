@@ -303,7 +303,7 @@ def
      * options values implications.
      */
     _processOptions: function() {
-        var options = this.options;
+        var options = this.options, plotSpecs;
         if(!this.parent) {
             this.width    = options.width;
             this.height   = options.height;
@@ -311,7 +311,16 @@ def
             this.paddings = options.paddings;
         }
 
-        if(this.compatVersion() <= 1) options.plot2 = this._allowV1SecondAxis && !!options.secondAxis;
+        if(this.compatVersion() <= 1) {
+            options.plot2 = this._allowV1SecondAxis && !!options.secondAxis;
+        } else if(!options.plot2 && (plotSpecs = options.plots)) {
+            options.plot2 = def.array.is(plotSpecs)
+                ? def.query(plotSpecs)
+                    .where(function (plotSpec) {
+                        return plotSpec.name === 'plot2';
+                    }).any()
+                : !!plotSpecs.plot2;
+        }
 
         this._processFormatOptions(options);
 

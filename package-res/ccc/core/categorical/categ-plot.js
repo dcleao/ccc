@@ -11,12 +11,6 @@
  */
 def
 .type('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    this._addVisualRole('category', this._getCategoryRoleSpec());
-})
 .add(/** @lends pvc.visual.CategoricalPlot# */{
     /** @override */
     createVisibleData: function(baseData, ka) {
@@ -34,6 +28,13 @@ def
     },
 
     _getOptionsDefinition: function() { return pvc.visual.CategoricalPlot.optionsDef; },
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        this._addVisualRole('category', this._getCategoryRoleSpec());
+    },
 
     /** @virtual */
     _getCategoryRoleSpec: function() {

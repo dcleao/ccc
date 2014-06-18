@@ -49,8 +49,6 @@ def
     this.isInternal  = !!internalPlot;
     this.isMain      = isMain;
 
-    this._visualRolesOptions = def.getPath(keyArgs, 'spec.visualRoles');
-
     // -------------
     
     // Last prefix has higher precedence.
@@ -71,8 +69,8 @@ def
 
     // -------------
 
-    var roleSpec = this._getColorRoleSpec();
-    if(roleSpec) this._addVisualRole('color', roleSpec);
+    var plotSpec = def.get(keyArgs, 'spec');
+    if(plotSpec) this.processSpec(plotSpec);
 })
 .add({
     /** @override */
@@ -80,6 +78,27 @@ def
 
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.Plot.optionsDef; },
+
+    processSpec: function(plotSpec) {
+        // Process extension points and publish options with the plot's optionId prefix.
+        var me = this, options = me.chart.options;
+        me.chart._processExtensionPointsIn(plotSpec, me.optionId, function(optValue, optId, optName) {
+            // Not an extension point => it's an option
+            switch(optName) {
+                // Already handled
+                case 'name':
+                case 'type':
+                    break;
+
+                // Handled specially
+                case 'visualRoles':
+                    me._visualRolesOptions = optValue; // NOTE: smashes, so only works once.
+                    break;
+
+                default: options[optId] = optValue; break;
+            }
+        });
+    },
 
     /** @virtual */
     _getColorRoleSpec: def.fun.constant(null),
@@ -110,10 +129,20 @@ def
     },
 
     /** 
-     * Called when added to the chart. 
+     * Called to finish construction of the plot.
+     * Only from now on are all plot options guaranteed to be available
+     * for consumption, so any initialization that is performed based on
+     * the value of plot options must be deferred until this call.
+     *
+     * The base implementation initializes known plot visual roles.
+     *
      * @virtual
+     * @see pvc.visual.Plot#processSpec
      */
-    onAdded: function() {},
+    initEnd: function() {
+        var roleSpec = this._getColorRoleSpec();
+        if(roleSpec) this._addVisualRole('color', roleSpec);
+    },
 
     /**
      * Creates the plots's visible data, based on a given base data,

@@ -11,25 +11,26 @@
  */
 def
 .type('pvc.visual.PointPlot', pvc.visual.CategoricalPlot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    this._addVisualRole('value', {
-        isMeasure: true,
-        isRequired: true,
-        isPercent: this.option('Stacked'),
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        valueType: Number,
-        defaultDimension: 'value'
-    });
-})
 .add({
     type: 'point',
     
     /** @override */
-    _getOptionsDefinition: function() { return pvc.visual.PointPlot.optionsDef; }
+    _getOptionsDefinition: function() { return pvc.visual.PointPlot.optionsDef; },
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        this._addVisualRole('value', {
+            isMeasure: true,
+            isRequired: true,
+            isPercent: this.option('Stacked'),
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number,
+            defaultDimension: 'value'
+        });
+    }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.PointPlot);

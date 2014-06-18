@@ -548,7 +548,11 @@ pvc.BaseChart
                 return !!nim && nim !== 'none';
              })
              .distinct(function(dataCell) {
-                 return dataCell.role.name  + '|' + (dataCell.dataPartValue || '');
+                 return [
+                     dataCell.nullInterpolationMode,
+                     dataCell.role.grouping.id,
+                     dataCell.dataPartValue || ''
+                 ].join();
              })
              .array();
 

@@ -254,8 +254,7 @@ def
             var plot2DataSeriesIndexes = this.options.plot2DataSeriesIndexes;
             if(plot2DataSeriesIndexes != null) {
                 var seriesReader = this._userDimsReadersByDim.series;
-                if(seriesReader)
-                    this._userRead(relTransl_dataPartGet.call(this, plot2DataSeriesIndexes, seriesReader), dataPartDimName);
+                if(seriesReader) relTransl_dataPartGet.call(this, plot2DataSeriesIndexes, seriesReader);
             }
         }
     },
@@ -280,7 +279,6 @@ def
  * @function
  * @param {Array} plot2DataSeriesIndexes The indexes of series that are to be shown on the second axis.
  * @param {function} seriesReader Dimension series atom getter.
- * @type function
  */
 function relTransl_dataPartGet(plot2DataSeriesIndexes, seriesReader) {
     var me = this;
@@ -302,5 +300,5 @@ function relTransl_dataPartGet(plot2DataSeriesIndexes, seriesReader) {
         return me._createPlot2SeriesKeySet(plot2DataSeriesIndexes, seriesKeys);
     }
 
-    return this._dataPartGet(calcAxis2SeriesKeySet, seriesReader);
+    this._dataPartGet(calcAxis2SeriesKeySet);
 }

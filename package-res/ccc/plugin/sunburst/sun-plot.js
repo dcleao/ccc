@@ -11,31 +11,32 @@
  */
 def
 .type('pvc.visual.SunburstPlot', pvc.visual.Plot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    this._addVisualRole('category', {
-        isRequired: true,
-        defaultDimension: 'category*',
-        autoCreateDimension: true
-    });
-
-    this._addVisualRole('size', {
-        isMeasure:  true,
-        isRequired: false,
-        isPercent:  true,
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        valueType: Number,
-        defaultDimension: 'size'
-    });
-})
 .add({
     type: 'sunburst',
 
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.SunburstPlot.optionsDef; },
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        this._addVisualRole('category', {
+            isRequired: true,
+            defaultDimension: 'category*',
+            autoCreateDimension: true
+        });
+
+        this._addVisualRole('size', {
+            isMeasure:  true,
+            isRequired: false,
+            isPercent:  true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number,
+            defaultDimension: 'size'
+        });
+    },
 
     /** @override */
     _getColorRoleSpec: function() {

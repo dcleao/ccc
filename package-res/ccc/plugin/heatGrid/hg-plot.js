@@ -11,26 +11,28 @@
  */
 def
 .type('pvc.visual.HeatGridPlot', pvc.visual.CategoricalPlot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    // TODO: get a translator for this!!
-
-    var sizeDimName = (chart.compatVersion() <= 1 && chart.options.sizeValIdx === 1)
-            ? 'value2'
-            : 'value';
-
-    this._addVisualRole('size', {
-        isMeasure: true,
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        valueType: Number,
-        defaultDimension: sizeDimName
-    });
-})
 .add({
     type: 'heatGrid',
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        // TODO: get a translator for this!!
+
+        var chart = this.chart,
+            sizeDimName = (chart.compatVersion() <= 1 && chart.options.sizeValIdx === 1)
+                ? 'value2'
+                : 'value';
+
+        this._addVisualRole('size', {
+            isMeasure: true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number,
+            defaultDimension: sizeDimName
+        });
+    },
 
     /* @override */
     _getColorRoleSpec: function() {

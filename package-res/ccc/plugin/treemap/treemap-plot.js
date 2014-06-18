@@ -11,31 +11,32 @@
  */
 def
 .type('pvc.visual.TreemapPlot', pvc.visual.Plot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    this._addVisualRole('category', {
-        isRequired: true,
-        defaultDimension: 'category*',
-        autoCreateDimension: true
-    });
-
-    this._addVisualRole('size', {
-        isMeasure:  true,
-        isRequired: false,
-        isPercent:  true,
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        valueType: Number,
-        defaultDimension: 'size'
-    });
-})
 .add({
     type: 'treemap',
     
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.TreemapPlot.optionsDef; },
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        this._addVisualRole('category', {
+            isRequired: true,
+            defaultDimension: 'category*',
+            autoCreateDimension: true
+        });
+
+        this._addVisualRole('size', {
+            isMeasure:  true,
+            isRequired: false,
+            isPercent:  true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number,
+            defaultDimension: 'size'
+        });
+    },
 
     /** @override */
     _getColorRoleSpec: function() {

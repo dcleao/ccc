@@ -11,9 +11,14 @@
  */
 def
 .type('pvc.visual.BulletPlot', pvc.visual.Plot)
-    .init(function(chart, keyArgs) {
+.add({
+    type: 'bullet',
+    
+    _getOptionsDefinition: function() { return pvc.visual.BulletPlot.optionsDef; },
 
-        this.base(chart, keyArgs);
+    /** @override */
+    initEnd: function() {
+        this.base();
 
         this._addVisualRole('title',    {defaultDimension: 'title*'   });
         this._addVisualRole('subTitle', {defaultDimension: 'subTitle*'});
@@ -36,11 +41,7 @@ def
             valueType: Number,
             defaultDimension: 'range*'
         });
-    })
-.add({
-    type: 'bullet',
-    
-    _getOptionsDefinition: function() { return pvc.visual.BulletPlot.optionsDef; }
+    }
 });
 
 pvc.visual.Plot.registerClass(pvc.visual.BulletPlot);

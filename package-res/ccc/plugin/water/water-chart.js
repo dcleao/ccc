@@ -31,17 +31,10 @@ def
      * @override
      */
     _processOptionsCore: function(options) {
-
-        // Might still affect scale calculation
-        options.stacked = true;
-        
         // Doesn't work (yet?);
         options.baseAxisComposite = false;
         
         this.base(options);
-        
-        // Not supported
-        options.plot2 = false;
     },
   
     _createPlotsInternal: function() {

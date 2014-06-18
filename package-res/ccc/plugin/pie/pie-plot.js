@@ -13,29 +13,30 @@
  */
 def
 .type('pvc.visual.PiePlot', pvc.visual.Plot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    this._addVisualRole('category', {
-        isRequired: true,
-        defaultDimension: 'category*',
-        autoCreateDimension: true
-    });
-
-    this._addVisualRole('value', {
-        isMeasure:  true,
-        isRequired: true,
-        isPercent:  true,
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        valueType: Number,
-        defaultDimension: 'value'
-    });
-})
 .add({
     /** @override */
     type: 'pie',
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        this._addVisualRole('category', {
+            isRequired: true,
+            defaultDimension: 'category*',
+            autoCreateDimension: true
+        });
+
+        this._addVisualRole('value', {
+            isMeasure:  true,
+            isRequired: true,
+            isPercent:  true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number,
+            defaultDimension: 'value'
+        });
+    },
 
     /** @override */
     _getColorRoleSpec: function() {

@@ -11,13 +11,6 @@
  */
 def
 .type('pvc.visual.CartesianPlot', pvc.visual.Plot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    var roleSpec = this._getSeriesRoleSpec();
-    if(roleSpec) this._addVisualRole('series', roleSpec);
-})
 .add({
     /** @override */
     _getColorRoleSpec: function() {
@@ -26,6 +19,14 @@ def
 
     _getSeriesRoleSpec: function() {
         return {isRequired: true, defaultDimension: 'series*', autoCreateDimension: true, requireIsDiscrete: true};
+    },
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        var roleSpec = this._getSeriesRoleSpec();
+        if(roleSpec) this._addVisualRole('series', roleSpec);
     },
 
     collectDataCells: function(addDataCell) {

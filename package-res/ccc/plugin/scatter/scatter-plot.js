@@ -11,22 +11,23 @@
  */
 def
 .type('pvc.visual.MetricPointPlot', pvc.visual.MetricXYPlot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    this._addVisualRole('size', {
-        isMeasure: true,
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        defaultDimension: 'size',
-        dimensionDefaults: {
-            valueType: Number
-        }
-    });
-})
 .add({
     type: 'scatter',
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        this._addVisualRole('size', {
+            isMeasure: true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            defaultDimension: 'size',
+            dimensionDefaults: {
+                valueType: Number
+            }
+        });
+    },
 
     /** @override */
     _getColorRoleSpec: function() {

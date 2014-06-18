@@ -703,7 +703,7 @@ def.type('cdo.CrosstabTranslationOper', cdo.MatrixTranslationOper)
             var seriesReader = this._userDimsReadersByDim.series;
             if(seriesReader) {
                 var calcAxis2SeriesKeySet = def.fun.constant(this._plot2SeriesKeySet);
-                this._userRead(this._dataPartGet(calcAxis2SeriesKeySet, seriesReader), dataPartDimName);
+                this._dataPartGet(calcAxis2SeriesKeySet);
             }
         }
     }

@@ -24,7 +24,7 @@ pvc.BaseChart
             this.plotsByType = parent.plotsByType;
         }
 
-        this._initPlotsDataCells();
+        this._initPlotsEnd();
     },
     
     // Any plots enforced by the chart type.
@@ -111,30 +111,8 @@ pvc.BaseChart
                     [name, plot.type]);
         }
 
-        var isNew = !plot;
-        if(isNew) plot = this._createPlotExternal(name, type, plotSpec);
-
-        // Process extension points and publish options with the plot's optionId prefix.
-        // Must define options before _addPlot, because it reads option 'Trend'.
-        var options = this.options;
-        this._processExtensionPointsIn(plotSpec, plot.optionId, function(optValue, optId, optName) {
-            // Not an extension point => it's an option
-            switch(optName) {
-                // Already handled
-                case 'name':
-                case 'type':
-                    break;
-
-                // Handled specially
-                case 'visualRoles':
-                    if(!isNew) plot._visualRolesOptions = optValue;
-                    break;
-
-                default: options[optId] = optValue; break;
-            }
-        });
-
-        if(isNew) this._addPlot(plot);
+        if(!plot) this._addPlot(this._createPlotExternal(name, type, plotSpec));
+        else plot.processSpec(plotSpec);
     },
 
     _createPlotExternal: function(name, type, plotSpec) {
@@ -191,39 +169,17 @@ pvc.BaseChart
 
         this._needsTrendPlot = this._needsTrendPlot ||
             (plot.option.isDefined('Trend') && !!plot.option('Trend'));
-
-        // Register the plot's visual roles.
-        plot.visualRoles().forEach(function(role) {
-            var rname = role.name, names = [];
-
-            if(isMain) {
-                // Prevent collision with chart level roles.
-                if(!(rname in this.visualRoles)) names.push(rname);
-                names.push("main." + rname);
-            }
-            names.push(id + "." + rname);
-            if(name) names.push(name + "." + rname);
-
-            this._addVisualRoleCore(role, names);
-        }, this);
-
-        // Callback
-        plot.onAdded();
     },
 
-    _initPlotsDataCells: function() {
+    _initPlotsEnd: function() {
         // type -> index -> [datacell array]
+        var dataCellsByAxisTypeThenIndex;
+        if(this.parent) {
+            dataCellsByAxisTypeThenIndex = this.parent._dataCellsByAxisTypeThenIndex;
+        } else {
+            dataCellsByAxisTypeThenIndex = {};
 
-        var dataCellsByAxisTypeThenIndex = this.parent
-                ? this.parent._dataCellsByAxisTypeThenIndex
-                : this._collectPlotsDataCells();
-
-        return (this._dataCellsByAxisTypeThenIndex = dataCellsByAxisTypeThenIndex);
-    },
-
-    _collectPlotsDataCells: function() {
-        var dataCellsByAxisTypeThenIndex = {},
-            addDataCell = function(dataCell) {
+            var addDataCell = function(dataCell) {
                 // Index DataCell in dataCellsByAxisTypeThenIndex
                 var dataCellsByAxisIndex =
                     def.array.lazy(dataCellsByAxisTypeThenIndex, dataCell.axisType);
@@ -231,13 +187,38 @@ pvc.BaseChart
                 def.array.lazy(dataCellsByAxisIndex, dataCell.axisIndex).push(dataCell);
             };
 
-        // Ask potential DataCells to each plot.
-        // Only effective if its visual role becomes bound.
-        this.plotList.forEach(function(plot) {
-            plot.collectDataCells(addDataCell);
-        });
+            this.plotList.forEach(function(plot) {
+                this._initPlotEnd(plot, addDataCell);
+            }, this);
+        }
 
-        return dataCellsByAxisTypeThenIndex;
+        this._dataCellsByAxisTypeThenIndex = dataCellsByAxisTypeThenIndex;
+    },
+
+    _initPlotEnd: function(plot, addDataCell) {
+        plot.initEnd();
+
+        this._registerPlotVisualRoles(plot);
+
+        // Ask "potential" DataCells to the plot.
+        // A DataCell is only effective if its visual role actually becomes bound.
+        plot.collectDataCells(addDataCell);
+    },
+
+    _registerPlotVisualRoles: function(plot) {
+        plot.visualRoles().forEach(function(role) {
+            var rname = role.name, names = [];
+
+            if(plot.isMain) {
+                // Prevent collision with chart level roles.
+                if(!(rname in this.visualRoles)) names.push(rname);
+                names.push("main." + rname);
+            }
+            names.push(plot.id + "." + rname);
+            if(name) names.push(name + "." + rname);
+
+            this._addVisualRoleCore(role, names);
+        }, this);
     }
 });
 

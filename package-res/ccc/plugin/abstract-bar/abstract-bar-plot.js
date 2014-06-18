@@ -11,24 +11,26 @@
  */
 def
 .type('pvc.visual.BarPlotAbstract', pvc.visual.CategoricalPlot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    this._addVisualRole('value', {
-        isMeasure: true,
-        isRequired: true,
-        isPercent: this.option('Stacked'),
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        valueType: Number,
-        defaultDimension: 'value'
-    });
-})
 .add({
     /** @override */
     _getOptionsDefinition: function() {
         return pvc.visual.BarPlotAbstract.optionsDef;
+    },
+
+    /** @override */
+    initEnd: function() {
+
+        this.base();
+
+        this._addVisualRole('value', {
+            isMeasure: true,
+            isRequired: true,
+            isPercent: this.option('Stacked'),
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number,
+            defaultDimension: 'value'
+        });
     },
 
     // NOTE

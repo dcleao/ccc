@@ -11,32 +11,33 @@
  */
 def
 .type('pvc.visual.BoxPlot', pvc.visual.CategoricalPlot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    var roleSpecBase = {
-        isMeasure: true,
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        valueType: Number
-    };
-
-    [
-        {name: 'median',       label: 'Median',        defaultDimension: 'median', isRequired: true},
-        {name: 'lowerQuartil', label: 'Lower Quartil', defaultDimension: 'lowerQuartil'},
-        {name: 'upperQuartil', label: 'Upper Quartil', defaultDimension: 'upperQuartil'},
-        {name: 'minimum',      label: 'Minimum',       defaultDimension: 'minimum' },
-        {name: 'maximum',      label: 'Maximum',       defaultDimension: 'maximum'}
-    ].forEach(function(info) {
-        this._addVisualRole(info.name, def.create(roleSpecBase, info));
-    }, this);
-})
 .add({
     type: 'box',
 
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.BoxPlot.optionsDef; },
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        var roleSpecBase = {
+            isMeasure: true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            valueType: Number
+        };
+
+        [
+            {name: 'median',       label: 'Median',        defaultDimension: 'median', isRequired: true},
+            {name: 'lowerQuartil', label: 'Lower Quartil', defaultDimension: 'lowerQuartil'},
+            {name: 'upperQuartil', label: 'Upper Quartil', defaultDimension: 'upperQuartil'},
+            {name: 'minimum',      label: 'Minimum',       defaultDimension: 'minimum' },
+            {name: 'maximum',      label: 'Maximum',       defaultDimension: 'maximum'}
+        ].forEach(function(info) {
+            this._addVisualRole(info.name, def.create(roleSpecBase, info));
+        }, this);
+    },
 
     /** @override */
     _getOrthoRoles: function() {
@@ -53,7 +54,7 @@ pvc.visual.BoxPlot.optionsDef = def.create(
     {
         // NO Values Label!
 
-        Stacked: {
+        Stacked: { // Not supported
             resolve: null,
             value:   false
         },

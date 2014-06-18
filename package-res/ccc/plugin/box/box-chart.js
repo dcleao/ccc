@@ -17,13 +17,6 @@
 def
 .type('pvc.BoxplotChart', pvc.CategoricalAbstract)
 .add({
-    _processOptionsCore: function(options) {
-        this.base.apply(this, arguments);
-
-        // Not supported
-        options.stacked = false;
-    },
-
     _getTranslationClass: function(translOptions) {
         return def
             .type(this.base(translOptions))

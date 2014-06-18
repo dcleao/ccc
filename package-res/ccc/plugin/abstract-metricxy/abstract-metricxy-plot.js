@@ -11,33 +11,34 @@
  */
 def
 .type('pvc.visual.MetricXYPlot', pvc.visual.CartesianPlot)
-.init(function(chart, keyArgs) {
-
-    this.base(chart, keyArgs);
-
-    this._addVisualRole('x', {
-        isMeasure:  true,
-        isRequired: true,
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        defaultDimension: 'x',
-        dimensionDefaults: {
-            valueType: chart.options.timeSeries ? Date : Number
-        }
-    });
-
-    this._addVisualRole('y', {
-        isMeasure:  true,
-        isRequired: true,
-        requireSingleDimension: true,
-        requireIsDiscrete: false,
-        defaultDimension: 'y',
-        dimensionDefaults: {valueType: Number}
-    });
-})
 .add({
     /** @override */
     _getOptionsDefinition: function() { return pvc.visual.MetricXYPlot.optionsDef; },
+
+    /** @override */
+    initEnd: function() {
+        this.base();
+
+        this._addVisualRole('x', {
+            isMeasure:  true,
+            isRequired: true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            defaultDimension: 'x',
+            dimensionDefaults: {
+                valueType: this.chart.options.timeSeries ? Date : Number
+            }
+        });
+
+        this._addVisualRole('y', {
+            isMeasure:  true,
+            isRequired: true,
+            requireSingleDimension: true,
+            requireIsDiscrete: false,
+            defaultDimension: 'y',
+            dimensionDefaults: {valueType: Number}
+        });
+    },
 
     /** @override */
     _getBaseRole: function() { return this.visualRole('x'); },

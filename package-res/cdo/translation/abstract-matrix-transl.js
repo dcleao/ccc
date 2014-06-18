@@ -227,40 +227,43 @@ def.type('cdo.MatrixTranslationOper', cdo.TranslationOper)
     },
 
     // TODO: docs
-    _dataPartGet: function(calcAxis2SeriesKeySet, seriesReader) {
+    _dataPartGet: function(calcAxis2SeriesKeySet) {
 
         var me = this,
             dataPartDimName = this.options.dataPartDimName,
             dataPartDimension,
             plot2SeriesKeySet,
             part1Atom,
-            part2Atom,
-            outAtomsSeries = {};
+            part2Atom;
 
-        function dataPartGet(item, outAtoms) {
-            /*
-             * First time initialization.
-             * Done here because *data* isn't available before.
-             */
-            if(!dataPartDimension) {
-                plot2SeriesKeySet = calcAxis2SeriesKeySet();
-                dataPartDimension = me.data.dimensions(dataPartDimName);
-
-                if(pvc.debug >=3 && plot2SeriesKeySet)
-                    pvc.log("Second axis series values: " + pvc.stringify(def.keys(plot2SeriesKeySet)));
-            }
-
-            seriesReader(item, outAtomsSeries);
-
-            var series = outAtomsSeries.series;
-
-            if(series != null && series.v != null) series = series.v;
-            
+        function calcDataPart(series, outAtoms) {
             outAtoms[dataPartDimName] = def.hasOwn(plot2SeriesKeySet, series)
                 ? (part2Atom || (part2Atom = dataPartDimension.intern("1")))
                 : (part1Atom || (part1Atom = dataPartDimension.intern("0")));
         }
 
-        return dataPartGet;
+        /*
+         * First time initialization.
+         * Done here because *data* isn't available before.
+         */
+        var init = function() {
+            plot2SeriesKeySet = calcAxis2SeriesKeySet();
+            dataPartDimension = me.data.dimensions(dataPartDimName);
+
+            if(pvc.debug >=3 && plot2SeriesKeySet)
+                pvc.log("Second axis series values: " + pvc.stringify(def.keys(plot2SeriesKeySet)));
+            init = null;
+        };
+
+        // Also create a calculation, so that new Datums later added from interpolation
+        // can have its dataPart calculated.
+        this.complexTypeProj.setCalc({
+            names: dataPartDimName,
+            calculation: function(datum, outAtoms) {
+                init && init();
+
+                calcDataPart(datum.atoms.series.value, outAtoms);
+            }
+        });
     }
 });

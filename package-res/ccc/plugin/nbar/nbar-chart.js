@@ -8,18 +8,6 @@
 def
 .type('pvc.NormalizedBarChart', pvc.BarAbstract)
 .add({
-    
-    /**
-     * Processes options after user options and default options have been merged.
-     * @override
-     */
-    _processOptionsCore: function(options) {
-        // Still affects visual role isPercent
-        options.stacked = true;
-
-        this.base(options);
-    },
-
     /** @override */
     _getContinuousVisibleExtentConstrained: function(axis, min, max) {
         if(axis.type === 'ortho')

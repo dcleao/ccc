@@ -11,25 +11,25 @@
  */
 def
 .type('pvc.visual.WaterfallPlot', pvc.visual.BarPlotAbstract)
-.init(function(chart, keyArgs) {
-    
-    this.base(chart, keyArgs);
-
-    // Here?
-    var extAbsId    = pvc.makeExtensionAbsId('line', this.extensionPrefixes);
-    var strokeStyle = chart._getConstantExtension(extAbsId, 'strokeStyle');
-    if(strokeStyle) this._waterColor = pv.color(strokeStyle);
-
-    chart._registerInitLegendScenes(this._initLegendScenes.bind(this));
-})
 .add({
     type: 'water',
 
     _waterColor: pv.color("#1f77b4").darker(),
 
     /** @override */
-    onAdded: function() {
-        // TODO: while visual roles are shared, this messes up visual roles of other plot types :-)
+    initEnd: function() {
+        this.base();
+
+        // Here?
+        var extAbsId    = pvc.makeExtensionAbsId('line', this.extensionPrefixes);
+        var strokeStyle = chart._getConstantExtension(extAbsId, 'strokeStyle');
+        if(strokeStyle) this._waterColor = pv.color(strokeStyle);
+
+        this.chart._registerInitLegendScenes(this._initLegendScenes.bind(this));
+
+        // ----------
+
+        // TODO: while visual roles are shared, this messes up visual roles of other plot types :-?
         var catRole  = this.visualRole('category'),
             travProp = this.isFalling() ? 'FlattenDfsPre' : 'FlattenDfsPost';
 
