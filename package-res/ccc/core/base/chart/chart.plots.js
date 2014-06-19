@@ -58,42 +58,6 @@ pvc.BaseChart
         }
     },
 
-    /*
-        {
-            * chart options are available here
-            * main plot options are available here
-            * main color axis is available here
-
-            * base,ortho,ortho2,...AxisXyzw - cartesian axis
-            * [color,]color2...AxisXyzw - color axis
-            
-            * sample EPs on root context
-            base_
-                content_
-
-                    [main]plot_  (or barPlot_)
-                    //chart_ (@deprecated)
-            
-                    plot2_
-                    plot2Plot_
-
-                    trend_
-                    trendPlot_
-
-                    [main]label_
-                    [main]dotsVisible: true,
-                    [main]dot_
-                    [main]bar_
-
-            plots: [
-                {
-                    name: 'plot2',
-                    type: 'point', // defaults to main plot's type
-                    valuesVisible: true
-                }
-            ]
-        }
-    */
     _defPlotExternal: function(name, plotSpec) {
         var plot, type = plotSpec.type;
 
