@@ -132,27 +132,37 @@ def.type('cdo.MatrixTranslationOper', cdo.TranslationOper)
     },
     
     logSource: function() {
-        var R = 15,
+        var R = cdo.previewRowsMax,
+            C = cdo.previewColsMax,
             md = this.metadata,
-            prepend = def.array.prepend,
-            table = def.textTable(md.length + 1)
+            L = md.length,
+            prepend = def.array.prepend;
+
+        if(L > C) {
+            md = md.slice(0, C);
+            md.push({colName: "(" + C + "/" + L + ")", colType: "..."});
+        }
+
+        var table = def.textTable(md.length + 1)
                 .rowSep()
                 .row.apply(table, prepend(md.map(function(col) { return col.colName; }), ["Name"]))
                 .rowSep()
                 .row.apply(table, prepend(md.map(function(col) { return col.colLabel ? ('"' + col.colLabel + '"') : ""; }),["Label"]))
+                .rowSep()
                 .row.apply(table, prepend(md.map(function(col) { return col.colType; }), ["Type" ]))
                 .rowSep();
 
         def.query(this.source)
             .take(R)
             .each(function(row, index) {
+                if(L > C) row = row.slice(0, C);
                 table.row.apply(table, prepend(row.map(function(v) { return pvc.stringify(v); }), [index + 1]));
             });
 
         table
             .rowSep()
             .row("(" + Math.min(R, this.I) + "/" + this.I + ")")
-            .rowSep();
+            .rowSep(true);
 
         return "DATA SOURCE SUMMARY\n" + table() + "\n";
     },
@@ -178,7 +188,7 @@ def.type('cdo.MatrixTranslationOper', cdo.TranslationOper)
             }
         }, this);
 
-        table.rowSep();
+        table.rowSep(true);
 
         return "VIRTUAL ITEM ARRAY\n" + table() + "\n";
     },
@@ -267,3 +277,6 @@ def.type('cdo.MatrixTranslationOper', cdo.TranslationOper)
         });
     }
 });
+
+cdo.previewRowsMax = 15;
+cdo.previewColsMax =  6;

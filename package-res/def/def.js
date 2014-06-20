@@ -2854,14 +2854,19 @@ def.textTable = function(C) {
     var rows = [],
         contPad = " ",
         colsMaxLen = new Array(C),
-        rowSepMarker = def.array.create(C, ""),
+        rowSepMarkerFirst = def.array.create(C, ""),
+        rowSepMarker = rowSepMarkerFirst.slice(),
+        rowSepMarkerLast = rowSepMarkerFirst.slice(),
         rowSep;
 
     function table() {
         return rows.map(function(r) {
-            return r === rowSepMarker
-                ? (rowSep || (rowSep = renderRow(r, "+", "-")))
-                : renderRow(r, "|", " ");
+            switch(r) {
+                case rowSepMarkerFirst: return renderRow(r, "\u2564", "\u2550", "\u2554", "\u2557");
+                case rowSepMarker:      return (rowSep || (rowSep = renderRow(r, "\u253c", "\u2500", "\u255f", "\u2562")));
+                case rowSepMarkerLast:  return renderRow(r, "\u2567", "\u2550", "\u255a", "\u255d");
+            }
+            return renderRow(r, "\u2502", " ", "\u2551", "\u2551");
         }).join("\n");
     }
 
@@ -2876,15 +2881,15 @@ def.textTable = function(C) {
         return table;
     };
 
-    table.rowSep = function() {
-        rows.push(rowSepMarker);
+    table.rowSep = function(isLast) {
+        rows.push(!rows.length ? rowSepMarkerFirst : isLast ? rowSepMarkerLast : rowSepMarker);
         return table;
     };
 
-    function renderRow(r, colSep, pad) {
-        return r.map(function(s, i) {
+    function renderRow(r, colSep, pad, first, last) {
+        return first + r.map(function(s, i) {
             return def.string.padRight(s || "", colsMaxLen[i], pad);
-        }).join(colSep);
+        }).join(colSep) + last;
     }
 
     return table;

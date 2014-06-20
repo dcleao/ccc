@@ -106,7 +106,7 @@ function(dimTypeSpecs) {
             table.row(type.name, features.join(', '));
         });
 
-        table.rowSep();
+        table.rowSep(true);
 
         return "COMPLEX TYPE INFORMATION\n" + table() + "\n";
     },

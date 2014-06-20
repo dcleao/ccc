@@ -457,7 +457,7 @@ pvc.visual.rolesBinder = function() {
                 String(r.grouping || "-"));
         });
 
-        table.rowSep();
+        table.rowSep(true);
 
         logger("VISUAL ROLES MAP SUMMARY\n" + table() + "\n");
     }
