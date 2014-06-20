@@ -307,14 +307,18 @@ var colorAxis_optionsDef = def.create(axis_optionsDef, {
         data: {
             resolveDefault: function(optionInfo) {
                 var plotList = this._plotList;
-                if(plotList.length <= 2) {
-                    var onlyTrendAndPlot2 = def.query(plotList)
-                        .all(function(plot) {
-                            var name = plot.name;
-                            return (name === 'plot2' || name === 'trend');
-                        });
-                    
-                    if(onlyTrendAndPlot2) return optionInfo.defaultValue(pvc.brighterColorTransform), true;
+                if(plotList.length) {
+                    var notMainAndAnyOfTrendAndPlot2 = false;
+
+                    def.query(plotList).each(function(plot) {
+                        // Set to false and break out.
+                        if(plot.isMain) return (notMainAndAnyOfTrendAndPlot2 = false);
+
+                        var name = plot.name;
+                        if(name === 'plot2' || name === 'trend') notMainAndAnyOfTrendAndPlot2 = true;
+                    });
+
+                    if(notMainAndAnyOfTrendAndPlot2) return optionInfo.defaultValue(pvc.brighterColorTransform), true;
                 }
             }
         },

@@ -21,6 +21,11 @@ def
     this.axisIndex = axisIndex;
     this.role = role;
     this.dataPartValue = dataPartValue;
+})
+.add(/** @lends pvc.visual.DataCell# */{
+    legendVisible: function() {
+        return !!this.role && this.role.legendVisible();
+    }
 });
 
 function dataCell_dataPartValue(dc) { return dc.dataPartValue; }

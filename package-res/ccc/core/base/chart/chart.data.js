@@ -141,7 +141,7 @@ pvc.BaseChart
                 this._createTranslation(ctp, dimsOptions, dataPartDimName);
 
         // If the the dataPart dimension is defined, but is not being read or calculated,
-        // then default its value '0'.
+        // then default its value to '0'.
         if(ctp.hasDim(dataPartDimName) && !ctp.isReadOrCalc(dataPartDimName))
             this._addDefaultDataPartCalculation(ctp, dataPartDimName);
 

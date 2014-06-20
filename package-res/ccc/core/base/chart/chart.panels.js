@@ -234,28 +234,30 @@ pvc.BaseChart
                     C = dataCells.length;
 
                 while(++cellIndex < C) {
-                    var dataCell = dataCells[cellIndex],
-                        cellData = axis.domainCellData(cellIndex),
-                        groupScene = getRootScene().createGroup({
-                            source:    cellData,
-                            colorAxis: axis,
-                            clickMode: getCellClickMode(axis, cellData),
-                            extensionPrefix: def.indexedId('', legendIndex++)
+                    var dataCell = dataCells[cellIndex];
+                    if(dataCell.legendVisible()) {
+                        var cellData = axis.domainCellData(cellIndex),
+                            groupScene = getRootScene().createGroup({
+                                source: cellData,
+                                colorAxis: axis,
+                                clickMode: getCellClickMode(axis, cellData),
+                                extensionPrefix: def.indexedId('', legendIndex++)
+                            });
+
+                        // For later binding of an appropriate bullet renderer
+                        dataCell.legendGroupScene(groupScene);
+
+                        // Create one item scene per cell domain item.
+                        axis.domainCellItems(cellData).forEach(function (itemData) {
+                            var itemScene = groupScene.createItem({source: itemData}),
+                                itemValue = axis.domainItemValue(itemData);
+
+                            // TODO: HACK: how to make this integrate better
+                            // with the way scenes/signs get the default color.
+                            // NOTE: CommonUI/Analyzer currently accesses this field, though. Must fix that first.
+                            itemScene.color = colorScale(itemValue);
                         });
-
-                    // For later binding of an appropriate bullet renderer
-                    dataCell.legendGroupScene(groupScene);
-
-                    // Create one item scene per cell domain item.
-                    axis.domainCellItems(cellData).forEach(function(itemData, itemIndex) {
-                        var itemScene = groupScene.createItem({source: itemData}),
-                            itemValue = axis.domainItemValue(itemData);
-
-                        // TODO: HACK: how to make this integrate better
-                        // with the way scenes/signs get the default color.
-                        // NOTE: CommonUI/Analyzer currently accesses this field, though. Must fix that first.
-                        itemScene.color = colorScale(itemValue);
-                    });
+                    }
                 }
             }
         });

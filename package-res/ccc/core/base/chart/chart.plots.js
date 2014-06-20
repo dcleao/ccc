@@ -91,10 +91,7 @@ pvc.BaseChart
         return new PlotClass(this, {
             name:       name,
             isInternal: false,
-            spec:       plotSpec,
-            defaults: {
-                ColorAxis: isFirst ? 1 : 2
-            }
+            spec:       plotSpec
         });
     },
 

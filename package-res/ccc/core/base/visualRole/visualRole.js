@@ -62,7 +62,10 @@ def
  * 
  * @param {boolean} [keyArgs.isMeasure=false] Indicates that <b>datums</b> that do not 
  * contain a non-null atom in any of the dimensions bound to measure roles should be readily excluded.
- * 
+ *
+ * @param {boolean} [keyArgs.legendVisible=true] Indicates if data cells using this visual role
+ * should show a legend. Use this to prevent showing an associated axis' legend, but only for a particular plot.
+ *
  * @param {boolean} [keyArgs.valueType] Restricts the allowed value type of dimensions.
  * 
  * @param {boolean|null} [keyArgs.requireIsDiscrete=null] Indicates if the grouping should be discrete, continuous or any.
@@ -94,9 +97,11 @@ def
     var defaultDimensionName = def.get(keyArgs, 'defaultDimension');
     if(defaultDimensionName) this.defaultDimensionName = defaultDimensionName;
 
-    if(!defaultDimensionName && this.autoCreateDimension) 
-        throw def.error.argumentRequired('defaultDimension');
-    
+    if(!defaultDimensionName && this.autoCreateDimension) throw def.error.argumentRequired('defaultDimension');
+
+    var legendVisible = def.get(keyArgs, 'legendVisible');
+    if(legendVisible != null && !legendVisible) this._legendVisible = false;
+
     var requireSingleDimension,
         requireIsDiscrete = def.get(keyArgs, 'requireIsDiscrete'); // isSingleDiscrete
     if(requireIsDiscrete != null && !requireIsDiscrete) requireSingleDimension = true;
@@ -146,9 +151,25 @@ def
     label: null,
     sourceRole: null,
     isDefaultSourceRole: false,
+    _legendVisible: true,
 
     prettyId: function() {
         return (this.plot ? (this.plot.prettyId + ".") : "") + this.name;
+    },
+
+    /**
+     * Indicates if legend groups of data-cells having this visual role
+     * <i>can</i> be shown.
+     * @param {boolean} [_] The new legend visible value.
+     * @return {pvc.visual.Role|boolean} <tt>this</tt> or the current value of legend visible.
+     */
+    legendVisible: function(_) {
+        if(arguments.length) {
+            if(_ != null) this._legendVisible = !!_;
+            return this;
+        }
+
+        return this._legendVisible;
     },
 
     /** 
@@ -418,12 +439,13 @@ def
     parse: function(lookup, name, config) {
         // Process the visual role configuration.
         // * a string with the grouping dimensions, or
-        // * {dimensions: "product", isReversed:true, from: "series"}
-        var parsed = {isReversed: false, source: null, grouping: null},
+        // * {dimensions: "product", isReversed:true, from: "series", legendVisible: true}
+        var parsed = {isReversed: false, source: null, grouping: null, legendVisible: true},
             groupSpec;
 
         if(def.object.is(config)) {
             if(config.isReversed) parsed.isReversed = true;
+            if(config.legendVisible != null) parsed.legendVisible = !!config.legendVisible;
 
             var sourceName = config.from;
             if(sourceName) {
