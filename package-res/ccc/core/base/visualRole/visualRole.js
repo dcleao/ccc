@@ -150,7 +150,6 @@ def
     isReversed: false,
     label: null,
     sourceRole: null,
-    isDefaultSourceRole: false,
     _legendVisible: true,
 
     prettyId: function() {
@@ -230,10 +229,13 @@ def
         var g = this.grouping;
         return g && g.isDiscrete();
     },
-    
-    setSourceRole: function(sourceRole, isDefault) {
+
+    /**
+     * Sets the visual role that is the source of this one.
+     * @param {pvc.visual.Role} sourceRole The source visual role.
+     */
+    setSourceRole: function(sourceRole) {
         this.sourceRole = sourceRole;
-        this.isDefaultSourceRole = !!isDefault;
     },
     
     setIsReversed: function(isReversed) {

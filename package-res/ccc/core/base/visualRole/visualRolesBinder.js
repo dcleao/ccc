@@ -225,15 +225,18 @@ pvc.visual.rolesBinder = function() {
     function configure(r, opts) {
         var parsed = pvc.visual.Role.parse(context, r.name, opts),
             grouping;
+
         if(parsed.isReversed) r.setIsReversed(true);
         if(parsed.legendVisible != null) r.legendVisible(parsed.legendVisible);
 
         if(parsed.source) {
             r.setSourceRole(parsed.source);
             return addUnboundSourced(r), 1;
-        } else if((grouping = parsed.grouping)) {
-            return preBindToGrouping(r, grouping), 1;
         }
+
+        if((grouping = parsed.grouping))
+            return preBindToGrouping(r, grouping), 1;
+
         return 0;
     }
 
@@ -274,7 +277,7 @@ pvc.visual.rolesBinder = function() {
         // Secondary roles have the same name as the main role,
         //  but are not returned by `context`.
         var mainRole = context(r.name);
-        if(mainRole !== r && r.canHaveSource(mainRole)) {
+        if(mainRole && mainRole !== r && r.canHaveSource(mainRole)) {
             // It's a secondary role and can be source by mainRole.
             r.setSourceRole(mainRole);
             addUnboundSourced(r);

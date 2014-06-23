@@ -126,12 +126,7 @@ def
         return def.getOwn(this.visualRoles, name);
     },
 
-    collectDataCells: function(addDataCell) {
-        var dataCell = this._getColorDataCell();
-        if(dataCell) addDataCell(dataCell);
-    },
-
-    /** 
+    /**
      * Called to finish construction of the plot.
      * Only from now on are all plot options guaranteed to be available
      * for consumption, so any initialization that is performed based on
@@ -145,6 +140,11 @@ def
     initEnd: function() {
         var roleSpec = this._getColorRoleSpec();
         if(roleSpec) this._addVisualRole('color', roleSpec);
+    },
+
+    collectDataCells: function(addDataCell) {
+        var dataCell = this._getColorDataCell();
+        if(dataCell) addDataCell(dataCell);
     },
 
     /**

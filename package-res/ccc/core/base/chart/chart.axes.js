@@ -120,11 +120,10 @@ pvc.BaseChart
                     dataCellsByAxisIndex = dataCellsByAxisTypeThenIndex[type];
                 if(dataCellsByAxisIndex) {
 
-                    AxisClass = this._axisClassByType[type];
-                    if(AxisClass)
-                        dataCellsByAxisIndex.forEach(function(dataCells, axisIndex) {
-                            new AxisClass(this, type, axisIndex);
-                        }, this);
+                    AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
+                    dataCellsByAxisIndex.forEach(function(dataCells, axisIndex) {
+                        new AxisClass(this, type, axisIndex);
+                    }, this);
                     
                 } else if(this._axisCreateIfUnbound[type]) {
                     AxisClass = this._axisClassByType[type];
