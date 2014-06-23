@@ -459,10 +459,8 @@ define([
                         });
                     });
                 });
-            });
 
-            // Multiple sourcing levels does not affect pre-binding propagation.
-            When("a pre-bound role, A, is, explicitly or implicitly, the source of another role, B", function() {
+                // Multiple sourcing levels does not affect pre-binding propagation.
                 And("in turn, role B is the source role of another role C", function() {
                     After("calling begin()", function () {
                         The("role C", function () {
@@ -583,6 +581,35 @@ define([
                     });
                 });
             });
+
+            // Null groupings
+            When("a role's options have dimensions=null", function() {
+                After("calling begin()", function() {
+                    The("role", function() {
+                        Should("be bound to a null grouping", function() {
+                            var ctp = new cdo.ComplexTypeProject();
+
+                            var rolesSpecs = [
+                                {name: 'A'}
+                            ];
+
+                            var rolesOptions = {A: {dimensions: null}};
+
+                            var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                            var binder = pvc.visual.rolesBinder()
+                                .complexTypeProject(ctp)
+                                .context(context);
+
+                            binder.begin();
+
+                            expect(context('A').isPreBound()).toBe(true);
+                            expect(context('A').preBoundGrouping().isNull()).toBe(true);
+                        });
+                    });
+                });
+            });
         });
+
     });
 });
