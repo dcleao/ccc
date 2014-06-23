@@ -41,10 +41,10 @@ def
     },
 
     /** @override */
-    _getBaseRole: function() { return this.visualRole('x'); },
+    _getBaseRole: function() { return this.visualRoles.x; },
 
     /** @override */
-    _getOrthoRoles: function() { return [this.visualRole('y')]; }
+    _getOrthoRoles: function() { return [this.visualRoles.y]; }
 });
 
 pvc.visual.MetricXYPlot.optionsDef = def.create(

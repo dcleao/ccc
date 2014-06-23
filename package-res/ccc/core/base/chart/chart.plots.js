@@ -10,7 +10,6 @@ pvc.BaseChart
         
         var parent = this.parent;
         if(!parent) {
-            this._needsTrendPlot = false;
             this.plots = {};
             this.plotList = [];
             this.plotsByType = {};
@@ -52,7 +51,13 @@ pvc.BaseChart
     },
 
     _initPlotTrend: function(trendPlotDefExt) {
-        if(this._needsTrendPlot) {
+        // This is done here, and not in _addPlot, cause it would evaluate the
+        // "Trend" option to soon, before the application of plot-local options.
+        var needsTrendPlot = this.plotList.some(function(p) {
+            return p.option.isDefined('Trend') && !!p.option('Trend');
+        });
+
+        if(needsTrendPlot) {
             this._createPlotTrend();
             if(trendPlotDefExt && this.plots.trend) this._defPlotExternal('trend', trendPlotDefExt);
         }
@@ -127,9 +132,6 @@ pvc.BaseChart
         plots[id] = plot;
         if(name) plots[name] = plot;
         if(isMain) plots.main = plot;
-
-        this._needsTrendPlot = this._needsTrendPlot ||
-            (plot.option.isDefined('Trend') && !!plot.option('Trend'));
     },
 
     _initPlotsEnd: function() {
@@ -167,7 +169,11 @@ pvc.BaseChart
     },
 
     _registerPlotVisualRoles: function(plot) {
-        plot.visualRoles().forEach(function(role) {
+        var name = plot.name,
+            id = plot.id,
+            isMain = plot.isMain;
+
+        plot.visualRoleList.forEach(function(role) {
             var rname = role.name, names = [];
 
             if(plot.isMain) {
@@ -175,7 +181,7 @@ pvc.BaseChart
                 if(!(rname in this.visualRoles)) names.push(rname);
                 names.push("main." + rname);
             }
-            names.push(plot.id + "." + rname);
+            names.push(id + "." + rname);
             if(name) names.push(name + "." + rname);
 
             this._addVisualRoleCore(role, names);

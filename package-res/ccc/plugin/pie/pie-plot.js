@@ -50,7 +50,7 @@ def
 
     /** @override */
     createVisibleData: function(baseData, ka) {
-        return this.visualRole('category').flatten(baseData, ka);
+        return this.visualRoles.category.flatten(baseData, ka);
     },
 
     /** @override */
@@ -71,7 +71,7 @@ def
             this,
             /*axisType*/'angle',
             /*axisIndex*/0,
-            /*role*/this.visualRole('value'),
+            /*role*/this.visualRoles.value,
             dataPartValue));
     },
 

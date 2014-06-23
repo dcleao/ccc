@@ -27,8 +27,7 @@ def
 
     var roles = this.visualRoles;
 
-    var sizeRoleName = plot.option('SizeRole'); // assumed to be always defined
-    roles.size = chart.visualRole(sizeRoleName);
+    roles.size = chart.visualRole(plot.option('SizeRole')); // SizeRole - assumed to be always defined
 
     this.useShapes = plot.option('UseShapes');
     this.shape     = plot.option('Shape');

@@ -26,11 +26,7 @@ def
 
     this.base(chart, parent, plot, options);
 
-    var sizeAxis = this.axes.size = chart._getAxis('size', (plot.option('SizeAxis') || 0) - 1), // may be undefined
-        sizeRoleName = plot.option('SizeRole'); // assumed to be always defined
-
-    this.visualRoles.size = sizeRoleName ? chart.visualRole(sizeRoleName) : null;
-
+    var sizeAxis = this.axes.size = chart._getAxis('size', (plot.option('SizeAxis') || 0) - 1); // may be undefined
     if(sizeAxis) {
         this.sizeAxisRatio = sizeAxis.option('Ratio');
         this.sizeAxisRatioTo = sizeAxis.option('RatioTo');

@@ -49,7 +49,7 @@ def
 
     /** @override */
     createVisibleData: function(baseData, ka) {
-        return this.visualRole('category').select(baseData, ka);
+        return this.visualRoles.category.select(baseData, ka);
     },
 
     /** @override */

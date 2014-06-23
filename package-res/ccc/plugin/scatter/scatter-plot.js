@@ -50,7 +50,7 @@ def
                 this,
                 /*axisType*/ 'size',
                 this.option('SizeAxis') - 1,
-                this.visualRole('size'),
+                this.visualRoles.size,
                 this.option('DataPart')));
     },
     

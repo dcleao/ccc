@@ -76,7 +76,7 @@ def
 });
 
 function pvc_castTrend(trend) {
-    // The trend plot itself does not have trends...
+    // The trend plot itself cannot have trends...
     if(this.name === 'trend') return null;
     
     var type = this.option('TrendType');

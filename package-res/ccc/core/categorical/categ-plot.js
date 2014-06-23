@@ -14,7 +14,7 @@ def
 .add(/** @lends pvc.visual.CategoricalPlot# */{
     /** @override */
     createVisibleData: function(baseData, ka) {
-        var serRole = this.visualRole('series'),
+        var serRole = this.visualRoles.series,
             serGrouping = serRole && serRole.flattenedGrouping(),
             catGrouping = this.visualRole('category').flattenedGrouping();
 
@@ -175,7 +175,7 @@ def
     },
 
     /** @override */
-    _getBaseRole: function() { return this.visualRole('category'); },
+    _getBaseRole: function() { return this.visualRoles.category; },
 
     /** @override */
     _getOrthoRoles: function() { return [this.visualRole('value')]; }

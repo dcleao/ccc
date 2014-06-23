@@ -64,8 +64,8 @@ def
         if(this.name) prefixes.push(this.name);
     }
 
-    this._visualRoles = {};
-    this._visualRoleList = [];
+    this.visualRoles = {};
+    this.visualRoleList = [];
 
     // -------------
 
@@ -81,8 +81,15 @@ def
 
     processSpec: function(plotSpec) {
         // Process extension points and publish options with the plot's optionId prefix.
-        var me = this, options = me.chart.options;
-        me.chart._processExtensionPointsIn(plotSpec, me.optionId, function(optValue, optId, optName) {
+        var me = this,
+            options = me.chart.options,
+            // Name has precedence in option resolution,
+            // so use it if it is defined,
+            // so that the the option variant with
+            // the highest precedence is used.
+            extId = (me.isInternal ? me.name : null) || me.optionId;
+
+        me.chart._processExtensionPointsIn(plotSpec, extId, function(optValue, optId, optName) {
             // Not an extension point => it's an option
             switch(optName) {
                 // Already handled
@@ -104,23 +111,19 @@ def
     _getColorRoleSpec: def.fun.constant(null),
 
     _addVisualRole: function(name, spec) {
-        var roleList = this._visualRoleList;
+        var roleList = this.visualRoleList;
         spec = def.set(spec,
             'index', roleList.length,
             'plot',  this);
 
         var role = new pvc.visual.Role(name, spec);
-        this._visualRoles[name] = role;
+        this.visualRoles[name] = role;
         roleList.push(role);
         return role;
     },
 
-    visualRoles: function() {
-        return this._visualRoleList;
-    },
-
     visualRole: function(name) {
-        return def.getOwn(this._visualRoles, name);
+        return def.getOwn(this.visualRoles, name);
     },
 
     collectDataCells: function(addDataCell) {
@@ -157,7 +160,7 @@ def
      * @virtual
      */
     createVisibleData: function(baseData, ka) {
-        var serRole = this.visualRole('series');
+        var serRole = this.visualRoles.series;
         return serRole && serRole.isBound() 
             ? serRole.flatten(baseData, ka) 
             : baseData.where(null, ka); // Used?
@@ -206,7 +209,7 @@ def
     },
 
     _getColorDataCell: function() {
-        var colorRole = this._visualRoles.color;
+        var colorRole = this.visualRoles.color;
         if(colorRole)
             return new pvc.visual.ColorDataCell(
                     this,

@@ -29,8 +29,8 @@ def
     this.valuesOverflow = plot.option('ValuesOverflow');
     this.valuesOptimizeLegibility = plot.option('ValuesOptimizeLegibility');
     
-    this.visualRoles = plot._visualRoles;
-    this.visualRoleList = plot._visualRoleList;
+    this.visualRoles = plot.visualRoles;
+    this.visualRoleList = plot.visualRoleList;
 })
 .add({
     anchor:  'fill',
