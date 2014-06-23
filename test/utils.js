@@ -18,11 +18,11 @@ define([
         return chart.data;
     };
 
-    testUtils.createBaseChart = function(options, dataSpec) {
-        var chart = new pvc.BaseChart(options);
+    testUtils.createChart = function(Chart, options, dataSpec) {
+        var chart = new Chart(options);
         chart.allowNoData = true;
         if(dataSpec) chart.setData.apply(chart, dataSpec);
-        
+
         try {
             chart._create({});
         } catch(ex) {
@@ -30,8 +30,12 @@ define([
                 throw ex;
             }
         }
-        
+
         return chart;
+    };
+
+    testUtils.createBaseChart = function(options, dataSpec) {
+        return testUtils.createChart(pvc.BaseChart, options, dataSpec);
     };
 
     testUtils.expectDatumValues = function(datum, map) {
@@ -54,7 +58,7 @@ define([
 
     testUtils.describeTerm = function(term) {
         function termed() {
-            arguments[0] = term + " " + arguments[0];
+            arguments[0] = (def.array.is(term) ? term.join(", and ") : term) + " " + arguments[0];
             return describe.apply(this, arguments);
         }
         return termed;
@@ -62,7 +66,7 @@ define([
 
     testUtils.itTerm = function(term) {
         function termed() {
-            arguments[0] = term + " " + arguments[0];
+            arguments[0] = (def.array.is(term) ? term.join(", and ") : term) + " " + arguments[0];
             return it.apply(this, arguments);
         }
         return termed;
