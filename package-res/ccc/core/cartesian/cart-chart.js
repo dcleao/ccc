@@ -204,7 +204,93 @@ def
             }
         }
     },
-    
+
+    _coordinateSmallChartsLayout: function(scopesByType) {
+        // TODO: optimize the case were
+        // the title panels have a fixed size and
+        // the x and y FixedMin and FixedMax are all specified...
+        // Don't need to coordinate in that case.
+
+        this.base(scopesByType);
+
+        // Force layout and retrieve sizes of
+        // * title panel
+        // * y panel if column or global scope (column scope coordinates x scales, but then the other axis' size also affects the layout...)
+        // * x panel if row    or global scope
+        var titleSizeMax  = 0,
+            titleOrthoLen,
+            axisIds = null,
+            sizesMaxByAxisId = {}; // {id:  {axis: axisSizeMax, title: titleSizeMax} }
+
+        // Calculate maximum sizes
+        this.children.forEach(function(childChart) {
+
+            childChart.basePanel.layout();
+
+            var size, panel = childChart.titlePanel;
+            if(panel) {
+                if(!titleOrthoLen) titleOrthoLen = panel.anchorOrthoLength();
+
+                size = panel[titleOrthoLen];
+                if(size > titleSizeMax) titleSizeMax = size;
+            }
+
+            // ------
+
+            var axesPanels = childChart.axesPanels;
+            if(!axisIds) {
+                axisIds = def.query(def.ownKeys(axesPanels))
+                    .where(function(alias) { return alias === axesPanels[alias].axis.id; })
+                    .select(function(id) {
+                        // side effect
+                        sizesMaxByAxisId[id] = {axis: 0, title: 0};
+                        return id;
+                    })
+                    .array();
+            }
+
+            axisIds.forEach(function(id) {
+                var axisPanel = axesPanels[id],
+                    sizes = sizesMaxByAxisId[id],
+                    ol = axisPanel.axis.orientation === 'x' ? 'height' : 'width';
+                size = axisPanel[ol];
+                if(size > sizes.axis) sizes.axis = size;
+
+                var titlePanel = axisPanel.titlePanel;
+                if(titlePanel) {
+                    size = titlePanel[ol];
+                    if(size > sizes.title) sizes.title = size;
+                }
+            });
+        }, this);
+
+        // Apply the maximum sizes to the corresponding panels
+        this.children.forEach(function(childChart) {
+
+            if(titleSizeMax > 0) {
+                var panel  = childChart.titlePanel;
+                panel.size = panel.size.clone().set(titleOrthoLen, titleSizeMax);
+            }
+
+            // ------
+
+            var axesPanels = childChart.axesPanels;
+            axisIds.forEach(function(id) {
+                var axisPanel = axesPanels[id],
+                    sizes = sizesMaxByAxisId[id],
+                    ol = axisPanel.axis.orientation === 'x' ? 'height' : 'width';
+
+                axisPanel.size = axisPanel.size.clone().set(ol, sizes.axis);
+
+                var titlePanel = axisPanel.titlePanel;
+                if(titlePanel) titlePanel.size = titlePanel.size.clone().set(ol, sizes.title);
+            });
+
+            // Invalidate their previous layout
+            childChart.basePanel.invalidateLayout();
+        }, this);
+    },
+
     markEventDefaults: {
         strokeStyle: "#5BCBF5",        /* Line Color */
         lineWidth: "0.5",              /* Line Width */
