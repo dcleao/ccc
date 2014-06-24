@@ -522,7 +522,7 @@ var def = /** @lends def */{
 
     object: {
         is: function(v) {
-            return v && typeof(v) === 'object'; // Is (v instanceof Object) faster?
+            return (!!v) && typeof(v) === 'object'; // Is (v instanceof Object) faster?
         },
 
         isNative: function(v) {

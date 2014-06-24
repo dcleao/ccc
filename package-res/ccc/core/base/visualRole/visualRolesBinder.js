@@ -190,7 +190,8 @@ pvc.visual.rolesBinder = function() {
         // object properties are enumerated.
         context.query().each(function(r) {
             var opts = context.getOptions(r);
-            if(!opts || !configure(r, opts))
+            // `null` means "pre-bind to a null grouping"
+            if(opts === undefined || !configure(r, opts))
                 trySourceIfSecondaryRole(r);
         });
 

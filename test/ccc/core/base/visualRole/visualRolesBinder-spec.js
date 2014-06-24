@@ -27,7 +27,7 @@ define([
         };
 
         context.getOptions = function(r) {
-            return def.get(rolesOptions, r.prettyId());
+            return rolesOptions[r.prettyId()]; // note: null is a valid config value!
         };
 
         return context;
@@ -670,6 +670,33 @@ define([
                             ];
 
                             var rolesOptions = {A: {dimensions: null}};
+
+                            var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                            var binder = pvc.visual.rolesBinder()
+                                .complexTypeProject(ctp)
+                                .context(context);
+
+                            binder.begin();
+
+                            expect(context('A').isPreBound()).toBe(true);
+                            expect(context('A').preBoundGrouping().isNull()).toBe(true);
+                        });
+                    });
+                });
+            });
+
+            When("a role's options are null", function() {
+                After("calling begin()", function() {
+                    The("role", function() {
+                        Should("be bound to a null grouping", function() {
+                            var ctp = new cdo.ComplexTypeProject();
+
+                            var rolesSpecs = [
+                                {name: 'A'}
+                            ];
+
+                            var rolesOptions = {A: null};
 
                             var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
 

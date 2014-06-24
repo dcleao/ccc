@@ -196,10 +196,12 @@ pvc.BaseChart
         context.getOptions = function(r) {
             var plot = r.plot, name = r.name;
 
+            // NOTE: a `null` config value means "create a null grouping"!
+            // So care was taken no to use def.get, which tests option presence using `value != null`.
             return def.firstDefined([
                 function() { if(!plot || plot.isMain) return options[name + 'Role']; },
-                function() { return def.get(chartRolesOptions, name); },
-                function() { if(plot) return def.get(plot._visualRolesOptions, name); }
+                function() { if(chartRolesOptions) return chartRolesOptions[name];   },
+                function() { var opts; if(plot && (opts = plot._visualRolesOptions)) return opts[name]; }
             ]);
         };
 
