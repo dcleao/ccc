@@ -265,6 +265,7 @@ pvc.visual.rolesBinder = function() {
         if(!dimsBoundTo[n]) {
             dimsBoundTo[n] = true;
             singleRoleByDimName[n] = r;
+            complexTypeProj.setDim(n);
         } else {
             // Two or more roles.
             delete singleRoleByDimName[n];
@@ -331,7 +332,7 @@ pvc.visual.rolesBinder = function() {
     //
     // However, the translation has now had a chance to configure the complex type project,
     // defining new dimensions or just configuring existing ones (with valueType, label, etc),
-    // and, in any case, marking those as being read.
+    // and, in any case, marking those as being read or calculated.
     //
     // For what the binding of visual roles to dimensions is concerned,
     // now is the time to check whether the default dimensions of still unbound visual roles exist.
@@ -350,10 +351,14 @@ pvc.visual.rolesBinder = function() {
             if(!r.isPreBound()) autoPrebindUnbound(r);
         });
 
+        // By now, any not sourced, unbound required role already caused throwing a required role error.
+
         // Try to pre-bind sourced roles that are still unbound.
         unboundSourcedRoles.forEach(function(r) {
             if(!tryPreBindSourcedRole(r)) roleIsUnbound(r);
         });
+
+        // -------
 
         applySingleRoleDefaults();
 
@@ -395,8 +400,8 @@ pvc.visual.rolesBinder = function() {
             // Otherwise, use only one.
             // Ex:  "product*"
             var match = dimName.match(/^(.*?)(\*)?$/) || def.fail.argumentInvalid('defaultDimensionName'),
-                defaultName =  match[1],
-                greedy = /*!!*/match[2];
+                defaultName = match[1],
+                greedy      = match[2];
             if(greedy) {
                 // TODO: does not respect any index explicitly specified before the *. It could mean >=...
                 var groupDimNames = complexTypeProj.groupDimensionsNames(defaultName);

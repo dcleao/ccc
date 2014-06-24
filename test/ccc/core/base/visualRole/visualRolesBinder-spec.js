@@ -8,9 +8,10 @@ define([
     var cdo = pvc.data;
 
     var When   = utils.describeTerm("when"),
-        Then   = utils.describeTerm("then"),
+        //Then   = utils.describeTerm("then"),
+        That   = utils.describeTerm("that"),
         After  = utils.describeTerm("after"),
-        With   = utils.describeTerm("with"),
+        //With   = utils.describeTerm("with"),
         And    = utils.describeTerm("and"),
         The    = utils.describeTerm("the"),
         A      = utils.describeTerm("a"),
@@ -258,8 +259,51 @@ define([
                                     expect(g.lastDimension.name).toBe('dimA');
                                 });
                             });
+
+                            When("the role is the single role bound to the dimension", function() {
+                                The("dimension", function() {
+                                    Should("be defined in the complex type project", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [{name: 'A'}];
+                                        var rolesOptions = {A: 'dimA'};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        expect(ctp.hasDim('dimA')).toBe(true);
+                                    });
+                                });
+                            });
+
+                            When("the role is NOT the single role bound to the dimension", function() {
+                                The("dimension", function() {
+                                    Should("be defined in the complex type project", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [{name: 'A'}, {name: 'B'}];
+                                        var rolesOptions = {A: 'dimA'};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        expect(ctp.hasDim('dimA')).toBe(true);
+                                    });
+                                });
+                            });
                         });
                     });
+
                     And("a dimension with that name does exist", function() {
                         After("calling begin()", function() {
                             The("visual role", function() {
@@ -525,8 +569,8 @@ define([
             });
 
             // Dimensions receive defaults from the single role that is bound to them.
-            When("a role has a non-empty dimensionDefaults property", function() {
-                And("it is the only role that is explicitly or implicitly pre-bound to certain dimensions", function() {
+            When("a role A has a non-empty dimensionDefaults property", function() {
+                And("it is the only role that is explicitly pre-bound to certain dimensions", function() {
                     After("calling begin()", function() {
                         The("bound to dimensions' properties", function() {
                             Should("have been defaulted with the visual role's dimensionDefaults", function() {
@@ -552,8 +596,40 @@ define([
                             });
                         });
                     });
+
+                    // B gets implicitly pre-bound to the same dimensions of A
+                    // but that doesn't count for the "single" role determination of dimensionDefaults.
+                    And("there is another role, B, that is sourced by A", function() {
+                        After("calling begin()", function() {
+                            The("bound to dimensions' properties", function() {
+                                Should("have been defaulted with the visual role's dimensionDefaults", function() {
+                                    var ctp = new cdo.ComplexTypeProject();
+
+                                    var rolesSpecs = [
+                                        {name: 'A', dimensionDefaults: {valueType: Number}},
+                                        {name: 'B'}
+                                    ];
+
+                                    var rolesOptions = {A: {dimensions: 'dimA'}, B: {from: 'A'}};
+
+                                    var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                    var binder = pvc.visual.rolesBinder()
+                                        .complexTypeProject(ctp)
+                                        .context(context);
+
+                                    binder.begin();
+
+                                    var dimInfo = ctp._dims['dimA'];
+                                    expect(!!dimInfo).toBe(true);
+                                    expect(dimInfo.spec.valueType).toBe(Number);
+                                });
+                            });
+                        });
+                    });
                 });
-                And("it is NOT the only role that is explicitly or implicitly pre-bound to certain dimensions", function() {
+
+                And("it is NOT the only role that is explicitly pre-bound to certain dimensions", function() {
                     After("calling begin()", function() {
                         The("bound to dimensions' properties", function() {
                             Should("have NOT been defaulted with any of the visual roles' dimensionDefaults", function() {
@@ -575,14 +651,14 @@ define([
                                 binder.begin();
 
                                 var dimInfo = ctp._dims['dimA'];
-                                if(dimInfo) expect(dimInfo.spec.valueType).toBeUndefined();
+                                expect(dimInfo.spec.valueType).toBeUndefined();
                             });
                         });
                     });
                 });
             });
 
-            // Null groupings
+            // Null groupings - a way to prevent a role from binding or being sourced.
             When("a role's options have dimensions=null", function() {
                 After("calling begin()", function() {
                     The("role", function() {
@@ -611,5 +687,466 @@ define([
             });
         });
 
+        describe("end() -", function() {
+            When("a role A was not pre-bound or sourced", function() {
+
+                // Binding to existing dimensions with name like defaultDimensionName
+                And("it has a non-empty property defaultDimensionName", function() {
+                    That("does NOT end with *", function() {
+                        And("one dimension with the same name has, since begin(), been defined", function() {
+                            After("calling end()", function() {
+                                The("visual role", function () {
+                                    Should("become bound to that dimension", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [
+                                            {name: 'A', defaultDimension: 'dimA'}
+                                        ];
+
+                                        var rolesOptions = {};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        expect(context('A').isPreBound()).toBe(false);
+
+                                        // A dimension with the default name, dimA,
+                                        // is in the mean time, defined by some external means.
+                                        ctp.setDim('dimA');
+
+                                        expect(ctp.hasDim('dimA')).toBe(true);
+
+                                        binder.end();
+
+                                        expect(context('A').isBound()).toBe(true);
+                                        expect(context('A').grouping.isSingleDimension).toBe(true);
+                                        expect(context('A').grouping.lastDimension.name).toBe('dimA');
+                                    });
+                                });
+                            });
+
+                            And("role A has a non-empty dimensionDefaults property", function() {
+                                And("it is the only role that is explicitly pre-bound to the default dimension", function () {
+                                    After("calling end()", function() {
+                                        The("default dimension's properties", function() {
+                                            Should("have been defaulted with the role A's dimensionDefaults", function() {
+                                                var ctp = new cdo.ComplexTypeProject();
+
+                                                var rolesSpecs = [
+                                                    {name: 'A', defaultDimension: 'dimA', dimensionDefaults: {valueType: Number}}
+                                                ];
+
+                                                var rolesOptions = {};
+
+                                                var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                                var binder = pvc.visual.rolesBinder()
+                                                    .complexTypeProject(ctp)
+                                                    .context(context);
+
+                                                binder.begin();
+
+                                                ctp.setDim('dimA');
+
+                                                binder.end();
+
+                                                var dimInfo = ctp._dims['dimA'];
+                                                expect(!!dimInfo).toBe(true);
+                                                expect(dimInfo.spec.valueType).toBe(Number);
+                                            });
+                                        });
+                                    });
+                                });
+                                And("it is NOT the only role that is explicitly pre-bound to the default dimension", function () {
+                                    After("calling end()", function() {
+                                        The("default dimension's properties", function() {
+                                            Should("NOT have been defaulted with the role A's dimensionDefaults", function() {
+                                                var ctp = new cdo.ComplexTypeProject();
+
+                                                var rolesSpecs = [
+                                                    {name: 'A', defaultDimension: 'dimA', dimensionDefaults: {valueType: Number}},
+                                                    {name: 'B', defaultDimension: 'dimA'}
+                                                ];
+
+                                                var rolesOptions = {};
+
+                                                var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                                var binder = pvc.visual.rolesBinder()
+                                                    .complexTypeProject(ctp)
+                                                    .context(context);
+
+                                                binder.begin();
+
+                                                ctp.setDim('dimA');
+
+                                                binder.end();
+
+                                                var dimInfo = ctp._dims['dimA'];
+                                                expect(dimInfo.spec.valueType).toBeUndefined();
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+
+                            // Sourced roles pre-binding when sources only get pre-bound in the end phase
+                            And("another visual role, B, is sourced by this one, A", function() {
+                                After("calling end()", function() {
+                                    The("visual role, B", function() {
+                                        Should("become bound to that dimension as well", function() {
+                                            var ctp = new cdo.ComplexTypeProject();
+
+                                            var rolesSpecs = [
+                                                {name: 'A', defaultDimension: 'dimA'},
+                                                {name: 'B'}
+                                            ];
+
+                                            var rolesOptions = {B: {from: 'A'}};
+
+                                            var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                            var binder = pvc.visual.rolesBinder()
+                                                .complexTypeProject(ctp)
+                                                .context(context);
+
+                                            binder.begin();
+
+                                            ctp.setDim('dimA');
+
+                                            expect(ctp.hasDim('dimA')).toBe(true);
+
+                                            binder.end();
+
+                                            expect(context('A').isBound()).toBe(true);
+                                            expect(context('B').isBound()).toBe(true);
+
+                                            expect(context('A').grouping).toBe(context('B').grouping);
+                                        });
+                                    });
+                                });
+                            });
+                        });
+
+                        And("two dimensions with the same name prefix have, since begin(), been defined", function() {
+                            After("calling end()", function() {
+                                The("visual role", function() {
+                                    Should("NOT become bound to any of those dimensions", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [
+                                            {name: 'A', defaultDimension: 'dimA'}
+                                        ];
+
+                                        var rolesOptions = {};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        expect(context('A').isPreBound()).toBe(false);
+
+                                        // A dimension with the default name, dimA,
+                                        // is in the mean time, defined by some external means.
+                                        ctp.setDim('dimA1');
+                                        ctp.setDim('dimA2');
+
+                                        expect(ctp.hasDim('dimA1')).toBe(true);
+                                        expect(ctp.hasDim('dimA2')).toBe(true);
+
+                                        binder.end();
+
+                                        expect(context('A').isBound()).toBe(false);
+                                    });
+                                });
+                            });
+                        });
+
+                        // Binding to automatically created dimension with name defaultDimensionName
+                        And("no dimensions with same name exist", function() {
+                            And("role property autoCreateDimension=true", function() {
+                                After("calling end()", function() {
+                                    The("visual role", function() {
+                                        Should("become bound to one dimension with the default name", function() {
+                                            var ctp = new cdo.ComplexTypeProject();
+
+                                            var rolesSpecs = [
+                                                {name: 'A', defaultDimension: 'dimA', autoCreateDimension: true}
+                                            ];
+
+                                            var rolesOptions = {};
+
+                                            var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                            var binder = pvc.visual.rolesBinder()
+                                                .complexTypeProject(ctp)
+                                                .context(context);
+
+                                            binder.begin();
+
+                                            expect(context('A').isPreBound()).toBe(false);
+
+                                            binder.end();
+
+                                            expect(context('A').isBound()).toBe(true);
+                                            expect(context('A').grouping.isSingleDimension).toBe(true);
+                                            expect(context('A').grouping.lastDimension.name).toBe('dimA');
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+
+                    That("does end with *", function() {
+                        And("one dimension with a name equal to the prefix has, since begin(), been defined", function() {
+                            After("calling end()", function() {
+                                The("visual role", function() {
+                                    Should("become bound to that dimension", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [
+                                            {name: 'A', defaultDimension: 'dimA*'}
+                                        ];
+
+                                        var rolesOptions = {};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        expect(context('A').isPreBound()).toBe(false);
+
+                                        // A dimension with the default name, dimA,
+                                        // is in the mean time, defined by some external means.
+                                        ctp.setDim('dimA');
+
+                                        expect(ctp.hasDim('dimA')).toBe(true);
+
+                                        binder.end();
+
+                                        expect(context('A').isBound()).toBe(true);
+                                        expect(context('A').grouping.isSingleDimension).toBe(true);
+                                        expect(context('A').grouping.lastDimension.name).toBe('dimA');
+                                    });
+                                });
+                            });
+                        });
+
+                        And("two dimensions with the same name prefix have, since begin(), been defined", function() {
+                            After("calling end()", function() {
+                                The("visual role", function() {
+                                    Should("NOT become bound to any of those dimensions", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [
+                                            {name: 'A', defaultDimension: 'dimA*'}
+                                        ];
+
+                                        var rolesOptions = {};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        expect(context('A').isPreBound()).toBe(false);
+
+                                        // A dimension with the default name, dimA,
+                                        // is in the mean time, defined by some external means.
+                                        ctp.setDim('dimA1');
+                                        ctp.setDim('dimA2');
+
+                                        expect(ctp.hasDim('dimA1')).toBe(true);
+                                        expect(ctp.hasDim('dimA2')).toBe(true);
+
+                                        binder.end();
+
+                                        expect(context('A').isBound()).toBe(true);
+                                        expect(context('A').grouping.isSingleDimension).toBe(false);
+                                        expect(context('A').grouping.dimensionNames()).toEqual(['dimA1', 'dimA2']);
+                                    });
+                                });
+                            });
+                        });
+
+                        // Binding to automatically created dimension with name defaultDimensionName
+                        And("no dimensions with same name exist", function() {
+                            And("role property autoCreateDimension=true", function() {
+                                After("calling end()", function() {
+                                    The("visual role", function() {
+                                        Should("become bound to one dimension with the default name", function() {
+                                            var ctp = new cdo.ComplexTypeProject();
+
+                                            var rolesSpecs = [
+                                                {name: 'A', defaultDimension: 'dimA*', autoCreateDimension: true}
+                                            ];
+
+                                            var rolesOptions = {};
+
+                                            var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                            var binder = pvc.visual.rolesBinder()
+                                                .complexTypeProject(ctp)
+                                                .context(context);
+
+                                            binder.begin();
+
+                                            expect(context('A').isPreBound()).toBe(false);
+
+                                            binder.end();
+
+                                            expect(context('A').isBound()).toBe(true);
+                                            expect(context('A').grouping.isSingleDimension).toBe(true);
+                                            expect(context('A').grouping.lastDimension.name).toBe('dimA');
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+
+                // Sourcing due to defaultSourceRole
+                And("it either has an empty property defaultDimensionName or could not be pre-bound by it", function() {
+                    And("it has a non-empty property defaultSourceRoleName", function() {
+                        And("a role with that name exists and is pre-bound", function() {
+                            After("calling end()", function() {
+                                The("role", function() {
+                                    Should("have the default source role as source", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [
+                                            {name: 'A', defaultSourceRole: 'B'},
+                                            {name: 'B'}
+                                        ];
+
+                                        var rolesOptions = {'B': 'dimB'};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        expect(context('A').defaultSourceRoleName).toBe('B');
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        binder.end();
+
+                                        expect(context('A').sourceRole).toBe(context('B'));
+                                    });
+
+                                    Should("become bound to the same grouping as that of the source role", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [
+                                            {name: 'A', defaultSourceRole: 'B'},
+                                            {name: 'B'}
+                                        ];
+
+                                        var rolesOptions = {'B': 'dimB'};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        expect(context('A').defaultSourceRoleName).toBe('B');
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        binder.end();
+
+                                        expect(context('B').isBound()).toBe(true);
+                                        expect(context('A').isBound()).toBe(true);
+                                        expect(context('A').grouping).toBe(context('B').grouping);
+                                    });
+                                });
+                            });
+                        });
+
+                        // When unbound and optional, sourceRoles are cleared...
+                        And("a role with that name exists but is not pre-bound", function() {
+                            After("calling end()", function() {
+                                The("role", function() {
+                                    Should("be unbound and NOT have the default source role as source", function() {
+                                        var ctp = new cdo.ComplexTypeProject();
+
+                                        var rolesSpecs = [
+                                            {name: 'A', defaultSourceRole: 'B'},
+                                            {name: 'B'}
+                                        ];
+
+                                        var rolesOptions = {};
+
+                                        var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                                        expect(context('A').defaultSourceRoleName).toBe('B');
+
+                                        var binder = pvc.visual.rolesBinder()
+                                            .complexTypeProject(ctp)
+                                            .context(context);
+
+                                        binder.begin();
+
+                                        binder.end();
+
+                                        expect(context('A').isBound()).toBe(false);
+                                        expect(context('A').sourceRole).toBe(null);
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+
+            When("a role was pre-bound to a null grouping in the begin phase", function() {
+                After("calling end()", function() {
+                    The("role", function() {
+                        Should("be unbound", function() {
+                            var ctp = new cdo.ComplexTypeProject();
+
+                            var rolesSpecs = [
+                                {name: 'A'}
+                            ];
+
+                            var rolesOptions = {A: {dimensions: null}};
+
+                            var context = buildVisualRolesContext(rolesSpecs, rolesOptions);
+
+                            var binder = pvc.visual.rolesBinder()
+                                .complexTypeProject(ctp)
+                                .context(context);
+
+                            binder.begin();
+                            binder.end();
+
+                            expect(context('A').isPreBound()).toBe(false);
+                            expect(context('A').isBound()).toBe(false);
+                        });
+                    });
+                });
+            });
+        });
     });
 });
