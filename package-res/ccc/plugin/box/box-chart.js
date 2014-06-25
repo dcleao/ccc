@@ -32,7 +32,7 @@ def
                 name: 'plot2',
                 spec: {
                     visualRoles: {
-                        'value': {from: 'median'}
+                        'value': {from: 'main.median'}
                     }
                 },
                 defaults: {
