@@ -11,6 +11,13 @@
  */
 def
 .type('pvc.visual.SunburstPlot', pvc.visual.Plot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    if(!(chart instanceof pvc.SunburstChart))
+        throw def.error(def.format("Plot type '{0}' can only be used from within a sunburst chart.", [this.type]));
+})
 .add({
     type: 'sunburst',
 

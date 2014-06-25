@@ -11,6 +11,13 @@
  */
 def
 .type('pvc.visual.TreemapPlot', pvc.visual.Plot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    if(!(chart instanceof pvc.TreemapChart))
+        throw def.error(def.format("Plot type '{0}' can only be used from within a treemap chart.", [this.type]));
+})
 .add({
     type: 'treemap',
     

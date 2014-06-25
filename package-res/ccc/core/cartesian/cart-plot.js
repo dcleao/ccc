@@ -11,6 +11,13 @@
  */
 def
 .type('pvc.visual.CartesianPlot', pvc.visual.Plot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    if(!(chart instanceof pvc.CartesianAbstract))
+        throw def.error(def.format("Plot type '{0}' can only be used from within a cartesian chart.", [this.type]));
+})
 .add({
     /** @override */
     _getColorRoleSpec: function() {

@@ -261,7 +261,7 @@ def
                     otherGrouping = this._getBoundRoleGrouping(otherRole);
                     if(dimNamesKey !== String(otherGrouping.dimensionNames()))
                         throw createError(
-                            "The discrete visual roles '{0}' on axis '{1}' should be bound to the same dimension sequence.", [
+                            "The visual roles '{0}', on axis '{1}', assumed discrete, should be bound to the same dimension list.", [
                                 [this.role.prettyId(), otherRole.prettyId()].join("', '"),
                                 this.id
                             ]);
@@ -269,7 +269,7 @@ def
 
                 // No common traversal modes possible for every visual role
                 if(!possibleTraversalModes)
-                    throw createError("The discrete visual roles on axis '{0}' do not share a possible traversal mode.", [this.id]);
+                    throw createError("The visual roles on axis '{0}', assumed discrete, do not share a possible traversal mode.", [this.id]);
 
                 // Find the traversal mode to use for all.
                 traversalMode = 0;
@@ -294,12 +294,12 @@ def
                 }
             } else {
                 if(!grouping.lastDimensionType().isComparable)
-                    throw createError("The continuous visual roles on axis '{0}' should have 'comparable' groupings.", [this.id]);
+                    throw createError("The visual roles on axis '{0}', assumed continuous, should have 'comparable' groupings.", [this.id]);
 
                 for(i = 1; i < L ; i++) {
                     otherGrouping = this._getBoundRoleGrouping(this.dataCells[i].role);
                     if(this.scaleType !== axis_groupingScaleType(otherGrouping))
-                        throw createError("The continuous visual roles on axis '{0}' should have scales of the same type.", [this.id]);
+                        throw createError("The visual roles on axis '{0}', assumed continuous, should have scales of the same type.", [this.id]);
                 }
             }
         }

@@ -13,6 +13,13 @@
  */
 def
 .type('pvc.visual.PiePlot', pvc.visual.Plot)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    if(!(chart instanceof pvc.PieChart))
+        throw def.error(def.format("Plot type '{0}' can only be used from within a pie chart.", [this.type]));
+})
 .add({
     /** @override */
     type: 'pie',
