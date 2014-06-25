@@ -33,6 +33,6 @@ var metricPointSizeAxis_optionsDef = def.create(sizeAxis_optionsDef, {
     RatioTo: {
         resolve: '_resolveFull',
         cast:    pvc.parseMetricPointSizeAxisRatioTo,
-        value:   'minWidthHeight'
+        value:   'minwidthheight'
     }
 });

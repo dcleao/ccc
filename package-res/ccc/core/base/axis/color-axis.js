@@ -236,7 +236,7 @@ function colorAxis_getDefaultColors(/*optionInfo*/) {
             // the global color scale of the role
             // The following fun ignores passed domain values.
             var me = this;
-            colors = function() { return me.chart._getRoleColorScale(me.role.name); };
+            colors = function() { return me.chart._getRoleColorScale(me.role.grouping); };
         }
     } else {
         if(!colorAxis_defContColors) colorAxis_defContColors = ['red', 'yellow','green'].map(pv.color);

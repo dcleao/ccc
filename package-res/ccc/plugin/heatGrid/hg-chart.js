@@ -17,7 +17,6 @@ def
 .type('pvc.HeatGridChart', pvc.CategoricalAbstract)
 .add({
     _allowColorPerCategory: true,
-    _interpolatable: false,
 
     // Create color axis, even if the role is unbound
     // cause we need to check the axis options any way

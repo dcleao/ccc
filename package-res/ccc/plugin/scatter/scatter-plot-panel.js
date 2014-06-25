@@ -112,7 +112,7 @@ def
             paddings   = layoutInfo.paddings;
 
         switch(this.sizeAxisRatioTo) {
-            case 'minWidthHeight':
+            case 'minwidthheight':
                 return Math.min(
                         clientSize.width  + paddings.width,
                         clientSize.height + paddings.height);
@@ -127,7 +127,7 @@ def
                     "Invalid option 'sizeAxisRatioTo' value. Assuming 'minWidthHeight'.",
                     [this.sizeAxisRatioTo]));
 
-        this.sizeRatioTo = 'minWidthHeight';
+        this.sizeRatioTo = 'minwidthheight';
 
         return this._getDotDiameterRefLength(layoutInfo);
     },
@@ -324,7 +324,7 @@ def
             })
             .lockMark('data', function(seriesScene) { return seriesScene.childNodes; })
             .intercept('visible', function(scene) {
-                if(!me.linesVisible) { return false; }
+                if(!me.linesVisible) return false;
 
                 var visible = this.delegateExtension();
                 if(visible == null) {
@@ -382,7 +382,7 @@ def
 
                 return this.base(scene);
             });
-        } else if(!(me.autoPaddingByDotSize && me.sizeAxisRatioTo === 'minWidthHeight')) {
+        } else if(!(me.autoPaddingByDotSize && me.sizeAxisRatioTo === 'minwidthheight')) {
             // Default is to hide overflow dots,
             // for a case where the provided offset, or calculated one is not enough
             // (sizeAxisRatioTo='width' or 'height' don't guarantee no overflow)

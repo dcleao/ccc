@@ -22,14 +22,13 @@ def
 
         // Here?
         var extAbsId    = pvc.makeExtensionAbsId('line', this.extensionPrefixes);
-        var strokeStyle = chart._getConstantExtension(extAbsId, 'strokeStyle');
+        var strokeStyle = this.chart._getConstantExtension(extAbsId, 'strokeStyle');
         if(strokeStyle) this._waterColor = pv.color(strokeStyle);
 
         this.chart._registerInitLegendScenes(this._initLegendScenes.bind(this));
 
         // ----------
 
-        // TODO: while visual roles are shared, this messes up visual roles of other plot types :-?
         var catRole  = this.visualRoles.category,
             travProp = this.isFalling() ? 'FlattenDfsPre' : 'FlattenDfsPost';
 

@@ -26,7 +26,8 @@ def
             this._sceneTypeExtensions = options.scenes;
             delete options.scenes;
         }
-        
+
+        // TODO: what is this argument for?
         var axes = options.axes;
         if(axes) {
             def.copy(this.axes, axes);
@@ -37,6 +38,7 @@ def
     // TODO: Danger...
     $.extend(this, options); // clickAction and doubleClickAction are set here
 
+    // TODO: related to options.axes above??
     if(!this.axes.color) this.axes.color = chart.axes.color;
     
     this.position = {
@@ -1482,7 +1484,7 @@ def
                     valueLabel = dim.format(value);
                     calcPct    = value != null ? calcGroupDimPct.bind(null, dim) : null;
 
-                    if(chart._interpolatable) {
+                    if(chart.interpolatable()) {
                         // NOTE: not sure if it is possible that more than one interpolation
                         // can occur. Sticking to the first one, as the other case is esoteric anyway.
                         dimInterp = Q(datums)

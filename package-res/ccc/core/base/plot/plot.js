@@ -100,11 +100,22 @@ def
                 // Handled specially
                 case 'visualRoles':
                     me._visualRolesOptions = optValue; // NOTE: smashes, so only works once.
+
+                    // Make every relative role name reference to refer to "this" plot's local role.
+                    if(def.object.is(optValue)) def.each(optValue, function(spec) {
+                        if(def.object.is(spec) && spec.from) spec.from = me.ensureAbsRoleRef(spec.from);
+                    });
                     break;
 
                 default: options[optId] = optValue; break;
             }
         });
+    },
+
+    ensureAbsRoleRef: function(roleName) {
+        return roleName && roleName.indexOf('.') < 0
+            ? this.prettyId + '.' + roleName
+            : roleName;
     },
 
     /** @virtual */
@@ -120,6 +131,11 @@ def
         this.visualRoles[name] = role;
         roleList.push(role);
         return role;
+    },
+
+    /** @virtual */
+    interpolatable: function() {
+        return false;
     },
 
     visualRole: function(name) {
@@ -165,8 +181,16 @@ def
             ? serRole.flatten(baseData, ka) 
             : baseData.where(null, ka); // Used?
     },
-    
-    /**
+
+
+    interpolateDataCell: function(/*dataCell, baseData*/) {
+    },
+
+    generateTrendsDataCell: function(/*newDatums, dataCell, baseData*/) {
+    },
+
+
+        /**
      * Gets the extent of the values of the specified role
      * over all datums of the visible data of this plot on the specified chart.
      * 
@@ -309,7 +333,8 @@ pvc.visual.Plot.optionsDef = {
         resolve: pvc.options.resolvers([
             function(optionInfo) {
                 // plot0 must use color axis 0!
-                // This also ensures that the color axis 0 is created...
+                // There are cases where the color role is unbound in the main plot
+                // and another plot has ColorAxis: 2...
                 if(this.globalIndex === 0) return optionInfo.specify(1), true;
             },
             '_resolveFull'

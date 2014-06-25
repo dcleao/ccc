@@ -38,8 +38,6 @@ pvc.BaseChart
      */
     metadata: [],
 
-    _interpolatable: false,
-
     _constructData: function(options) {
         if(this.parent)
             //noinspection JSDeprecatedSymbols
@@ -198,11 +196,12 @@ pvc.BaseChart
 
             // NOTE: a `null` config value means "create a null grouping"!
             // So care was taken no to use def.get, which tests option presence using `value != null`.
-            return def.firstDefined([
-                function() { if(!plot || plot.isMain) return options[name + 'Role']; },
-                function() { if(chartRolesOptions) return chartRolesOptions[name];   },
-                function() { var opts; if(plot && (opts = plot._visualRolesOptions)) return opts[name]; }
-            ]);
+            var v, opts, U /*=undefined*/;
+            if(!plot || plot.isMain) {
+                if((v = options[name + 'Role']) !== U) return v;
+                if(chartRolesOptions && (v = chartRolesOptions[name]) !== U) return v;
+            }
+            if(plot && (opts = plot._visualRolesOptions)) return opts[name];
         };
 
         return context;
@@ -539,8 +538,13 @@ pvc.BaseChart
 
     // --------------------
 
+    interpolatable: function() {
+        var plotList = this.plotList;
+        return !!plotList && plotList.some(function(p) { return p.interpolatable(); });
+    },
+
     _interpolate: function(hasMultiRole) {
-        if(!this._interpolatable) return;
+        if(!this.interpolatable()) return;
 
         var dataCells = def
             .query(this.axesList)
@@ -558,7 +562,9 @@ pvc.BaseChart
              })
              .array();
 
-        this._eachLeafDatasAndDataCells(hasMultiRole, dataCells, this._interpolateDataCell, this);
+        this._eachLeafDatasAndDataCells(hasMultiRole, dataCells, function(dataCell, baseData) {
+            dataCell.plot.interpolateDataCell(dataCell, baseData);
+        });
     },
 
     _generateTrends: function(hasMultiRole) {
@@ -575,9 +581,9 @@ pvc.BaseChart
 
         var newDatums = [];
         
-        this._eachLeafDatasAndDataCells(hasMultiRole, dataCells, function(dataCell, data) {
-            this._generateTrendsDataCell(newDatums, dataCell, data);
-        }, this);
+        this._eachLeafDatasAndDataCells(hasMultiRole, dataCells, function(dataCell, baseData) {
+            dataCell.plot.generateTrendsDataCell(newDatums, dataCell, baseData);
+        });
         
         newDatums.length && this.data.owner.add(newDatums);
     },
@@ -600,10 +606,6 @@ pvc.BaseChart
             for(var c = 0; c < C; c++) f.call(x, dataCells[c], leafData, c, d);
         }
     },
-
-    _interpolateDataCell: function(/*dataCell, baseData*/) {},
-
-    _generateTrendsDataCell: function(/*dataCell, baseData*/) {},
 
     _getTrendDataPartAtom: function() {
         var dataPartDimName = this._getDataPartDimName();

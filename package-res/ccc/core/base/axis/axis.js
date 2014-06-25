@@ -74,9 +74,9 @@ def
         me._domainValues = null;
         me._domainItems  = null;
 
-        // TODO
+        // TODO: todo what??
 
-        me._checkRoleCompatibility();
+        me._conciliateVisualRoles();
 
         return this;
     },
@@ -225,27 +225,81 @@ def
         });
     },
 
-    _checkRoleCompatibility: function() {
+    _conciliateVisualRoles: function() {
         var L = this.dataCells.length;
         if(L > 1) {
-            var grouping = this._getBoundRoleGrouping(this.role),
+            var me = this,
+                grouping = this._getBoundRoleGrouping(this.role),
+                otherRole,
                 otherGrouping,
+                possibleTraversalModes,
+                traversalMode,
+                otherTravMode,
+                rootLabel,
+                dimNamesKey,
                 i;
 
+            function createError(msg, args) {
+                return def.error.operationInvalid(def.format(msg, args));
+            }
+
             if(this.scaleType === 'discrete') {
-                for(i = 1; i < L ; i++) {
-                    otherGrouping = this._getBoundRoleGrouping(this.dataCells[i].role);
-                    if(grouping.id !== otherGrouping.id)
-                        throw def.error.operationInvalid("Discrete roles on the same axis must have equal groupings.");
+                // Same sequence of dimension names +
+                // same traversal mode (conciliate-able) +
+                // same rootLabel (conciliate-able)
+
+                // Discover possible traversal modes shared by all visual roles in the axis
+                possibleTraversalModes = this.role.traversalModes;
+                // Choose the first non-empty root label.
+                rootLabel = this.role.rootLabel;
+                dimNamesKey = String(this.role.grouping.dimensionNames());
+                for(i = 1; i < L && possibleTraversalModes; i++) {
+                    otherRole = this.dataCells[i].role;
+                    possibleTraversalModes &= otherRole.traversalModes;
+                    if(!rootLabel) rootLabel = otherRole.rootLabel;
+
+                    otherGrouping = this._getBoundRoleGrouping(otherRole);
+                    if(dimNamesKey !== String(otherGrouping.dimensionNames()))
+                        throw createError(
+                            "The discrete visual roles '{0}' on axis '{1}' should be bound to the same dimension sequence.", [
+                                [this.role.prettyId(), otherRole.prettyId()].join("', '"),
+                                this.id
+                            ]);
+                }
+
+                // No common traversal modes possible for every visual role
+                if(!possibleTraversalModes)
+                    throw createError("The discrete visual roles on axis '{0}' do not share a possible traversal mode.", [this.id]);
+
+                // Find the traversal mode to use for all.
+                traversalMode = 0;
+                for(i = 0; i < L ; i++) {
+                    otherRole = this.dataCells[i].role;
+                    otherTravMode = otherRole.traversalMode;
+                    // `>` practical way of making FlattenDfsPre/Post being chosen over Tree,FlattenLeafs
+                    if((otherTravMode & possibleTraversalModes) && otherTravMode > traversalMode)
+                        traversalMode = otherTravMode;
+                }
+
+                // Default to the traversal mode that corresponds to the
+                // first (least-significant) set bit in possibleTraversalModes.
+                if(!traversalMode) traversalMode = possibleTraversalModes & (-possibleTraversalModes);
+
+                for(i = 0; i < L ; i++) {
+                    otherRole = this.dataCells[i].role;
+                    otherRole.setRootLabel(rootLabel);
+                    otherRole.setTraversalMode(traversalMode);
+                    // This prevents any other traversal mode being chosen by other axis that the role may be in.
+                    otherRole.setTraversalModes(traversalMode);
                 }
             } else {
                 if(!grouping.lastDimensionType().isComparable)
-                    throw def.error.operationInvalid("Continuous roles on the same axis must have 'comparable' groupings.");
+                    throw createError("The continuous visual roles on axis '{0}' should have 'comparable' groupings.", [this.id]);
 
                 for(i = 1; i < L ; i++) {
                     otherGrouping = this._getBoundRoleGrouping(this.dataCells[i].role);
                     if(this.scaleType !== axis_groupingScaleType(otherGrouping))
-                        throw def.error.operationInvalid("Continuous roles on the same axis must have scales of the same type.");
+                        throw createError("The continuous visual roles on axis '{0}' should have scales of the same type.", [this.id]);
                 }
             }
         }

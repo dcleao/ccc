@@ -69,8 +69,6 @@ pvc.BaseChart
     },
 
     _initAxes: function(hasMultiRole) {
-        // TODO: almost sure that some of the below loops can be merged
-
         this.axes = {};
         this.axesList = [];
         this.axesByType = {};
@@ -78,7 +76,10 @@ pvc.BaseChart
         // Clear any previous global color scales
         delete this._rolesColorScale;
 
-        // Filter only bound dataCells
+        // Filter only bound dataCells.
+        // ATTENTION: the splicing here performed breaks the correspondence between array index and axisIndex.
+        // So the indexing on axisIndex is no longer valid after this!!
+        // However, in each entry, all dataCells will still have the same axisIndex.
         var dataCellsByAxisTypeThenIndex = this._dataCellsByAxisTypeThenIndex;
         if(!this.parent) def.eachOwn(dataCellsByAxisTypeThenIndex, function(dataCellsByAxisIndex, type) {
             var i = 0, I = dataCellsByAxisIndex.length;
@@ -117,16 +118,17 @@ pvc.BaseChart
             // Create?
             if((this._axisCreateChartLevel[type] & chartLevel) !== 0) {
                 var AxisClass,
-                    dataCellsByAxisIndex = dataCellsByAxisTypeThenIndex[type];
-                if(dataCellsByAxisIndex) {
+                    dataCellsOfTypeByIndex = dataCellsByAxisTypeThenIndex[type];
+                if(dataCellsOfTypeByIndex) {
 
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
-                    dataCellsByAxisIndex.forEach(function(dataCells, axisIndex) {
+                    dataCellsOfTypeByIndex.forEach(function(dataCells) {
+                        var axisIndex = dataCells[0].axisIndex;
                         new AxisClass(this, type, axisIndex);
                     }, this);
                     
                 } else if(this._axisCreateIfUnbound[type]) {
-                    AxisClass = this._axisClassByType[type];
+                    AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
                     if(AxisClass) new AxisClass(this, type, 0);
                 }
             }
@@ -143,11 +145,12 @@ pvc.BaseChart
         // and which were created at this level
         def.eachOwn(
             dataCellsByAxisTypeThenIndex,
-            function(dataCellsByAxisIndex, type) {
+            function(dataCellsOfTypeByIndex, type) {
                 // Was created at this level?
                 if((this._axisCreateChartLevel[type] & chartLevel)) {
-                    dataCellsByAxisIndex.forEach(function(dataCells, index) {
-                        var axis = this.axes[def.indexedId(type, index)];
+                    dataCellsOfTypeByIndex.forEach(function(dataCells) {
+                        var axisIndex = dataCells[0].axisIndex,
+                            axis = this.axes[def.indexedId(type, axisIndex)];
                         if(!axis.isBound()) axis.bind(dataCells);
                     }, this);
                 }
@@ -182,8 +185,9 @@ pvc.BaseChart
     },
 
     _getAxis: function(type, index) {
-        var typeAxes = this.axesByType[type];
-        if(typeAxes && index != null && (+index >= 0)) return typeAxes[index];
+        var typeAxes;
+        if(index != null && (+index >= 0) && (typeAxes = this.axesByType[type]))
+            return typeAxes[index];
     },
 
     _setAxesScales: function(chartLevel) {
@@ -526,38 +530,37 @@ pvc.BaseChart
     },
 
     /**
-     * Obtains an unified color scale,
-     * of all the color axes with specified `Colors` option.
+     * Obtains a unified <b>discrete</b> color scale,
+     * using all the color axes with own, specified, `Colors` or `Map` option.
      *
      * This color scale is used to satisfy axes
      * for which `Colors' was not specified.
      *
-     * Each color-role has a different unified color-scale,
+     * Each distinct grouping of dimensions has a different unified color-scale,
      * so that the color keys are of the same types.
      */
-    _getRoleColorScale: function(roleName) {
+    _getRoleColorScale: function(grouping) {
         return def.lazy(
-            def.lazy(this, '_rolesColorScale'), 
-            roleName, 
+            def.lazy(this, '_rolesColorScale'),
+            grouping.id,
             this._createRoleColorScale, 
             this);
     },
 
-    _createRoleColorScale: function(roleName) {
+    _createRoleColorScale: function(groupingId) {
         var firstScale, scale, valueToColorMap = {};
 
         this.axesByType.color.forEach(function(axis) {
-            // Only use color axes with specified Colors
-            var axisRole = axis.role,
-                isRoleCompatible =
-                    (axisRole.name === roleName) ||
-                    (axisRole.sourceRole && axisRole.sourceRole.name === roleName);
-
-            if(isRoleCompatible &&
+            var axisRole = axis.role;
+            if(axisRole && // bound
                axis.scale &&
-               (axis.index === 0 ||
-                axis.option.isSpecified('Colors') ||
-                axis.option.isSpecified('Map'))) {
+               axis.scaleType === 'discrete' &&
+               axisRole.grouping.id === groupingId && // same grouping
+
+               // Only use color axes with "specified Colors"
+               axis.index === 0 ||
+               axis.option.isSpecified('Colors') ||
+               axis.option.isSpecified('Map')) {
 
                 scale = axis.scale;
                 if(!firstScale) firstScale = scale;

@@ -15,6 +15,11 @@ def
     type: 'heatGrid',
 
     /** @override */
+    interpolatable: function() {
+        return false;
+    },
+
+        /** @override */
     initEnd: function() {
         this.base();
 

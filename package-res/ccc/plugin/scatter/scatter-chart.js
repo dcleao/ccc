@@ -26,14 +26,14 @@ def
             name: 'trend',
             spec: {
                 visualRoles: {
-                    color: {from: 'series'}
+                    color: {from: 'series'}, // one trend per series
+                    size:  null // prevent auto-sourcing to main plot's size role
                 }
             },
             fixed: {
                 DataPart:  'trend',
                 TrendType: 'none',
                 NullInterpolatioMode: 'none',
-                //ColorRole: 'series', // one trend per series
                 SizeRole:  null,
                 SizeAxis:  null,
                 OrthoAxis: 1

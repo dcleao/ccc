@@ -5,12 +5,12 @@
 def
 .space('pvc.visual')
 .TraversalMode = def.makeEnum([
-    'Tree',                 // No flattening.
-    'FlattenedSingleLevel', // Flattened the dimensions to a single grouping level.
-    'FlattenDfsPre',        // Flattened. Same grouping levels and dimensions,
-                            //   but all nodes are output, in Dfs-pre order, at level 1.
-    'FlattenDfsPost'        // Flattened. Idem, but in Dfs-Post order
-]);
+    'Tree',           // No flattening.
+    'FlattenLeafs',   // Flattened. Transformed to a new grouping with all dimensions in a single grouping level.
+    'FlattenDfsPre',  // Flattened. Transformed to a grouping having the same grouping levels and dimensions,
+                      //   but where all nodes are output, in Dfs-pre order, at level 1.
+    'FlattenDfsPost'  // Flattened. Idem, but in Dfs-Post order.
+], {all: 'AllMask'});
 
 /**
  * Initializes a visual role.
@@ -75,7 +75,7 @@ def
  * Indicates if a dimension with the default name (the first level of, when a group name),
  * should be created when the role is required and it has not been read by a translator.
  *
- * @param {pvc.visual.TraversalMode} [keyArgs.traversalMode=pvc.visual.TraversalMode.FlattenedSingleLevel] 
+ * @param {pvc.visual.TraversalMode} [keyArgs.traversalMode=pvc.visual.TraversalMode.FlattenLeafs]
  * Indicates the type of data nodes traversal that the role performs.
  */
 def
@@ -92,10 +92,18 @@ def
     if(def.get(keyArgs, 'autoCreateDimension', false)) this.autoCreateDimension = true;
     
     var defaultSourceRoleName = def.get(keyArgs, 'defaultSourceRole');
-    if(defaultSourceRoleName) this.defaultSourceRoleName = defaultSourceRoleName;
+    if(defaultSourceRoleName) {
+        this.defaultSourceRoleName = this.plot
+            ? this.plot.ensureAbsRoleRef(defaultSourceRoleName)
+            : defaultSourceRoleName;
+    }
     
     var defaultDimensionName = def.get(keyArgs, 'defaultDimension');
     if(defaultDimensionName) this.defaultDimensionName = defaultDimensionName;
+
+    var traversalModes = def.get(keyArgs, 'traversalModes');
+    // intersects with AllMask
+    if(traversalModes && (traversalModes &= this.traversalModes)) this.traversalModes = traversalModes;
 
     if(!defaultDimensionName && this.autoCreateDimension) throw def.error.argumentRequired('defaultDimension');
 
@@ -144,7 +152,8 @@ def
     defaultSourceRoleName: null,
     defaultDimensionName:  null,
     grouping: null,
-    traversalMode: pvc.visual.TraversalMode.FlattenedSingleLevel,
+    traversalMode:  pvc.visual.TraversalMode.FlattenLeafs,
+    traversalModes: pvc.visual.TraversalMode.AllMask, // possible values
     rootLabel: '',
     autoCreateDimension: false,
     isReversed: false,
@@ -246,13 +255,31 @@ def
     setTraversalMode: function(travMode) {
         var T = pvc.visual.TraversalMode;
         
-        travMode = def.nullyTo(travMode, T.FlattenedSingleLevel);
+        travMode = def.nullyTo(travMode, T.FlattenLeafs);
         
         if(travMode !== this.traversalMode) {
-            if(travMode === T.FlattenedSingleLevel) // default value
+            if(!(travMode & this.traversalModes))
+                throw def.error.argumentInvalid("traversalMode", "Value is not currently valid.");
+
+            if(travMode === T.FlattenLeafs) // default value
                 delete this.traversalMode;
             else
                 this.traversalMode = travMode;
+        }
+    },
+
+    setTraversalModes: function(travModes) {
+        // Ensure we go into a subset of the previous value.
+        travModes = (this.traversalModes &= travModes);
+
+        if(!travModes) throw def.error.argumentInvalid("traversalModes", "Cannot become empty.");
+
+        // If the current traversal mode is not valid,
+        // choose the first one (least-significant bit one).
+        var travMode = this.traversalMode & travModes;
+        if(!travMode) {
+            travMode = travModes & (-travModes);
+            this.setTraversalMode(travMode);
         }
     },
 
@@ -296,13 +323,20 @@ def
     },
 
     _flatteningMode: function() {
-        var T = pvc.visual.TraversalMode,
-            F = cdo.FlatteningMode;
+        var Trav = pvc.visual.TraversalMode, Flat = cdo.FlatteningMode;
+
+        // This seems to be the only practical use of this.traversalMode
+        // and its possible value Tree is never distinguished from single level...
+        // It even looks like that in #flattenedGrouping(),
+        // when here Flat.None is returned the default value for isSingleLevel is true,
+        // not taking into account the distinction between Tree and FlattenLeafs (single level)...
+        // In practice, ignoring the value Tree and taking it always to mean FlattenLeafs.
+
         switch(this.traversalMode) {
-            case T.FlattenDfsPre:  return F.DfsPre;
-            case T.FlattenDfsPost: return F.DfsPost;
+            case Trav.FlattenDfsPre:  return Flat.DfsPre;
+            case Trav.FlattenDfsPost: return Flat.DfsPost;
         }
-        return T.None;
+        return Flat.None;
     },
     
     select: function(data, keyArgs) {
@@ -411,16 +445,7 @@ def
     },
 
     _updateBind: function(groupingSpec) {
-        if(this.grouping) {
-            // unregister from current dimension types
-            this.grouping.dimensions().each(function(dimSpec) {
-                if(dimSpec.type) {
-                    /*global dimType_removeVisualRole:true */
-                    dimType_removeVisualRole.call(dimSpec.type, this);
-                }
-            }, this);
-        }
-        
+
         this.grouping = groupingSpec;
         
         if(this.grouping) {
@@ -428,12 +453,6 @@ def
                 reverse:   this.isReversed, 
                 rootLabel: this.rootLabel
             });
-            
-            // register in current dimension types
-            this.grouping.dimensions().each(function(dimSpec) {
-                /*global dimType_addVisualRole:true */
-                dimType_addVisualRole.call(dimSpec.type, this);  
-            }, this);
         }
     }
 })

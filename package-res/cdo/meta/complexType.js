@@ -306,9 +306,7 @@ function(dimTypeSpecs) {
 
             def.array.insertAt(this._calcDimsList, index, dimension);
         }
-        
-        this._isPctRoleDimTypeMap = null;
-        
+
         return dimension;
     },
     
@@ -369,26 +367,6 @@ function(dimTypeSpecs) {
     },
     
     /**
-     * Obtains a map of the dimension types, indexed by their name,
-     * that are playing a role such that {@link pvc.visual.Role#isPercent} is <tt>true</tt>.
-     * 
-     * @type def.Map
-     */
-    getPlayingPercentVisualRoleDimensionMap: function() {
-        var map = this._isPctRoleDimTypeMap;
-        if(!map) {
-            map = this._isPctRoleDimTypeMap = new def.Map(
-                def.query(def.own(this._dims))
-                    .where(function(dimType) { return dimType.playingPercentVisualRole(); })
-                    .object({
-                        name: function(dimType) { return dimType.name; } 
-                    }));
-        }
-        
-        return map;
-    },
-    
-    /**
      * Sorts a specified dimension array in place, 
      * according to the definition order.
      * 
@@ -421,17 +399,3 @@ function(dimTypeSpecs) {
         return dims;
     }
 });
-
-/**
- * Called by a dimension type to indicate that its assigned roles have changed.
- * 
- * @name cdo.ComplexType#_dimensionRolesChanged
- * @function
- * @param {cdo.DimensionType} dimType The affected dimension type.
- * @type undefined
- * @private
- * @internal
- */
-function compType_dimensionRolesChanged(dimType) {
-    this._isPctRoleDimTypeMap = null;
-}

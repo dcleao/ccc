@@ -62,9 +62,6 @@
  * @property {boolean} isHidden Indicates if the dimension is
  * hidden from the user, in places like a tooltip, for example, or in the legend.
  * 
- * @property {def.Map} playedVisualRoles
- * A map of {@link pvc.visual.Role} indexed by visual role name, of the visual roles currently being played by this dimension type.
- * 
  * @constructor
  *
  * @param {cdo.ComplexType} complexType The complex type that this dimension belongs to.
@@ -205,7 +202,6 @@ function(complexType, name, keyArgs) {
 
     if(this.label.indexOf('{') >= 0) this.label = def.format(this.label, [this.groupLevel+1]);
 
-    this.playedVisualRoles = new def.Map();
     this.isHidden = !!def.get(keyArgs, 'isHidden');
     
     var valueType = def.get(keyArgs, 'valueType') || null,
@@ -452,16 +448,6 @@ function(complexType, name, keyArgs) {
      */
     converter: function() {
         return this._converter;
-    },
-    
-    /**
-     * Obtains a value indicating if this dimension type plays any visual role 
-     * such that {@link pvc.visual.Role#isPercent} is <tt>true</tt>.
-     * @type boolean
-     */
-    playingPercentVisualRole: function() {
-        return def.query(this.playedVisualRoles.values())
-            .any(function(visualRole) { return visualRole.isPercent; });
     }
 });
 
@@ -552,34 +538,3 @@ cdo.DimensionType.extendSpec = function(dimName, dimSpec, keyArgs) {
 
     return dimSpec;
 };
-
-/**
- * Adds a visual role to the dimension type.
- * 
- * @name cdo.DimensionType#_addVisualRole
- * @function
- * @param {pvc.visual.Role} visualRole The visual role.
- * @type undefined
- * @private
- * @internal
- */
-function dimType_addVisualRole(visualRole) {
-    this.playedVisualRoles.set(visualRole.name, visualRole);
-    /*global compType_dimensionRolesChanged:true */
-    compType_dimensionRolesChanged.call(this.complexType, this);
-}
-
-/**
- * Removes a visual role from the dimension type.
- * 
- * @name cdo.DimensionType#_removeVisualRole
- * @function
- * @param {pvc.visual.Role} visualRole The visual role.
- * @type undefined
- * @private
- * @internal
- */
-function dimType_removeVisualRole(visualRole) {
-    this.playedVisualRoles.rem(visualRole.name);
-    compType_dimensionRolesChanged.call(this.complexType, this);
-}
