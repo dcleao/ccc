@@ -25,17 +25,15 @@ def
     _getIsNullDatum: def.fun.constant(),
     
     _createPlotsInternal: function() {
-        var treemapPlot = new pvc.visual.TreemapPlot(this);
-        
-        this._addPlot(treemapPlot);
-        
+        this._addPlot(new pvc.visual.TreemapPlot(this));
+    },
+
+    _initPlotsEnd: function() {
+        this.base();
+
+        // By default, show the legend only if color mode is byparent
         if(this.options.legend == null)
-            // Only show the legend by default if color mode is byparent
-            this.options.legend = treemapPlot.option('ColorMode') === 'byparent';
-        
-        var rootCategoryLabel = treemapPlot.option('RootCategoryLabel');
-        this.visualRoles.category.setRootLabel(rootCategoryLabel);
-        this.visualRoles.color   .setRootLabel(rootCategoryLabel);
+            this.options.legend = this.plots.treemap.option('ColorMode') === 'byparent';
     },
     
     _initAxes: function(hasMultiRole) {

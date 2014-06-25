@@ -34,9 +34,5 @@ def
         
         // Not currently supported
         this.options.legend = false;
-
-        var rootCategoryLabel = sunburstPlot.option('RootCategoryLabel');
-        this.visualRoles.category.setRootLabel(rootCategoryLabel);
-        this.visualRoles.color   .setRootLabel(rootCategoryLabel);
     }
 });

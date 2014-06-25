@@ -1494,10 +1494,10 @@ def
                     }
                 } else {
                     if(hasManyRealDatums) dimAggr = 'list';
-                    // NOTE: the null atom is not returned by #atoms; return an empty array when no non-null atoms.
-
                     value = valueLabel = dim.atoms(visibleKeyArgs)
-                        .map(function(a) { return a.label; })
+                        .filter(function(a) { return a.value != null; })
+                        // JIC a non-null atom has an empty label. Advised against, but also not enforced.
+                        .map(function(a) { return a.label || "- "; })
                         .join(", ");
 
                     if(!value) value = null;

@@ -101,6 +101,9 @@ def
     var defaultDimensionName = def.get(keyArgs, 'defaultDimension');
     if(defaultDimensionName) this.defaultDimensionName = defaultDimensionName;
 
+    var rootLabel = def.get(keyArgs, 'rootLabel');
+    if(rootLabel != null) this.rootLabel = rootLabel;
+
     var traversalModes = def.get(keyArgs, 'traversalModes');
     // intersects with AllMask
     if(traversalModes && (traversalModes &= this.traversalModes)) this.traversalModes = traversalModes;

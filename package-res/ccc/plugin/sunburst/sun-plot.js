@@ -24,7 +24,8 @@ def
         this._addVisualRole('category', {
             isRequired: true,
             defaultDimension: 'category*',
-            autoCreateDimension: true
+            autoCreateDimension: true,
+            rootLabel: this.option('RootCategoryLabel')
         });
 
         this._addVisualRole('size', {
@@ -43,7 +44,8 @@ def
         return {
             defaultSourceRole: 'category',
             defaultDimension:  'color*',
-            requireIsDiscrete: true
+            requireIsDiscrete: true,
+            rootLabel: this.option('RootCategoryLabel')
         };
     },
 
