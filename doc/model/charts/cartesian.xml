@@ -137,6 +137,8 @@
                    base="pvc.options.ext.ChartExtensionPoints">
         <c:documentation>
             The extension points common to all cartesian chart types.
+
+            Chart extension points can also be specified directly at the chart options level.
         </c:documentation>
         
         <c:property name="plotFrame" type="pvc.options.marks.PanelExtensionPoint">

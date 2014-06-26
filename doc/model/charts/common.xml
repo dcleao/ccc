@@ -247,6 +247,8 @@
         <c:documentation>
             The extension points common to all chart types.
 
+            Chart extension points can also be specified directly at the chart options level.
+
             To use an extension point you must find its full name, by joining:
             <ol>
                 <li>extension property (ex: <tt>base</tt>)</li>
