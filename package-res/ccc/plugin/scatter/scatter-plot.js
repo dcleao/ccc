@@ -33,7 +33,7 @@ def
     /** @override */
     _getColorRoleSpec: function() {
         return {
-            //isMeasure: true, // TODO: not being set as measure when continuous...
+            isMeasure: true,
             defaultSourceRole: 'series',
             defaultDimension:  'color*',
             dimensionDefaults: {

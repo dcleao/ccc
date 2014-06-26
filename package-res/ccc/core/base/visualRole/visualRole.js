@@ -57,8 +57,10 @@ def
  *
  * @param {boolean} [keyArgs.isRequired=false] Indicates a required role.
  * 
- * @param {boolean} [keyArgs.requireSingleDimension=false] Indicates that the role 
- * can only be satisfied by a single dimension. 
+ * @param {boolean} [keyArgs.requireSingleDimension] Indicates that the role
+ * can only be satisfied by a single dimension.
+ * Defaults to <tt>true</tt> when <i>requireIsDiscrete</i> is <tt>false</tt> (continuous dimension),
+ * and to <tt>false</tt>, otherwise.
  * 
  * @param {boolean} [keyArgs.isMeasure=false] Indicates that <b>datums</b> that do not 
  * contain a non-null atom in any of the dimensions bound to measure roles should be readily excluded.
@@ -115,33 +117,35 @@ def
     var legendVisible = def.get(keyArgs, 'legendVisible');
     if(legendVisible != null && !legendVisible) this._legendVisible = false;
 
-    var requireSingleDimension,
-        requireIsDiscrete = def.get(keyArgs, 'requireIsDiscrete'); // isSingleDiscrete
-    if(requireIsDiscrete != null && !requireIsDiscrete) requireSingleDimension = true;
-    
-    if(requireSingleDimension != null) {
-        requireSingleDimension = def.get(keyArgs, 'requireSingleDimension', false);
-        if(requireSingleDimension) {
-            if(def.get(keyArgs, 'isMeasure', false)) {
-                this.isMeasure = true;
-                
-                if(def.get(keyArgs, 'isPercent', false)) this.isPercent = true;
-            }
-            
-            var valueType = def.get(keyArgs, 'valueType', null);
-            if(valueType !== this.valueType) {
-                this.valueType = valueType;
-                this.dimensionDefaults.valueType = valueType;
-            }
+    var requireSingleDimension = def.get(keyArgs, 'requireSingleDimension'),
+        requireIsDiscrete      = def.get(keyArgs, 'requireIsDiscrete'), // isSingleDiscrete
+        requireContinuous      = requireIsDiscrete != null && !requireIsDiscrete;
+
+    // If only continuous dimensions are accepted,
+    // then *default* requireSingleDimension to true.
+    // Otherwise, default to false.
+    if(requireSingleDimension == null) requireSingleDimension = requireContinuous;
+
+    if(!requireIsDiscrete) {
+        if(def.get(keyArgs, 'isMeasure')) {
+            this.isMeasure = true;
+
+            if(def.get(keyArgs, 'isPercent')) this.isPercent = true;
         }
     }
-    
+
+    var valueType = def.get(keyArgs, 'valueType', null);
+    if(valueType !== this.valueType) {
+        this.valueType =
+        this.dimensionDefaults.valueType = valueType;
+    }
+
     if(requireSingleDimension !== this.requireSingleDimension)
         this.requireSingleDimension = requireSingleDimension;
     
-    if(requireIsDiscrete != this.requireIsDiscrete) {
-        this.requireIsDiscrete = !!requireIsDiscrete;
-        this.dimensionDefaults.isDiscrete = this.requireIsDiscrete;
+    if(requireIsDiscrete != null) {
+        this.requireIsDiscrete =
+        this.dimensionDefaults.isDiscrete = !!requireIsDiscrete;
     }
 })
 .add(/** @lends pvc.visual.Role# */{

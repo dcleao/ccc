@@ -27,18 +27,21 @@ def
             //isRequired: true, // due to the no data mode
             isMeasure:  true,
             requireIsDiscrete: false,
+            requireSingleDimension: false,
             valueType: Number,
             defaultDimension: 'value*'
         });
         this._addVisualRole('marker', {
             isMeasure:  true,
             requireIsDiscrete: false,
+            requireSingleDimension: false,
             valueType: Number,
             defaultDimension: 'marker*'
         });
         this._addVisualRole('range', {
             isMeasure:  true,
             requireIsDiscrete: false,
+            requireSingleDimension: false,
             valueType: Number,
             defaultDimension: 'range*'
         });

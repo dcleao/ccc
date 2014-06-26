@@ -7,21 +7,6 @@
  */
 def
 .type('pvc.BulletChart', pvc.BaseChart)
-.init(function(options) {
-    
-    options = options || {};
-
-    // Add range and marker dimension group defaults
-    // This only helps in default bindings...
-    var dimGroups = options.dimensionGroups || (options.dimensionGroups = {});
-    var rangeDimGroup = dimGroups.range  || (dimGroups.range  = {});
-    if(rangeDimGroup.valueType === undefined) rangeDimGroup.valueType = Number;
-
-    var markerDimGroup = dimGroups.marker || (dimGroups.marker = {});
-    if(markerDimGroup.valueType === undefined) markerDimGroup.valueType = Number;
-
-    this.base(options);
-})
 .add({
 
     bulletChartPanel : null,

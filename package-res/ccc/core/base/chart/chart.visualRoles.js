@@ -50,17 +50,29 @@ pvc.BaseChart
      * Obtains the array of all {@link pvc.visual.Role} instances used by the chart
      * that are considered measures.
      *
+     * This is made lazily because the effective "measure" status
+     * depends on the binding of the visual role, and
+     * of it becoming discrete or continuous.
+     *
      * Do NOT modify the returned array.
      *
      * @return {pvc.visual.Role[]} The array of measure visual roles.
      */
-    measureVisualRoles: function() { return this._measureVisualRoles; },
+    measureVisualRoles: function() {
+        if(this.parent) return this.parent.measureVisualRoles();
+
+        return this._measureVisualRoles ||
+            (this._measureVisualRoles =
+                this.visualRoleList.filter(function(r) {
+                    return r.isBound() && !r.isDiscrete() && r.isMeasure;
+                }));
+    },
 
     measureDimensionsNames: function() {
-        return def.query(this._measureVisualRoles)
-           .select(function(role) { return role.lastDimensionName(); })
-           .where(def.notNully)
-           .array();
+        return def.query(this.measureVisualRoles())
+            .selectMany(function(r) { return r.grouping.dimensionNames(); })
+            .distinct()
+            .array();
     },
 
     /**
@@ -90,11 +102,9 @@ pvc.BaseChart
         if(parent) {
             this.visualRoles = parent.visualRoles;
             this.visualRoleList = parent.visualRoleList;
-            this._measureVisualRoles = parent._measureVisualRoles;
         } else {
             this.visualRoles = {};
             this.visualRoleList = [];
-            this._measureVisualRoles = [];
         }
     },
 
@@ -112,8 +122,6 @@ pvc.BaseChart
             names.forEach(function(name) { this.visualRoles[name] = role; }, this);
         else
             this.visualRoles[names] = role;
-
-        if(role.isMeasure) this._measureVisualRoles.push(role);
         return role;
     },
     

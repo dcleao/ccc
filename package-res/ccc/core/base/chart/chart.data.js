@@ -242,16 +242,25 @@ pvc.BaseChart
     },
 
     _getIsNullDatum: function() {
-        var measureDimNames = this.measureDimensionsNames(),
-            M = measureDimNames.length;
-        if(M) {
-            // Must have all measure role dimensions = null
-            return function(datum) {
-                var atoms = datum.atoms;
-                for(var i = 0 ; i < M ; i++) if(atoms[measureDimNames[i]].value != null) return false;
-                return true;
-            };
-        }
+        var me = this, measureDimNames, M;
+        // Could test the potential value isMeasure of all visual roles,
+        // but what's the probability of there not existing a measure visual role.
+
+        // Must defer initialization of measureDimNames cause at this time
+        // visual roles have not been bound yet (only some pre-bound),
+        // so there's not certainty of a visual role being "measure" or not.
+
+        // A null datum has all measure role dimensions = null.
+        return function(datum) {
+            if(!measureDimNames) {
+                measureDimNames = me.measureDimensionsNames();
+                M = measureDimNames.length;
+            }
+
+            var atoms = datum.atoms;
+            for(var i = 0 ; i < M ; i++) if(atoms[measureDimNames[i]].value != null) return false;
+            return true;
+        };
     },
 
     _createTranslation: function(complexTypeProj, dimsOptions, dataPartDimName) {
