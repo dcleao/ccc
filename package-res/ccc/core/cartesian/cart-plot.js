@@ -20,6 +20,15 @@ def
 })
 .add({
     /** @override */
+    _initVisualRoles: function() {
+
+        this.base();
+
+        var roleSpec = this._getSeriesRoleSpec();
+        if(roleSpec) this._addVisualRole('series', roleSpec);
+    },
+
+    /** @override */
     _getColorRoleSpec: function() {
         return {isRequired: true, defaultDimension: 'color*', defaultSourceRole: 'series', requireIsDiscrete: true};
     },
@@ -29,23 +38,16 @@ def
     },
 
     /** @override */
-    initEnd: function() {
+    _initDataCells: function() {
+
         this.base();
-
-        var roleSpec = this._getSeriesRoleSpec();
-        if(roleSpec) this._addVisualRole('series', roleSpec);
-    },
-
-    collectDataCells: function(addDataCell) {
-        
-        this.base(addDataCell);
 
         var dataPartValue = this.option('DataPart'),
             baseRole   = this._getBaseRole(),
             orthoRoles = this._getOrthoRoles();
 
         if(baseRole)
-            addDataCell(new pvc.visual.DataCell(
+            this._addDataCell(new pvc.visual.DataCell(
                 this,
                 /*axisType*/'base',
                 this.option('BaseAxis') - 1,
@@ -60,7 +62,7 @@ def
                 trend = this.option('Trend');
 
             orthoRoles.forEach(function (orthoRole) {
-                addDataCell(new pvc.visual.CartesianOrthoDataCell(
+                this._addDataCell(new pvc.visual.CartesianOrthoDataCell(
                     this,
                     /*axisType*/'ortho',
                     orthoAxisIndex,

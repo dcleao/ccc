@@ -19,12 +19,14 @@
  */
 def
 .type('pvc.visual.legend.WaterfallBulletGroupScene', pvc.visual.legend.BulletGroupScene)
-.init(function(rootScene, keyArgs) {
+.init(function(rootScene, plot, keyArgs) {
     
     keyArgs = def.set(keyArgs, 'clickMode', 'none');
     
     this.base(rootScene, keyArgs);
-    
+
+    this.plot = plot;
+
     this.createItem(keyArgs); // label && color
 })
 .add(/** @lends pvc.visual.legend.WaterfallBulletGroupScene# */{

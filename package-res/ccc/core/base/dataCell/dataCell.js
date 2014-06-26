@@ -21,10 +21,12 @@ def
     this.axisIndex = axisIndex;
     this.role = role;
     this.dataPartValue = dataPartValue;
+
+    this.key = [axisType, axisIndex, role.prettyId(), dataPartValue].join("~");
 })
 .add(/** @lends pvc.visual.DataCell# */{
     legendVisible: function() {
-        return !!this.role && this.role.legendVisible();
+        return this.role.legendVisible();
     }
 });
 

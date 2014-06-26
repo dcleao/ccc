@@ -18,7 +18,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.PointPlot.optionsDef; },
 
     /** @override */
-    initEnd: function() {
+    _initVisualRoles: function() {
+
         this.base();
 
         this._addVisualRole('value', {

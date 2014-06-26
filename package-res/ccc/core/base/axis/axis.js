@@ -67,6 +67,7 @@ def
         !me.dataCells || def.fail.operationInvalid('Axis is already bound.');
 
         me.dataCells = def.array.to(dataCells);
+        me._dataCellsByKey = def.query(me.dataCells).uniqueIndex(function(dc) { return dc.key; });
         me.dataCell  = me.dataCells[0];
         me.role      = me.dataCell && me.dataCell.role;
         me.scaleType = axis_groupingScaleType(me.role.grouping);
@@ -79,6 +80,17 @@ def
         me._conciliateVisualRoles();
 
         return this;
+    },
+
+    setDataCellScaleInfo: function(dataCell, scaleInfo) {
+        if(this._dataCellsByKey[dataCell.key] !== dataCell)
+            throw def.error.argumentInvalid("dataCell", "Not present in this axis.");
+
+        def.lazy(this, '_dataCellsScaleInfoByKey')[dataCell.key] = scaleInfo;
+    },
+
+    getDataCellScaleInfo: function(dataCell) {
+        return def.getOwn(this._dataCellsScaleInfoByKey, dataCell.key);
     },
 
     domainData: function() {

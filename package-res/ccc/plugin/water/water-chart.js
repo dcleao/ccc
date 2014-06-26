@@ -24,11 +24,6 @@
 def
 .type('pvc.WaterfallChart', pvc.BarAbstract)
 .add({
-    // TODO: this is being stored in the chart still so that multiple charts are supported.
-    // The ruleInfos calculation code move to the plot, but there's a single plot for all small charts.
-    // This, however will prevent using more than one waterfall plot in a given chart...
-    //_ruleInfos: null,
-    
     /**
      * Processes options after user options and default options have been merged.
      * @override

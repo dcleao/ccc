@@ -40,8 +40,6 @@ def
         plot.option.specify({'LinesVisible': true});
     }
 
-    if(!this.offsetPaddings) this.offsetPaddings = new pvc_Sides(0.01);
-
     // Legacy field
     if(!chart.scatterChartPanel) chart.scatterChartPanel = this;
 })
@@ -243,13 +241,13 @@ def
             requestPaddings = {};
 
             // Resolve offset paddings (not of PercentValue so cannot use pvc.Sides#resolve)
-            var op;
-            if(this.offsetPaddings) {
+            var op, axisOffsetPaddings = this.chart._axisOffsetPaddings;
+            if(axisOffsetPaddings) {
                 op = {};
                 pvc_Sides.names.forEach(function(side) {
                     var len_a = pvc.BasePanel.orthogonalLength[side];
 
-                    op[side] = (this.offsetPaddings[side] || 0) *
+                    op[side] = (axisOffsetPaddings[side] || 0) *
                                (clientSize[len_a] + paddings[len_a]);
                 }, this);
             }

@@ -105,8 +105,10 @@ def
     if(rootLabel != null) this.rootLabel = rootLabel;
 
     var traversalModes = def.get(keyArgs, 'traversalModes');
-    // intersects with AllMask
-    if(traversalModes && (traversalModes &= this.traversalModes)) this.traversalModes = traversalModes;
+    if(traversalModes) this.setTraversalModes(traversalModes);
+
+    var traversalMode = def.get(keyArgs, 'traversalMode');
+    if(traversalMode) this.setTraversalMode(traversalMode);
 
     if(!defaultDimensionName && this.autoCreateDimension) throw def.error.argumentRequired('defaultDimension');
 
@@ -141,9 +143,6 @@ def
         this.requireIsDiscrete = !!requireIsDiscrete;
         this.dimensionDefaults.isDiscrete = this.requireIsDiscrete;
     }
-
-    var traversalMode = def.get(keyArgs, 'traversalMode');
-    if(traversalMode != null && traversalMode !== this.traversalMode) this.traversalMode = traversalMode;
 })
 .add(/** @lends pvc.visual.Role# */{
     isRequired: false,

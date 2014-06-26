@@ -52,7 +52,13 @@ def
             .type(this.base(translOptions))
             .add(pvc.data.MetricPointChartTranslationOper);
     },
-    
+
+    /** @override */
+    _calcAxesOffsetPaddings: function() {
+        var aops = this.base();
+        return aops || new pvc_Sides(0.01); // default value
+    },
+
     defaults: {
         axisOriginIsZero: false,
         tooltipOffset: 10

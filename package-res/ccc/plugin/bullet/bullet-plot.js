@@ -17,7 +17,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.BulletPlot.optionsDef; },
 
     /** @override */
-    initEnd: function() {
+    _initVisualRoles: function() {
+
         this.base();
 
         this._addVisualRole('title',    {defaultDimension: 'title*'   });

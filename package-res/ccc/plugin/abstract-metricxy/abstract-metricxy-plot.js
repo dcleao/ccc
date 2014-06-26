@@ -16,7 +16,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.MetricXYPlot.optionsDef; },
 
     /** @override */
-    initEnd: function() {
+    _initVisualRoles: function() {
+
         this.base();
 
         this._addVisualRole('x', {

@@ -142,30 +142,15 @@ pvc.BaseChart
         } else {
             dataCellsByAxisTypeThenIndex = {};
 
-            var addDataCell = function(dataCell) {
-                // Index DataCell in dataCellsByAxisTypeThenIndex
-                var dataCellsByAxisIndex =
-                    def.array.lazy(dataCellsByAxisTypeThenIndex, dataCell.axisType);
-
-                def.array.lazy(dataCellsByAxisIndex, dataCell.axisIndex).push(dataCell);
-            };
-
             this.plotList.forEach(function(plot) {
-                this._initPlotEnd(plot, addDataCell);
+                plot.initEnd();
+
+                this._registerPlotVisualRoles(plot);
+                this._indexPlotDataCells(plot, dataCellsByAxisTypeThenIndex);
             }, this);
         }
 
         this._dataCellsByAxisTypeThenIndex = dataCellsByAxisTypeThenIndex;
-    },
-
-    _initPlotEnd: function(plot, addDataCell) {
-        plot.initEnd();
-
-        this._registerPlotVisualRoles(plot);
-
-        // Ask "potential" DataCells to the plot.
-        // A DataCell is only effective if its visual role actually becomes bound.
-        plot.collectDataCells(addDataCell);
     },
 
     _registerPlotVisualRoles: function(plot) {
@@ -176,7 +161,7 @@ pvc.BaseChart
         plot.visualRoleList.forEach(function(role) {
             var rname = role.name, names = [];
 
-            if(plot.isMain) {
+            if(isMain) {
                 // Prevent collision with chart level roles.
                 if(!(rname in this.visualRoles)) names.push(rname);
                 names.push("main." + rname);
@@ -186,6 +171,17 @@ pvc.BaseChart
 
             this._addVisualRoleCore(role, names);
         }, this);
+    },
+
+    // Ask the plot for "potential" DataCells.
+    // A DataCell is only effective if its visual role actually becomes bound.
+    _indexPlotDataCells: function(plot, dataCellsByAxisTypeThenIndex) {
+        plot.dataCellList.forEach(function(dataCell) {
+            var dataCellsByAxisIndex =
+                def.array.lazy(dataCellsByAxisTypeThenIndex, dataCell.axisType);
+
+            def.array.lazy(dataCellsByAxisIndex, dataCell.axisIndex).push(dataCell);
+        });
     }
 });
 

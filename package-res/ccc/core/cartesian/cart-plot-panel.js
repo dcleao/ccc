@@ -26,55 +26,15 @@ def
 
     addAxis(chart._getAxis('base',  plot.option('BaseAxis' ) - 1));
     addAxis(chart._getAxis('ortho', plot.option('OrthoAxis') - 1));
-
-    // ----------------
-
-    // Initialize paddings from **chart** axes offsets
-    // TODO: move this to the chart??
-    var pctPaddings = {};
-    var hasAny = false;
-
-    function setSide(side, pct) {
-        var value = pctPaddings[side];
-        if(value == null || pct > value) {
-            hasAny = true;
-            pctPaddings[side] = pct;
-        }
-    }
-
-    function processAxis(axis) {
-        var offset = axis && axis.option('Offset');
-        if(offset != null && offset > 0 && offset < 1) {
-            if(axis.orientation === 'x') {
-                setSide('left',  offset);
-                setSide('right', offset);
-            } else {
-                setSide('top',    offset);
-                setSide('bottom', offset);
-            }
-        }
-    }
-
-    var chartAxes = chart.axesByType;
-
-    ['base', 'ortho'].forEach(function(type) {
-        var typeAxes = chartAxes[type];
-        if(typeAxes) typeAxes.forEach(processAxis);
-    });
-
-    if(hasAny) this.offsetPaddings = pctPaddings;
 })
 .add({
-
-    offsetPaddings: null,
-
     _calcLayout: function(layoutInfo) {
         layoutInfo.requestPaddings = this._calcRequestPaddings(layoutInfo);
     },
 
     _calcRequestPaddings: function(layoutInfo) {
         var reqPads;
-        var offPads = this.offsetPaddings;
+        var offPads = this.chart._axisOffsetPaddings;
         if(offPads) {
             var tickRoundPads = this.chart._getAxesRoundingPaddings();
             var clientSize = layoutInfo.clientSize;
@@ -86,7 +46,7 @@ def
                     paddingLen = pads[len_a],
                     len = clientLen + paddingLen;
 
-                // Only request offset-padding if the tickRoundPads.side is not locked
+                // Only request offset-padding if the tickRoundPads.side is not locked.
                 if(!tickRoundPads[side + 'Locked']) {
                     // Offset paddings are a percentage of the outer length
                     // (there are no margins in this panel).
@@ -108,15 +68,13 @@ def
         return reqPads;
     },
 
-    /**
-     * @override
-     */
+    /** @override */
     _createCore: function() {
-        // Send the panel behind the axis, title and legend, panels
+        // Send the panel behind the axis, title and legend, panels.
         this.pvPanel.zOrder(-10);
 
-        var hideOverflow;
-        var contentOverflow = this.chart.options.leafContentOverflow || 'auto';
+        var hideOverflow,
+            contentOverflow = this.chart.options.leafContentOverflow || 'auto';
         if(contentOverflow === 'auto') {
             // Overflow
             hideOverflow =
@@ -127,13 +85,11 @@ def
                     return axis.option('FixedMin') != null ||
                            axis.option('FixedMax') != null;
                 });
-        } else {
+        } else { // or 'visible' or 'hidden'
             hideOverflow = (contentOverflow === 'hidden');
         }
 
-        if(hideOverflow) {
-            // Padding area is used by bubbles and other vizs without problem
-            this.pvPanel.borderPanel.overflow('hidden');
-        }
+        // Padding area is used by bubbles and other vizs without problem.
+        if(hideOverflow) this.pvPanel.borderPanel.overflow('hidden');
     }
 });

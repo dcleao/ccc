@@ -67,6 +67,9 @@ def
     this.visualRoles = {};
     this.visualRoleList = [];
 
+    this.dataCellList = [];
+    this.dataCellsByRole = {}; // role name -> [] dataCells
+
     // -------------
 
     var plotSpec = def.get(keyArgs, 'spec');
@@ -133,6 +136,11 @@ def
         return role;
     },
 
+    _addDataCell: function(dataCell) {
+        this.dataCellList.push(dataCell);
+        def.array.lazy(this.dataCellsByRole, dataCell.role.name).push(dataCell);
+    },
+
     /** @virtual */
     interpolatable: function() {
         return false;
@@ -154,13 +162,22 @@ def
      * @see pvc.visual.Plot#processSpec
      */
     initEnd: function() {
+        this._initVisualRoles();
+        this._initDataCells();
+    },
+
+    /** @virtual */
+    _initVisualRoles: function() {
         var roleSpec = this._getColorRoleSpec();
         if(roleSpec) this._addVisualRole('color', roleSpec);
     },
 
-    collectDataCells: function(addDataCell) {
-        var dataCell = this._getColorDataCell();
-        if(dataCell) addDataCell(dataCell);
+    /** @virtual */
+    _initDataCells: function() {
+        if(this.visualRoles.color) {
+            var dataCell = this._getColorDataCell();
+            if (dataCell) this._addDataCell(dataCell);
+        }
     },
 
     /**

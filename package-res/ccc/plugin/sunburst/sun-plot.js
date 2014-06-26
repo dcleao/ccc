@@ -25,7 +25,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.SunburstPlot.optionsDef; },
 
     /** @override */
-    initEnd: function() {
+    _initVisualRoles: function() {
+
         this.base();
 
         this._addVisualRole('category', {
@@ -62,15 +63,15 @@ def
     },
 
     /** @override */
-    collectDataCells: function(addDataCell) {
+    _initDataCells: function() {
 
-        this.base(addDataCell);
+        this.base();
 
-        addDataCell(new pvc.visual.DataCell(
+        this._addDataCell(new pvc.visual.DataCell(
                 this,
                 /*axisType*/ 'size',
                 this.option('SizeAxis') - 1,
-                this.visualRole('size'),
+                this.visualRoles.size,
                 this.option('DataPart')));
     }
 });

@@ -52,7 +52,53 @@ def
                 this[axis.orientation + 'Scale'] = axis.scale;
         }
     },
-    
+
+    /** @override */
+    _initAxesEnd: function() {
+
+        this._axisOffsetPaddings = this.parent
+            ? this.parent._axisOffsetPaddings
+            : this._calcAxesOffsetPaddings(); // Reads CartesianAxis#option("Offset")
+
+        this.base();
+    },
+
+    /** @virtual */
+    _calcAxesOffsetPaddings: function() {
+        var pctPaddings = {},
+            hasAny = false;
+
+        function setSide(side, pct) {
+            var value = pctPaddings[side];
+            if(value == null || pct > value) {
+                hasAny = true;
+                pctPaddings[side] = pct;
+            }
+        }
+
+        function processAxis(axis) {
+            var offset = axis && axis.option('Offset');
+            if(offset != null && offset > 0 && offset < 1) {
+                if(axis.orientation === 'x') {
+                    setSide('left',  offset);
+                    setSide('right', offset);
+                } else {
+                    setSide('top',    offset);
+                    setSide('bottom', offset);
+                }
+            }
+        }
+
+        var chartAxes = this.axesByType;
+
+        ['base', 'ortho'].forEach(function(type) {
+            var typeAxes = chartAxes[type];
+            if(typeAxes) typeAxes.forEach(processAxis);
+        });
+
+        return hasAny ? pctPaddings : null;
+    },
+
     _createContent: function(parentPanel, contentOptions) {
         
         this._createFocusWindow();

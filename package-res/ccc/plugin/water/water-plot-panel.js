@@ -86,7 +86,10 @@ def
         // Register BULLET legend prototype marks
         var rootScene = this._getLegendBulletRootScene();
         if(rootScene) {
-            var waterfallGroupScene = rootScene.firstChild;
+            var waterfallGroupScene = def.query(rootScene.childNodes).first(function(groupScene) {
+                return groupScene.plot == this;
+            }, this.plot);
+
             if(waterfallGroupScene && !waterfallGroupScene.hasRenderer()) {
                 var keyArgs = {
                         drawRule:    true,
@@ -110,21 +113,25 @@ def
             isVertical = this.isOrientationVertical(),
             anchor = isVertical ? "bottom" : "left",
             ao = this.anchorOrtho(anchor),
-            ruleRootScene = this._buildRuleScene(),
-            orthoScale = this.axes.ortho.scale,
-            orthoZero = orthoScale(0),
-            sceneOrthoScale = this.axes.ortho.sceneScale({sceneVarName: 'value'}),
-            sceneBaseScale  = this.axes.base.sceneScale({sceneVarName: 'category'}),
-            baseScale = this.axes.base.scale,
-            barWidth2 = this.barWidth/2,
-            barWidth = this.barWidth,
+            orthoAxis = this.axes.ortho,
+            baseAxis  = this.axes.base,
+            valueDataCell = this.plot.dataCellsByRole.value[0],
+            ris = orthoAxis.getDataCellScaleInfo(valueDataCell),
+            ruleRootScene = this._buildRuleScene(ris),
+            orthoScale = orthoAxis.scale,
+            orthoZero  = orthoScale(0),
+            sceneOrthoScale = orthoAxis.sceneScale({sceneVarName: 'value'}),
+            sceneBaseScale  = baseAxis.sceneScale({sceneVarName: 'category'}),
+            baseScale       = baseAxis.scale,
+            barWidth2    = this.barWidth/2,
+            barWidth     = this.barWidth,
             barStepWidth = this.barStepWidth,
-            isFalling = this.plot.isFalling(),
-            waterColor = this.plot._waterColor;
+            isFalling    = this.plot.isFalling(),
+            waterColor   = this.plot._waterColor;
 
         if(this.plot.option('AreasVisible')) {
             var panelColors = pv.Colors.category10(),
-                waterGroupRootScene = this._buildWaterGroupScene(),
+                waterGroupRootScene = this._buildWaterGroupScene(ris),
                 orthoRange = orthoScale.range(),
                 orthoPanelMargin = 0.04 * (orthoRange[1] - orthoRange[0]);
 
@@ -240,9 +247,8 @@ def
         }
     },
 
-    _buildRuleScene: function() {
+    _buildRuleScene: function(ris) {
         var rootScene = new pvc.visual.Scene(null, {panel: this, source: this.visibleData({ignoreNulls: false})}),
-            ris = this.chart._ruleInfos,
             prevValue, isClimbing, valueDim;
         if(ris) {
             valueDim = this.chart.data.dimensions(this.visualRoles.value.lastDimensionName());
@@ -288,9 +294,8 @@ def
         }
     },
 
-    _buildWaterGroupScene: function() {
+    _buildWaterGroupScene: function(ris) {
         var chart = this.chart,
-            ris = chart._ruleInfos,
             rootCatData = this.visualRoles.category.select(chart.partData(this.dataPartValue), {visible: true}),
             rootScene = new pvc.visual.Scene(null, {panel: this, source: rootCatData}),
             ruleInfoByCategKey, isFalling;

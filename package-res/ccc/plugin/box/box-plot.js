@@ -18,7 +18,8 @@ def
     _getOptionsDefinition: function() { return pvc.visual.BoxPlot.optionsDef; },
 
     /** @override */
-    initEnd: function() {
+    _initVisualRoles: function() {
+
         this.base();
 
         var roleSpecBase = {

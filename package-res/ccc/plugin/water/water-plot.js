@@ -11,29 +11,40 @@
  */
 def
 .type('pvc.visual.WaterfallPlot', pvc.visual.BarPlotAbstract)
+.init(function(chart, keyArgs) {
+
+    this.base(chart, keyArgs);
+
+    chart._registerInitLegendScenes(this._initLegendScenes.bind(this));
+})
 .add({
     type: 'water',
 
     _waterColor: pv.color("#1f77b4").darker(),
 
     /** @override */
-    initEnd: function() {
-        this.base();
-
-        // Here?
+    _initEnd: function() {
+        // After all options have been set, the chart's
+        // extension points may now be safely queried.
         var extAbsId    = pvc.makeExtensionAbsId('line', this.extensionPrefixes);
         var strokeStyle = this.chart._getConstantExtension(extAbsId, 'strokeStyle');
         if(strokeStyle) this._waterColor = pv.color(strokeStyle);
 
-        this.chart._registerInitLegendScenes(this._initLegendScenes.bind(this));
+        this.base();
+    },
 
-        // ----------
-
-        var catRole  = this.visualRoles.category,
+    /** @override */
+    _getCategoryRoleSpec: function() {
+        var catRoleSpec = this.base(),
             travProp = this.isFalling() ? 'FlattenDfsPre' : 'FlattenDfsPost';
 
-        catRole.setTraversalMode(pvc.visual.TraversalMode[travProp]);
-        catRole.setRootLabel(this.option('AllCategoryLabel'));
+        // This sets traversalMode as well, as there is only one possible value.
+        // This ensures that two water-plots are incompatible if they have different Directions,
+        // something that is detected in Axis#_conciliateVisualRoles.
+        catRoleSpec.traversalModes = pvc.visual.TraversalMode[travProp];
+        catRoleSpec.rootLabel      = this.option('AllCategoryLabel');
+
+        return catRoleSpec;
     },
 
     isFalling: function() {
@@ -48,12 +59,14 @@ def
      *
      * Propagates the total value.
      *
-     * Also creates the array of rule information {@link #_ruleInfos}
-     * used by the waterfall panel to draw the rules.
+     * Also creates an array of rule information that is stored in the axis as the data cell's scale info.
+     * This is used by the waterfall panel to draw the rules.
+     * This cannot be stored in the chart, for example, so that multiple charts are supported.
+     * It would also prevent using more than one waterfall plot in a chart.
      *
      * Supports {@link #_getContinuousVisibleExtent}.
      */
-    _reduceStackedCategoryValueExtent: function(chart, result, catRange, catGroup) {
+    _reduceStackedCategoryValueExtent: function(chart, result, catRange, catGroup, valueAxis, valueDataCell) {
         // That min + max are the variation of this category
         // relies on the concrete base._getStackedCategoryValueExtent() implementation...
         // Max always contains the sum of positives, if any, or 0
@@ -71,14 +84,15 @@ def
         var offsetPrev  = result ? result.offset : 0,
             offsetDelta = catRange.min + catRange.max,
             offsetNext;
+
         if(!result) {
             if(catRange) {
                 offsetNext = offsetPrev + offsetDelta;
-                chart._ruleInfos = [{
+                valueAxis.setDataCellScaleInfo(valueDataCell, [{
                     offset: offsetNext,
                     group:  catGroup,
                     range:  catRange
-                }];
+                }]);
 
                 // Copy the range object
                 return {
@@ -117,7 +131,8 @@ def
             }
         }
 
-        chart._ruleInfos.push({
+        // Add a ruleInfo to the data cell's scale info.
+        valueAxis.getDataCellScaleInfo(valueDataCell).push({
             offset: isFalling ? offsetPrev : result.offset,
             group:  catGroup,
             range:  catRange
@@ -130,7 +145,7 @@ def
         
         var rootScene = legendPanel._getBulletRootScene();
         
-        new pvc.visual.legend.WaterfallBulletGroupScene(rootScene, {
+        new pvc.visual.legend.WaterfallBulletGroupScene(rootScene, this, {
             extensionPrefix: def.indexedId('', 1),
             label: this.option('TotalLineLabel'),
             color: this._waterColor

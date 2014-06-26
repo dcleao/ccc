@@ -19,8 +19,9 @@ def
         return false;
     },
 
-        /** @override */
-    initEnd: function() {
+    /** @override */
+    _initVisualRoles: function() {
+
         this.base();
 
         // TODO: get a translator for this!!
@@ -63,12 +64,13 @@ def
         return catRoleSpec;
     },
 
-    collectDataCells: function(addDataCell) {
+    /** @override */
+    _initDataCells: function() {
         
-        this.base(addDataCell);
+        this.base();
 
         if(this.option('UseShapes')) {
-            addDataCell(new pvc.visual.DataCell(
+            this._addDataCell(new pvc.visual.DataCell(
                 this,
                 /*axisType*/ 'size',
                 this.option('SizeAxis') - 1,

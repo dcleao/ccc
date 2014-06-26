@@ -37,6 +37,7 @@ def
     },
     
     _initAxes: function(hasMultiRole) {
+        // TODO: move axis class to the data cell!
         if(this.visualRoles.color.isDiscrete()) {
             // Switch to custom Treemap color-axis class
             //  that handles derived colors calculation.

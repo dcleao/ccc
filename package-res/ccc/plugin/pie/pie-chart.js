@@ -42,7 +42,7 @@ def
 
         // 1 = root, 2 = leaf, 1|2=3 = everywhere
         if((chartLevel & 2) && axis.type === 'angle')
-            axis.setScaleRange({min: 0, max: 2* Math.PI});
+            axis.setScaleRange({min: 0, max: 2*Math.PI});
     },
 
     _createContent: function(parentPanel, contentOptions) {

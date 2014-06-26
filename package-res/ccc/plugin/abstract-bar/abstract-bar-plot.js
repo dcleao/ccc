@@ -18,7 +18,7 @@ def
     },
 
     /** @override */
-    initEnd: function() {
+    _initVisualRoles: function() {
 
         this.base();
 

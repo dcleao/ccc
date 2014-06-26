@@ -45,16 +45,17 @@ def
                 }}));
         }
     },
-    
-    _initAxes: function(hasMultiRole) {
-        
-        this.base(hasMultiRole);
+
+    /** @override */
+    _initAxesEnd: function() {
         
         // Set defaults of Offset property
         var typeAxes = this.axesByType.ortho;
         if(typeAxes) typeAxes.forEach(function(axis) {
             axis.option.defaults({Offset: 0.02});
         });
+
+        this.base();
     },
     
     defaults: {

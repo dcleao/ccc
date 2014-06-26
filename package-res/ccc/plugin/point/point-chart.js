@@ -57,23 +57,21 @@ def
             }
         }));
     },
-    
+
     /** @override */
-    _initAxes: function(hasMultiRole) {
-        
-        this.base(hasMultiRole);
-        
+    _initAxesEnd: function() {
         // Set defaults of Offset property
         var typeAxes = this.axesByType.base;
         if(typeAxes) typeAxes.forEach(function(axis) {
-            var isDiscrete = axis.scaleType === 'discrete';
-            if(!isDiscrete) axis.option.defaults({Offset: 0.01});
+            if(axis.scaleType !== 'discrete') axis.option.defaults({Offset: 0.01});
         });
-        
+
         typeAxes = this.axesByType.ortho;
         if(typeAxes) typeAxes.forEach(function(axis) {
             axis.option.defaults({Offset: 0.04});
         });
+
+        this.base();
     },
     
     /** @abstract */

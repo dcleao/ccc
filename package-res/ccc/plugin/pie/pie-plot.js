@@ -25,7 +25,8 @@ def
     type: 'pie',
 
     /** @override */
-    initEnd: function() {
+    _initVisualRoles: function() {
+
         this.base();
 
         this._addVisualRole('category', {
@@ -61,20 +62,20 @@ def
     },
 
     /** @override */
-    collectDataCells: function(addDataCell) {
+    _initDataCells: function() {
         
-        this.base(addDataCell);
+        this.base();
 
         var dataPartValue = this.option('DataPart');
 
-        addDataCell(new pvc.visual.DataCell(
+        this._addDataCell(new pvc.visual.DataCell(
             this,
             /*axisType*/'category',
             /*axisIndex*/0,
             /*role*/this.visualRole('category'),
             dataPartValue));
 
-        addDataCell(new pvc.visual.DataCell(
+        this._addDataCell(new pvc.visual.DataCell(
             this,
             /*axisType*/'angle',
             /*axisIndex*/0,

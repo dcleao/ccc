@@ -109,6 +109,10 @@ pvc.BaseChart
          * because it is needed to read axis options in the root chart.
          * Also, binding occurs so that it is possible to know its scale type.
          * Yet, their scales are not setup at the root level.
+         *
+         * This reveals a deficiency of the model,
+         * in the lack of separation of the two parts: i) options and static binding to dataCells,
+         * and ii) "axis scopes" which are actually bound to data.
          */
 
         // 1 = root, 2 = leaf, 1 | 2 = 3 = everywhere
@@ -156,6 +160,12 @@ pvc.BaseChart
                 }
             },
             this);
+
+        this._initAxesEnd();
+    },
+
+    /** @virtual */
+    _initAxesEnd: function() {
     },
 
     /**

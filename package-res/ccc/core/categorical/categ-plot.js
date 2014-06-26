@@ -35,7 +35,8 @@ def
     },
 
     /** @override */
-    initEnd: function() {
+    _initVisualRoles: function() {
+
         this.base();
 
         this._addVisualRole('category', this._getCategoryRoleSpec());
@@ -91,7 +92,7 @@ def
                 return this.base(chart, valueAxis, valueDataCell);
         }
 
-        if(valueDataCell.plot !== this) throw def.error.operationInvalid("Datacell not of this plot.");
+        if(valueDataCell.plot !== this) throw def.error.operationInvalid("DataCell not of this plot.");
 
         chart._warnSingleContinuousValueRole(valueRole);
 
@@ -124,7 +125,9 @@ def
                             chart, 
                             result,
                             rangeInfo.range,
-                            rangeInfo.group);
+                            rangeInfo.group,
+                            valueAxis,
+                            valueDataCell);
             }.bind(this), null);
 
             // The following would not work:
@@ -175,7 +178,7 @@ def
      * Supports {@link #_getContinuousVisibleExtent}.
      * @virtual
      */
-    _reduceStackedCategoryValueExtent: function(chart, result, catRange, catGroup) {
+    _reduceStackedCategoryValueExtent: function(chart, result, catRange, catGroup, valueAxis, valueDataCell) {
         return pvc.unionExtents(result, catRange);
     },
 
@@ -183,7 +186,7 @@ def
     _getBaseRole: function() { return this.visualRoles.category; },
 
     /** @override */
-    _getOrthoRoles: function() { return [this.visualRole('value')]; },
+    _getOrthoRoles: function() { return [this.visualRoles.value]; },
 
     /** @override */
     interpolateDataCell: function(dataCell, baseData) {
