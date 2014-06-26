@@ -212,12 +212,17 @@ def
         if(pvc.debug >= 3) this._log("Creating");
 
         var isRoot = !this.parent,
-            isOverflowRetry = this._isMultiChartOverflowClipRetry,
-            isRootInit = isRoot && !isOverflowRetry && !this.data,
+            isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry,
+            isRootInit = isRoot && !isMultiChartOverflowRetry && !this.data,
             hasMultiRole;
 
+        // CLEAN UP
+        if(isRoot) this.children = [];
+        this.plotPanels = {};
+        this.plotPanelList = [];
+
         // Options may be changed between renders
-        if(!isRoot || !isOverflowRetry) this._processOptions();
+        if(!isRoot || !isMultiChartOverflowRetry) this._processOptions();
 
         if(isRootInit) {
             this._processDataOptions(this.options);
@@ -238,7 +243,7 @@ def
         if(isRootInit || !isRoot) this._initPlots();
 
         // Initialize the data (and _bindVisualRolesPost)
-        if(!isOverflowRetry) {
+        if(!isMultiChartOverflowRetry) {
             this._initData(keyArgs);
 
             // When data is excluded, there may be no data after all
@@ -247,11 +252,9 @@ def
 
         hasMultiRole = this.visualRoles.multiChart.isBound();
         
-        if(!isOverflowRetry) this._initAxes(hasMultiRole);
+        if(!isMultiChartOverflowRetry) this._initAxes(hasMultiRole);
 
         if(isRoot) {
-            this.children = [];
-
             if(hasMultiRole) this._initMultiCharts();
 
             // Trends and Interpolation on Root Chart only.

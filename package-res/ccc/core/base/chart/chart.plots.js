@@ -5,9 +5,6 @@
 pvc.BaseChart
 .add({
     _initPlots: function() {
-        this.plotPanels = {};
-        this.plotPanelList = [];
-        
         var parent = this.parent;
         if(!parent) {
             this.plots = {};
