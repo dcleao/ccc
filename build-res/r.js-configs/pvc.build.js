@@ -44,7 +44,7 @@
     modules: [
         {
             name: "pvc",
-            create: true,
+            create: false,
             include: 
             [
     'ccc/core/base/shims',
