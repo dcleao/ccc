@@ -31,7 +31,6 @@ def
                 }
             },
             fixed: {
-                DataPart:  'trend',
                 TrendType: 'none',
                 NullInterpolatioMode: 'none',
                 SizeRole:  null,
@@ -39,6 +38,7 @@ def
                 OrthoAxis: 1
             },
             defaults: {
+                DataPart:    'trend',
                 ColorAxis:    2,
                 LinesVisible: true,
                 DotsVisible:  false

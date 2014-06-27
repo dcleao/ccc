@@ -120,7 +120,7 @@
                 <c:link to="pvc.options.VisualRole#isReversed" /> is toggled.
 
                 If this is a plot visual role and it is being
-                specified from within <c:link to="pvc.options.charts.Chart#plots" />,
+                specified from within <c:link to="pvc.options.charts.BasicChart#plots" />,
                 then <c:link to="pvc.options.VisualRole#from" /> is relative to the enclosing plot.
 
                 To refer to a visual role of the <i>main</i> plot,

@@ -41,16 +41,15 @@ def
             name: 'trend',
             spec: {
                 visualRoles: {
-                    color: {from: 'series'}
+                    color: {from: 'series'} // one trend per series
                 }
             },
             fixed: {
-                DataPart: 'trend',
                 TrendType: 'none',
-                //ColorRole: 'series', // one trend per series
                 NullInterpolatioMode: 'none'
             },
             defaults: {
+                DataPart:    'trend',
                 ColorAxis:    2,
                 LinesVisible: true,
                 DotsVisible:  false

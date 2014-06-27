@@ -37,12 +37,11 @@ def
                 },
                 defaults: {
                     LinesVisible: true,
-                    DotsVisible:  true,
-                    ColorAxis:    2
-                },
-                fixed: {
+                    DotsVisible: true,
+                    ColorAxis: 2,
                     OrthoAxis: 1
-                }}));
+                }
+            }));
         }
     },
 

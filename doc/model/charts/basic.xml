@@ -4,14 +4,26 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="urn:webdetails/com/2012 ../../schema/com_2012.xsd"
     xmlns="http://www.w3.org/1999/xhtml">
-    
-    <c:facetType name="BasicChartFacet" space="pvc.options.charts">
+
+    <c:complexType name="BasicChart" space="pvc.options.charts" abstract="true">
         <c:documentation>
             The options documentation class of the basic chart facet.
         </c:documentation>
         
-        <!-- Roles -->
-        <c:property name="visualRoles" type="map(string : pvc.options.VisualRole)" category="Chart > Visual Roles">
+        <!-- Visual Roles -->
+        <c:property name="dataPartRole" type="string pvc.options.VisualRole" category="Chart > Visual Roles">
+            <c:documentation>
+                The <tt>dataPart</tt> visual role is a chart-level visual role that
+                allows partitioning of the data into several datum subsets.
+
+                This is a shortcut property for
+                <c:link to="pvc.options.visualRoles.BasicChartVisualRoles#dataPart" />.
+            </c:documentation>
+        </c:property>
+
+        <c:property name="visualRoles"
+                    type="map(string : pvc.options.VisualRole) pvc.options.visualRoles.BasicChartVisualRoles"
+                    category="Chart > Visual Roles">
             <c:documentation>
                 The chart's visual roles map.
                 
@@ -137,7 +149,7 @@
                 any click-related actions will not be executed 
                 (ex: 
                 <c:link to="#clickAction" />,
-                <c:link to="#doubleClickAction" />, or
+                <c:link to="pvc.options.charts.Chart#doubleClickAction" />, or
                 <c:link to="pvc.options.axes.DiscreteCartesianAxis#clickAction" />).
             </c:documentation>
         </c:property>
@@ -225,13 +237,13 @@
                 When this property is specified,
                 it sets also the
                 <c:link to="pvc.options.format.FormatProvider#number" /> format of the chart's format provider,
-                <c:link to="pvc.options.chart.Chart#format" />.
+                <c:link to="pvc.options.charts.BasicChart#format" />.
                 Consequently, its value is inherited by the number dimension types'
                 <c:link to="pvc.options.DimensionType#format" />.
 
                 Conversely, if the chart's format provider
                 <c:link to="pvc.options.format.FormatProvider#number" /> format is specified,
-                its value sets this property, <c:link to="pvc.options.chart.Chart#valueFormat" />.
+                its value sets this property, <c:link to="pvc.options.charts.BasicChart#valueFormat" />.
 
                 When both are specified, the one in the chart's format provider has precedence.
 
@@ -438,9 +450,9 @@
                 Can be specified to calculate the values of certain dimensions.
             </c:documentation>
         </c:property>
-    </c:facetType>
+    </c:complexType>
     
-    <c:facetType name="BasicChartExtensionPointsFacet" space="pvc.options.ext">
+    <c:complexType name="BasicChartExtensionPoints" space="pvc.options.ext">
         
         <c:property name="base" type="pvc.options.marks.PanelExtensionPoint">
             <c:documentation>
@@ -474,6 +486,83 @@
                 The plot panel is a child of the content panel.
             </c:documentation>
         </c:property>
-    </c:facetType>
-    
+    </c:complexType>
+
+    <c:space name="pvc.options.visualRoles">
+        <c:documentation>
+            The namespace of CCC visualRoles options classes.
+        </c:documentation>
+    </c:space>
+
+    <c:complexType name="VisualRoles" space="pvc.options.visualRoles" use="literal" abstract="true">
+        <c:documentation>
+            The visual roles options base class.
+        </c:documentation>
+    </c:complexType>
+
+    <c:complexType name="BasicChartVisualRoles"
+                   space="pvc.options.visualRoles"
+                   base="pvc.options.visualRoles.VisualRoles"
+                   use="literal">
+        <c:documentation>
+            The chart visual roles options base class.
+        </c:documentation>
+
+        <c:property name="dataPart" type="string pvc.options.VisualRole" category="Chart > Visual Roles">
+            <c:documentation>
+                The <tt>dataPart</tt> visual role is a chart-level visual role that
+                allows partitioning of the data into several datum subsets.
+
+                Plots may then specify the data part value which they represent.
+
+                The <tt>dataPart</tt> visual role
+                can be bound to a single dimension
+                that is, or is turned into, discrete.
+
+                The <tt>dataPart</tt> visual role automatically binds to
+                a dimension whose name has the <tt>dataPart</tt> prefix.
+
+                See <c:link to="pvc.options.VisualRole" />
+                for more information on supported data types.
+
+                See <c:link to="pvc.options.plots.Plot#dataPart" />
+                for more information on default values used by different plots.
+            </c:documentation>
+        </c:property>
+    </c:complexType>
+
+    <c:complexType name="BasicPlot" space="pvc.options.plots" abstract="true" use="expanded">
+        <c:documentation>
+            The common options documentation class of all plots.
+        </c:documentation>
+
+        <c:property name="visualRoles"
+                    type="map(string : pvc.options.VisualRole) pvc.options.visualRoles.BasicPlotVisualRoles"
+                    category="Visual Roles">
+            <c:documentation>
+                The plot's visual roles map.
+
+                Can be used, in code, to configure the visual roles of the plot.
+
+                If this is the main plot of a chart,
+                its visual roles can also be configured directly at the chart level,
+                either in the direct visual roles properties -
+                named after the visual role's name followed by the word <tt>Role</tt> -
+                or, in code, in the chart's visual roles map, <c:link to="pvc.options.charts.BasicChart#visualRoles" />.
+
+                The visual role name is the map's key,
+                and the value, its options.
+            </c:documentation>
+        </c:property>
+
+    </c:complexType>
+
+    <c:complexType name="BasicPlotVisualRoles"
+                   space="pvc.options.visualRoles"
+                   base="pvc.options.visualRoles.VisualRoles"
+                   use="literal">
+        <c:documentation>
+            The visual roles options class of all plot types.
+        </c:documentation>
+    </c:complexType>
 </c:model>

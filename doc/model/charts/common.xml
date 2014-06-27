@@ -7,11 +7,11 @@
 
     <c:complexType name="Chart"
                    space="pvc.options.charts"
-                   facets="pvc.options.charts.BasicChartFacet"
+                   base="pvc.options.charts.BasicChart"
                    abstract="true">
 
         <c:documentation>
-            The common options documentation class of all charts.
+            The common options documentation class of (almost) all charts.
         </c:documentation>
 
         <c:property name="color" type="pvc.options.axes.ColorAxis" category="Axes">
@@ -215,16 +215,16 @@
                 A function used to format <i>non-null</i> <i>numeric</i> values
                 as percentages.
 
-                When this property is specified,
+                When this property is specified,\
                 it sets also the
                 <c:link to="pvc.options.format.FormatProvider#percent" /> format of the chart's format provider,
-                <c:link to="pvc.options.chart.Chart#format" />.
+                <c:link to="pvc.options.charts.BasicChart#format" />.
                 Consequently, its value is inherited by the number dimension types'
                 <c:link to="pvc.options.DimensionType#format" />.
 
                 Conversely, if the chart's format provider
                 <c:link to="pvc.options.format.FormatProvider#percent" /> format is specified,
-                its value sets this property, <c:link to="pvc.options.chart.Chart#percentValueFormat" />.
+                its value sets this property, <c:link to="pvc.options.charts.Chart#percentValueFormat" />.
 
                 When both are specified, the one in the chart's format provider has precedence.
             </c:documentation>
@@ -241,11 +241,11 @@
     <!-- scale_ and tooltip_ are undocumented -->
     <c:complexType name="ChartExtensionPoints"
                    space="pvc.options.ext"
-                   use="expanded"
-                   facets="pvc.options.ext.BasicChartExtensionPointsFacet">
+                   base="pvc.options.ext.BasicChartExtensionPoints"
+                   use="expanded">
 
         <c:documentation>
-            The extension points common to all chart types.
+            The extension points common to (almost) all chart types.
 
             Chart extension points can also be specified directly at the chart options level.
 
@@ -294,9 +294,13 @@
         </c:property>
     </c:complexType>
 
-    <c:complexType name="Plot" space="pvc.options.plots" abstract="true" use="expanded">
+    <c:complexType name="Plot"
+                   space="pvc.options.plots"
+                   base="pvc.options.plots.BasicPlot"
+                   abstract="true"
+                   use="expanded">
         <c:documentation>
-            The common options documentation class of all plots.
+            The common options documentation class of (almost) all plots.
         </c:documentation>
 
         <c:property name="name" type="string" category="General" excludeIn="cde">
@@ -304,7 +308,7 @@
                 The name of the plot being defined or configured.
 
                 This option can only be used in code,
-                from within <c:link to="pvc.options.charts.Chart#plots" />.
+                from within <c:link to="pvc.options.charts.BasicChart#plots" />.
 
                 To configure an internal plot, its reserved name is specified:
                 <dl>
@@ -341,7 +345,7 @@
                 The type of the plot being defined or configured.
 
                 This option can only be used in code,
-                from within <c:link to="pvc.options.charts.Chart#plots" />.
+                from within <c:link to="pvc.options.charts.BasicChart#plots" />.
 
                 The current list of plot types is:
                 <dl>
@@ -359,6 +363,32 @@
                 </dl>
 
                 See <c:link to="pvc.options.plots.Plot#name" /> for more information.
+            </c:documentation>
+        </c:property>
+
+        <c:property name="dataPart" type="string" category="Data" excludeIn="cde">
+            <c:documentation>
+                The data part value of the subset of data that the plot consumes.
+
+                This option can only be used in code,
+                from within <c:link to="pvc.options.charts.BasicChart#plots" />.
+
+                By default, for internal plots,
+                like <i>main</i> and <i>plot2</i>,
+                data is partitioned into two data parts,
+                <tt>"0"</tt> and <tt>"1"</tt>,
+                respectively,
+                according to the chart's
+                <tt>plot2Series</tt>, or <tt>plot2SeriesIndexes</tt>, options
+                (depending on the chart type,
+                <c:link to="pvc.options.charts.BarChart#plot2Series" />, or
+                <c:link to="pvc.options.charts.PointChart#plot2Series" />).
+
+                The internal <i>trend</i> plot, by default, represents the data part value <tt>"trend"</tt>.
+
+                For external plots, the default data part value is <tt>"0"</tt>.
+
+                See <c:link to="pvc.options.charts.BasicChart#dataPartRole" /> for more information.
             </c:documentation>
         </c:property>
 
@@ -428,23 +458,6 @@
                 The main plot of a chart always uses the axis <tt>1</tt>.
                 The <tt>plot2</tt> plot uses the axis <tt>2</tt>, by default.
                 The <tt>trend</tt> plot uses the axis <tt>3</tt>, by default.
-            </c:documentation>
-        </c:property>
-
-        <c:property name="visualRoles" type="map(string : pvc.options.VisualRole)" category="Visual Roles">
-            <c:documentation>
-                The plot's visual roles map.
-
-                Can be used, in code, to configure the visual roles of the plot.
-
-                If this is the main plot of a chart,
-                its visual roles can also be configured directly at the chart level,
-                either in the direct visual roles properties -
-                named after the visual role's name followed by the word <tt>Role</tt> -
-                or, in code, in the chart's visual roles map, <c:link to="pvc.options.charts.Chart#visualRoles" />.
-
-                The visual role name is the map's key,
-                and the value, its options.
             </c:documentation>
         </c:property>
     </c:complexType>
