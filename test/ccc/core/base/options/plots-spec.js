@@ -368,6 +368,36 @@ define([
                         });
                     });
 
+                    And("option plots contains a single plot with type=bar and name=.", function() {
+                        Should("throw an error due to invalid plot name", function () {
+                            expect(function () {
+                                createBarChart1({
+                                    plots: [
+                                        {
+                                            type: 'bar',
+                                            name: '.'
+                                        }
+                                    ]
+                                });
+                            }).toThrow();
+                        });
+                    });
+
+                    And("option plots contains a single plot with type=bar and name=$", function() {
+                        Should("throw an error due to invalid plot name", function () {
+                            expect(function () {
+                                createBarChart1({
+                                    plots: [
+                                        {
+                                            type: 'bar',
+                                            name: '$'
+                                        }
+                                    ]
+                                });
+                            }).toThrow();
+                        });
+                    });
+
                     // Setting options of the main plot
                     And("option plots contains a single plot with name=main", function() {
                         A("second plot", function() {

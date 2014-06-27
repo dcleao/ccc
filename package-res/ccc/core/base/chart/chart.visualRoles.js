@@ -110,8 +110,14 @@ pvc.BaseChart
 
     _addVisualRole: function(name, keyArgs) {
         keyArgs = def.set(keyArgs, 'index', this.visualRoleList.length);
+        var role = new pvc.visual.Role(name, keyArgs),
+            names = [name];
 
-        return this._addVisualRoleCore(new pvc.visual.Role(name, keyArgs), name);
+        // There's a way to refer to chart visual roles without danger
+        // of matching the main plot's visual roles.
+        if(!role.plot) names.push("$." + name);
+
+        return this._addVisualRoleCore(role, names);
     },
 
     _addVisualRoleCore: function(role, names) {
