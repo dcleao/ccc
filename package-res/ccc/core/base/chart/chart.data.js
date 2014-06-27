@@ -256,7 +256,7 @@ pvc.BaseChart
                 measureDimNames = me.measureDimensionsNames();
                 M = measureDimNames.length;
             }
-
+            if(!M) return false;
             var atoms = datum.atoms;
             for(var i = 0 ; i < M ; i++) if(atoms[measureDimNames[i]].value != null) return false;
             return true;

@@ -45,6 +45,9 @@ def
 
     this.base(chart, this.type, index, keyArgs);
 
+    if(this.name && this.name.indexOf(".") >= 0)
+        throw def.error.argumentInvalid("name", def.format("Invalid plot name '{0}'.", [this.name]));
+
     this.prettyId    = this.name || this.id;
     this.isInternal  = !!internalPlot;
     this.isMain      = isMain;
