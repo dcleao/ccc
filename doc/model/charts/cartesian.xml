@@ -12,7 +12,20 @@
         <c:documentation>
             The common options documentation class for the <b>Cartesian</b> charts.
         </c:documentation>
-        
+
+        <c:property name="plots" type="list(pvc.options.plots.Plot)" category="Plots" excludeIn="cde">
+            <c:documentation>
+                An array of cartesian plots.
+
+                All the cartesian plots can be used together,
+                from within a cartesian <i>chart</i> class,
+                as long as their axes, notably <i>base</i> and <i>ortho</i>,
+                are encoding compatible visual roles.
+
+                See  <c:link to="pvc.options.charts.Chart" /> for additional information.
+            </c:documentation>
+        </c:property>
+
         <c:property name="seriesRole" type="string pvc.options.VisualRole" category="Chart > Visual Roles">
             <c:documentation>
                 The <tt>series</tt> visual role represents a 

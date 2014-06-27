@@ -13,12 +13,12 @@
         <!-- Roles -->
         <c:property name="visualRoles" type="map(string : pvc.options.VisualRole)" category="Chart > Visual Roles">
             <c:documentation>
-                The chart's visual roles.
+                The chart's visual roles map.
                 
                 Besides the existing visual role properties
                 - named after the visual role's name followed by the word <tt>Role</tt> -
                 the visual roles map can be used, in code,
-                as an alternative to specify the visual role's information.
+                to specify the visual roles information.
                 The visual role name is the map's key, 
                 and the value, its options. 
             </c:documentation>
@@ -316,7 +316,7 @@
                 be represented.
             </c:documentation>
         </c:property>
-        
+
 
         <c:property name="dataWhere" type="pvc.options.varia.DataWhere" category="Chart > Data Source">
             <c:documentation>
@@ -404,11 +404,37 @@
                 translation process of the data source. 
             </c:documentation>
         </c:property>
+
+        <c:property name="plots" type="list(pvc.options.plots.Plot)" category="Plots" excludeIn="cde">
+            <c:documentation>
+                An array of plots.
+
+                Can be specified to configure the options
+                of the chart's internal plots
+                (like <i>main</i> and <i>plot2</i> and <i>trend</i>, when supported by the chart type),
+                or to <b>define and configure extra plots</b>,
+                of compatible types.
+
+                The types of plots that can be used together in a chart depend on:
+                <ul>
+                    <li>each plot's chart base class requirement, and</li>
+                    <li>further axes compatibility requirements;
+                        the visual roles being encoded by an axis must be compatible:
+                        they must have the same value type (number, date, or discrete) and,
+                        for discrete visual roles, they must also
+                        be bound to the same dimension list.
+                    </li>
+                </ul>
+
+                For additional information, specific of each chart type,
+                see its documentation for property <i>plots</i>.
+            </c:documentation>
+        </c:property>
         
         <c:property name="calculations" type="list(pvc.options.DimensionsCalculation)" category="Chart > Data" excludeIn="cde">
             <c:documentation>
                 An array of dimensions calculations.
-                 
+
                 Can be specified to calculate the values of certain dimensions.
             </c:documentation>
         </c:property>

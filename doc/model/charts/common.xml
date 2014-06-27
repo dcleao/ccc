@@ -299,6 +299,69 @@
             The common options documentation class of all plots.
         </c:documentation>
 
+        <c:property name="name" type="string" category="General" excludeIn="cde">
+            <c:documentation>
+                The name of the plot being defined or configured.
+
+                This option can only be used in code,
+                from within <c:link to="pvc.options.charts.Chart#plots" />.
+
+                To configure an internal plot, its reserved name is specified:
+                <dl>
+                    <dt><i>main</i></dt>
+                    <dd>the main plot of a chart; for example, a bar chart has a main plot of type <tt>bar</tt></dd>
+
+                    <dt><i>plot2</i></dt>
+                    <dd>the special second plot;
+                        this is the plot that, in applicable chart types,
+                        is activated when the option <i>plot2</i> is <tt>true</tt>;
+                        configuring the second plot this way implicitly activates it,
+                        and the value of option <i>plot2</i> is ignored.
+                    </dd>
+
+                    <dt><i>trend</i></dt>
+                    <dd>the special trend plot;
+                        this is the plot that, in applicable chart types,
+                        is activated when other plots specify one of the options <i>trend</i> or <i>trendType</i>.
+                    </dd>
+                </dl>
+
+                In this case, if <c:link to="pvc.options.plots.Plot#type" /> is also specified,
+                it must match the plot type of the corresponding internal plot.
+
+                To define a new plot, specify a <c:link to="pvc.options.plots.Plot#type" />
+                and, no name, or one that is not reserved.
+
+                The name of a plot cannot have dot (".") character in it.
+            </c:documentation>
+        </c:property>
+
+        <c:property name="type" type="string" category="General" excludeIn="cde">
+            <c:documentation>
+                The type of the plot being defined or configured.
+
+                This option can only be used in code,
+                from within <c:link to="pvc.options.charts.Chart#plots" />.
+
+                The current list of plot types is:
+                <dl>
+                    <dt>bar</dt><dd>bar plot</dd>
+                    <dt>nbar</dt><dd>100% normalized bar plot</dd>
+                    <dt>water</dt><dd>waterfall plot</dd>
+                    <dt>box</dt><dd>box plot</dd>
+                    <dt>heatGrid</dt><dd>heat-grid plot</dd>
+                    <dt>point</dt><dd>point plot (area/line/dot)</dd>
+                    <dt>scatter</dt><dd>metric point plot (area/line/dot)</dd>
+                    <dt>pie</dt><dd>pie</dd>
+                    <dt>sunburst</dt><dd>sunburst</dd>
+                    <dt>treemap</dt><dd>treemap</dd>
+                    <dt>bullet</dt><dd>bullet</dd>
+                </dl>
+
+                See <c:link to="pvc.options.plots.Plot#name" /> for more information.
+            </c:documentation>
+        </c:property>
+
         <c:property name="valuesVisible" default="false" type="boolean" category="Style">
             <c:documentation>
                 Indicates if value labels are shown next to the visual elements.
@@ -365,6 +428,23 @@
                 The main plot of a chart always uses the axis <tt>1</tt>.
                 The <tt>plot2</tt> plot uses the axis <tt>2</tt>, by default.
                 The <tt>trend</tt> plot uses the axis <tt>3</tt>, by default.
+            </c:documentation>
+        </c:property>
+
+        <c:property name="visualRoles" type="map(string : pvc.options.VisualRole)" category="Visual Roles">
+            <c:documentation>
+                The plot's visual roles map.
+
+                Can be used, in code, to configure the visual roles of the plot.
+
+                If this is the main plot of a chart,
+                its visual roles can also be configured directly at the chart level,
+                either in the direct visual roles properties -
+                named after the visual role's name followed by the word <tt>Role</tt> -
+                or, in code, in the chart's visual roles map, <c:link to="pvc.options.charts.Chart#visualRoles" />.
+
+                The visual role name is the map's key,
+                and the value, its options.
             </c:documentation>
         </c:property>
     </c:complexType>
