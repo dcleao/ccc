@@ -1756,24 +1756,24 @@ var parCoordTest_01 = {
 
 var testMeasureDiscrim = {
     "metadata":[
-        {"colIndex":0, "colName":"Series",     "colType":"STRING" },
-        {"colIndex":1, "colName":"Category",   "colType":"STRING" },
+        {"colIndex":0, "colName":"Region",     "colType":"STRING" },
+        {"colIndex":1, "colName":"Period",     "colType":"STRING" },
         {"colIndex":3, "colName":"Count",      "colType":"NUMERIC"},
         {"colIndex":4, "colName":"AvgLatency", "colType":"NUMERIC"}
     ],
     resultset: [
-        [1, 8, 35000, 140],
-        [1, 9, 40000, 120],
-        [1, 10, 45000, 115],
-        [1, 11, null, 110],
-        [2, 8, 70000, null],
-        [2, 9, 80000, 180],
-        [2, 10, 115000, 170],
-        [2, 11, 45000, 145],
-        [3, 8, 70000, 200],
-        [3, 9, 90000, 190],
-        [3, 10, 120000, 180],
-        [3, 11, 30000, 130]
+        ['London', 'Jan', 35000,  141.3],
+        ['London', 'Apr', 40000,  120.12],
+        ['London', 'Jul', 45000,  115.6],
+        ['London', 'Oct', null,   110.37],
+        ['Paris',  'Jan', 70000,  null],
+        ['Paris',  'Apr', 80000,  180.9],
+        ['Paris',  'Jul', 115000, 170.7],
+        ['Paris',  'Oct', 45000,  145.5],
+        ['Lisbon', 'Jan', 70000,  200.7],
+        ['Lisbon', 'Apr', 90000,  190.3],
+        ['Lisbon', 'Jul', 120000, 180.2],
+        ['Lisbon', 'Oct', 30000,  130.067]
     ]
 };
 

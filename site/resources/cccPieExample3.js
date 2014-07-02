@@ -2,16 +2,22 @@ new pvc.PieChart({
     canvas: 'cccPieExample3',
     width:  600,
     height: 400,
-    legend:     false,
-    selectable: true,
-    hoverable:  true,
+
+    // Data source
+    crosstabMode: false,
+
+    // Main plot
     valuesVisible: true,
     explodedSliceRadius: '5%',
-    tooltipClassName: 'light',
-    
-    extensionPoints: {
-        slice_innerRadiusEx: '20%'
-    }
+    slice_innerRadiusEx: '20%',
+
+    // Panels
+    legend: false,
+
+    // Chart/Interaction
+    selectable: true,
+    hoverable:  true,
+    tooltipClassName: 'light'
 })
-.setData(relational_03_b, {crosstabMode: false})
+.setData(relational_03_b)
 .render();

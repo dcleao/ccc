@@ -1,25 +1,30 @@
 new pvc.BarChart({
-    canvas: "cccBarExample2",
+    canvas: 'cccBarExample2',
     width:  600,
     height: 400,
     orientation: 'horizontal',
-    title:  "Rich Bar chart",
+
+    // Cartesian axes
+    axisGrid: true,
+    axisGrid_strokeStyle: 'lightgray',
+
+    // Panels
+    title:         "Rich Bar chart",
     titlePosition: 'left',
-    titleSize:  {height: '100%'},
-    titleMargins: 10,
-    titleFont:  '16px sans-serif',
+    titleSize:     {height: '100%'},
+    titleMargins:  10,
+    titleFont:     '16px sans-serif',
+    title_fillStyle:   'lightblue',
+    title_strokeStyle: 'black',
+
+    legend: true,
+    legendPosition: 'right',
+
+    // Chart/Interaction
     animate:    false,
     clickable:  true,
     selectable: true,
-    hoverable:  true,
-    legend:     true,
-    legendPosition: 'right',
-    axisGrid:   true,
-    extensionPoints: {
-        title_fillStyle:   'lightblue',
-        title_strokeStyle: 'black',
-        axisGrid_strokeStyle: 'lightgray'
-    }
+    hoverable:  true
 })
 .setData(relational_01, {crosstabMode: false})
 .render();
