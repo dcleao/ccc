@@ -1,35 +1,41 @@
-
 new pvc.WaterfallChart({
     canvas:  'cccWaterfallExample3',
     width:   600,
     height:  400,
-    title:   "Balance Analysis",
-    titleMargins: '3%',
-    legend:  true,
-    legendPosition: 'right',
-    animate:       false,
-    selectable:    true,
-    hoverable:     true,
-    valuesVisible: true,
-    titleFont:     '16px sans-serif',
-    
+
+    // Data source
+    readers: ['productType, accountType, accountSource, value'],
+
+    // Visual roles
+    visualRoles: {
+        series:   'productType',
+        category: 'accountType, accountSource'
+    },
+
+    // Main plot
+    allCategoryLabel: "Profit",
     direction: 'up',
     areasVisible: true,
-    allCategoryLabel: "Profit",
-    
-    seriesRole:   'productType',
-    categoryRole: 'accountType, accountSource',
+    valuesVisible: true,
+    line_lineWidth: 2,
 
-    extensionPoints: {
-        line_lineWidth: 2,
-        xAxisLabel_textAngle:    -Math.PI/3,
-        xAxisLabel_textAlign:    'right',
-        xAxisLabel_textBaseline: 'top'
-    }
+    // Cartesian axes
+    baseAxisLabel_textAngle:    -Math.PI/3,
+    baseAxisLabel_textAlign:    'right',
+    baseAxisLabel_textBaseline: 'top',
+
+    // Panels
+    title:        "Balance Analysis",
+    titleMargins: '3%',
+    titleFont:    '16px sans-serif',
+
+    legend: true,
+    legendPosition: 'right',
+
+    // Chart/Interaction
+    animate:    false,
+    selectable: true,
+    hoverable:  true
 })
-.setData(testWaterfallBalance, {
-    readers: [
-        'productType, accountType, accountSource, value'
-    ]
-})
+.setData(testWaterfallBalance)
 .render();
