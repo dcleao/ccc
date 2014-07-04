@@ -122,7 +122,7 @@ def
         if(this.valuesVisible && this.labelStyle === 'linked') {
             // Reserve space for labels and links
             var textMargin = def.number.to(this._getConstantExtension('label', 'textMargin'), 3),
-                textHeight = pv.Text.fontHeight(labelFont) * 2/ 3,
+                textHeight = pv.Text.fontHeight(labelFont),
                 linkHandleWidth = this.linkHandleWidth * textHeight, // em
 
                 linkInsetRadius  = resolvePercentRadius(this.linkInsetRadius),
