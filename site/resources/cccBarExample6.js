@@ -22,7 +22,8 @@ new pvc.BarChart({
     animate:    false,
     selectable: true,
     hoverable:  true,
-    tooltipClassName: 'light'
+    tooltipClassName: 'light',
+    tooltipOpacity: 1
 })
 .setData(relational_01)
 .render();

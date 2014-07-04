@@ -1,41 +1,43 @@
+// NOTE: DEACTIVATED, cause it reveals some problems in
+// the suppression of single element groups.
+
 new pvc.WaterfallChart({
-    canvas:  'cccWaterfallExample3',
-    width:   600,
-    height:  400,
+    canvas: 'cccWaterfallExample3',
+    width:  600,
+    height: 700,
 
     // Data source
-    readers: ['productType, accountType, accountSource, value'],
+    readers: ['product, territory, region, market, sales'],
 
-    // Visual roles
+    // Visual Roles
     visualRoles: {
-        series:   'productType',
-        category: 'accountType, accountSource'
+        series:   'product',
+        category: 'territory|region, market',
+        value:    'sales'
     },
 
     // Main plot
-    allCategoryLabel: "Profit",
-    direction: 'up',
-    areasVisible: true,
+    direction:     'up',
+    areasVisible:  true,
     valuesVisible: true,
-    line_lineWidth: 2,
+    label_font:    '8px sans-serif',
+    totalValuesVisible: false,
+    line_lineWidth:     2,
 
     // Cartesian axes
     baseAxisLabel_textAngle:    -Math.PI/3,
     baseAxisLabel_textAlign:    'right',
     baseAxisLabel_textBaseline: 'top',
 
-    // Panels
-    title:        "Balance Analysis",
-    titleMargins: '3%',
-    titleFont:    '16px sans-serif',
 
+    // Panels
     legend: true,
-    legendPosition: 'right',
+    legendPosition: 'top',
 
     // Chart/Interaction
     animate:    false,
     selectable: true,
     hoverable:  true
 })
-.setData(testWaterfallBalance)
-.render();
+    .setData(testWaterfall1)
+    .render();

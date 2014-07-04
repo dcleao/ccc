@@ -4,10 +4,7 @@ new pvc.BoxplotChart({
     height: 400,
 
     // Panels
-    title: "Minimal Boxplot Chart",
-
-    // Chart/Interaction
-    animate: false
+    title: "Minimal Boxplot Chart"
 })
 .setData(boxplotData_01)
 .render();

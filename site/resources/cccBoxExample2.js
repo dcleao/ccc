@@ -22,7 +22,6 @@ new pvc.BoxplotChart({
     title: "Horizontal Boxplot Chart",
 
     // Chart/Interaction
-    animate:    false,
     selectable: true,
     hoverable:  true
 })

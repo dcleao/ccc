@@ -73,7 +73,6 @@ new pvc.BarChart({
 
     // Chart/Interaction
     animate:    true,
-    clickable:  true,
     selectable: true,
     hoverable:  true
 })

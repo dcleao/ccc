@@ -16,6 +16,7 @@ new pvc.BarChart({
     orthoAxisFixedMax: 130,
     baseAxisTicks: true,
     baseAxisTicks_strokeStyle: 'gray',
+    baseAxisTooltipAutoContent: 'summary',
 
     // Panels
     legend: true,
