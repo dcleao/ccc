@@ -116,14 +116,20 @@ def
               noClickSelect: true   // just rubber-band (the click is for other behaviors)
           })
           .pvMark
-          .lock('data', function(section) { return section.items; }) // each section has a list of bullet item scenes
+          .lock('data', function(section) { return section.items; }) // each section has a list of item scenes
           [a_right](null)
           [a_bottom](null)
           [a_left](function(clientScene) {
-              var itemPadding = clientScene.vars.itemPadding;
-              var prevItem = this.sibling();
-              return prevItem
-                  ? (prevItem[a_left] + prevItem[a_width] + itemPadding[a_width])
+              var index = this.index, prevItem;
+
+              // First previous visible sibling.
+              // TODO: This is less than optimal cause no reflow from following sections is made
+              // to make up for freed space.
+              // For simple cases, that only have one section, it's a nice feature, though.
+              while(index > 0 && !(prevItem = this.scene[--index]).visible);
+
+              return prevItem && prevItem.visible
+                  ? (prevItem[a_left] + prevItem[a_width] + clientScene.vars.itemPadding[a_width])
                   : 0;
           })
           [a_top](isHorizontal
@@ -139,11 +145,7 @@ def
               function(itemScene) { return itemScene.vars.itemClientSize.width; } :
               
                // The biggest child width of the column
-              function(/*itemScene*/) { return this.parent.width(); })
-          .def("hidden", "false")
-          .fillStyle(function() { // TODO: ??
-              return this.hidden() == "true" ? "rgba(200,200,200,1)" : "rgba(200,200,200,0.0001)";
-          });
+              function(/*itemScene*/) { return this.parent.width(); });
           
       // SECTION > ITEM > MARKER
       var pvLegendMarkerPanel = new pvc.visual.Panel(this, pvLegendItemPanel, {
