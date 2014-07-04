@@ -22,7 +22,6 @@ new pvc.BarChart({
 
     // Chart/Interaction
     animate:    false,
-    clickable:  true,
     selectable: true,
     hoverable:  true
 })

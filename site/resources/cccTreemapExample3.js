@@ -16,9 +16,6 @@ new pvc.TreemapChart({
     title:     "Slice-and-dice Layout And Self-Colored",
     titleFont: 'italic 14px sans-serif',
 
-    legend: true,
-    legendPosition: 'right',
-
     // Chart/Interaction
     selectable: true,
     hoverable:  true

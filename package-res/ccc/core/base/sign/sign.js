@@ -536,3 +536,20 @@ def.type('pvc.visual.Sign', pvc.visual.BasicSign)
     _onClick:       function(context) { context.click();       },
     _onDoubleClick: function(context) { context.doubleClick(); }
 });
+
+/**
+ * Pass this function to an extension point with a final property value
+ * to ensure that it will not be processed anymore.
+ * @param v the final value.
+ * @return {any} the final value.
+ */
+pvc.finished = function(v) {
+    if(def.fun.is(v))
+        return function() {
+            return (this.finished ? this : this.getSign()).finished(v.apply(this, arguments));
+        };
+
+    return function() {
+        return (this.finished ? this : this.getSign()).finished(v);
+    };
+};

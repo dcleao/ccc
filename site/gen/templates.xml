@@ -9,6 +9,7 @@
             An alternative to pie is the donut chart.
         </t:summary>
         <t:example title="SIMPLE PIE" />
+        <t:example title="CONCENTRIC PIES" />
         <t:example title="RICH PIE" />
         <t:example title="DONUT" />
         <t:example title="SMALL MULTIPLE PIES" style="wide" />
@@ -109,9 +110,8 @@
             in a waterfall chart you just compare the size of bars as all bars are parallel to one another.
         </t:summary>
         <t:example title="DOWN WATERFALL" />
-        <t:example title="UP WATERFALL" />
         <t:example title="UP AND DOWN WATERFALL" />
-
+        <!--<t:example title="UP WATERFALL" />-->
     </t:template>
 
     <t:template name="Bullet" exampleMask="cccBulletExample{0}.js">

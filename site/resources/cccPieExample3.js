@@ -6,18 +6,33 @@ new pvc.PieChart({
     // Data source
     crosstabMode: false,
 
-    // Main plot
+    // Main Plot
     valuesVisible: true,
-    explodedSliceRadius: '5%',
-    slice_innerRadiusEx: '20%',
+    explodedSliceIndex:  1,
+    explodedSliceRadius: '10%',
+
+    // Color axes
+    colors: [
+        '#8ED300', '#7CB021', '#568000',
+        '#3A3A3A', '#969696', '#F5F4F2'
+    ],
 
     // Panels
-    legend: false,
+    title:           "Rich Pie",
+    titleSize:       {width: '100%'},
+    titlePaddings:   '4%',
+    titleFont:       'bold 16px sans-serif',
+    title_fillStyle: 'lightblue',
+
+    legend:      true,
+    legendShape: 'circle',
+    legendSize:  {width: '100%'},
+    legendArea_fillStyle: 'lightgray',
 
     // Chart/Interaction
+    animate:    false,
     selectable: true,
-    hoverable:  true,
-    tooltipClassName: 'light'
+    hoverable:  true
 })
 .setData(relational_03_b)
 .render();

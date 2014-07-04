@@ -17,7 +17,7 @@ new pvc.BarChart({
 
     // Panels
     title:     "Negative Values Stacked Bar Chart",
-    titleFont: 'bold italic 12px sans-serif',
+    titleFont: 'bold italic 14px sans-serif',
     titleSize:     {width: '70%', height: '25%'},
     titleMargins:  10,
     titlePaddings: {all: '15%', top: 10, bottom: 10},

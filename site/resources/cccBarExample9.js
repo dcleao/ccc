@@ -7,7 +7,7 @@ new pvc.BarChart({
     crosstabMode: false,
 
     //  map virtual item columns -> dimensions
-    readers: ['region, period, count, avgLatency'],
+    readers: ['city, period, count, avgLatency'],
 
     // Data
     dimensions: {
@@ -21,7 +21,7 @@ new pvc.BarChart({
             name: 'main',
             visualRoles: {
                 value:    'count',
-                series:   'region',
+                series:   'city',
                 category: 'period'
             }
         },
@@ -34,7 +34,7 @@ new pvc.BarChart({
             nullInterpolationMode: 'linear',
             visualRoles: {
                 value: 'avgLatency',
-                color: {legendVisible: false}
+                color: {legend: {visible: false}}
             }
         }
     ],
@@ -59,7 +59,6 @@ new pvc.BarChart({
 
     // Chart/Interaction
     animate:    true,
-    clickable:  true,
     selectable: true,
     hoverable:  true,
     tooltipClassName: 'light',

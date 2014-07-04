@@ -22,8 +22,7 @@ new pvc.TreemapChart({
     titleFont:      'italic 14px sans-serif',
     smallTitleFont: 'bold 14px sans-serif',
 
-    legend: true,
-    legendPosition: 'right',
+    legend: false,
 
     // Chart/Interaction
     selectable: true,

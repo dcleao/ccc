@@ -4,6 +4,9 @@ new pvc.MetricLineChart({
     height:   350,
     orientation: 'horizontal',
 
+    // Main plot
+    line_interpolate: 'cardinal',
+
     // Cartesian axes
     axisGrid: true,
     axisOriginIsZero: true,
