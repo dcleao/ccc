@@ -80,21 +80,39 @@ pvc.BaseChart
                 // Existing data is kept.
                 // This is used for re-layouting only.
                 // Yet...
-
+                
                 // Dispose all data children and linked children (recreated as well)
                 // And clears caches as well.
                 data.disposeChildren();
 
                 // Remove virtual datums (they are regenerated each time)
                 data.clearVirtuals();
+                
+                // NEW603 _initRolesAxes
+                this._initRolesAxes();
             }
-        }
+        }else this._initRolesAxes(); // NEW603 _initRolesAxes
 
         // Cached data stuff
         delete this._partsDataCache;
         delete this._visibleDataCache;
 
         if(def.debug >= 3) this.log(this.data.getInfo());
+    },
+ 
+
+    // NEW603 Auxiliar function to initializa axes prior to the datums distribution
+    _initRolesAxes: function(){
+
+        hasMultiRole = this.visualRoles.multiChart.isBound();
+        this._initAxes(hasMultiRole);
+
+    },
+
+    // NEW603 - createSlidingWindowOptions 
+    // do nothing - only allow slidingWindow on cartesian 
+    // possibly allow scoring on others later on
+    _createSlidingWindowOptions: function(options) {    
     },
 
     _loadData: function() {
@@ -153,6 +171,12 @@ pvc.BaseChart
                 keySep:   options.dataOptions.separator
             });
 
+        var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
+        
+        // NEW603 _initRolesAxes , _createSlidingWindowOptions
+        this._initRolesAxes();
+        this._createSlidingWindowOptions( this.options );
+
         // ----------
 
         if(translation) this._loadDataCore(data, translation);
@@ -170,6 +194,10 @@ pvc.BaseChart
 
         if(def.debug >= 3) this.log(translation.logSource());
 
+        var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
+
+        // NEW603 _initRolesAxes 
+        this._initRolesAxes();
         this._loadDataCore(data, translation);
     },
 
@@ -178,6 +206,7 @@ pvc.BaseChart
             readQuery = translation.execute(data);
 
         data.load(readQuery, loadKeyArgs);
+
     },
 
     _createVisualRolesContext: function() {
@@ -293,6 +322,7 @@ pvc.BaseChart
             dimensionGroups:      options.dimensionGroups
         };
     },
+
 
     _createTranslationOptions: function(dimsOptions, dataPartDimName) {
         var options = this.options,
@@ -659,6 +689,7 @@ pvc.BaseChart
         if(!this.metadata.length) this.log.warn("Metadata is empty");
 
         return this;
-    }
+    },
+
 });
 

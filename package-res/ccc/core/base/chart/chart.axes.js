@@ -161,7 +161,8 @@ pvc.BaseChart
             },
             this);
 
-        this._initAxesEnd();
+        // NEW603 _initAxes separated from _initAxesEnd (see _createPhase1)
+        //this._initAxesEnd();
     },
 
     /** @virtual */

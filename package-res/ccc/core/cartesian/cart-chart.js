@@ -33,6 +33,22 @@ def
     yScale: null,
     xScale: null,
 
+
+    // NEW603 - createSlidingWindowOptions 
+
+    /** @override */
+    _createSlidingWindowOptions: function(options) {
+        /*global cdo_assertIsOwner:true */
+        this.data.timeSeries = options.timeSeries || false; 
+        this.data.slidingWindow = options.slidingWindow || false;
+        this.data.slidingWindowInterval = pv.parseDatePrecision(options.slidingWindowInterval,Number.MAX_VALUE); 
+        this.data.slidingDimName = options.slidingDimName || this.axes.base.role.grouping.lastDimensionName() ;
+        this.data.score = options.score || _defaultDatumScore;
+        debugger;
+        this.data.select= options.select || _defaultSelect;
+
+    },
+
     /**
      * Creates a scale for a given axis, with domain applied, but no range yet,
      * assigns it to the axis and assigns the scale to special v1 chart instance fields.
@@ -470,5 +486,31 @@ def
         
         // Show a frame around the plot area
         // plotFrameVisible: undefined
-    }
+    },
+
+
 });
+
+// NEW603 - default scoring: shouldn't affect non-cartesian
+    function _defaultDatumScore( datum ) { return datum.atoms[this.slidingDimName].rawValue; }
+
+    // NEW603 - default select: 
+    //          TODO check priorities
+    //          TODO use base axis from chart
+    //          0 - shouldn't affect non-cartesian ??? do this on selectDatums
+    //          1 - should apply scoring function if specified
+    //          2 - should apply sliding window in timeSeries and numeric if specified 
+    //          3 - should do nothing if no option is specified
+    function _defaultSelect( allData , remove) {
+        
+        var now = this.dimensions(this.slidingDimName).max().rawValue;
+        
+        allData.forEach(function(datum){
+                if (this.timeSeries) result = Math.abs( new Date(now) - new Date(this.score(datum))); 
+                else result=now-this.score(datum);
+                if( !this.score(datum) || 
+                    result && result > this.slidingWindowInterval ) 
+                        remove.push(datum);
+        },this);
+
+    }

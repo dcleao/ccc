@@ -250,7 +250,10 @@ def
 
         hasMultiRole = this.visualRoles.multiChart.isBound();
 
-        if(!isMultiChartOverflowRetry) this._initAxes(hasMultiRole);
+        // NEW603 _initAxes separated from _initAxesEnd (see _initAxes)
+        //hasMultiRole = this.visualRoles.multiChart.isBound();
+        // if(!isMultiChartOverflowRetry) this._initAxes(hasMultiRole);
+        if(!isMultiChartOverflowRetry) this._initAxesEnd();
 
         if(isRoot) {
             if(hasMultiRole) this._initMultiCharts();
