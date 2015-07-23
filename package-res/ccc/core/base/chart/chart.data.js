@@ -93,6 +93,9 @@ pvc.BaseChart
             }
         }else this._initRolesAxes(); // NEW603 _initRolesAxes
 
+        // NEW603
+        if(this.slidingWindow) this.slidingWindow._setColorAxisDefaults();
+
         // Cached data stuff
         delete this._partsDataCache;
         delete this._visibleDataCache;
@@ -109,10 +112,16 @@ pvc.BaseChart
 
     },
 
-    // NEW603 - createSlidingWindowOptions 
-    // do nothing - only allow slidingWindow on cartesian 
-    // possibly allow scoring on others later on
-    _createSlidingWindowOptions: function(options) {    
+    // NEW603 - createScoringOptions 
+    _createScoringOptions: function(options) {    
+        this._getScoringOpts(options);
+    },
+
+    // NEW603 - fetch scoring options
+    _getScoringOpts: function(options) {    
+        if(options.score) this.data.score = options.score;
+        if(options.select) this.data.select = options.select;
+        debugger;
     },
 
     _loadData: function() {
@@ -173,9 +182,9 @@ pvc.BaseChart
 
         var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
         
-        // NEW603 _initRolesAxes , _createSlidingWindowOptions
+        // NEW603 _initRolesAxes , _createScoringOptions
         this._initRolesAxes();
-        this._createSlidingWindowOptions( this.options );
+        this._createScoringOptions( this.options );
 
         // ----------
 

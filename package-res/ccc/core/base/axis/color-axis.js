@@ -60,6 +60,19 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             return this.base(scale);
         },
 
+        //NEW603 - set preserveMap to true
+        preserveColorMap: function(){
+            if( this.option.isSpecified('PreserveMap') ) 
+                this.option.specify( { 'PreserveMap' : true } );
+        },
+
+
+       /* getPreserveState: function(){ 
+            var state = this.option('PreserveMap');
+            debugger;
+        },
+        */
+        
         scheme: function() {
             return def.lazy(this, '_scheme', this._createScheme, this);
         },
@@ -292,6 +305,17 @@ pvc.visual.ColorAxis.options({
         cast:    colorAxis_castColorMap
     },
     
+
+    /**NEW603
+     * 
+     */
+    PreserveMap: {
+        resolve: '_resolveFull',
+        cast:    Boolean,
+        value: false
+    },
+
+
     /*
      * A function that transforms the colors
      * of the color scheme:

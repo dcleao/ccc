@@ -208,6 +208,8 @@ def
         /* Increment create version to allow for cache invalidation  */
         this._createVersion++;
 
+        if(this.isCreated) 
+
         this.isCreated = false;
 
         if(def.debug >= 3) this.log("Creating");

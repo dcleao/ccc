@@ -120,13 +120,8 @@ cdo.Data.add(/** @lends cdo.Data# */{
     },
    
 
-    // NEW603 - slidingWindow default properties 
-    timeSeries: false,
-    slidingWindow:false,
-    slidingWindowInterval:Number.MAX_VALUE,  // unspecified window = infinite window ~= no window
-    
-    score: function(d){ 
-        return 1; 
+    score: function(datum){ 
+        return true; 
     }, 
     
     select: function(allData, remove){ 
@@ -134,8 +129,6 @@ cdo.Data.add(/** @lends cdo.Data# */{
             if( !this.score(datum)) remove.push(datum); 
         },this); 
     }, 
-    
-    slidingDimName: 'category',
 
     /**
      * Adds new datums to the owner data.
@@ -557,12 +550,11 @@ function data_setDatums(addDatums, keyArgs) {
     }
 
     // NEW603 
-    // Datum evaluation according to slidingWindow or a given score/select criteria
-    if(this.slidingWindow){
-        var remove = [];
-        this.select(datums, remove);
-        remove.forEach( function(rmDatum) { this.removeDatum(rmDatum); }, this );
-    }
+    // Datum evaluation according to a score/select criteria
+    // Defaults don't remove anything
+    var remove = [];
+    this.select(datums, remove);
+    remove.forEach( function(rmDatum) { this.removeDatum(rmDatum); }, this );
 
 
     // NEW603 - Mark and sweep Garbage Collection pushed to the end of function
