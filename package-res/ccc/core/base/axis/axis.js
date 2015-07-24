@@ -28,6 +28,8 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
         // Fills #axisIndex and #typeIndex
         chart._addAxis(this);
+         //NEW603
+        if(keyArgs && keyArgs.state) setState( keyArgs.state );
     },
 
     methods: /** @lends pvc.visual.Axis# */{
@@ -80,6 +82,16 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
             me._conciliateVisualRoles();
 
             return this;
+        },
+
+        //NEW603
+        setState: function(options){
+            this.state = $.extend({}, this.state, options); 
+        },
+
+        //NEW603
+        getState: function(){
+            return this.state;
         },
 
         setDataCellScaleInfo: function(dataCell, scaleInfo) {

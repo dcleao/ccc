@@ -69,6 +69,15 @@ pvc.BaseChart
     },
 
     _initAxes: function(hasMultiRole) {
+
+        var axesState;
+        if(this.axes) {
+            axesState = {};
+            this.axesList.forEach(function(axis) {
+                axesState[axis.id] = axis.getState();
+            });
+        }
+
         this.axes = {};
         this.axesList = [];
         this.axesByType = {};
@@ -128,7 +137,8 @@ pvc.BaseChart
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
                     dataCellsOfTypeByIndex.forEach(function(dataCells) {
                         var axisIndex = dataCells[0].axisIndex;
-                        new AxisClass(this, type, axisIndex);
+                        var ka = {state: axesState && axesState[axisIndex]};
+                        new AxisClass(this, type, axisIndex, ka);
                     }, this);
                     
                 } else if(this._axisCreateIfUnbound[type]) {

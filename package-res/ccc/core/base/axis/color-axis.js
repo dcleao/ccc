@@ -60,18 +60,35 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             return this.base(scale);
         },
 
-        //NEW603 - set preserveMap to true
+    //NEW603 - set preserveMap to true
         preserveColorMap: function(){
-            if( this.option.isSpecified('PreserveMap') ) 
-                this.option.specify( { 'PreserveMap' : true } );
+            this.option.specify( { 'PreserveMap' : true } );
+            setState( { _preservedMap : true } );
+        },
+
+        //NEW603
+        _preservedMap: function(){
+            if( this.getState() ) return this.state._preservedMap && this.state.Map;
+            else return null;
+        },
+
+        //NEW603
+        _haveMap: function() {
+            return this.option.isSpecified("Map") || this._preservedMap() ;  
         },
 
 
-       /* getPreserveState: function(){ 
-            var state = this.option('PreserveMap');
-            debugger;
+        //NEW603
+        effectiveMap: function( colorMap ) {
+            var prevMap = this._haveMap(),
+                newMap;
+
+                if(prevMap) newMap =prevMap;
+                else  newMap = colorMap ;
+
+                this.setState( { Map: newMap } );
+                return newMap;
         },
-        */
         
         scheme: function() {
             return def.lazy(this, '_scheme', this._createScheme, this);
