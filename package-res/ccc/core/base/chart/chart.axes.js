@@ -69,8 +69,11 @@ pvc.BaseChart
     },
 
     _initAxes: function(hasMultiRole) {
+        
+        //NEW603 - get previous state
+        var axesState, 
+            oldByType = def.copy( {}, this.axesByType );
 
-        var axesState;
         if(this.axes) {
             axesState = {};
             this.axesList.forEach(function(axis) {
@@ -136,17 +139,25 @@ pvc.BaseChart
 
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
                     dataCellsOfTypeByIndex.forEach(function(dataCells) {
-                        var axisIndex = dataCells[0].axisIndex;
-                        var ka = {state: axesState && axesState[axisIndex]};
+                        //NEW603 - pass previous state
+                        var axisIndex = dataCells[0].axisIndex,
+                            ka = {};
+                        if(oldByType){
+                            var axes = oldByType[type];
+                            if(axes){ 
+                                var axisId = axes[axisIndex].id;
+                                ka = {state: axesState && axesState[axisId]};
+                            }
+                        }
                         new AxisClass(this, type, axisIndex, ka);
-                    }, this);
+                    }, this, oldByType);
                     
                 } else if(this._axisCreateIfUnbound[type]) {
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
                     if(AxisClass) new AxisClass(this, type, 0);
                 }
             }
-        }, this);
+        }, this, oldByType);
 
         // Copy axes that exist in root and not here
         if(this.parent)
@@ -545,8 +556,14 @@ pvc.BaseChart
 
     _onColorAxisScaleSet: function(axis) {
         switch(axis.index) {
-            case 0: this.colors = axis.scheme(); break;
-            case 1: if(this._allowV1SecondAxis) this.secondAxisColor = axis.scheme(); break;
+            case 0: this.colors = axis.scheme(); 
+                    axis._saveMap(axis.scale); //NEW603 
+                    break;
+            case 1: if(this._allowV1SecondAxis){ 
+                        this.secondAxisColor = axis.scheme();
+                        axis._saveMap(axis.scale); //NEW603 
+                    }
+                    break;
         }
     },
 

@@ -14,6 +14,11 @@
  * @extends pvc.visual.Axis
  */
 def('pvc.visual.ColorAxis', pvc_Axis.extend({
+    init:function(chart, type, index, keyArgs) {
+
+        this.base(chart, type, index, keyArgs);
+        if( this.option('PreserveMap') ) preserveColorMap() ; 
+    },
     methods: /** @lends pvc.visual.ColorAxis# */{
 
         /** @override */scaleNullRangeValue: function() { return this.option('Missing') || null; },
@@ -47,10 +52,14 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             // and if so, transform the color scheme.
             // If the user specified the colors,
             // do not apply default color transforms...
+            // (NEW603) If there is a preserved map
+            // do not apply default color transforms ?
+            var state = this.getState(); //NEW603 - obtain state to see if there's a preserved map
             var optSpecified = this.option.isSpecified,
                 applyTransf = (this.scaleType !== 'discrete') ||
                     optSpecified('Transform') ||
-                    (!optSpecified('Colors') && !optSpecified('Map'));
+                    (!optSpecified('Colors') && !optSpecified('Map')  
+                     && (state && !state._preservedMap) );  //NEW603 
 
             if(applyTransf) {
                 var colorTransf = this.option('Transform');
@@ -60,21 +69,22 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             return this.base(scale);
         },
 
-    //NEW603 - set preserveMap to true
+        //NEW603 - set preserveMap to true
         preserveColorMap: function(){
-            this.option.specify( { 'PreserveMap' : true } );
-            setState( { _preservedMap : true } );
+            this.setState( { _preservedMap : true } );
         },
 
         //NEW603
         _preservedMap: function(){
-            if( this.getState() ) return this.state._preservedMap && this.state.Map;
+            var state = this.getState();
+            if( state && state._preservedMap ) return state.Map ;
             else return null;
         },
 
         //NEW603
         _haveMap: function() {
-            return this.option.isSpecified("Map") || this._preservedMap() ;  
+            // if( this.option.isSpecified("Map") ) 
+            return this._preservedMap() ;  
         },
 
 
@@ -83,12 +93,40 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             var prevMap = this._haveMap(),
                 newMap;
 
-                if(prevMap) newMap =prevMap;
-                else  newMap = colorMap ;
+            if(prevMap) newMap = prevMap;
+            else newMap = colorMap ;
 
-                this.setState( { Map: newMap } );
-                return newMap;
+            return newMap;
         },
+
+        //NEW603
+        _getMapFromScheme: function( scheme ) { 
+            
+            var domain = this.domainValues();
+            var state = this.getState();
+            debugger;
+            if(!state     ||
+               !state.Map || 
+                domain.length > Object.keys(state.Map).length )
+                {
+                    var newMap = {};
+                    domain.forEach(
+                        function(d) { 
+                            if( !newMap[d] ) newMap[d] = scheme(d); 
+                        }, 
+                    this); 
+                    return newMap;        
+                }
+            else return null;
+        },
+
+        //NEW603
+        _saveMap: function(scheme){
+            var newMap = this._getMapFromScheme(scheme);
+            if(newMap) this.setState({ Map: newMap });
+        },
+
+
         
         scheme: function() {
             return def.lazy(this, '_scheme', this._createScheme, this);
@@ -125,8 +163,8 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
                     return me._wrapScale(scale);
                 };
             }
-
-            var colorMap = me.option('Map'); // map domain key -> pv.Color
+            
+            var colorMap = this.effectiveMap( me.option('Map') ); // map domain key -> pv.Color
             if(!colorMap) {
                 return function(/*domainAsArrayOrArgs*/) {
                     // Create a fresh baseScale, from the baseColorScheme

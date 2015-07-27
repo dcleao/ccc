@@ -28,8 +28,10 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
         // Fills #axisIndex and #typeIndex
         chart._addAxis(this);
-         //NEW603
-        if(keyArgs && keyArgs.state) setState( keyArgs.state );
+
+        //NEW603
+        this.state = {};
+        if(keyArgs && keyArgs.state) this.setState( keyArgs.state );
     },
 
     methods: /** @lends pvc.visual.Axis# */{

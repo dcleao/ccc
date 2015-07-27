@@ -89,7 +89,7 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
             this.chart.axesByType.color.forEach( function(axis){
 
                 var dim = axis.role.grouping.firstDimension;
-                //this._setOrdering(dim);
+                this._setOrdering(dim);
                 this._preserveAxisColorMap( axis );
 
 
@@ -97,13 +97,14 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
 
         },
 
-       /* _setOrdering: function( dim ) {
+        // ?????
+        _setOrdering: function( dim ) {
             var dimName = dim.name;
             var dimOptions = this.chart.options.dimensions;
             if (dimOptions) var dimComp = dimOptions[dimName];
-            if(!dimComp) dim.comparer = def.ascending; 
+            if(!dimComp) dim.type.setComparer(def.ascending); 
             debugger;
-        },*/
+        },
 
         _preserveAxisColorMap: function( axis ) { axis.preserveColorMap(); }
 

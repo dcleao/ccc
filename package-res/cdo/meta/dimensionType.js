@@ -375,6 +375,15 @@ function(complexType, name, keyArgs) {
             : (me._dc || (me._dc = function(a, b) { return me.compare(a, b); }));
     },
     
+    //NEW603 
+    setComparer: function( comparer ){
+        this.isComparable = true;
+        this._comparer=comparer;
+        var dims = this.complexType.dimensionsList();
+        if(dims) dims.forEach(
+            function(dim){ dim.comparer=comparer; },this);
+    },
+
     /**
      * Gets a context-free atom comparer function, 
      * for a specified order.
