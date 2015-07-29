@@ -460,13 +460,13 @@ def
         switch(this.scale.type) {
             case 'discrete':   this._calcDiscreteTicks(); break;
             case 'timeSeries':
-            case 'numeric':    this._calcContinuousTicks(); break;
+            case 'numeric':  this._calcContinuousTicks(); break;
             default: throw def.error.operationInvalid("Undefined axis scale type");
         }
 
-        this.axis.setTicks(layoutInfo.ticks);
-
-        var clientLength = layoutInfo.clientSize[this.anchorLength()];
+        this.axis.setTicks(this._layoutInfo.ticks);
+        
+        var clientLength = this._layoutInfo.clientSize[this.anchorLength()];
         this.axis.setScaleRange(clientLength);
 
         if(layoutInfo.maxTextWidth == null) this._calcTicksTextLength(layoutInfo);
@@ -478,6 +478,12 @@ def
 
         layoutInfo.ticks = axis.domainItems();
 
+        /*
+        NEW603 
+        var state=axis.getState();
+        if(state && state.step ) layoutInfo.ticks.step = axis.getState().step;
+        if( state && !state.step ) this.axis.setState({step: this._layoutInfo.ticks.step});
+*/
         // If the discrete data is of a single Date value type,
         // we want to format the category values with an appropriate precision,
         // instead of showing the default label.
@@ -563,10 +569,22 @@ def
             ticks        = layoutInfo.ticks,
             roundOutside = this.axis.option('DomainRoundMode') === 'tick';
 
+        //NEW603
+      var ticksNumber;
+        var state=this.axis.getState();
+        if( state && state.Ticks) ticksNumber=state.Ticks; //force number of ticks to multiple?
+        tickCountMax = Math.min(ticksNumber,tickCountMax) || tickCountMax;
+
         if(!ticks || (ticks.length > (roundOutside ? 3 : 1) && ticks.length > tickCountMax)) {
             this._calcContinuousTicksValue(layoutInfo, tickCountMax);
             this._calcContinuousTicksText(layoutInfo);
             ticks = layoutInfo.ticks;
+        }
+
+        //NEW603
+      if(!ticksNumber){
+            ticksNumber = Math.min(ticksNumber,layoutInfo.ticks.length) || layoutInfo.ticks.length;
+            if(this.axis.chart.slidingWindow) this.axis.setState( { Ticks: ticksNumber} );
         }
 
         // Hide 2/3 ticks only if they actually overlap (spacing = 0).

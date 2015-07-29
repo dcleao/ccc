@@ -557,11 +557,11 @@ pvc.BaseChart
     _onColorAxisScaleSet: function(axis) {
         switch(axis.index) {
             case 0: this.colors = axis.scheme(); 
-                    axis._saveMap(axis.scale); //NEW603 
+                    axis.preserveColorMap(); //NEW603 
                     break;
             case 1: if(this._allowV1SecondAxis){ 
                         this.secondAxisColor = axis.scheme();
-                        axis._saveMap(axis.scale); //NEW603 
+                        axis.preserveColorMap(); //NEW603 
                     }
                     break;
         }

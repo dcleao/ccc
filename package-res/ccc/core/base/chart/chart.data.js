@@ -121,7 +121,6 @@ pvc.BaseChart
     _getScoringOpts: function(options) {    
         if(options.score) this.data.score = options.score;
         if(options.select) this.data.select = options.select;
-        debugger;
     },
 
     _loadData: function() {

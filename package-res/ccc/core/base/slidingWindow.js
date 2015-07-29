@@ -97,16 +97,15 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
 
         },
 
-        // ?????
+        // NEW603 ?????
         _setOrdering: function( dim ) {
             var dimName = dim.name;
             var dimOptions = this.chart.options.dimensions;
             if (dimOptions) var dimComp = dimOptions[dimName];
             if(!dimComp) dim.type.setComparer(def.ascending); 
-            debugger;
         },
 
-        _preserveAxisColorMap: function( axis ) { axis.preserveColorMap(); }
+        _preserveAxisColorMap: function( axis ) { axis.setPreserveColorMap(); }
 
     },
 

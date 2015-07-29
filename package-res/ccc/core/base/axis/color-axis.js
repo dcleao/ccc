@@ -17,7 +17,7 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
     init:function(chart, type, index, keyArgs) {
 
         this.base(chart, type, index, keyArgs);
-        if( this.option('PreserveMap') ) preserveColorMap() ; 
+        if( this.option('PreserveMap') ) setPreserveColorMap() ; 
     },
     methods: /** @lends pvc.visual.ColorAxis# */{
 
@@ -70,7 +70,7 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
         },
 
         //NEW603 - set preserveMap to true
-        preserveColorMap: function(){
+        setPreserveColorMap: function(){
             this.setState( { _preservedMap : true } );
         },
 
@@ -104,7 +104,7 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             
             var domain = this.domainValues();
             var state = this.getState();
-            debugger;
+
             if(!state     ||
                !state.Map || 
                 domain.length > Object.keys(state.Map).length )
@@ -124,6 +124,11 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
         _saveMap: function(scheme){
             var newMap = this._getMapFromScheme(scheme);
             if(newMap) this.setState({ Map: newMap });
+        },
+
+        preserveColorMap: function(){
+            var axisState=this.getState();
+            if(axisState && axisState._preservedMap && this.scale) this._saveMap(this.scale);
         },
 
 

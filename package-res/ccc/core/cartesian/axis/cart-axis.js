@@ -148,6 +148,7 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
 
         setScaleRange: function(size) {
             var rangeInfo = this.getScaleRangeInfo();
+
             if(rangeInfo) {
                 if(rangeInfo.value != null)
                     size = rangeInfo.value;
@@ -238,6 +239,7 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
         },
 
         calcContinuousTicks: function(tickCountMax) {
+
             return this.scale.ticks(this.desiredTickCount(), {
                 roundInside:  this.option('DomainRoundMode') !== 'tick',
                 tickCountMax: tickCountMax,
