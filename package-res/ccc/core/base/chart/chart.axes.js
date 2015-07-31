@@ -70,7 +70,9 @@ pvc.BaseChart
 
     _initAxes: function(hasMultiRole) {
         
-        //NEW603 - get previous state
+        // NEW603 C
+        // Get axis state 
+        // The state is to be kept between render calls
         var axesState, 
             oldByType = def.copy( {}, this.axesByType );
 
@@ -139,7 +141,8 @@ pvc.BaseChart
 
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
                     dataCellsOfTypeByIndex.forEach(function(dataCells) {
-                        //NEW603 - pass previous state
+                        // NEW603 C
+                        // Pass the stored state in axis construction
                         var axisIndex = dataCells[0].axisIndex,
                             ka = {};
                         if(oldByType){
@@ -182,8 +185,8 @@ pvc.BaseChart
             },
             this);
 
-        // NEW603 _initAxes separated from _initAxesEnd (see _createPhase1)
-        //this._initAxesEnd();
+        // NEW603 C removed _initAxesEnd (see _createPhase1)
+        // this._initAxesEnd();
     },
 
     /** @virtual */
@@ -455,6 +458,33 @@ pvc.BaseChart
             }
         }
 
+        // NEW603 C
+        // Length should always be an absolute value
+        var width;
+        if(axis.option.isDefined('FixedLength')) {
+            width = axis.option('FixedLength');
+            if(width != null) width = getDim.call(this).read(width);
+            if(width != null) width = width.value;
+            if(width < 0) width = -width; 
+        }
+
+        // NEW603 C
+        // If FixedMin + FixedLength specified, max is directly set
+        // using both and FixedMax is ignored
+        // if width is not null then FixedLength was defined
+        if(min   != null && axis.option.isDefined('FixedMin') && 
+           width != null && max == null) {
+            max = min - (0-width);
+            maxLocked = (max != null);
+            if(maxLocked) {
+                // this shouldn't be necessary since width is always 
+                // greater than 0 and if scaleUsesAbs returns true,
+                // so is min
+                if(max < 0 && axis.scaleUsesAbs()) max = -max;
+            }
+        } 
+
+        // Get max from option
         if(max == null && axis.option.isDefined('FixedMax')) {
             max = axis.option('FixedMax');
             // may return null when an invalid non-null value is supplied.
@@ -467,6 +497,21 @@ pvc.BaseChart
             }
         }
 
+        // NEW603 C
+        // If min is null, but FixedMax and FixedLength were defined 
+        // the minimum can be set using both
+        if(min == null && width != null && 
+           max != null && axis.option.isDefined('FixedMax') ) {
+            min = max - width;
+            minLocked = (min != null);
+            if(minLocked) {
+                // this can and will change the length if 
+                // width > max
+                if(min < 0 && axis.scaleUsesAbs()) max = -max;
+            }
+        } 
+
+            
         if(min == null || max == null) {
             var baseExtent = this._getContinuousVisibleExtent(axis); // null when no data
             if(!baseExtent) return null;
@@ -557,11 +602,11 @@ pvc.BaseChart
     _onColorAxisScaleSet: function(axis) {
         switch(axis.index) {
             case 0: this.colors = axis.scheme(); 
-                    axis.preserveColorMap(); //NEW603 
+                    axis.preserveColorMap(); //NEW603 C
                     break;
             case 1: if(this._allowV1SecondAxis){ 
                         this.secondAxisColor = axis.scheme();
-                        axis.preserveColorMap(); //NEW603 
+                        axis.preserveColorMap(); //NEW603 C
                     }
                     break;
         }

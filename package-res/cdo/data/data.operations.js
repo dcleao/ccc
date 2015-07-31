@@ -43,7 +43,8 @@ cdo.Data.add(/** @lends cdo.Data# */{
     },
 
 
-    // NEW603 Auxiliar function to remove datums (to avoid repeated code)
+    // NEW603 C
+    // Auxiliar function to remove datums (to avoid repeated code)
     // removes datums instance from datums, datumById, datumByKey; 
     // remove from selected and visible if necessary
     removeDatum: function(datum){
@@ -73,7 +74,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
         if(datums) {
             this._sumAbsCache = null;
 
-            // NEW603: removeDatum 
+            // NEW603 C: removeDatum 
             var i = 0,
                 L = datums.length,
                 removed;
@@ -81,7 +82,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
                 var datum = datums[i];
                 if(datum.isVirtual) {
 
-                   // NEW603: removeDatum 
+                   // NEW603 C: removeDatum 
                     this.removeDatum(datum);
                     L--;
                     removed = true;
@@ -549,7 +550,7 @@ function data_setDatums(addDatums, keyArgs) {
         throw def.error.argumentInvalid('addDatums', "Argument is of invalid type.");
     }
 
-    // NEW603 
+    // NEW603 c
     // Datum evaluation according to a score/select criteria
     // Defaults don't remove anything
     var remove = [];
@@ -557,7 +558,8 @@ function data_setDatums(addDatums, keyArgs) {
     remove.forEach( function(rmDatum) { this.removeDatum(rmDatum); }, this );
 
 
-    // NEW603 - Mark and sweep Garbage Collection pushed to the end of function
+    // NEW603 C
+    // Mark and sweep Garbage Collection pushed to the end of function
 
     // TODO: change this to a visiting id method,
     //  that by keeping the atoms on the previous visit id, 
@@ -651,7 +653,8 @@ function data_setDatums(addDatums, keyArgs) {
         
         if(/*isAdditive && */newDatums) newDatums.push(newDatum);
 
-        //NEW603 - removed the marking part of Garbage collector
+        // NEW603 C
+        // removed the marking part of Garbage collector
         // We can mark as selected/visible, because in the removal it's unmarked 
             if(!newDatum.isNull) {
                 if(selDatums && newDatum.isSelected) selDatums.set(id, newDatum);

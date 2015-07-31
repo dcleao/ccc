@@ -88,13 +88,16 @@ pvc.BaseChart
                 // Remove virtual datums (they are regenerated each time)
                 data.clearVirtuals();
                 
-                // NEW603 _initRolesAxes
+                // NEW603 C added _initRolesAxes
                 this._initRolesAxes();
             }
-        }else this._initRolesAxes(); // NEW603 _initRolesAxes
+        }else this._initRolesAxes(); // NEW603 C added _initRolesAxes
 
-        // NEW603
-        if(this.slidingWindow) this.slidingWindow._setColorAxisDefaults();
+        // NEW603 C - should be after axes initialization
+        if(this.slidingWindow) {
+            this.slidingWindow._setColorAxisDefaults();
+            this.slidingWindow.setRatio();
+        } 
 
         // Cached data stuff
         delete this._partsDataCache;
@@ -104,7 +107,8 @@ pvc.BaseChart
     },
  
 
-    // NEW603 Auxiliar function to initializa axes prior to the datums distribution
+    // NEW603 C
+    // Auxiliar function to initialize axes prior to the datums distribution
     _initRolesAxes: function(){
 
         hasMultiRole = this.visualRoles.multiChart.isBound();
@@ -112,16 +116,17 @@ pvc.BaseChart
 
     },
 
-    // NEW603 - createScoringOptions 
+    // NEW603 C
+    // @virtual
     _createScoringOptions: function(options) {    
-        this._getScoringOpts(options);
+        //NOOP
     },
 
-    // NEW603 - fetch scoring options
-    _getScoringOpts: function(options) {    
+    // NEW603 C - REMOVE
+    /*_getScoringOpts: function(options) {    
         if(options.score) this.data.score = options.score;
         if(options.select) this.data.select = options.select;
-    },
+    },*/
 
     _loadData: function() {
         /*jshint expr:true*/
@@ -181,7 +186,7 @@ pvc.BaseChart
 
         var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
         
-        // NEW603 _initRolesAxes , _createScoringOptions
+        // NEW603 C - added _initRolesAxes and _createScoringOptions
         this._initRolesAxes();
         this._createScoringOptions( this.options );
 
@@ -204,7 +209,7 @@ pvc.BaseChart
 
         var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
 
-        // NEW603 _initRolesAxes 
+        // NEW603 C added _initRolesAxes 
         this._initRolesAxes();
         this._loadDataCore(data, translation);
     },

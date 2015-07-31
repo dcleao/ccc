@@ -169,21 +169,21 @@ def
     },
     
 
-      // NEW603 - createScoringOptions 
-    /** @override */
+    // NEW603 C
+    // Applies the slidingWindow select/score functions to the data
+   /** @override */
     _createScoringOptions: function(options) {
         sw = this._createSlidingWindow();
         if(sw){
             //override default scoring functions
             this.data.score = function(datum) { sw.score.call( sw , datum ); }
             this.data.select = function(allData, remove) { sw.select.call( sw , allData, remove ); }
-        } else {
-            //if sliding window doesn't exist, get ordinary scoring functions if possible
-            this._getScoringOpts(options);
+            return;
         }
     },
 
-    // NEW603 - createSlidingWindow
+    // NEW603 C 
+    // creates a slidingWindow and initializes its options
     _createSlidingWindow: function() {
         /*global cdo_assertIsOwner:true */
         var sw = this.options.slidingWindow;
@@ -508,23 +508,3 @@ def
 
 
 });
-
-/*
-// NEW603 
-    function _defaultDatumScore( datum ) { return datum.atoms[this.slidingDimName].rawValue; }
-
-// NEW603 
-    function _defaultSelect( allData , remove) {
-        
-        var now = this.dimensions(this.slidingDimName).max().rawValue;
-        
-        allData.forEach(function(datum){
-                if (this.timeSeries) result = Math.abs( new Date(now) - new Date(this.score(datum))); 
-                else result=now-this.score(datum);
-                if( !this.score(datum) || 
-                    result && result > this.slidingWindowInterval ) 
-                        remove.push(datum);
-        },this);
-
-    }
-    */

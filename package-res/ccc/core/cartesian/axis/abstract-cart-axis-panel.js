@@ -452,10 +452,12 @@ def
          */
         layoutInfo.textHeight = pv.Text.fontHeight(this.font) * 4/5;
         layoutInfo.maxTextWidth = null;
-
+        
         // Reset scale to original un-rounded domain
         this.axis.setTicks(null);
 
+        var clientLength = this._layoutInfo.clientSize[this.anchorLength()];
+       
         // update maxTextWidth, ticks and ticksText
         switch(this.scale.type) {
             case 'discrete':   this._calcDiscreteTicks(); break;
@@ -464,11 +466,17 @@ def
             default: throw def.error.operationInvalid("Undefined axis scale type");
         }
 
-        this.axis.setTicks(this._layoutInfo.ticks);
-        
-        var clientLength = this._layoutInfo.clientSize[this.anchorLength()];
+        this.axis.setTicks(this._layoutInfo.ticks); 
         this.axis.setScaleRange(clientLength);
 
+        // NEW603 C
+        // update ticks in layoutInfo
+        if(this.axis.ticks){
+            delete layoutInfo.ticks;
+            layoutInfo.ticks = this.axis.ticks;
+            debugger;
+        } 
+        
         if(layoutInfo.maxTextWidth == null) this._calcTicksTextLength(layoutInfo);
     },
 
@@ -478,12 +486,7 @@ def
 
         layoutInfo.ticks = axis.domainItems();
 
-        /*
-        NEW603 
-        var state=axis.getState();
-        if(state && state.step ) layoutInfo.ticks.step = axis.getState().step;
-        if( state && !state.step ) this.axis.setState({step: this._layoutInfo.ticks.step});
-*/
+    
         // If the discrete data is of a single Date value type,
         // we want to format the category values with an appropriate precision,
         // instead of showing the default label.
@@ -569,23 +572,13 @@ def
             ticks        = layoutInfo.ticks,
             roundOutside = this.axis.option('DomainRoundMode') === 'tick';
 
-        //NEW603
-      var ticksNumber;
-        var state=this.axis.getState();
-        if( state && state.Ticks) ticksNumber=state.Ticks; //force number of ticks to multiple?
-        tickCountMax = Math.min(ticksNumber,tickCountMax) || tickCountMax;
-
+  
         if(!ticks || (ticks.length > (roundOutside ? 3 : 1) && ticks.length > tickCountMax)) {
             this._calcContinuousTicksValue(layoutInfo, tickCountMax);
             this._calcContinuousTicksText(layoutInfo);
             ticks = layoutInfo.ticks;
         }
 
-        //NEW603
-      if(!ticksNumber){
-            ticksNumber = Math.min(ticksNumber,layoutInfo.ticks.length) || layoutInfo.ticks.length;
-            if(this.axis.chart.slidingWindow) this.axis.setState( { Ticks: ticksNumber} );
-        }
 
         // Hide 2/3 ticks only if they actually overlap (spacing = 0).
         // Keep at least two ticks until they overlap.
@@ -614,7 +607,7 @@ def
 
     _calcContinuousTicksValue: function(ticksInfo, tickCountMax) {
         ticksInfo.ticks = this.axis.calcContinuousTicks(tickCountMax);
-
+        
         if(def.debug > 4) {
             this.log("DOMAIN: " + def.describe(this.scale.domain()));
             this.log("TICKS:  " + def.describe(ticksInfo.ticks));

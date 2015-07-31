@@ -252,9 +252,10 @@ def
 
         hasMultiRole = this.visualRoles.multiChart.isBound();
 
-        // NEW603 _initAxes separated from _initAxesEnd (see _initAxes)
-        //hasMultiRole = this.visualRoles.multiChart.isBound();
+        // NEW603 C - removed following:
+        // hasMultiRole = this.visualRoles.multiChart.isBound();
         // if(!isMultiChartOverflowRetry) this._initAxes(hasMultiRole);
+
         if(!isMultiChartOverflowRetry) this._initAxesEnd();
 
         if(isRoot) {
@@ -665,6 +666,7 @@ def
             if(!hasError) this._resumeSelectionUpdate();
             if(def.debug > 1) this.log.groupEnd();
         }
+        debugger;
         return this;
     },
 
@@ -834,6 +836,14 @@ def
 //        legendMarkerSize: undefined,
 
 //        colors: null,
+
+//NEW603 C SlidingWindow options
+        slidingWindow:false,
+//      slidingWindowInterval: undefined,       
+//      slidingWindowDimName: undefined,  
+//      slidingWindowScore: undefined, 
+//      slidingWindowSelect: undefined,    
+
 
         v1StyleTooltipFormat: function(s, c, v, datum) {
             return s + ", " + c + ":  " + this.chart.options.valueFormat(v) +

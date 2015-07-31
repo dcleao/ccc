@@ -5,8 +5,9 @@
 /*global axis_optionsDef:true*/
 
 def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
-   
-//NEW603 - SLIDING WINDOW OPTIONS 
+  
+   //NEW603 C - SLIDING WINDOW OPTIONS 
+
     init: function(chart) {
         this.base( chart, 'slidingWindow', 0, {byNaked: false} );
     },
@@ -40,7 +41,6 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
                 this.dimName = keyArgs.dimName ;
                 this.score = keyArgs.score ;
                 this.select = keyArgs.select ;
-                //debugger;
             }
 
         },
@@ -65,47 +65,63 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
             }
         },
 
-        _defaultSlidingWindowScore: function( datum ) { 
-            return datum.atoms[this.dimName].rawValue; 
+        _defaultSlidingWindowScore: function(datum) { 
+            return datum.atoms[this.dimName].value; 
         },
 
         
-        _defaultSlidingWindowSelect: function( allData , remove ) {
+        _defaultSlidingWindowSelect: function(allData, remove) {
                        
-            var now = this.chart.data.dimensions(this.dimName).max().rawValue;
-            // debugger;
-            allData.forEach(function(datum){
-                if (this.chart.options.timeSeries) result = Math.abs( new Date(now) - new Date(this.score(datum))); 
-                else result=now-this.score(datum);
-                if( !this.score(datum) || 
-                    result && result > this.interval ) 
+            var data  = this.chart.data;
+                dName = this.dimName;
+                dim   = data.owner.dimensions(dName),
+                now   = data.dimensions(dName).max().value;
+
+                if(now!=null) now=dim.read(now);
+                if(now!=null) now=now.value;
+
+            //debugger;
+            allData.forEach(function(datum) {
+                var datumScore = this.score(datum);
+                if(datumScore!=null) datumScore=dim.read(datumScore);
+                if(datumScore!=null) datumScore=datumScore.value;
+                    result = now - datumScore; 
+                if(!datumScore || result && result > this.interval) 
                     remove.push(datum);
             },this);
 
         },
 
-        _setColorAxisDefaults: function(){
+        _setColorAxisDefaults: function() {
 
-            this.chart.axesByType.color.forEach( function(axis){
+            this.chart.axesByType.color.forEach(function(axis) {
 
                 var dim = axis.role.grouping.firstDimension;
-                this._setOrdering(dim);
+                var dimName = dim.name;
+                var dimOptions = this.chart.options.dimensions;
+                if (dimOptions) var dimComp = dimOptions[dimName];
+                if(!dimComp) dim.type.setComparer(def.ascending); 
                 this._preserveAxisColorMap( axis );
 
 
-            }, this );
+            }, this);
 
         },
 
-        // NEW603 ?????
-        _setOrdering: function( dim ) {
-            var dimName = dim.name;
-            var dimOptions = this.chart.options.dimensions;
-            if (dimOptions) var dimComp = dimOptions[dimName];
-            if(!dimComp) dim.type.setComparer(def.ascending); 
-        },
+        _preserveAxisColorMap: function( axis ) { axis.setPreserveColorMap(); },
 
-        _preserveAxisColorMap: function( axis ) { axis.setPreserveColorMap(); }
+        setRatio: function(){
+            // get axes with sliding window dimensions
+            var axes = this.chart.axesList.filter(function(axis) {
+                var dim = axis.role.grouping.firstDimension;
+                return dim == this.dimName;
+            },this);
+            
+            axes.forEach(function(axis) {
+                axis.setInitialLength(this.interval);
+            },this);
+
+        }
 
     },
 

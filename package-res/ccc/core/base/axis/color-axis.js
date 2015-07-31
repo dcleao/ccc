@@ -17,7 +17,7 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
     init:function(chart, type, index, keyArgs) {
 
         this.base(chart, type, index, keyArgs);
-        if( this.option('PreserveMap') ) setPreserveColorMap() ; 
+    
     },
     methods: /** @lends pvc.visual.ColorAxis# */{
 
@@ -52,14 +52,15 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             // and if so, transform the color scheme.
             // If the user specified the colors,
             // do not apply default color transforms...
-            // (NEW603) If there is a preserved map
-            // do not apply default color transforms ?
-            var state = this.getState(); //NEW603 - obtain state to see if there's a preserved map
+
+            // (NEW603 C) If there is a preserved map
+            // do not apply default color transforms 
             var optSpecified = this.option.isSpecified,
                 applyTransf = (this.scaleType !== 'discrete') ||
-                    optSpecified('Transform') ||
-                    (!optSpecified('Colors') && !optSpecified('Map')  
-                     && (state && !state._preservedMap) );  //NEW603 
+                                optSpecified('Transform')     ||
+                              (!optSpecified('Colors')   && 
+                               !optSpecified('Map')      &&
+                               !this.Map);
 
             if(applyTransf) {
                 var colorTransf = this.option('Transform');
@@ -69,27 +70,26 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             return this.base(scale);
         },
 
-        //NEW603 - set preserveMap to true
-        setPreserveColorMap: function(){
-            this.setState( { _preservedMap : true } );
+        // NEW603 C - set PreserveMap default to true
+        // must be called before the first read of PreserveMap? 
+        setPreserveColorMap: function() {
+            this.option.defaults({'PreserveMap': true});
         },
 
-        //NEW603
-        _preservedMap: function(){
-            var state = this.getState();
-            if( state && state._preservedMap ) return state.Map ;
-            else return null;
-        },
 
-        //NEW603
+        // NEW603 C 
+        // returns the stored Map if it is supposed to be 
+        // preserved and if it exists
         _haveMap: function() {
-            // if( this.option.isSpecified("Map") ) 
-            return this._preservedMap() ;  
+              if(this.option('PreserveMap') && this.Map) 
+                return this.Map;  
         },
 
-
-        //NEW603
-        effectiveMap: function( colorMap ) {
+ 
+        //NEW603 C
+        // given a colorMap it substitutes it if it exists
+        // a previously stored one
+        effectiveMap: function(colorMap) {
             var prevMap = this._haveMap(),
                 newMap;
 
@@ -99,20 +99,21 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             return newMap;
         },
 
-        //NEW603
-        _getMapFromScheme: function( scheme ) { 
+        //NEW603 C
+        // given a scheme, computes the corresponding colorMap
+        // scheme is a function that for a given element of the 
+        // domain returns the corresponding color object (pv.Color)
+        _getMapFromScheme: function(scheme) { 
             
             var domain = this.domainValues();
-            var state = this.getState();
 
-            if(!state     ||
-               !state.Map || 
-                domain.length > Object.keys(state.Map).length )
+            if(!this.Map                                       || 
+                domain.length > Object.keys(this.Map).length      )
                 {
                     var newMap = {};
                     domain.forEach(
                         function(d) { 
-                            if( !newMap[d] ) newMap[d] = scheme(d); 
+                            if(!newMap[d]) newMap[d] = scheme(d); 
                         }, 
                     this); 
                     return newMap;        
@@ -120,15 +121,19 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             else return null;
         },
 
-        //NEW603
-        _saveMap: function(scheme){
-            var newMap = this._getMapFromScheme(scheme);
+        // NEW603 C
+        // given a scheme, obtains a map and preserves it in the state of the axis
+        _saveMap: function(scheme) {
+            var newMap
+            if(scheme) newMap = this._getMapFromScheme(scheme);
             if(newMap) this.setState({ Map: newMap });
         },
 
-        preserveColorMap: function(){
-            var axisState=this.getState();
-            if(axisState && axisState._preservedMap && this.scale) this._saveMap(this.scale);
+        // NEW603 C
+        // if possible, it saves the map originated by the axis scale
+        // functions
+        preserveColorMap: function() {
+            if(this.option('PreserveMap') && this.scale) this._saveMap(this.scale);
         },
 
 
@@ -366,8 +371,10 @@ pvc.visual.ColorAxis.options({
     },
     
 
-    /**NEW603
-     * 
+    /**NEW603 C
+     * A Boolean that indicates if map 
+     * preservation should be applied
+     * between render calls
      */
     PreserveMap: {
         resolve: '_resolveFull',

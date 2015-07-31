@@ -92,6 +92,10 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
             this.extensionPrefixes = getExtensionPrefixes.call(this);
         },
 
+        setInitialLength: function(fixedLength){
+            this.option.defaults({'FixedLength':fixedLength});
+        },
+
         setScale: function(scale) {
             var oldScale = this.scale;
 
@@ -122,6 +126,7 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
             return this;
         },
 
+
         setTicks: function(ticks) {
             var scale = this.scale;
 
@@ -130,7 +135,12 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
 
             this.ticks = ticks;
 
-            if(scale.type !== 'discrete' && this.option('DomainRoundMode') === 'tick') {
+            if(     scale.type !== 'discrete' 
+                &&  this.option('DomainRoundMode') === 'tick'
+                &&  !this.option('Ratio')   
+                &&  !this.option('PreserveRatio') 
+            ) //NEW603 C - if a fixed ratio is imposed, don't update the domain in the same way
+            {
 
                 delete this._roundingPaddings;
 
@@ -139,11 +149,13 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
                 var tickCount = ticks ? ticks.length : 0,
                     di = this.domain[0],
                     df = this.domain[1];
-                if(tickCount >= 2)
+                if(tickCount >= 2){
                     this.scale.domain(Math.min(di, ticks[0]), Math.max(df, ticks[tickCount - 1]));
-                else
-                    this.scale.domain(di, df);
+                    
+                } else 
+                    this.scale.domain(di, df); 
             }
+
         },
 
         setScaleRange: function(size) {
@@ -171,10 +183,107 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
                         scale.splitBandedCenter(scale.min, scale.max, rangeInfo.ratio);
                 }
             } else {
+                //NEW603 C
+                this.recalculateDomain(scale);
                 scale.range(scale.min, scale.max);
             }
 
             return scale;
+        },
+
+        //NEW603 C
+        resetDomain: function(scale) {
+
+            var oldScale = this.scale;
+            if(oldScale) delete this.domain;
+
+            this.domain = scale.domain();
+            this.domain.minLocked = !!scale.minLocked;
+            this.domain.maxLocked = !!scale.maxLocked;
+
+            return this;
+        },
+
+        //NEW603 C
+        recalculateDomain: function(scale) {
+
+            var currDom    = scale.domain(),
+                prevMinDom = currDom[0],  
+                prevMaxDom = currDom[1],  
+                newMinDom  = prevMinDom,  
+                newMaxDom  = prevMaxDom;
+
+            // calculate new limits for the domain
+            if(this.option.isSpecified('Ratio')         ||
+               this.option.isSpecified('PreserveRatio')   ) {    
+
+                // Gets / Sets the ratio
+                var ratio, own, dim,
+                    domainSize = this.option('FixedLength') || 
+                                 prevMaxDom-prevMinDom,
+                    rangeSize  = scale.max-scale.min,
+                    initRatio  = domainSize/rangeSize,
+
+                ratio = this.option('Ratio') || // if specified
+                        this.ratio           || // if preserved
+                        initRatio;              // default (can be imposed by length)
+                
+                if(this.option('PreserveRatio')) 
+                    this.setState({ratio:ratio});
+
+                debugger;
+                // align to the right/top -> keep the maximum
+                // align to the left/bottom -> keep the minimum
+                // align to the center -> if necessary, some data 
+                // from each side will not appear           
+
+                // to calculate the center the domainSize may be wrong 
+                // if FixedLength and Ratio are both specified     
+                var align      = this.option('RatioAlign'),
+                    center     = prevMaxDom - (prevMaxDom-prevMinDom) / 2,
+                    dim        = this.chart.data.owner.dimensions(
+                                        this.role.grouping.lastDimensionName());
+
+                    domainSize = ratio * rangeSize;
+
+                if(align == 'right' || align == 'right') 
+                    newMinDom = prevMaxDom - domainSize; 
+                else if(align  == 'left' || align == 'bottom') 
+                    newMaxDom = prevMinDom - (0 - domainSize);
+                else if(align  == 'center') {
+                    newMaxDom = center - (0 - (domainSize / 2));
+                    newMinDom = center - (domainSize / 2);
+                }
+            
+                newMinDom = dim.read(newMinDom);
+                newMaxDom = dim.read(newMaxDom);
+                if(newMinDom!=null) newMinDom=newMinDom.value;
+                if(newMaxDom!=null) newMaxDom=newMaxDom.value;
+                
+                if(newMinDom!=null && newMaxDom!=null)
+                    scale.domain(newMinDom,newMaxDom);
+
+                // Number / timeseries
+                this._domainValues = this.domainValues().filter(function(value) { 
+                        return  ! (value < newMinDom || 
+                                   value > newMaxDom); 
+                    });
+                this._domainItems = this.domainItems().filter(function(item) { 
+                        return ! (item.value < newMinDom ||
+                                  item.value > newMaxDom); 
+                    });
+
+                if(this.ticks){
+                    this.ticks = this.ticks.filter(function(tick) {
+                                return !(tick < newMinDom ||
+                                         tick > newMaxDom);
+                            });
+
+                    this.setTicks(this.ticks); 
+                }
+
+                this.resetDomain(scale);
+            }
         },
 
         getScaleRangeInfo: function() {
@@ -193,7 +302,7 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
             if(!layoutInfo) return layoutInfo;
 
             // Multi-charts do not support Fixed/Min/Max restrictions.
-            if(this.chart.parent) return {mode: 'rel', min: 0, max: Infinity, ratio: layoutInfo.ratio};
+            if(this.chart.parent) return {mode: 'rel', min: 0, max: Infinity };
 
             return layoutInfo;
 
@@ -239,9 +348,11 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
         },
 
         calcContinuousTicks: function(tickCountMax) {
-
+            //dim = this.chart.data.owner.dimensions(this.role.grouping.lastDimensionName());
             return this.scale.ticks(this.desiredTickCount(), {
-                roundInside:  this.option('DomainRoundMode') !== 'tick',
+                roundInside:   /*(!this.chart.options.slidingWindow 
+                                || !(dim.name==this.chart.slidingWindow.dimName) )
+                                &&*/ this.option('DomainRoundMode') !== 'tick',
                 tickCountMax: tickCountMax,
                 precision:    this.option('TickUnit'),
                 precisionMin: this.tickUnitMinEf(),
@@ -250,6 +361,7 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
         },
 
         desiredTickCount: function() {
+            
             var desiredTickCount = this.option('DesiredTickCount'),
                 isDate = this.scaleType === 'timeSeries';
 
@@ -512,6 +624,24 @@ pvc_CartesianAxis.options({
 
     FixedMin: cartAxis_fixedMinMaxSpec,
     FixedMax: cartAxis_fixedMinMaxSpec,
+    FixedLength: cartAxis_fixedMinMaxSpec,
+
+    Ratio: {
+        resolve: '_resolveFull',
+        cast: Number
+    },
+
+    RatioAlign: {
+        resolve: '_resolveFull',
+        cast: String,
+        value: 'left'
+    },
+
+    PreserveRatio: {
+        resolve: '_resolveFull',
+        cast: Boolean,
+        value: false
+    },
 
     /* 1 <- originIsZero (v1)
      * 2 <- secondAxisOriginIsZero (v1 && bar)
@@ -784,4 +914,5 @@ pvc_CartesianAxis.options({
         cast:   pvc.parseTooltipAutoContent,
         value:  'value'
     }
+
 });

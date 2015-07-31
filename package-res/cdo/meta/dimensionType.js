@@ -375,7 +375,8 @@ function(complexType, name, keyArgs) {
             : (me._dc || (me._dc = function(a, b) { return me.compare(a, b); }));
     },
     
-    //NEW603 
+    // NEW603 C
+    // override comparer of all dimensions of the type
     setComparer: function( comparer ){
         this.isComparable = true;
         this._comparer=comparer;
