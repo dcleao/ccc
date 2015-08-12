@@ -171,6 +171,26 @@ def
 
     _allowV1SecondAxis: false,
 
+    //NEW603 C
+    /**
+     * Indicates if the previous layout is to be preserved
+     * <p>
+     * This field is set to <tt>false</tt>
+     * until the second call to the {@link #_create} method,
+     * where it is set to <tt>true</tt> if a previous render
+     * has ocurred, by testing if the plot panels already 
+     * existed
+     * </p>
+     * <p>
+     * This will consequently indicate that the chart is a 
+     * re-render
+     * </p>
+     *
+     * @type boolean
+     */
+    _preserveLayout: false,
+
+
     //------------------
     compatVersion: function(options) { return (options || this.options).compatVersion; },
 
@@ -219,6 +239,33 @@ def
             isRootInit = isRoot && !isMultiChartOverflowRetry && !this.data,
             hasMultiRole;
 
+        //NEW603 C
+        /* Save plots layout information if the preserveLayout option is specified as true 
+           This has to be done before cleanup */
+        if(this.options.preserveLayout && this.plotPanelList && this.plotPanelList.length){
+
+            this.preservedPlotsLayoutInfo = {};
+            this.preservedPlotsLayoutInfoList = [];
+
+            this.plotPanelList.forEach(function(plotPanel) {
+                var id = plotPanel.plot.id;
+
+                this.preservedPlotsLayoutInfo[id] = {
+                    margins     : plotPanel.getLayoutMargins(),
+                    paddings    : plotPanel.getLayoutPaddings(),
+                    reqPaddings : plotPanel.getLayoutRequestPaddings(),
+                    size        : plotPanel.getLayoutSize()
+                };
+
+                /*The order in this list is assumed to be the same in each re-render
+                  data may change, but there will never be new or different plot panels*/
+                this.preservedPlotsLayoutInfoList.push(this.preservedPlotsLayoutInfo[id]);
+
+            }, this);
+
+            this._preserveLayout = true;
+        }
+        
         // CLEAN UP
         if(isRoot) this.children = [];
         this.plotPanels = {};
@@ -666,7 +713,7 @@ def
             if(!hasError) this._resumeSelectionUpdate();
             if(def.debug > 1) this.log.groupEnd();
         }
-        debugger;
+
         return this;
     },
 
@@ -838,7 +885,7 @@ def
 //        colors: null,
 
 //NEW603 C SlidingWindow options
-        slidingWindow:false,
+        slidingWindow: false,
 //      slidingWindowInterval: undefined,       
 //      slidingWindowDimName: undefined,  
 //      slidingWindowScore: undefined, 

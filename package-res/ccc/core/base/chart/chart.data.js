@@ -93,10 +93,9 @@ pvc.BaseChart
             }
         }else this._initRolesAxes(); // NEW603 C added _initRolesAxes
 
-        // NEW603 C - should be after axes initialization
+        // NEW603 C - the axis need to be created
         if(this.slidingWindow) {
-            this.slidingWindow._setColorAxisDefaults();
-            this.slidingWindow.setRatio();
+            this.slidingWindow.setAxisDefaults(); 
         } 
 
         // Cached data stuff
@@ -121,12 +120,6 @@ pvc.BaseChart
     _createScoringOptions: function(options) {    
         //NOOP
     },
-
-    // NEW603 C - REMOVE
-    /*_getScoringOpts: function(options) {    
-        if(options.score) this.data.score = options.score;
-        if(options.select) this.data.select = options.select;
-    },*/
 
     _loadData: function() {
         /*jshint expr:true*/
@@ -676,6 +669,35 @@ pvc.BaseChart
 
         return this;
     },
+
+
+    // ---------------
+
+    /** NEW603 - TODO pass flag to indicate is incremental add*/
+
+    addData: function(data) {
+
+        // check if metadata is the same
+        this.addResultset(data && data.resultset);
+
+        return this;
+    },
+   
+
+    /** NEW603 - TODO pass flag to indicate is incremental add*/
+
+    addResultset: function(resultset) {
+
+        !this.parent || def.fail.operationInvalid("Can only set resultset on root chart.");
+        
+        this.resultset =this.resultset.concat(resultset||[]);
+        if(!this.resultset.length) this.log.warn("Resultset is empty");
+
+        return this;
+    },
+    /**/
+
+
 
     /**
      * Sets the resultset that will be used to build the chart.

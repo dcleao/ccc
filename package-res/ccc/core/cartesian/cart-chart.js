@@ -145,7 +145,7 @@ def
     _createContent: function(parentPanel, contentOptions) {
         
         this._createFocusWindow();
-        
+
         // Create the grid/docking panel
         this._gridDockPanel = new pvc.CartesianGridDockingPanel(this, parentPanel, {
             margins:  contentOptions.margins,
@@ -231,21 +231,53 @@ def
                 title = axis.option('Title');
 
             if(!def.empty(title)) {
+
+                //NEW603 C
+                /* Save axes title panel's layout information if this is a re-render 
+                and layout should be preserved.
+                This is done before replacing the old panel by a new one */
+                var sizeOld, marginsOld, paddingsOld;
+
+                if (this.axesPanels[axis.id]            &&
+                    this.axesPanels[axis.id].titlePanel &&
+                    this.options.preserveLayout){
+                    sizeOld     =  this.axesPanels[axis.id].titlePanel.titleSize;
+                    marginsOld  =  this.axesPanels[axis.id].titlePanel.margins;
+                    paddingsOld =  this.axesPanels[axis.id].titlePanel.paddings;
+                }
+
                 titlePanel = new pvc.AxisTitlePanel(this, this._gridDockPanel, axis, {
                     title:        title,
                     font:         axis.option('TitleFont') || axis.option('Font'),
                     anchor:       axis.option('Position'),
                     align:        axis.option('TitleAlign'),
-                    margins:      axis.option('TitleMargins'),
-                    paddings:     axis.option('TitlePaddings'),
-                    titleSize:    axis.option('TitleSize'),
+                    margins:      marginsOld ? axis.option.getSpecified('TitleMargins', marginsOld.resolve()) : 
+                                               axis.option('TitleMargins'),
+                    paddings:     paddingsOld ? axis.option.getSpecified('TitlePaddings', paddingsOld.resolve()) : 
+                                                axis.option('TitlePaddings'),
+                    titleSize:    sizeOld ? axis.option.getSpecified('TitleSize', sizeOld.resolve()) : 
+                                            axis.option('TitleSize'), 
                     titleSizeMax: axis.option('TitleSizeMax')
                 });
             }
             
+            //NEW603 C
+            /* Save axes panel's layout information if this is a re-render 
+            and layout should be preserved. 
+            This is done before replacing the old panel by a new one */
+            var sizeOld2, marginsOld2, paddingsOld2;
+
+            if (this.axesPanels[axis.id] && this.options.preserveLayout){
+                debugger;
+                sizeOld2     =  this.axesPanels[axis.id].size;
+                marginsOld2  =  this.axesPanels[axis.id].margins;
+                paddingsOld2 =  this.axesPanels[axis.id].paddings;
+            }
+
             var panel = new pvc.AxisPanel(this, this._gridDockPanel, axis, {
                 anchor:            axis.option('Position'),
-                size:              axis.option('Size'),
+                size:              sizeOld2 ? axis.option.getSpecified('Size', sizeOld2.resolve()) : 
+                                            axis.option('Size'), 
                 sizeMax:           axis.option('SizeMax'),
                 clickAction:       axis.option('ClickAction'),
                 doubleClickAction: axis.option('DoubleClickAction'),
@@ -257,7 +289,9 @@ def
                 ruleCrossesMargin: axis.option('RuleCrossesMargin'),
                 zeroLine:          axis.option('ZeroLine'),
                 showTicks:         axis.option('Ticks'),
-                showMinorTicks:    axis.option('MinorTicks')
+                showMinorTicks:    axis.option('MinorTicks'),
+                margins:           marginsOld2  ? marginsOld2  : undefined,
+                paddings:          paddingsOld2 ? paddingsOld2 : undefined
             });
             
             if(titlePanel) panel.titlePanel = titlePanel;
@@ -284,8 +318,9 @@ def
         var info   = this.plotPanelList[0]._layoutInfo,
             size   = info.clientSize,
             a_size = (axis.orientation === 'x') ? size.width : size.height;
-
+ 
         axis.setScaleRange(a_size);
+        axis.setTicks(axis.ticks);
 
         return axis.scale;
     },
@@ -313,8 +348,10 @@ def
         
         function processAxis(axis) {
             if(axis) {
+                var tickRoundPads;
                 // {begin: , end: , beginLocked: , endLocked: }
-                var tickRoundPads = axis.getScaleRoundingPaddings();
+                tickRoundPads = axis.getScaleRoundingPaddings();
+                 
                 if(tickRoundPads) {
                     var isX = axis.orientation === 'x';
                     setSide(isX ? 'left'  : 'bottom', tickRoundPads.begin, tickRoundPads.beginLocked);

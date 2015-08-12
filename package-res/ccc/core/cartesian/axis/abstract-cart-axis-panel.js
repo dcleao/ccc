@@ -119,7 +119,10 @@ def
                     clientSize[a_length] = Math.max(Math.min(clientSize[a_length], rangeInfo.max), rangeInfo.min);
             }
 
+            // NEW603 C  
+            this.axis.setScaleRange(clientSize[a_length]); 
             this._calcLayoutCore(layoutInfo);
+
         }
 
         return this.createAnchoredSize(layoutInfo.axisSize, clientSize);
@@ -274,8 +277,6 @@ def
                 scale         = me.scale,
                 isDiscrete    = scale.type === 'discrete',
                 clientLength  = li.clientSize[me.anchorLength()];
-
-            this.axis.setScaleRange(clientLength);
 
             var evalLabelSideOverflow = function(labelBBox, side, isBegin, index) {
                 var sideLength = me._getLabelBBoxQuadrantLength(labelBBox, side);
@@ -467,16 +468,7 @@ def
         }
 
         this.axis.setTicks(this._layoutInfo.ticks); 
-        this.axis.setScaleRange(clientLength);
-
-        // NEW603 C
-        // update ticks in layoutInfo
-        if(this.axis.ticks){
-            delete layoutInfo.ticks;
-            layoutInfo.ticks = this.axis.ticks;
-            debugger;
-        } 
-        
+    
         if(layoutInfo.maxTextWidth == null) this._calcTicksTextLength(layoutInfo);
     },
 
@@ -915,12 +907,14 @@ def
                 }
             } else {
                 ticks.forEach(function(majorTick, index) {
-                    var scene = new pvc.visual.CartesianAxisTickScene(rootScene, {
-                        tick:      majorTick,
-                        tickRaw:   majorTick,
-                        tickLabel: ticksText[index]
-                    });
-                    scene.dataIndex = index;
+ 
+
+                        var scene = new pvc.visual.CartesianAxisTickScene(rootScene, {
+                                            tick:      majorTick,
+                                            tickRaw:   majorTick,  
+                                            tickLabel: ticksText[index],
+                                        });
+                        scene.dataIndex = index;
                 }, this);
             }
         }

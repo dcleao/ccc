@@ -11,7 +11,7 @@
  * the license for the specific language governing your rights and limitations.
  */
  /*! Copyright 2010 Stanford Visualization Group, Mike Bostock, BSD license. */
- /*! 0135dfb19625d73484a2fa0cfd8c62d4d1e4c3ef */
+ /*! 7145caa5744484640dbe4c878bba1fff7bb7acc8 */
 /**
  * @class The built-in Array class.
  * @name Array
@@ -4666,8 +4666,6 @@ parseDatePrecision = function(value, dv) {
       }
     }
   }
-
- pv.parseDatePrecision = parseDatePrecision;
 
   if(typeof value !== 'number' || value < 0)
     value = dv != null ? dv : 0;

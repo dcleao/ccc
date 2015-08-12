@@ -80,7 +80,7 @@ function pvc_options(specs, context) {
      * @name pvc.options#option
      * @function
      * @param {string} name The name of the option.
-     * @param {booleam} [noDefault=false] Prevents returning a default value.
+     * @param {boolean} [noDefault=false] Prevents returning a default value.
      * If a value for the option hasn't been provided, undefined is returned.
      * 
      *  @type any
@@ -98,7 +98,26 @@ function pvc_options(specs, context) {
      * @type boolean
      */
     function isSpecified(name) { return resolve(name).isSpecified; }
-    
+   
+    // NEW603 C
+    /* returns specified value or a given default
+       allow override of default
+       if a new default is not specified give the info default value*/
+    /**
+     * Indicates if a value for a given option has been specified.
+     * @name pvc.options#getSpecified
+     * @function
+     * @param {string} name The name of the option.
+     * @param {} dv The given value to return, if any, when the option isn't specified instead
+     * of the associated default value
+     *
+     * @type any
+     */
+    function getSpecified(name, dv) {
+        var info = resolve(name);
+        return info.isSpecified ? info.value : dv ;
+    }
+
     /**
      * Obtains the value of an option given its name,
      * but only if it has been specified (not defaulted).
@@ -182,6 +201,9 @@ function pvc_options(specs, context) {
 
     option.isSpecified  = isSpecified;
     option.isDefined    = isDefined;
+
+    //NEW603 C created getSpecified
+    option.getSpecified = getSpecified;
 
     option.specify      = specify;
     option.defaults     = defaults;

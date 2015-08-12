@@ -32,8 +32,9 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
         // NEW603 C
         // uses the state of the axis to update its objects
         // elements of state will be elements of axis
+        
         if(keyArgs && keyArgs.state) $.extend(this, keyArgs.state); 
-        this.state = {};
+        this._state = {};
     },
 
     methods: /** @lends pvc.visual.Axis# */{
@@ -91,13 +92,20 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
         // NEW603 C
         // Function that stores something to be considered state of the axis
         setState: function(options){
-            this.state = $.extend({}, this.state, options); 
+            this._state = $.extend({}, this._state, options); 
         },
 
         // NEW603 C
         // Returns state object
         getState: function(){
-            return this.state;
+            return this._state;
+        },
+
+        // NEW603 C
+        // @ virtual
+        setInitialLength: function(fixedLength){
+            //NOOP
+            return;
         },
 
         setDataCellScaleInfo: function(dataCell, scaleInfo) {
@@ -258,6 +266,10 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
                 return scene.vars[varName].value;
             });
         },
+
+
+
+
 
         _conciliateVisualRoles: function() {
             var L = this.dataCells.length;
