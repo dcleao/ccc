@@ -682,12 +682,6 @@ pvc_CartesianAxis.options({
         cast: pvc.cartAxis_parseRatio   //change cast to add parser
     },
 
-    RatioAlign: {
-        resolve: '_resolveFull',
-        cast: pvc.parseRatioAlign,
-        value: 'left'
-    },
-
     DomainAlign: {
         resolve: '_resolveFull',
         cast: pvc.parseDomainAlign,

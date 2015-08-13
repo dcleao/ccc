@@ -6,14 +6,14 @@ define([
     'test/data-1'
 ], function(cdo, pvc, def, utils, datas) {
 
-    describe('Sliding Window for cartesian charts', function() {
+    describe('Sliding Window object for cartesian charts', function() {
 
-        it("should create a sliding window options object", function() {
+        it("should create a sliding window options object; ", function() {
             var slidingWindow = createSlidingWindow({ timeSeries: true, timeSeriesFormat: "%Y-%m-%d", slidingWindow:true }, pvc.LineChart);
             expect(!!slidingWindow).toBe(true);
         });
 
-        describe(" without any specified options - ", function() {
+        describe("1) If no options are specified: ", function() {
 
             var options = { timeSeries      : true,
                             timeSeriesFormat: "%Y-%m-%d",
@@ -21,7 +21,7 @@ define([
                            };
             var slidingWindow = createSlidingWindow(options, pvc.LineChart);
 
-            it("should be created with default values", function() {
+            it("should be created with default values; ", function() {
                 slidingWindow._initFromOptions();
 
                 expect(slidingWindow.dimName).toEqual("category");
@@ -32,7 +32,7 @@ define([
         });
 
 
-         describe(" with specified options - ", function() {
+         describe("2) If some options are specified:  ", function() {
             var options, slidingWindow;
 
             beforeEach(function() {

@@ -242,7 +242,7 @@ pvc.cartAxis_parseRatio = function(ratio) {
 
   if(typeof ratio === 'string') {
 
-    var reg=/([0-9]\u002F[0-9]|[a-z]\u002F[0-9])/;
+    var reg=/([0-9]\u002F[0-9]|[0-9]\u002F[a-z]|[0-9]\u002F[0-9][a-z])/;
      
     if(reg.test(ratio)) ratio=ratio.split("/");
     if(ratio.length==2){

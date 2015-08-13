@@ -72,6 +72,12 @@ def('pvc.visual.SizeAxis', pvc_Axis.extend({
             cast:    def.number.to
         },
 
+        DomainAlign: {
+            resolve: '_resolveFull',
+            cast: pvc.parseDomainAlign,
+            value: 'center'
+        },
+
         UseAbs: {
             resolve: '_resolveFull',
             cast:    Boolean,
