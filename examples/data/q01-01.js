@@ -378,61 +378,112 @@ var relational_01_neg = {
     }]
 };
 
-var relational_01_negRT = {
+//NEW603 pvcTestRealTime
+var relational_01_RT = {
     "resultset": [
-        ['0', "London", -72, "2011-09-05"],
-        ['0', "London", -50, "2011-09-12"],
-        ['0', "London", -20, "2011-06-19"],
-        ['0', "London", -23, "2011-06-26"],
-        ['0', "London", -72, "2011-07-03"],
-        ['0', "London", 50, "2011-07-10"],
-        ['0', "London", 30, "2011-07-17"],
-        ['0', "London", -23, "2011-07-24"],
-        ['0', "London", -72, "2011-07-31"],
-        ['0', "London", -50, "2011-08-07"],
-        ['0', "London", 100, "2011-08-14"],
-        ['0', "London", -23, "2011-08-21"],
-        ['0', "London", -20, "2011-08-28"],
+        ["London", 72, "2011-09-05"],
+        ["London", 50, "2011-09-12"],
+        ["London", 20, "2011-06-19"],
+        ["London", 23, "2011-06-26"],
+        ["London", 72, "2011-07-03"],
+        ["London", 50, "2011-07-10"],
+        ["London", 30, "2011-07-17"],
+        ["London", 23, "2011-07-24"],
+        ["London", 72, "2011-07-31"],
+        ["London", 50, "2011-08-07"],
+        ["London", 100, "2011-08-14"],
+        ["London", 23, "2011-08-21"],
+        ["London", 20, "2011-08-28"],
         //
-        ['0', "Paris", 27, "2011-06-05"],
-        ['0', "Paris", 5, "2011-06-12"],
-        ['0', "Paris", 2, "2011-06-19"],
-        ['0', "Paris", 32, "2011-06-26"],
-        ['0', "Paris", 24, "2011-07-03"],
-        ['0', "Paris", 4, "2011-07-10"],
-        ['0', "Paris", 105, "2011-07-17"],
-        ['0', "Paris", 53, "2011-07-24"],
-        ['0', "Paris", 17, "2011-07-31"],
-        ['0', "Paris", 20, "2011-08-07"],
-        ['0', "Paris", -40, "2011-08-14"],
-        ['0', "Paris", 43, "2011-08-21"],
-        ['0', "Paris", 40, "2011-08-28"],
+        ["Paris", 27, "2011-06-05"],
+        ["Paris", 5, "2011-06-12"],
+        ["Paris", 2, "2011-06-19"],
+        ["Paris", 32, "2011-06-26"],
+        ["Paris", 24, "2011-07-03"],
+        ["Paris", 4, "2011-07-10"],
+        ["Paris", 105, "2011-07-17"],
+        ["Paris", 53, "2011-07-24"],
+        ["Paris", 17, "2011-07-31"],
+        ["Paris", 20, "2011-08-07"],
+        ["Paris", 40, "2011-08-14"],
+        ["Paris", 43, "2011-08-21"],
+        ["Paris", 40, "2011-08-28"],
         //
-        ['0', "Lisbon", 60, "2011-07-03"],
-        ['0', "Lisbon", 40, "2011-07-10"],
-        ['0', "Lisbon", 105, "2011-07-17"],
-        ['0', "Lisbon", -30, "2011-07-24"],
-        ['0', "Lisbon", 50, "2011-08-07"]
+        ["Lisbon", 60, "2011-07-03"],
+        ["Lisbon", 40, "2011-07-10"],
+        ["Lisbon", 105, "2011-07-17"],
+        ["Lisbon", 30, "2011-07-24"],
+        ["Lisbon", 50, "2011-08-07"]
     ],
     "metadata": [{
         "colIndex": 0,
         "colType": "String",
-        "colName": "Index"
-    }, {
-        "colIndex": 1,
-        "colType": "String",
         "colName": "City"
     }, {
-        "colIndex": 2,
+        "colIndex": 1,
         "colType": "Numeric",
         "colName": "Profit"
     }, {
-        "colIndex": 3,
+        "colIndex": 2,
         "colType": "String",
         "colName": "Date"
     }]
 };
 
+//NEW603 pvcTestRealTime
+var relational_01_negRT = {
+    "resultset": [
+        ["London", -72, "2011-09-05"],
+        ["London", -50, "2011-09-12"],
+        ["London", -20, "2011-06-19"],
+        ["London", -23, "2011-06-26"],
+        ["London", -72, "2011-07-03"],
+        ["London", 50, "2011-07-10"],
+        ["London", 30, "2011-07-17"],
+        ["London", -23, "2011-07-24"],
+        ["London", -72, "2011-07-31"],
+        ["London", -50, "2011-08-07"],
+        ["London", 100, "2011-08-14"],
+        ["London", -23, "2011-08-21"],
+        ["London", -20, "2011-08-28"],
+        //
+        ["Paris", 27, "2011-06-05"],
+        ["Paris", 5, "2011-06-12"],
+        ["Paris", 2, "2011-06-19"],
+        ["Paris", 32, "2011-06-26"],
+        ["Paris", 24, "2011-07-03"],
+        ["Paris", 4, "2011-07-10"],
+        ["Paris", 105, "2011-07-17"],
+        ["Paris", 53, "2011-07-24"],
+        ["Paris", 17, "2011-07-31"],
+        ["Paris", 20, "2011-08-07"],
+        ["Paris", -40, "2011-08-14"],
+        ["Paris", 43, "2011-08-21"],
+        ["Paris", 40, "2011-08-28"],
+        //
+        ["Lisbon", 60, "2011-07-03"],
+        ["Lisbon", 40, "2011-07-10"],
+        ["Lisbon", 105, "2011-07-17"],
+        ["Lisbon", -30, "2011-07-24"],
+        ["Lisbon", 50, "2011-08-07"]
+    ],
+    "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "City"
+    }, {
+        "colIndex": 1,
+        "colType": "Numeric",
+        "colName": "Profit"
+    }, {
+        "colIndex": 2,
+        "colType": "String",
+        "colName": "Date"
+    }]
+};
+
+
+//NEW603 pvcTestRealTime
 var relational_01_neg_rt1 = {
     "resultset": [
         ["London", "2011-09-05", -72],
@@ -1106,6 +1157,52 @@ var relational_one_all_null_series_others_overlapping = {
     }]
 };
 
+//NEW603 pvcTestRealTime
+var relational_one_all_null_series_others_overlapping02 = {
+    "resultset": [
+        ["Paris",  "A", "2011-06-05", 27],
+        ["Paris",  "B", "2011-06-05", 5],
+        ["Paris",  "C", "2011-06-05", 2],
+        ["Paris",  "D", "2011-06-05", 32],
+        
+        ["Paris",  "E", "2011-06-05", 24],
+        ["Paris",  "F", "2011-06-05", 4],
+        ["Paris",  "G", "2011-06-05", 105],
+        ["Paris",  "H", "2011-06-05", 53],
+        
+        ["Paris",  "I", "2011-06-05", 17],
+        
+        ["Lisbon", "E", "2011-06-05", null],
+        ["Lisbon", "F", "2011-06-05", null],
+        ["Lisbon", "G", "2011-06-05", null],
+        ["Lisbon", "H", "2011-06-05", null],
+        ["Lisbon", "J", "2011-06-05", null],
+
+        ["London",  "J", "2011-06-05", 20],
+        ["London",  "A", "2011-06-05", 40],
+        ["London",  "B", "2011-06-05", 43],
+        ["London",  "N", "2011-06-05", 40]
+    ],
+    "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "City"
+    }, {
+        "colIndex": 1,
+        "colType": "String",
+        "colName": "Product"
+    }, {
+        "colIndex": 2,
+        "colType": "String",
+        "colName": "Date"
+    }, {
+        "colIndex": 3,
+        "colType": "Numeric",
+        "colName": "Profit"
+    }]
+};
+
+
 
 // {"crosstabMode": false, "seriesInRows": false}
 var relationalCountrySales = {
@@ -1709,6 +1806,53 @@ var testTreemapThreeLevel = testSunburstThreeLevel = {
         ["RoW",    "S. America", null,          50],
         ["RoW",    "India",      null,          25],
         ["RoW",    "Mexico",     null,          25]
+    ]
+};
+
+var testTreemapThreeLevel02 = testSunburstThreeLevel02 = {
+    "metadata": [{
+        "colIndex": 0,
+        "colType": "String",
+        "colName": "Territory"
+    }, {
+        "colIndex": 1,
+        "colType": "String",
+        "colName": "Region"
+    }, {
+        "colIndex": 2,
+        "colType": "String",
+        "colName": "Market"
+    }, {
+        "colIndex": 3,
+        "colType": "Numeric",
+        "colName": "Sales"
+    }, {
+        "colIndex": 3,
+        "colType": "String",
+        "colName": "Date"
+    }],
+    "resultset": [
+        ["USA",    'Kansas',     null,         100, "2011-06-05" ],
+        
+        ["USA",    'New York',   'Fair',       500, "2011-06-05"],
+        ["USA",    'New York',   'Restaurant', 200, "2011-06-05"],
+        ["USA",    'New York',   'House',      100, "2011-06-05"],
+        
+        ["USA",    'Idaho',      'Farm',       200, "2011-06-05"],
+        ["USA",    'Idaho',      'Fairy',      500, "2011-06-05"],
+        ["USA",    'Idaho',      'House',      400, "2011-06-05"],
+        ["USA",    'Idaho',      'Grocery',    200, "2011-06-05"],
+        
+        ["Europe", null,         null,         400, "2011-06-05"],
+        
+        ["Moon",   "Big Valey",  "North Hole", 300, "2011-06-05"],
+        ["Moon",   "Big Valey",  "South Hole", 100, "2011-06-05"],
+        
+        ["RoW",    "Japan",      null,         100, "2011-06-05"],
+        ["RoW",    "China",      null,         100, "2011-06-05"],
+        ["RoW",    "S. America", null,          50, "2011-06-05"],
+        ["RoW",    "India",      null,          25, "2011-06-05"],
+        ["RoW",    "Mexico",     null,          25, "2011-06-05"]
     ]
 };
 
