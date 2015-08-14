@@ -458,7 +458,7 @@ def
         this.axis.setTicks(null);
 
         var clientLength = this._layoutInfo.clientSize[this.anchorLength()];
-       
+
         // update maxTextWidth, ticks and ticksText
         switch(this.scale.type) {
             case 'discrete':   this._calcDiscreteTicks(); break;
@@ -477,8 +477,7 @@ def
             layoutInfo = this._layoutInfo;
 
         layoutInfo.ticks = axis.domainItems();
-
-    
+        
         // If the discrete data is of a single Date value type,
         // we want to format the category values with an appropriate precision,
         // instead of showing the default label.

@@ -66,6 +66,7 @@ def
     },
 
     _eachCartAxis: function(f, x) {
+
         var chartAxes = this.axesByType;
         ['base', 'ortho'].forEach(function(type) {
             var typeAxes = chartAxes[type];
@@ -155,6 +156,7 @@ def
         // Create child axis panels.
         // The order is relevant because of docking order.
         ['base', 'ortho'].forEach(function(type) {
+
             var typeAxes = this.axesByType[type];
             if(typeAxes) def.query(typeAxes)
                 .reverse()
@@ -172,20 +174,21 @@ def
     // NEW603 C
     // Applies the slidingWindow select/score functions to the data
    /** @override */
-    _createScoringOptions: function(options) {
-        sw = this._createSlidingWindow();
-        if(sw){
+   _createScoringOptions: function(options) {
+         this._createSlidingWindow();
+         if(this.slidingWindow){
+            var sw = this.slidingWindow;
             //override default scoring functions
             this.data.score = function(datum) { sw.score.call( sw , datum ); }
             this.data.select = function(allData, remove) { sw.select.call( sw , allData, remove ); }
-            return;
+            return this;
         }
     },
 
     // NEW603 C 
     // creates a slidingWindow and initializes its options
     _createSlidingWindow: function() {
-        /*global cdo_assertIsOwner:true */
+
         var sw = this.options.slidingWindow;
 
         if(this.slidingWindow){ this.slidingWindow.delete; }
@@ -197,9 +200,8 @@ def
             sw._initFromOptions();
 
         } 
-        return sw;
+        return this;
     },
-
 
     _createFocusWindow: function() {
         if(this.selectableByFocusWindow()) {
@@ -268,7 +270,6 @@ def
             var sizeOld2, marginsOld2, paddingsOld2;
 
             if (this.axesPanels[axis.id] && this.options.preserveLayout){
-                debugger;
                 sizeOld2     =  this.axesPanels[axis.id].size;
                 marginsOld2  =  this.axesPanels[axis.id].margins;
                 paddingsOld2 =  this.axesPanels[axis.id].paddings;
