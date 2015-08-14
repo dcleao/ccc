@@ -231,6 +231,198 @@
 
 
     <script type="text/javascript" src="pvcDocUtils.js"></script>
+
+    <script type="text/javascript">
+        var _seriesLastValue = {};
+        var _lastDayNumber = 28; // Last day of static data (of 2011/8)
+        var _periodDays = 7;     // Number of days separating sample points
+        var _series = ['London', 'Paris', 'Lisbon', 'Berlim', 'Madrid', 'New York', 'Porto', 'Rio de Janeiro'];
+        var _product = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'N'];
+        var _valueAmplitude = 10;   // How much `value` can vary (+- half of this)
+
+        function periodicRefresh(chart, count, delta, missingSeries, dataFun) {
+
+            function refresh() {
+                chart_addData(chart, missingSeries, dataFun);
+                if(count--) setTimeout(refresh, delta);
+                else _lastDayNumber = 28; // Last day of static data (of 2011/8)
+
+            }
+            
+            setTimeout(refresh, delta);
+        }
+
+        function chart_addData(chart, missingSeries, dataFun) {
+            
+            var N = _series.length - missingSeries;    // Number of datums (rows)
+            var incData = dataFun(chart.data, N);      // @type cdo.Datum[]
+            chart.data.add(incData);                   // Update chart data
+            chart.render(true, true, false);           // Re-render (bypassAnimation, recreate, reloadData)
+        }
+
+        var _territory = ['USA', 'Europe', 'Moon', 'RoW'];
+        var _region = { 'USA'   : ['Kansas', 'NewYork', 'Idaho'],
+                        'Europe': [ ],
+                        'Moon'  : ['Big Valley'],
+                        'RoW'   : ['China', 'Japan', 'India', 'S. America', 'Mexico']
+                      };
+        var _market = { 'Kansas'     : [ ],
+                        'NewYork'    : ['Restaurant', 'Fair', 'House'],
+                        'Idaho'      : ['Grocery', 'Fairy', 'House', 'Farm', 'Restaurant'],
+                        'Big Valley' : ['North Hole', 'South Hole', 'West Hole'],
+                        'China'      : [ ],
+                        'Japan'      : [ 'Restaurant' ],
+                        'India'      : [ ],
+                        'S. America' : [ 'Grocery','Restaurant' ],
+                        'Mexico'     : [ 'Grocery', 'Fair']
+                       };
+
+        function randomDataChart5(data, N) {
+            N = _territory.length; 
+            var T = _territory.length,
+                indexesT = sampleIndexes(T, N);
+            var dateText = randomDate();
+            var rows = [];
+            
+            while(N--) {
+                var territory = _territory[indexesT[N]];
+
+                var R = _region[territory].length;
+                    if(!R){
+                        var region = null,
+                            market = null;
+                    } else {
+                        var indexesR = sampleIndexes(R, 1),
+                            region= _region[territory][indexesR[0]],
+                            M = _market[region].length;
+
+                            if(!M){
+                                var market = null;
+                            } else {
+                                var indexesM = sampleIndexes(M, 1),
+                                    market= _market[region][indexesM[0]];
+                            }
+                    }
+
+                var value  = _seriesLastValue[territory] || 0;
+                   
+                value += _valueAmplitude * (Math.random() - 0.5);
+                _seriesLastValue[territory] = value;
+                
+                rows.push(new cdo.Datum(data, {
+                    territory: territory,
+                    region   :    region,
+                    market   :    market,
+                    value    :     value,
+                    date     :   dateText 
+                }));
+            }
+
+            return rows;
+        }
+
+
+        function randomDataChart3(data, N) {
+            var S = _series.length;
+            var indexes = sampleIndexes(S, N);
+            var dateText = randomDate();
+            var rows = [];
+
+            var P = _product.length;
+            var indexesP = sampleIndexes(P, N);
+
+            while(N--) {
+                var series = _series[indexes[N]],
+                    product= _product[indexesP[N]],
+                    value  = _seriesLastValue[series] || 0;
+                
+                value += _valueAmplitude * (Math.random() - 0.5);
+                _seriesLastValue[series] = value;
+                
+                rows.push(new cdo.Datum(data, {
+                    date: dateText,
+                    city:   series,
+                    profit:    value,
+                    product: product
+                }));
+            }
+
+            return rows;
+        }
+
+        function randomDataChart2(data, N) {
+            var S = _series.length;
+            var indexes = sampleIndexes(S, N);
+            var dateText = randomDate();
+            var rows = [];
+
+             while(N--) {
+                var series = _series[indexes[N]],
+                    value  = Math.abs(_seriesLastValue[series]) || 0;
+                
+                _seriesLastValue[series] += _valueAmplitude/100 * (Math.random() - 0.5);
+          
+                rows.push(new cdo.Datum(data, {
+                    date: dateText,
+                    city:   series,
+                    profit:    value
+                }));
+            }
+
+            return rows;
+        }
+
+        function randomDataChart1(data, N) {
+            var S = _series.length;
+            var indexes = sampleIndexes(S, N);
+            var dateText = randomDate();
+            var rows = [];
+
+             while(N--) {
+                var series = _series[indexes[N]],
+                    value  = _seriesLastValue[series] || 0;
+                
+                value += _valueAmplitude * (Math.random() - 0.5);
+                _seriesLastValue[series] = value;
+                
+                rows.push(new cdo.Datum(data, {
+                    category: dateText,
+                    series:   series,
+                    value:    value
+                }));
+            }
+
+            return rows;
+        }
+
+        function randomDate() {
+            var dayNumber = (_lastDayNumber += _periodDays);
+            var date = new Date(2011, 8, dayNumber);
+            return date.getFullYear() + "-" +
+                   pad2Digits(date.getMonth() + 1) + "-" +
+                   pad2Digits(date.getDate());
+        }
+
+        // N indexes out of S indexes
+        function sampleIndexes(S, N) {
+            var indexes = pv.range(S);
+            if(N == null) return indexes;
+            if(N > S) N = S;
+            
+            var out = [];
+            while(N--) {
+                var j = Math.floor(Math.random() * indexes.length);
+                var i = indexes.splice(j, 1)[0];
+                out.push(i);
+            }
+            return out;
+        }
+
+        function pad2Digits(v) {
+            return v < 10 ? ('0' + v) : v;
+        }        
+
+    </script>
   </head>
   <body>
 
@@ -275,14 +467,6 @@ Line charts are often used to visualize time series data.
   <li>timeSeries (true| false)</li>
   <li>timeSeriesFormat. For example: "%Y-%m-%d"</li>
 </ul>
-<h4>Line chart properties</h4>
-<ul>
-  <li>orientation - horizontal or vertical. Default: vertical</li>
-  <li>dotsVisible - Show or hide dots. Default: false</li>
-  <li>areasVisible - Show or hide areas. Default: false</li>
-  <li>valuesVisible - Show or hide line value. Default: false</li>
-  <li>stacked - Stacked? Default: false</li>
-</ul>
 <h4>Axis properties</h4>
 <ul>
   <li>show{X,Y}Scale (true | false) - whether to show an axis. Default: true</li>
@@ -298,60 +482,36 @@ Line charts are often used to visualize time series data.
       The title consumes space from the specified {x|y}AxisSize.
       Default: The required by the font height plus a proportional margin.</li>
   <li>{x,y}AxisDomainRoundMode (none | nice | tick) - rounding mode of the domain bounds of a linear scale axis. Default: none</li>
+  <li>{x,y}AxisDomainAlign (min | center | max) Default: center</li>
   <li>{x,y}AxisDesiredTickCount - desired number of (major) ticks of a linear scale axis. Default: 5</li>
   <li>{x,y}AxisMinorTicks (true|false) - show minor ticks on a linear scale axis. Default: true</li>
+  <li>{x,y}AxisFixedMin </li>
+  <li>{x,y}AxisFixedMinMax </li>
+  <li>{x,y}AxisFixedLength </li>
+  <li>{x,y}AxisRatio </li>
+  <li>{x,y}AxisPreserveRatio (true|false). Default: false</li>
+  <li>{x,y}AxisMinorTicks (true|false) - show minor ticks on a linear scale axis. Default: true</li>
+  <li>{x,y}AxisMinorTicks (true|false) - show minor ticks on a linear scale axis. Default: true</li>
+  <li>colorAxisPreserveMap (true|false). Default: false</li>
 </ul>
-
-<h2>Extension Points</h2>
-The following&nbsp;list&nbsp;serves as the basis
-for&nbsp;Line chart extension points:
+<h4>Sliding Window properties</h4>
 <ul>
-  <li>base_</li>
-  <li>title_</li>
-  <li>titleLabel_</li>
-  <li>legendArea_</li>
-  <li>legendPanel_</li>
-  <li>legendRule_</li>
-  <li>legendDot_</li>
-  <li>legendLabel_</li>
-  <li>{x,y}Axis_</li>
-  <li>{x,y}AxisRule_</li>
-  <li>{x,y}AxisGrid_</li>
-  <li>{x,y}AxisScale_</li>
-  <li>{x,y}AxisTicks_</li>
-  <li>{x,y}AxisMinorTicks_</li>
-  <li>{x,y}AxisLabel_</li>
-  <li>{x,y}AxisTitleLabel_</li>
-  <li>tooltip_</li>
-  <li>chart_ - for the main chart Panel</li>
-  <li>line_ - for the actual line</li>
-  <li>linePanel_ - for the panel where the lines are</li>
-  <li>lineDot_ - the dots on the line</li>
-  <li>lineLabel_ - for the main line label</li>
-</ul>
-Sample extension points:<br>
-<ul>
-  <li>base_fillStyle</li>
-  <li>titleLabel_font</li>
-  <li>line_lineWidth</li>
+  <li>slidingWindowInterval </li>
+  <li>slidingWindowDimName </li>
+  <li>slidingWindowScore </li>
+  <li>slidingWindowSelect </li>
 </ul>
 
 
 <h2>Examples</h2>
 
-<h3>Real Time Line Chart</h3>
+<h3>A Real Time Line Chart</h3>
 The following is a timeseries line chart in real time mode<br>
 <textarea cols="55" rows="15" id="pvcLine1Code">
 
 var _count = 20;         // Number of refresh periods
 var _delta = 400;        // Refresh period (ms)
 var _seriesMissing = 0;  // How many series are missing each time
-var _lastDayNumber = 28; // Last day of static data (of 2011/8)
-var _periodDays = 7;     // Number of days separating sample points
-
-
-var _series = ['London', 'Paris', 'Lisbon', 'Berlim', 'Madrid', 'New York', 'Porto', 'Rio de Janeiro'];
-var _valueAmplitude = 50;   // How much `value` can vary (+- half of this)
 
 function chartExample1() {
     
@@ -359,7 +519,7 @@ function chartExample1() {
         canvas: "pvcLine1",
         width:  520,
         height: 300,
-        title: "Incremental data, increasing concentration, sliding window",
+        title: "Line chart with sliding window",
         animate: false,
         selectable: true,
         hoverable: true,
@@ -370,7 +530,7 @@ function chartExample1() {
         timeSeries: true,
 
         slidingWindow:true,
-        slidingWindowInterval:'16w',
+        slidingWindowInterval:'12w',
 
         baseAxisDomainAlign:'max',   
         baseAxisDomainRoundMode: 'tick',
@@ -392,307 +552,280 @@ function chartExample1() {
     .setData(relational_01_neg)
     .render();
     
-    periodicRefresh(chart, _count, _delta);
-}
-
-function periodicRefresh(chart, count, delta) {
-
-    function refresh() {
-        chart_addData(chart);
-        if(count--) setTimeout(refresh, delta);
-    }
-    
-    setTimeout(refresh, delta);
-}
-
-function chart_addData(chart) {
-    
-    var N = _series.length - _seriesMissing;   // Number of datums (rows)
-    var incData = randomData(chart.data, N);   // @type cdo.Datum[]
-    chart.data.add(incData);                   // Update chart data
-    chart.render(true, true, false);           // Re-render (bypassAnimation, recreate, reloadData)
-}
-
-
-var _seriesLastValue = {};
-
-function randomData(data, N) {
-    var dateText = randomDate();
-    return randomRows(data, dateText, N);
-}
-
-function randomDate() {
-    var dayNumber = (_lastDayNumber += _periodDays);
-    var date = new Date(2011, 8, dayNumber);
-    return date.getFullYear() + "-" +
-           pad2Digits(date.getMonth() + 1) + "-" +
-           pad2Digits(date.getDate());
-}
-
-function randomRows(data, date, N) {
-    var S = _series.length;
-    var indexes = sampleIndexes(S, N);
-    
-    var rows = [];
-    while(N--) {
-        var series = _series[indexes[N]],
-            value  = _seriesLastValue[series] || 0;
-        
-        value += _valueAmplitude * (Math.random() - 0.5);
-        _seriesLastValue[series] = value;
-        
-        rows.push(new cdo.Datum(data, {
-            category: date,
-            series:   series,
-            value:    value
-        }));
-    }
-    
-    return rows;
-}
-
-// N indexes out of S indexes
-function sampleIndexes(S, N) {
-    var indexes = pv.range(S);
-    if(N == null) return indexes;
-    if(N > S) N = S;
-    
-    var out = [];
-    while(N--) {
-        var j = Math.floor(Math.random() * indexes.length);
-        var i = indexes.splice(j, 1)[0];
-        out.push(i);
-    }
-    return out;
-}
-
-function pad2Digits(v) {
-    return v < 10 ? ('0' + v) : v;
+    periodicRefresh(chart, _count, _delta, _seriesMissing, randomDataChart1);
 }
 
 chartExample1();
 </textarea>
+
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine1"></div>
 
-<h3>A Decorated Line chart</h3>
+<h3>A Real Time Bar Chart</h3>
 A simple line chart can be enhanced as for example adding a background grid, or drawing the dots
 that connect the lines.<br>
-<textarea cols="55" rows="30" id="pvcLine2Code">
-  var line2 = new pvc.BarChart({
+<textarea cols="55" rows="15" id="pvcLine2Code">
+var _count = 20;         // Number of refresh periods
+var _delta = 400;        // Refresh period (ms)
+var _seriesMissing = 0;  // How many series are missing each time
+
+function chartExample2() {
+    
+    var chart2 = new pvc.BarChart({
     canvas: "pvcLine2",
-    width:  400,
+    width:  520,
     height: 300,
-    title:  "Sample Bar chart",
+
+    title:  "Bar chart with sliding window",
+
+    legend: true,
+    legendPosition: "right",
+
     orientation: 'horizontal',
+
+    readers: 'city, profit, date',
     dimensions: { 
-            category2: { 
-                name:'category2',
-                valueType: Date, 
-                rawFormat: "%Y-%m-%d", 
-                format: "%m/%d", 
-                type: { 
-                    isHidden: true 
-                    }
+            date: { 
+                valueType :  Date       , 
+                rawFormat : "%Y-%m-%d"  , 
+                format    : "%m/%d",
+                isHidden:true     
                 } 
             },
+
+    plots: [
+        {
+            name: 'main',
+            visualRoles: {
+                value:    'profit',
+                category:   'city',
+                color: 'city'
+               
+            }
+        },
+    ],
+    //axisComposite: true,
+    yAxisPosition: 'left',
+
+    //real time - sliding window
     slidingWindow:true,
-    slidingWindowInterval:'m',
-    slidingWindowDimName:'category2',
+    slidingWindowInterval:'6w',
+    slidingWindowDimName:'date',
+
     animate:    false,
     selectable: true,
     hoverable:  true,
     valuesVisible: false,
-    //orthoAxisFixedMax: 60,
-    //orthoAxisLabelSpacingMin: 2,
-    //extensionPoints: {
-    //    bar_fillStyle: 
-    //    'linear-gradient(90deg, green, blue)'
-    //  'linear-gradient(to bottom left, red, yellow 20%, green, blue)'
-    //  'radial-gradient(red, yellow 40%, red)'
-    //  'linear-gradient(red, rgb(0,0,255))'
-    //}
-});
-line2.setData(relational_01_negRT, { crosstabMode: false });
-line2.render();
+    crosstabMode: false
+
+  })
+  .setData(relational_01_negRT)
+  .render();
+
+  periodicRefresh(chart2, _count, _delta, _seriesMissing, randomDataChart2);
+}
+
+chartExample2();
 </textarea>
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine2"></div>
 
 
-<h3>A Categorical Line chart</h3>
-<textarea cols="55" rows="30" id="pvcLine3Code">
-var line3 = new pvc.DotChart({
-  canvas: "pvcLine3",
-  width: 1000,
-  height:515,
-  title:"A Categorical Line chart",
-  extensionPoints:{
-    "xAxisLabel_textAngle":-0.5235987755982988,
-    "xAxisLabel_textAlign":"right",
-    "xAxisLabel_textBaseline":"top",
-    "yAxisTicks_strokeStyle":"#A0A0A0",
-    "yAxisRule_strokeStyle":"#A0A0A0",
-    "plotFrame_strokeStyle":"#A0A0A0",
-    "yAxisGrid_strokeWidth":"2px",
-    "yAxisGrid_strokeStyle":"#A0A0A0",
-    "xAxisRule_strokeStyle":"#A0A0A0",
-    "xAxisGrid_strokeWidth":"2px",
-    "xAxisGrid_strokeStyle":"#A0A0A0"
-  },
-  animate:false,
-  legend:true,
-  legendPosition:"right",
-  legendAlign:"top",
-  stacked:true,
-  selectable:true,
-  margins: {all: 20},
-  nullInterpolationMode: 'linear',
-  tooltipEnabled:true,
-  dotsVisible:true,
-  linesVisible:true,
-  areasVisible:true,
-  valuesVisible:false,
-  crosstabMode: false,
-  dimensionGroups: {
-    series:   {formatter: function(value){ return relationalCountrySalesYearLabels[value];    }},
-    category: {formatter: function(value){ return relationalCountrySalesCountryLabels[value]; }}
-  }
-});
-line3.setData(relationalCountrySales);
-line3.render();
+<h3>A Real Time Heat Grid</h3>
+<textarea cols="55" rows="15" id="pvcLine3Code">
+var _count = 10;         // Number of refresh periods
+var _delta = 400;        // Refresh period (ms)
+var _seriesMissing = 0;  // How many series are missing each time
+
+function chartExample3() {
+
+    var chart3 = new pvc.HeatGridChart({
+        canvas: "pvcLine3",
+        width:  520,
+        height: 300,
+
+        title:  "Heat grid with sliding window",
+
+        selectable:  true,
+        ignoreNulls: false,
+        //axisComposite: true,
+        readers: 'city, product, date, profit',
+        dimensions: { 
+                date: { 
+                    valueType :  Date       , 
+                    rawFormat : "%Y-%m-%d"  , 
+                    format    : "%m/%d"   
+                    } 
+                },
+        visualRoles: {
+            category: 'city',
+            value: 'profit',
+            series: 'product',
+            color: 'profit'
+        },
+
+        //real time - sliding window
+        slidingWindow:true,
+        slidingWindowInterval:'6w',
+        slidingWindowDimName:'date',
+
+        orientation: "horizontal",
+        valuesVisible: false,
+        extensionPoints: {
+            panel_lineWidth: 1,
+            panel_strokeStyle: 'black'
+        }
+    })
+    .setData(relational_one_all_null_series_others_overlapping02, 
+    {
+        crosstabMode: false, 
+        seriesInRows: false
+    })
+    .render();
+
+  periodicRefresh(chart3, _count, _delta, _seriesMissing, randomDataChart3);
+}
+
+chartExample3();
+
 </textarea>
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine3"></div>
 
-<h3>A Line chart with a second axis</h3>
-The following is a line chart displaying a second Y axis with an
-independent scale.<br>
+<h3>A Real Time Pie Chart</h3>
 <textarea cols="55" rows="15" id="pvcLine4Code">
-var line4 = new pvc.LineChart({
-  canvas: "pvcLine4",
-  width:  500,
-  height: 300,
-  orientation: 'vertical',
-  title: "Line chart with second axis",
-  plot2: true,
-  plot2Series: ['Lisbon'],
-  plot2OrthoAxis: 2,
-  plot2ColorAxis: 2,
-  color2AxisColors: ['purple'],
-  legend: true,
-  legendPosition: "right",
-  selectable: true,
-  hoverable:  true,
-  animate:    false,
-  areasVisible:  true,
-  dotsVisible:   false,
-  valuesVisible: false,
-  crosstabMode: false,
-  seriesInRows: false
-});
-line4.setData(relational_04);
-line4.render();
+var _count = 20;         // Number of refresh periods
+var _delta = 400;        // Refresh period (ms)
+var _seriesMissing = 0;  // How many series are missing each time
+
+function chartExample4() {
+
+    var chart4 = new pvc.PieChart({
+        canvas: "pvcLine4",
+        width: 520,
+        height: 300,
+        title: "Donut with sliding window",
+        titlePosition: "top",
+        legend: true,
+        tooltipEnabled: true,
+        valuesVisible: true,
+        selectable: true,
+        hoverable:  true,
+        animate: false,
+        readers: 'city, profit, date',
+        dimensions: {
+            date:  {  valueType :  Date       , 
+                      rawFormat : "%Y-%m-%d"  , 
+                      format    : "%m/%d"   
+                    } 
+        },
+        visualRoles: {
+            value:    'profit',
+            category: 'city',
+        },
+        extensionPoints: {
+            //slice_innerRadius: 30,
+            slice_innerRadiusEx: '40%',
+            titleLabel_font: "18px sans-serif"
+        },
+
+        //real time - sliding window
+        slidingWindow:true,
+        slidingWindowInterval:'6w',
+        slidingWindowDimName:'date',
+
+        crosstabMode: false,
+        seriesInRows: false
+    })
+    .setData($.extend(true, {},relational_01_RT))
+    .render();
+
+  periodicRefresh(chart4, _count, _delta, _seriesMissing, randomDataChart2);
+}
+
+chartExample4();
+
 </textarea>
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine4"></div>
 
-<h3>A Line chart showing campaigns</h3>
+
+<h3>A Real Time TreeMap</h3>
 <textarea cols="55" rows="15" id="pvcLine5Code">
-var line5 = new pvc.LineChart({
-  canvas: "pvcLine5",
-  axisBandSizeRatio : 0.9,
-  timeSeries : true,
-  width : 998,
-  height : 225,
-  animate : true,
-  titlePosition : "top",
-  titleAlign : "center",
-  legend : true,
-  legendPosition : "left",
-  hoverable : false,
-  selectable : false,
-  extensionPoints : {
-    baseAxisGrid_strokeStyle : "#DEDEDE",
-    baseAxisRule_strokeStyle : "#DEDEDE",
-    orthoAxisGrid_strokeStyle : "#DEDEDE",
-    orthoAxisRule_strokeStyle : "#DEDEDE",
-    plotFrame_strokeStyle : "#DEDEDE",
-    baseAxisTicks_height : 0,
-    orthoAxisTicks_width : 9,
-    orthoAxisMinorTicks_width : 9,
-    legendRule_height : 2,
-    legendLabel_font : "12px \"Open Sans\", arial, sans-serif",
-    legendLabel_textStyle : "#323E48",
-    line_lineWidth : 2,
-    dot_lineWidth : 2,
-    dot_shapeRadius : 2.5,
-    dot_fillStyle : "white",
-    //dot_visible: function(scene) { return this.index == 0 ||  this.index == scene.parent.childNodes.length - 1; },
-    legendDot_left : 4,
-    legendRule_left : 2
-  },
+/*
+    rootCategoryLabel: "Earth"
+*/
 
-  baseAxisGrid : true,
-  baseAxisMinorTicks : false,
-  baseAxisOffset : 0,
-  baseAxisTicks : true,
-  baseAxisTitleFont : "12px sans-serif",
-  baseAxisTitleMargins : "0",
-  baseAxisVisible : true,
-  baseAxisZeroLine : true,
+var _count = 20;         // Number of refresh periods
+var _delta = 400;        // Refresh period (ms)
+var _seriesMissing = 0;  // How many series are missing each time
 
-  contentMargins : "0",
-  contentPaddings : "0",
-  dotsVisible : true,
-  legendItemPadding : 5,
-  legendMargins : "0",
-  legendMarkerSize : 25,
-  legendPaddings : {
-    top : 9,
-    bottom : 9,
-    left : 2
-  },
-  legendTextMargin : 10,
-  legendVisible : true,
-  nullInterpolationMode : "zero",
-  orthoAxisDesiredTickCount : 3,
-  orthoAxisGrid : true,
-  orthoAxisMinorTicks : true,
-  orthoAxisOverlappedLabelsMode : "hide",
-  orthoAxisTicks : true,
-  orthoAxisVisible : true,
-  orthoAxisZeroLine : true,
-  paddings : {
-    top : 16,
-    right : 40,
-    bottom : 16,
-    left : 40
-  },
-  plotFrameVisible : true,
-  titleFont : "14px sans-serif",
-  titleMargins : "0",
-  titlePaddings : "0",
-  valuesFont : "10px sans-serif",
-  legendSize : 170,
-  colorMap : {
-    3610 : "#0085D8",
-    3611 : "#FF8333",
-    3612 : "#36C7E8",
-    3613 : "#E83890",
-    3614 : "#898582"
-  },
-  dimensions: {
-      series: { formatter: function(v){ return 'Campaign ' + v; } }
-  }
-})
-.setData(cdaCampaignsByTime1, {
-  crosstabMode: false,
-  readers: "category, series, value"
-})
-.render();
+
+function chartExample5() {
+
+    var chart5 = new pvc.TreemapChart({
+        canvas:     'pvcLine5',
+        width:      520,
+        height:     300,
+        title:      "Three-Level Treemap",
+        titleFont:  'italic 14px sans-serif',
+        selectable: true,
+        hoverable:  true,
+        legend:     true,
+        legendPosition: 'right',
+        rootCategoryLabel: "",
+        readers: 'territory, region, market, value, date',
+        visualRoles:{ 'category'  : 'territory, region, market',
+                      'value'     : 'value'
+        },
+        dimensions:{ date:{valueType :  Date       , 
+                      rawFormat : "%Y-%m-%d"  , 
+                      format    : "%m/%d"   }},
+        //legendSizeMax: '15%',
+        legend: {
+            scenes: {
+                item: {
+                    labelText: function() {
+                        var indent = "";
+                        var group  = this.group;
+                        if(group) {
+                            var depth = group.depth;
+                            // 0 ""
+                            // 1 "text"
+                            // 2 "└ text"
+                            // 3 "  └ text"
+                            switch(depth) {
+                                case 0: return "";
+                                case 1: break;
+                                case 2: indent = "└ "; break;
+                                default:
+                                    indent = new Array(2*(depth-2) + 1).join(" ") + "└ ";
+                            }
+                        }
+                        return indent + this.base();
+                    }
+                }
+            }
+        },
+        extensionPoints: {
+            //legendLabel_textAlign: 'right'
+        }
+    })
+    .setData(testTreemapThreeLevel02, {crosstabMode: false})
+    .render();
+
+    periodicRefresh(chart5, _count, _delta, _seriesMissing, randomDataChart5);
+
+}
+
+chartExample5();
+
 </textarea>
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine5"></div>
+
+
+
+
   </body>
 </html>
