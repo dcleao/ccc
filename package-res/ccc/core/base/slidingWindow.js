@@ -103,15 +103,17 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
         setAxisDefaults: function() {
 
             this.chart.axesByType.color.forEach(function(axis) {
+                this._preserveAxisColorMap( axis );
+            }, this);
 
+            this.chart.axesList.forEach(function(axis) {
                 var dim = axis.role.grouping.firstDimension;
                 var dimName = dim.name;
                 var dimOptions = this.chart.options.dimensions;
                 if (dimOptions) var dimComp = dimOptions[dimName];
-                if(!dimComp || !dimComp.comparer) dim.type.setComparer(def.ascending); //???
-                this._preserveAxisColorMap( axis );
-
-
+                if(!dimComp || !dimComp.comparer){
+                    dim.type.setComparer(def.ascending); //???
+                }
             }, this);
 
             this._preserveLayout();
