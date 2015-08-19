@@ -76,9 +76,6 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
                 dim   = data.dimensions(dName),
                 mostRecent   = dim.max().value;
 
-/*              if(mostRecent!=null) mostRecent=dim.read(mostRecent);
-                if(mostRecent!=null) mostRecent=mostRecent.value;*/
-                
             allData.forEach(function(datum) {
                 var datumScore = this.score(datum),
                     result;
@@ -107,13 +104,18 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
             }, this);
 
             this.chart.axesList.forEach(function(axis) {
-                var dim = axis.role.grouping.firstDimension;
-                var dimName = dim.name;
+                var dims = axis.role.grouping._dimNames;
                 var dimOptions = this.chart.options.dimensions;
-                if (dimOptions) var dimComp = dimOptions[dimName];
-                if(!dimComp || !dimComp.comparer){
-                    dim.type.setComparer(def.ascending); //???
-                }
+
+                dims.forEach(function(dimName) {
+                    //debugger;
+                    var dim = this.chart.data._dimensions[dimName];
+                    if (dimOptions) var dimComp = dimOptions[dimName];
+                    if(!dimComp || !dimComp.comparer){
+                        dim.type.setComparer(def.ascending); //???
+                    }
+                }, this);
+                
             }, this);
 
             this._preserveLayout();
@@ -134,10 +136,12 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
             },this);
 
             axes.forEach(function(axis) {
-                if(axis.option.isDefined('FixedLength')) 
-                    axis.setInitialLength(this.interval);
-                if((axis.option.isDefined('FixedLength')  && 
+                if(axis.option.isDefined('FixedLength')){
+                    if(this.option.isSpecified('Interval')) axis.setInitialLength(this.interval);    //review
+                } 
+                if((axis.option.isDefined('FixedLength')       && 
                     axis.option.isDefined('PreserveRatio'))    &&
+                    this.option.isSpecified('Interval')        &&  //review
                             !(axis.option.isSpecified('Ratio')        || 
                               axis.option.isSpecified('PreserveRatio'))) {
                     axis.option.specify({ PreserveRatio : true });
