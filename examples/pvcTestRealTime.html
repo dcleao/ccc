@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>CCC Samples - Line Chart</title>
+    <title>CCC Samples - Real time</title>
 
     <meta name="svg.render.forceflash" content="true">
 
@@ -233,20 +233,15 @@
     <script type="text/javascript" src="pvcDocUtils.js"></script>
 
     <script type="text/javascript">
-        var _seriesLastValue = {};
-        var _lastDayNumber = 28; // Last day of static data (of 2011/8)
-        var _periodDays = 7;     // Number of days separating sample points
-        var _series = ['London', 'Paris', 'Lisbon', 'Berlim', 'Madrid', 'New York', 'Porto', 'Rio de Janeiro'];
-        var _product = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'N'];
-        var _valueAmplitude = 10;   // How much `value` can vary (+- half of this)
+        
 
         function periodicRefresh(chart, count, delta, missingSeries, dataFun) {
 
             function refresh() {
-                chart_addData(chart, missingSeries, dataFun);
-                if(count--) setTimeout(refresh, delta);
-                else _lastDayNumber = 28; // Last day of static data (of 2011/8)
-
+                if(count--) {
+                    chart_addData(chart, missingSeries, dataFun);
+                    setTimeout(refresh, delta);
+                }
             }
             
             setTimeout(refresh, delta);
@@ -254,31 +249,33 @@
 
         function chart_addData(chart, missingSeries, dataFun) {
             
-            var N = _series.length - missingSeries;    // Number of datums (rows)
-            var incData = dataFun(chart.data, N);      // @type cdo.Datum[]
-            chart.data.add(incData);                   // Update chart data
-            chart.render(true, true, false);           // Re-render (bypassAnimation, recreate, reloadData)
+            
+            var incData = dataFun(chart.data, missingSeries);      // @type cdo.Datum[]
+            debugger;
+            chart.setData(incData);                   // Update chart data
+            chart.render(true, true, false, true);    // Re-render (bypassAnimation, recreate, reloadData, addData)
         }
 
-        var _territory = ['USA', 'Europe', 'Moon', 'RoW'];
-        var _region = { 'USA'   : ['Kansas', 'NewYork', 'Idaho'],
-                        'Europe': [ ],
-                        'Moon'  : ['Big Valley'],
-                        'RoW'   : ['China', 'Japan', 'India', 'S. America', 'Mexico']
-                      };
-        var _market = { 'Kansas'     : [ ],
-                        'NewYork'    : ['Restaurant', 'Fair', 'House'],
-                        'Idaho'      : ['Grocery', 'Fairy', 'House', 'Farm', 'Restaurant'],
-                        'Big Valley' : ['North Hole', 'South Hole', 'West Hole'],
-                        'China'      : [ ],
-                        'Japan'      : [ 'Restaurant' ],
-                        'India'      : [ ],
-                        'S. America' : [ 'Grocery','Restaurant' ],
-                        'Mexico'     : [ 'Grocery', 'Fair']
-                       };
-
-        function randomDataChart5(data, N) {
-            N = _territory.length; 
+        function randomDataChart5(data, missingSeries) {
+            var _valueAmplitude = 10;   // How much `value` can vary (+- half of this)
+            var _territory = ['USA', 'Europe', 'Moon', 'RoW'];
+            var _region = { 'USA'   : ['Kansas', 'NewYork', 'Idaho'],
+                            'Europe': [ ],
+                            'Moon'  : ['Big Valey'],
+                            'RoW'   : ['China', 'Japan', 'India', 'S. America', 'Mexico']
+                          };
+            var _market = { 'Kansas'     : [ ],
+                            'NewYork'    : ['Restaurant', 'Fair', 'House'],
+                            'Idaho'      : ['Grocery', 'Fairy', 'House', 'Farm', 'Restaurant'],
+                            'Big Valey' : ['North Hole', 'South Hole'],
+                            'China'      : [ ],
+                            'Japan'      : [ 'Restaurant' ],
+                            'India'      : [ ],
+                            'S. America' : [ 'Grocery','Restaurant' ],
+                            'Mexico'     : [ 'Grocery', 'Fair']
+                           };
+            var N = _territory.length - missingSeries;    // Number of datums (rows)
+            var _seriesLastValue = {};
             var T = _territory.length,
                 indexesT = sampleIndexes(T, N);
             var dateText = randomDate();
@@ -309,75 +306,83 @@
                 value += _valueAmplitude * (Math.random() - 0.5);
                 _seriesLastValue[territory] = value;
                 
-                rows.push(new cdo.Datum(data, {
-                    territory: territory,
-                    region   :    region,
-                    market   :    market,
-                    value    :     value,
-                    date     :   dateText 
-                }));
+                rows.push([ territory, region, market, value, dateText ]);
             }
 
-            return rows;
+            return {"metadata":testTreemapThreeLevel02.metadata , "resultset": rows};
         }
 
 
-        function randomDataChart3(data, N) {
+        function randomDataChart3(data, missingSeries) {
+            var _valueAmplitude = 10;   // How much `value` can vary (+- half of this)
+            var _series = ['London', 'Paris', 'Lisbon', 'Berlim', 'Madrid', 'New York', 'Porto', 'Rio de Janeiro'];
+            var N = _series.length - missingSeries;    // Number of datums (rows)
+            var _product = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'N'];
+            var _seriesLastValue = {};
             var S = _series.length;
             var indexes = sampleIndexes(S, N);
             var dateText = randomDate();
             var rows = [];
 
             var P = _product.length;
-            var indexesP = sampleIndexes(P, N);
+            var indexesP = sampleIndexes(P, P);
 
             while(N--) {
-                var series = _series[indexes[N]],
-                    product= _product[indexesP[N]],
-                    value  = _seriesLastValue[series] || 0;
-                
-                value += _valueAmplitude * (Math.random() - 0.5);
-                _seriesLastValue[series] = value;
-                
-                rows.push(new cdo.Datum(data, {
-                    date: dateText,
-                    city:   series,
-                    profit:    value,
-                    product: product
-                }));
+                var series = _series[indexes[N]];
+                var M = _product.length;
+                while(M--) {
+                    var product= _product[indexesP[M]],
+                        value  = _seriesLastValue[series] || 0;
+                    
+
+                    value += _valueAmplitude * (Math.random() - 0.5);
+                    _seriesLastValue[series+product] = value;
+
+                    rows.push([ series, product, dateText, value]);
+                     
+                }
             }
 
-            return rows;
+            return {"metadata":relational_one_all_null_series_others_overlapping02.metadata , "resultset": rows};
         }
 
-        function randomDataChart2(data, N) {
+        function randomDataChart2(data, missingSeries) {
+            var _valueAmplitude = 10;   // How much `value` can vary (+- half of this)
+            var _series = ['London', 'Paris', 'Lisbon', 'Berlim', 'Madrid', 'New York', 'Porto', 'Rio de Janeiro'];
+            var N = _series.length - missingSeries;    // Number of datums (rows)
+            var _seriesLastValue = {};
             var S = _series.length;
             var indexes = sampleIndexes(S, N);
             var dateText = randomDate();
             var rows = [];
+            
 
              while(N--) {
                 var series = _series[indexes[N]],
-                    value  = Math.abs(_seriesLastValue[series]) || 0;
-                
-                _seriesLastValue[series] += _valueAmplitude/100 * (Math.random() - 0.5);
+                    value  = _seriesLastValue[series] || 0;
+
+                    value  += _valueAmplitude * (Math.random() - 0.5); 
+
+                    value=Math.abs(value);
           
-                rows.push(new cdo.Datum(data, {
-                    date: dateText,
-                    city:   series,
-                    profit:    value
-                }));
+                rows.push([ series, value,  dateText ]);
             }
 
-            return rows;
+            return {"metadata":relational_01_RT.metadata , "resultset": rows};
         }
 
-        function randomDataChart1(data, N) {
+        function randomDataChart1(data, missingSeries) {
+            var _valueAmplitude = 10;   // How much `value` can vary (+- half of this)
+            var _series = ['London', 'Paris', 'Lisbon', 'Berlim', 'Madrid', 'New York', 'Porto', 'Rio de Janeiro'];
+            var N = _series.length - missingSeries;    // Number of datums (rows)
+            var _seriesLastValue = {};
             var S = _series.length;
             var indexes = sampleIndexes(S, N);
-            var dateText = randomDate();
             var rows = [];
-
+            var i = 4;
+            _valueAmplitude = 50;
+            while(i--){
+             var dateText = randomDate();
              while(N--) {
                 var series = _series[indexes[N]],
                     value  = _seriesLastValue[series] || 0;
@@ -385,15 +390,17 @@
                 value += _valueAmplitude * (Math.random() - 0.5);
                 _seriesLastValue[series] = value;
                 
-                rows.push(new cdo.Datum(data, {
-                    category: dateText,
-                    series:   series,
-                    value:    value
-                }));
+                rows.push([ series, dateText, value ]);
             }
-
-            return rows;
+            N = _series.length - missingSeries; 
+            }
+            _valueAmplitude = 10;
+debugger;
+            return {"metadata":relational_01_neg.metadata , "resultset": rows };
         }
+
+ var _lastDayNumber = 28; // Last day of static data (of 2011/8)
+ var _periodDays = 7;     // Number of days separating sample points
 
         function randomDate() {
             var dayNumber = (_lastDayNumber += _periodDays);
@@ -509,13 +516,15 @@ Line charts are often used to visualize time series data.
 The following is a timeseries line chart in real time mode<br>
 <textarea cols="55" rows="15" id="pvcLine1Code">
 
-var _count = 20;         // Number of refresh periods
-var _delta = 400;        // Refresh period (ms)
-var _seriesMissing = 0;  // How many series are missing each time
+//var _count = 8;          Number of refresh periods
+//var _delta = 300;        Refresh period (ms)
+//var _seriesMissing = 0;  How many series are missing each time
+
+def.setDebug(8);
 
 function chartExample1() {
     
-    var chart = new pvc.LineChart({
+    return new pvc.LineChart({
         canvas: "pvcLine1",
         width:  520,
         height: 300,
@@ -551,11 +560,12 @@ function chartExample1() {
     })
     .setData(relational_01_neg)
     .render();
-    
-    periodicRefresh(chart, _count, _delta, _seriesMissing, randomDataChart1);
 }
 
-chartExample1();
+var chart = chartExample1();
+
+periodicRefresh(chart, /*_count*/ 0, /*_delta*/ 300, /*_seriesMissing*/ 0, randomDataChart1);
+
 </textarea>
 
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
@@ -565,9 +575,9 @@ chartExample1();
 A simple line chart can be enhanced as for example adding a background grid, or drawing the dots
 that connect the lines.<br>
 <textarea cols="55" rows="15" id="pvcLine2Code">
-var _count = 20;         // Number of refresh periods
-var _delta = 400;        // Refresh period (ms)
-var _seriesMissing = 0;  // How many series are missing each time
+//var _count = 8;          Number of refresh periods
+//var _delta = 300;        Refresh period (ms)
+//var _seriesMissing = 0;  How many series are missing each time
 
 function chartExample2() {
     
@@ -619,10 +629,10 @@ function chartExample2() {
     crosstabMode: false
 
   })
-  .setData(relational_01_negRT)
+  .setData(relational_01_RT)
   .render();
 
-  periodicRefresh(chart2, _count, _delta, _seriesMissing, randomDataChart2);
+  periodicRefresh(chart2, /*_count*/ 8, /*_delta*/ 300, /*_seriesMissing*/ 0, randomDataChart2);
 }
 
 chartExample2();
@@ -633,9 +643,9 @@ chartExample2();
 
 <h3>A Real Time Heat Grid</h3>
 <textarea cols="55" rows="15" id="pvcLine3Code">
-var _count = 10;         // Number of refresh periods
-var _delta = 400;        // Refresh period (ms)
-var _seriesMissing = 0;  // How many series are missing each time
+//var _count = 8;          Number of refresh periods
+//var _delta = 300;        Refresh period (ms)
+//var _seriesMissing = 0;  How many series are missing each time
 
 function chartExample3() {
 
@@ -683,7 +693,8 @@ function chartExample3() {
     })
     .render();
 
-  periodicRefresh(chart3, _count, _delta, _seriesMissing, randomDataChart3);
+  periodicRefresh(chart3, /*_count*/ 8, /*_delta*/ 300, /*_seriesMissing*/ 0, randomDataChart3);
+
 }
 
 chartExample3();
@@ -694,9 +705,9 @@ chartExample3();
 
 <h3>A Real Time Pie Chart</h3>
 <textarea cols="55" rows="15" id="pvcLine4Code">
-var _count = 20;         // Number of refresh periods
-var _delta = 400;        // Refresh period (ms)
-var _seriesMissing = 0;  // How many series are missing each time
+//var _count = 8;          Number of refresh periods
+//var _delta = 300;        Refresh period (ms)
+//var _seriesMissing = 0;  How many series are missing each time
 
 function chartExample4() {
 
@@ -740,7 +751,7 @@ function chartExample4() {
     .setData($.extend(true, {},relational_01_RT))
     .render();
 
-  periodicRefresh(chart4, _count, _delta, _seriesMissing, randomDataChart2);
+periodicRefresh(chart4, /*_count*/ 8, /*_delta*/ 300, /*_seriesMissing*/ 0, randomDataChart2);
 }
 
 chartExample4();
@@ -749,15 +760,12 @@ chartExample4();
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine4"></div>
 
-
+ 
 <h3>A Real Time TreeMap</h3>
 <textarea cols="55" rows="15" id="pvcLine5Code">
-/*
-    rootCategoryLabel: "Earth"
-*/
 
-var _count = 20;         // Number of refresh periods
-var _delta = 400;        // Refresh period (ms)
+var _count = 8;         // Number of refresh periods
+var _delta = 300;        // Refresh period (ms)
 var _seriesMissing = 0;  // How many series are missing each time
 
 
@@ -767,20 +775,32 @@ function chartExample5() {
         canvas:     'pvcLine5',
         width:      520,
         height:     300,
+
         title:      "Three-Level Treemap",
         titleFont:  'italic 14px sans-serif',
         selectable: true,
         hoverable:  true,
+
         legend:     true,
         legendPosition: 'right',
+
         rootCategoryLabel: "",
-        readers: 'territory, region, market, value, date',
-        visualRoles:{ 'category'  : 'territory, region, market',
-                      'value'     : 'value'
+
+        readers: 'territory, region, market, date, sales',
+
+        visualRoles:{ 
+            'category'  : 'territory, region, market',
+            'size'     : 'sales',
+            'series'    : 'date'
         },
-        dimensions:{ date:{valueType :  Date       , 
-                      rawFormat : "%Y-%m-%d"  , 
-                      format    : "%m/%d"   }},
+        dimensions:{ 
+            date:{
+                valueType :  Date       , 
+                rawFormat : "%Y-%m-%d"  , 
+                format    : "%m/%d"   
+            }
+        },
+
         //legendSizeMax: '15%',
         legend: {
             scenes: {
@@ -807,6 +827,28 @@ function chartExample5() {
                 }
             }
         },
+
+        /*colorAxisMap: {
+            ' '              :  'yellow' ,
+            'USA'            :  'blue'   ,
+            'USA~Idaho'      :  'blue'   ,
+            'USA~NewYork'    :  'blue'   ,
+            'USA~Kansas'     :  'blue'   ,
+            'Moon'           :  'red'    ,
+            'Moon~Big Valey' :  'red'    ,
+            'RoW'            :  'green'  ,
+            'RoW~China'      :  'green'  ,
+            'RoW~Japan'      :  'green'  ,
+            'RoW~S. America' :  'green'  ,
+            'RoW~India'      :  'green'  ,
+            'RoW~Mexico'     :  'green'
+        },*/
+  
+        //real time - sliding window
+        slidingWindow:true,
+        slidingWindowInterval:'6w',
+        slidingWindowDimName:'date',
+
         extensionPoints: {
             //legendLabel_textAlign: 'right'
         }
@@ -814,16 +856,19 @@ function chartExample5() {
     .setData(testTreemapThreeLevel02, {crosstabMode: false})
     .render();
 
-    periodicRefresh(chart5, _count, _delta, _seriesMissing, randomDataChart5);
+    //periodicRefresh(chart5, _count, _delta, _seriesMissing, randomDataChart5);
 
 }
 
 chartExample5();
 
+
+
+
 </textarea>
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine5"></div>
-
+ 
 
 
 
