@@ -89,7 +89,7 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
         //NEW603 C
         // given a colorMap it substitutes it if it exists
         // a previously stored one
-        effectiveMap: function(colorMap) {
+        effectiveMap: function(colorMap , baseScheme) {
             var prevMap = this._haveMap(),
                 newMap;
 
@@ -107,18 +107,15 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             
             var domain = this.domainValues();
 
-            if(!this.Map                                       || 
-                domain.length > Object.keys(this.Map).length      )
-                {
-                    var newMap = {};
-                    domain.forEach(
-                        function(d) { 
-                            if(!newMap[d]) newMap[d] = scheme(d); 
-                        }, 
-                    this); 
-                    return newMap;        
-                }
-            else return null;
+                var newMap = this.Map || {};
+                domain.forEach(
+                    function(d) { 
+                        if(!newMap[d]) newMap[d] = scheme(d); 
+                    }, 
+                this); 
+                debugger;
+                return newMap;        
+
         },
 
         // NEW603 C
@@ -129,20 +126,25 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
             if(newMap) this.setState({ Map: newMap });
         },
 
+
         // NEW603 C
         // if possible, it saves the map originated by the axis scale
         // functions
         preserveColorMap: function() {
-            if(this.option('PreserveMap') && this.scale) this._saveMap(this.scale);
-        },
 
+            if((this.scale || this.scalesByCateg) && this.scaleType === 'discrete'){ 
+                this._saveMap(this.scale);
+                return true;
+            }
+
+        },
 
         
         scheme: function() {
             return def.lazy(this, '_scheme', this._createScheme, this);
         },
 
-        _createColorMapFilter: function(colorMap) {
+        _createColorMapFilter: function(colorMap, baseScheme) {
             // Fixed Color Values (map of color.key -> first domain value of that color)
             var fixedColors = def.uniqueIndex(colorMap, function(c) { return c.key; });
 
@@ -174,7 +176,7 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
                 };
             }
             
-            var colorMap = this.effectiveMap( me.option('Map') ); // map domain key -> pv.Color
+            var colorMap = this.effectiveMap( me.option('Map')); // map domain key -> pv.Color
             if(!colorMap) {
                 return function(/*domainAsArrayOrArgs*/) {
                     // Create a fresh baseScale, from the baseColorScheme
@@ -186,7 +188,7 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
                 };
             }
 
-            var filter = this._createColorMapFilter(colorMap);
+            var filter = this._createColorMapFilter(colorMap, baseScheme);
 
             return function(d/*domainAsArrayOrArgs*/) {
 
@@ -198,9 +200,10 @@ def('pvc.visual.ColorAxis', pvc_Axis.extend({
                 d = d.filter(filter.domain);
 
                 var baseScale = baseScheme(d),
-                    // Remove fixed colors from the baseScale
-                    r = baseScale.range().filter(filter.color);
-
+                
+                // Remove fixed colors from the baseScale
+                r = baseScale.range().filter(filter.color);
+                
                 baseScale.range(r);
 
                 // Intercept so that the fixed color is tested first
