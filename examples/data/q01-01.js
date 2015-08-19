@@ -492,10 +492,10 @@ var relational_01_neg_rt1 = {
         ["London", "2011-09-26", -2],
         ["London", "2011-10-03", -72],
         ["London", "2011-10-10", 50],
-        ["London", "2011-10--17", 30],
-        ["London", "2011-10--24", -23],
-        ["London", "2011-10--31", -4],
-        ["London", "2011-11--07", -50],
+        ["London", "2011-10-17", 30],
+        ["London", "2011-10-24", -23],
+        ["London", "2011-10-31", -4],
+        ["London", "2011-11-07", -50],
         ["London", "2011-11-14", 53],
         ["London", "2011-11-21", -23],
         ["London", "2011-11-28", -20],
@@ -1126,7 +1126,7 @@ var relational_one_all_null_series_others_overlapping = {
         
         ["Paris",  "E", 24],
         ["Paris",  "F", 4],
-        ["Paris",  "G", 105],
+        ["Paris",  "G", 12],
         ["Paris",  "H", 53],
         
         ["Paris",  "I", 17],
@@ -1824,35 +1824,35 @@ var testTreemapThreeLevel02 = testSunburstThreeLevel02 = {
         "colName": "Market"
     }, {
         "colIndex": 3,
-        "colType": "Numeric",
-        "colName": "Sales"
-    }, {
-        "colIndex": 3,
         "colType": "String",
         "colName": "Date"
+    }, {
+        "colIndex": 4,
+        "colType": "Numeric",
+        "colName": "Sales"
     }],
     "resultset": [
-        ["USA",    'Kansas',     null,         100, "2011-06-05" ],
+        ["USA",    'Kansas',     null         , "2011-06-05",       100],
         
-        ["USA",    'New York',   'Fair',       500, "2011-06-05"],
-        ["USA",    'New York',   'Restaurant', 200, "2011-06-05"],
-        ["USA",    'New York',   'House',      100, "2011-06-05"],
+        ["USA",    'New York',   'Fair'       , "2011-06-05",       500],
+        ["USA",    'New York',   'Restaurant' , "2011-06-05",       200],
+        ["USA",    'New York',   'House'      , "2011-06-05",       100],
         
-        ["USA",    'Idaho',      'Farm',       200, "2011-06-05"],
-        ["USA",    'Idaho',      'Fairy',      500, "2011-06-05"],
-        ["USA",    'Idaho',      'House',      400, "2011-06-05"],
-        ["USA",    'Idaho',      'Grocery',    200, "2011-06-05"],
+        ["USA",    'Idaho',      'Farm'       , "2011-06-05",       200],
+        ["USA",    'Idaho',      'Fairy'      , "2011-06-05",       500],
+        ["USA",    'Idaho',      'House'      , "2011-06-05",       400],
+        ["USA",    'Idaho',      'Grocery'    , "2011-06-05",       200],
         
-        ["Europe", null,         null,         400, "2011-06-05"],
+        ["Europe", null,         null         , "2011-06-05",       400],
         
-        ["Moon",   "Big Valey",  "North Hole", 300, "2011-06-05"],
-        ["Moon",   "Big Valey",  "South Hole", 100, "2011-06-05"],
+        ["Moon",   "Big Valey",  "North Hole" , "2011-06-05",       300],
+        ["Moon",   "Big Valey",  "South Hole" , "2011-06-05",       100],
         
-        ["RoW",    "Japan",      null,         100, "2011-06-05"],
-        ["RoW",    "China",      null,         100, "2011-06-05"],
-        ["RoW",    "S. America", null,          50, "2011-06-05"],
-        ["RoW",    "India",      null,          25, "2011-06-05"],
-        ["RoW",    "Mexico",     null,          25, "2011-06-05"]
+        ["RoW",    "Japan",      null         , "2011-06-05",       100],
+        ["RoW",    "China",      null         , "2011-06-05",       100],
+        ["RoW",    "S. America", null         , "2011-06-05",        50],
+        ["RoW",    "India",      null         , "2011-06-05",        25],
+        ["RoW",    "Mexico",     null         , "2011-06-05",        25]
     ]
 };
 
