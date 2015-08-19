@@ -652,7 +652,7 @@ def
      * Render the visualization.
      * If not created, do it now.
      */
-    render: function(bypassAnimation, recreate, reloadData) {
+    render: function(bypassAnimation, recreate, reloadData, addData) {
         var hasError;
 
         /*global console:true*/
@@ -668,7 +668,7 @@ def
                             pvc.removeTipsyLegends();
 
                         if(!this.isCreated || recreate)
-                            this._create({reloadData: reloadData});
+                            this._create({reloadData: reloadData, addData: addData});
 
                         // TODO: Currently, the following always redirects the call
                         // to topRoot.render;

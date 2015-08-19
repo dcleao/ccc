@@ -76,6 +76,16 @@ pvc.BaseChart
             } else if(def.get(ka, 'reloadData', true)) {
                 // This **replaces** existing data (datums also existing in the new data are kept)
                 this._reloadData();
+            } else if(def.get(ka, 'addData', false)) {
+                // Dispose all data children and linked children (recreated as well)
+                // And clears caches as well.
+                data.disposeChildren();
+
+                // Remove virtual datums (they are regenerated each time)
+                data.clearVirtuals();
+
+                // NEW603 This adds data new data without necessarily removing the previous
+                this._addData();
             } else {
                 // Existing data is kept.
                 // This is used for re-layouting only.
@@ -207,9 +217,31 @@ pvc.BaseChart
         this._loadDataCore(data, translation);
     },
 
-    _loadDataCore: function(data, translation) {
-        var loadKeyArgs = {where: this.options.dataOptions.where, isNull: this._getIsNullDatum()},
-            readQuery = translation.execute(data);
+    // NEW603 C
+    // incremental load --> uses isAdditive
+    _addData: function() {
+        /*jshint expr:true*/
+
+        var data = this.data, translation = this._translation;
+
+        (data && translation) || def.assert("Invalid state.");
+
+        // Pass new resultset to the translation (metadata is maintained!).
+        translation.setSource(this.resultset);
+
+        if(def.debug >= 3) this.log(translation.logSource());
+
+        var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
+
+        // NEW603 C added _initRolesAxes 
+        this._initRolesAxes();
+        this._loadDataCore(data, translation, { isAdditive : true });  
+    },
+
+    //NEW603 - added ka
+    _loadDataCore: function(data, translation, ka) {
+        var loadKeyArgs = $.extend({}, ka, {where: this.options.dataOptions.where, isNull: this._getIsNullDatum()});
+        var readQuery = translation.execute(data);
 
         data.load(readQuery, loadKeyArgs);
 
@@ -669,34 +701,6 @@ pvc.BaseChart
 
         return this;
     },
-
-
-    // ---------------
-
-    /** NEW603 - TODO pass flag to indicate is incremental add*/
-
-    addData: function(data) {
-
-        // check if metadata is the same
-        this.addResultset(data && data.resultset);
-
-        return this;
-    },
-   
-
-    /** NEW603 - TODO pass flag to indicate is incremental add*/
-
-    addResultset: function(resultset) {
-
-        !this.parent || def.fail.operationInvalid("Can only set resultset on root chart.");
-        
-        this.resultset =this.resultset.concat(resultset||[]);
-        if(!this.resultset.length) this.log.warn("Resultset is empty");
-
-        return this;
-    },
-    /**/
-
 
 
     /**

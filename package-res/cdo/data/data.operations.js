@@ -30,17 +30,17 @@ cdo.Data.add(/** @lends cdo.Data# */{
 
         var whereFun  = def.get(keyArgs, 'where'),
             isNullFun = def.get(keyArgs, 'isNull'),
+            isAdditive     = def.get(keyArgs, 'isAdditive', false),  //NEW603 isAdditive 
             datums = def.query(atomz)
                 .select(function(atoms) {
                     var datum = new cdo.Datum(this, atoms);
-
                     if(isNullFun && isNullFun(datum)) datum.isNull = true;
                     if(whereFun  && !whereFun(datum)) return null;
 
                     return datum;
                 }, this);
 
-        data_setDatums.call(this, datums, {isAdditive: false, doAtomGC: true});
+        data_setDatums.call(this, datums, {isAdditive: isAdditive, doAtomGC: true}); //NEW603 isAdditive 
     },
 
 
