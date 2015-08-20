@@ -378,11 +378,10 @@ function(complexType, name, keyArgs) {
     // NEW603 C
     // override comparer of all dimensions of the type
     setComparer: function( comparer ){
+        
         this.isComparable = true;
         this._comparer=comparer;
-        var dims = this.complexType.dimensionsList();
-        if(dims) dims.forEach(
-            function(dim){ dim.comparer=comparer; },this);
+
     },
 
     /**
