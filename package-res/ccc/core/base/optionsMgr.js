@@ -99,7 +99,7 @@ function pvc_options(specs, context) {
      */
     function isSpecified(name) { return resolve(name).isSpecified; }
    
-    // NEW603 C
+    // CDF603
     /* returns specified value or a given default
        allow override of default
        if a new default is not specified give the info default value*/
@@ -202,7 +202,7 @@ function pvc_options(specs, context) {
     option.isSpecified  = isSpecified;
     option.isDefined    = isDefined;
 
-    //NEW603 C created getSpecified
+    //CDF603 created getSpecified
     option.getSpecified = getSpecified;
 
     option.specify      = specify;
