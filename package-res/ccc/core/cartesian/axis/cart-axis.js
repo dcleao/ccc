@@ -152,20 +152,33 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
                 tf = ticks[tickCount - 1];
 
                 //NEW603 TODO - improve this
-            if( this.ratio                                      ||
-                this.option.isSpecified('Ratio')                ||
-                    (this.option.isSpecified('PreserveRatio')   && 
-                    this.option.isSpecified('FixedLength'))) {
+            if(  this.ratio                                      ||
+                 this.option.isSpecified('Ratio')                ||
+                    (this.option('PreserveRatio') && this.option('FixedLength'))) {
                 var currDomain = this.scale.domain(),
-                    tickRem    = []; 
+                    tickRem    = [],
+                    align      = this.option('DomainAlign');
 
-                if((+ tf) > (+ currDomain[1])) 
-                    tickRem.push(tf);
-                if((+ ti) < (+ currDomain[0])) 
-                    tickRem.push(ti);              
-                    
+                if(align == 'min'){
+                    //if( (+ti) < (+currDomain[0])) tickRem.push(ti);
+                    if( (+tf) > (+currDomain[1])) tickRem.push(tf); 
+                } else if(align == 'max') {
+                    debugger;
+                    if( (+ti) < (+currDomain[0])) tickRem.push(ti);
+                    //if( (+tf) > (+currDomain[1])) tickRem.push(tf);       
+                } else{ 
+                    if( (+ti) < (+currDomain[0])) tickRem.push(ti);     
+                    if( (+tf) > (+currDomain[1])) tickRem.push(tf);       
+                }
+
                 tickRem.forEach(function(tick) {
-                    ticks.splice(ticks.indexOf(tick),1);
+                    var id    = this.id,
+                        panel = this.chart.axesPanels ? this.chart.axesPanels[id] : undefined,
+                        index = ticks.indexOf(tick);
+
+                    panel._layoutInfo.ticks.splice(index, 1);
+                    panel._layoutInfo.ticksText.splice(index, 1);
+                    ticks = panel._layoutInfo.ticks;
                     delete tick;
                 }, this);
 
@@ -192,8 +205,9 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
                     var ti = ticks[0],
                         tf = ticks[tickCount - 1];
                     // NEW603 C
-                    this.adjustDomain(scale, ti, tf);
-                    this.ticks = this.removeTicks(ticks);   
+                    this.adjustDomain(scale, ti, tf);  
+                    this.ticks = this.removeTicks(ticks);
+                    ticks = this.ticks;
         
                 } else{
                     // NEW603 C
@@ -228,12 +242,12 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
                 if(di == null || df == null) return; //scale has no domain to adjust?
 
             // adjust domain according to ratio and range
-            if(this.option.isSpecified('Ratio') || this.option.isSpecified('PreserveRatio')){
+            if(this.option.isSpecified('Ratio') || (this.option('PreserveRatio') && this.option('FixedLength'))){
                 var ratio      = this.option('Ratio') || this.ratio,
                     align      = this.option('DomainAlign'),
                     rangeSize  = scale.size,
                     domainSize;
-  
+                //debugger;
                 if(rangeSize && ratio){
 
                     domainSize=rangeSize/ratio;
@@ -292,7 +306,7 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
                 //NEW603 C
                 scale.range(scale.min, scale.max);
                 this.forceRatio(scale);
-                //if(this.ticks) this.setTicks(this.ticks);
+                //if(this.ticks) this.ticks = this.removeTicks(this.ticks);
 
             }
             return scale;
@@ -398,6 +412,7 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
         },
 
         calcContinuousTicks: function(tickCountMax) {
+            //debugger;
             return this.scale.ticks(this.desiredTickCount(), {
                 roundInside:  this.option('DomainRoundMode') !== 'tick',
                 tickCountMax: tickCountMax,
