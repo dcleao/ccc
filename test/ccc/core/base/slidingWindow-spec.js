@@ -194,7 +194,7 @@ define([
 
             describe(" setting axis defaults", function() {
                 it("should set axis options' defaults", function() {
-                    
+                    options['slidingWindowInterval'] = 'w';
                     slidingWindow = createSlidingWindow(options, pvc.LineChart);
                     slidingWindow._initFromOptions();
                     slidingWindow.setAxisDefaults();
@@ -215,6 +215,32 @@ define([
                     axes.forEach(function(axis) {
                          expect(axis.option.defaultValue('FixedLength')).toEqual(this.interval);
                          expect(axis.option('FixedLength')).toEqual(this.interval);
+                    }, slidingWindow);
+
+        
+                });
+
+                it("should set axis options' defaults except for fixed length", function() {
+                    slidingWindow = createSlidingWindow(options, pvc.LineChart);
+                    slidingWindow._initFromOptions();
+                    slidingWindow.setAxisDefaults();
+
+                    slidingWindow.chart.axesByType.color.forEach(function(axis) {
+                        expect(axis.option.defaultValue('PreserveMap')).toEqual(true);
+                        var dim = axis.role.grouping.firstDimension;
+                        //expect(dim.comparer).toEqual(def.ascending);
+                    }, slidingWindow);
+
+                    expect(slidingWindow.chart.options.preserveLayout).toEqual(true);
+
+                    var axes = slidingWindow.chart.axesList.filter(function(axis) {
+                        var dim = axis.role.grouping.firstDimension;
+                        return dim.name == this.dimName;
+                    }, slidingWindow);
+
+                    axes.forEach(function(axis) {
+                         expect(axis.option.defaultValue('FixedLength')).toBe(undefined);
+                         expect(axis.option('FixedLength')).toBe(undefined);
                     }, slidingWindow);
 
         
