@@ -319,10 +319,10 @@ def
         var info   = this.plotPanelList[0]._layoutInfo,
             size   = info.clientSize,
             a_size = (axis.orientation === 'x') ? size.width : size.height;
- 
+
         axis.setScaleRange(a_size);
         axis.setTicks(axis.ticks);
-
+        
         return axis.scale;
     },
         
