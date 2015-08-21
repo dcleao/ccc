@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c:model 
+    xmlns:c="urn:webdetails/com/2012" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:webdetails/com/2012 ../../../schema/com_2012.xsd"
+    xmlns="http://www.w3.org/1999/xhtml">
+    
+    <c:atomType name="AxisDomainAlign" space="pvc.options.varia" base="string">
+        <c:documentation>
+            The domain alignment, used to decide which values to keep or to view, 
+            for options like  <tt> FixedLength </tt> (see <c:link to="pvc.options.axes.AnyContinuousCartesianAxis#fixedLength" /> and 
+            <c:link to="pvc.options.axes.SizeAxis#fixedLength" /> ) 
+            and  <tt> Ratio </tt> (see <c:link to="pvc.options.axes.AnyContinuousCartesianAxis#ratio" /> ).
+
+            This only applies when the domain has some order among its elements,
+            and, consequently, some minimum and maximum values.
+
+        </c:documentation>
+        
+        <c:atom name="Min" value="'min'">
+            <c:documentation>
+                If necessary, the domain will be cut in a way that 
+                the smallest values will allways be kept, and the maximum 
+                is discarded.
+            </c:documentation>
+        </c:atom>
+        
+        <c:atom name="Max" value="'max'">
+            <c:documentation>
+                If necessary, the domain will be cut in a way that 
+                the biggest values will allways be kept, and the minimum 
+                is discarded.
+            </c:documentation>
+        </c:atom>
+        
+        <c:atom name="Center" value="'center'">
+            <c:documentation>
+                If necessary, the domain will be cut by computing the 
+                central values, discarding both minimum and maximum.
+            </c:documentation>
+        </c:atom>
+    </c:atomType>
+</c:model>
