@@ -448,7 +448,7 @@ def
         return this._layoutInfo ? this._layoutInfo.requestPaddings : undefined;
     },
 
-    
+
     /**
      * Override to calculate panel client size.
      * <p>
@@ -601,33 +601,33 @@ def
                     childKeyArgs.canChange = remTimes > 0;
 
                     child.layout(new pvc_Size(remSize), childKeyArgs);
-             
+
                     if(child.isVisible) {
                         resized = checkChildResize.call(this, child, canResize);
                         if(resized) return false; // stop
-                        
+
                         var requestPaddings = /*!this.chart._preserveLayout ? */ child._layoutInfo.requestPaddings;
-                  
-                            if(checkPaddingsChanged(paddings, requestPaddings)) {
-                                paddings = requestPaddings
 
-                                // Child wants to repeat its layout with != paddings
-                                if(remTimes > 0) {
-                                    paddings = new pvc_Sides(paddings);
-                                    if(useLog) this.log("Child requested paddings change: " + def.describe(paddings));
-                                    return true; // again
-                                }
+                        if(checkPaddingsChanged(paddings, requestPaddings)) {
+                            paddings = requestPaddings
 
-                                if(def.debug >= 2) this.log.warn("Child requests paddings change but iterations limit has been reached.");
-                                // ignore overflow
+                            // Child wants to repeat its layout with != paddings
+                            if(remTimes > 0) {
+                                paddings = new pvc_Sides(paddings);
+                                if(useLog) this.log("Child requested paddings change: " + def.describe(paddings));
+                                return true; // again
                             }
 
-                            // --------
+                            if(def.debug >= 2) this.log.warn("Child requests paddings change but iterations limit has been reached.");
+                            // ignore overflow
                         }
 
-                        positionChild.call(this, child);
+                        // --------
+                    }
 
-                        if(child.anchor !== 'fill') updateSide.call(this, child);
+                    positionChild.call(this, child);
+
+                    if(child.anchor !== 'fill') updateSide.call(this, child);
 
                     return false; // stop
                 } finally {

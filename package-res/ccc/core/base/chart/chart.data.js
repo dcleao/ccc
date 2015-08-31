@@ -76,39 +76,31 @@ pvc.BaseChart
             } else if(def.get(ka, 'reloadData', true)) {
                 // This **replaces** existing data (datums also existing in the new data are kept)
                 this._reloadData();
-            } else if(def.get(ka, 'addData', false)) {
-                // Dispose all data children and linked children (recreated as well)
-                // And clears caches as well.
-                data.disposeChildren();
-
-                // Remove virtual datums (they are regenerated each time)
-                data.clearVirtuals();
-
-                // CDF603 
-                // This adds data new data without necessarily removing the previous
-                this._addData();
             } else {
-                // Existing data is kept.
-                // This is used for re-layouting only.
-                // Yet...
-                
                 // Dispose all data children and linked children (recreated as well)
                 // And clears caches as well.
                 data.disposeChildren();
 
                 // Remove virtual datums (they are regenerated each time)
                 data.clearVirtuals();
-                
+
                 // CDF603
-                this._initRolesAxes();
+                if(def.get(ka, 'addData', false)) {
+                    // This adds data new data without necessarily removing the previous
+                    this._addData();
+                } else {
+                    // Existing data is kept.
+                    // This is used for re-layouting only.
+                    this._initAxes();
+                }
             }
-        }else this._initRolesAxes(); // CDF603
+        } else {
+            this._initAxes(); // CDF603
+        }
 
         // CDF603
         // can only be done after axes creation
-        if(this.slidingWindow) {
-            this.slidingWindow.setAxisDefaults(); 
-        } 
+        if(this.slidingWindow) this.slidingWindow.setAxesDefaults();
 
         // Cached data stuff
         delete this._partsDataCache;
@@ -116,46 +108,22 @@ pvc.BaseChart
 
         if(def.debug >= 3) this.log(this.data.getInfo());
     },
- 
-
-    // CDF603
-    // Auxiliar function to initialize axes prior to the datums distribution
-    _initRolesAxes: function(){
-
-        hasMultiRole = this.visualRoles.multiChart.isBound();
-        this._initAxes(hasMultiRole);
-
-    },
 
     // CDF603
     // @virtual
-   _createScoringOptions: function(options) {
-         this._createSlidingWindow();
-         if(this.slidingWindow){
-            var sw = this.slidingWindow;
-            //override default scoring functions
-            this.data.score = function(datum) { sw.score.call( sw , datum ); }
-            this.data.select = function(allData, remove) { sw.select.call( sw , allData, remove ); }
-            return this;
+    _initSlidingWindow: function() {
+        var sw = this.options.slidingWindow ? new pvc.visual.SlidingWindow(this) : null;
+
+        if(this.slidingWindow) {
+            this.data.clipper(null);
         }
-    },
 
-    // CDF603
-    // @virtual
-    _createSlidingWindow: function() {
-
-        var sw = this.options.slidingWindow;
-
-        if(this.slidingWindow){ this.slidingWindow.delete; }
+        this.slidingWindow = sw;
 
         if(sw) {
-
-            sw = new pvc.visual.SlidingWindow(this);
-            this.slidingWindow = sw;
-            sw._initFromOptions();
-
-        } 
-        return this;
+            // Bind data's scoring functions to slidingWindow's scoring options.
+            this.data.clipper(sw.select.bind(sw));
+        }
     },
 
     _loadData: function() {
@@ -215,10 +183,10 @@ pvc.BaseChart
             });
 
         var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
-        
+
         // CDF603
-        this._initRolesAxes();
-        this._createScoringOptions( this.options );
+        this._initAxes();
+        this._initSlidingWindow();
 
         // ----------
 
@@ -240,7 +208,7 @@ pvc.BaseChart
         var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
 
         // CDF603
-        this._initRolesAxes();
+        this._initAxes();
         this._loadDataCore(data, translation);
     },
 
@@ -249,7 +217,8 @@ pvc.BaseChart
     _addData: function() {
         /*jshint expr:true*/
 
-        var data = this.data, translation = this._translation;
+        var data = this.data,
+            translation = this._translation;
 
         (data && translation) || def.assert("Invalid state.");
 
@@ -259,9 +228,9 @@ pvc.BaseChart
         if(def.debug >= 3) this.log(translation.logSource());
 
         var isMultiChartOverflowRetry = this._isMultiChartOverflowClipRetry;
-        
-        this._initRolesAxes();
-        this._loadDataCore(data, translation, { isAdditive : true });  
+
+        this._initAxes();
+        this._loadDataCore(data, translation, {isAdditive: true});
     },
 
     // CDF603
@@ -271,7 +240,6 @@ pvc.BaseChart
         var readQuery = translation.execute(data);
 
         data.load(readQuery, loadKeyArgs);
-
     },
 
     _createVisualRolesContext: function() {

@@ -6,152 +6,166 @@ define([
     'test/data-1'
 ], function(cdo, pvc, def, utils, datas) {
 
-    describe('Sliding Window object for cartesian charts', function() {
-
-        it("should create a sliding window options object; ", function() {
-            var slidingWindow = createSlidingWindow({ timeSeries: true, timeSeriesFormat: "%Y-%m-%d", slidingWindow:true }, pvc.LineChart);
-            expect(!!slidingWindow).toBe(true);
-        });
+    describe("Sliding Window object for cartesian charts ", function() {
 
         describe("1) If no options are specified: ", function() {
 
-            var options = { timeSeries      : true,
-                            timeSeriesFormat: "%Y-%m-%d",
-                            slidingWindow   :  true 
-                           };
-            var slidingWindow = createSlidingWindow(options, pvc.LineChart);
+            it("should not create a sliding window options object", function() {
+                var slidingWindow = createSlidingWindow({
+                    timeSeries: true,
+                    timeSeriesFormat: "%Y-%m-%d",
+                    slidingWindow: true
+                }, pvc.LineChart);
 
-            it("should be created with default values; ", function() {
-                slidingWindow._initFromOptions();
-
-                expect(slidingWindow.dimName).toEqual("category");
-                expect(slidingWindow.interval).toEqual(Number.MAX_VALUE);
-                expect(slidingWindow.score).toEqual(slidingWindow._defaultSlidingWindowScore);
-                expect(slidingWindow.select).toEqual(slidingWindow._defaultSlidingWindowSelect);
+                expect(slidingWindow == null).toBe(true);
             });
         });
 
+        describe("2) If no options but `slidingWindowLength` are specified: ", function() {
 
-         describe("2) If some options are specified:  ", function() {
+            var slidingWindow = createSlidingWindow({
+                        timeSeries: true,
+                        timeSeriesFormat: "%Y-%m-%d",
+                        slidingWindow: true,
+                        slidingWindowLength: 'y'
+                    }, pvc.LineChart);
+
+            it("should create a sliding window options object", function() {
+                expect(!!slidingWindow).toBe(true);
+            });
+
+            it("should create a sliding window options object with default values", function() {
+                expect(slidingWindow.dimension).toBe("category");
+                expect(slidingWindow.length).toBe(pvc.time.intervals.y);
+                expect(typeof slidingWindow.score).toBe("function");
+                expect(typeof slidingWindow.select).toBe("function");
+            });
+        });
+
+         describe("3) If some other options are specified: ", function() {
             var options, slidingWindow;
 
             beforeEach(function() {
-                options = { timeSeries      : true,
-                            timeSeriesFormat: "%Y-%m-%d",
-                            slidingWindow   :  true 
-                           };
-                slidingWindow = undefined;                
-            });
-
-            afterEach(function() {
+                options = {
+                    timeSeries: true,
+                    timeSeriesFormat: "%Y-%m-%d",
+                    slidingWindow: true
+                };
                 slidingWindow = undefined;
-                options = undefined;
             });
-
 
             it("should be created with correct specified options", function() {
-                options['slidingWindowInterval'] = 'w';
-                options['slidingWindowDimName']  = 'series';
-                options['slidingWindowScore'] = function(d) { return 1; } ;
-                
+                options['slidingWindowLength'] = 'w';
+                options['slidingWindowDimension'] = 'series';
+                options['slidingWindowScore'] = function(d) { return 1; };
+
                 slidingWindow = createSlidingWindow(options, pvc.LineChart);
-                slidingWindow._initFromOptions();
 
-                expect(slidingWindow.interval).toEqual(6048e5);
-                expect(slidingWindow.dimName).toEqual(options.slidingWindowDimName);
-   
-            });         
-
-
-            it("should ignore incorrect options", function() {
-                options['slidingWindowInterval'] = 'InvalidStringFormat';
-                options['slidingWindowDimName']  = 'InexistentDimension';
-                
-                slidingWindow = createSlidingWindow(options, pvc.LineChart);
-                slidingWindow._initFromOptions();
-
-                expect(slidingWindow.interval).toEqual(Number.MAX_VALUE);
-                expect(slidingWindow.dimName).not.toEqual(options.slidingWindowDimName);
-   
+                expect(slidingWindow.length).toBe(pvc.time.intervals.w);
+                expect(slidingWindow.dimension).toBe(options.slidingWindowDimension);
+                expect(slidingWindow.score).toBe(options.slidingWindowScore);
             });
 
-            describe(" evaluating datums", function() {
-                describe(" with default scoring functions - ", function() {
-                    it("should discard datuns outside interval", function() {
-                        options['slidingWindowInterval'] = 'y';
+            it("should ignore incorrect length", function() {
+                options['slidingWindowLength'] = 'InvalidStringFormat';
+
+                slidingWindow = createSlidingWindow(options, pvc.LineChart);
+
+                expect(slidingWindow.length).toBe(null);
+            });
+
+            it("should ignore incorrect dimension", function() {
+                options['slidingWindowLength'] = 'w';
+                options['slidingWindowDimension']  = 'InexistentDimension';
+
+                slidingWindow = createSlidingWindow(options, pvc.LineChart);
+
+                expect(slidingWindow.length).toBe(pvc.time.intervals.w);
+                expect(slidingWindow.dimension).toBe(null);
+            });
+
+            describe("evaluating datums ", function() {
+                describe("with default scoring functions - ", function() {
+                    it("should discard datums outside the window", function() {
+
+                        options['slidingWindowLength'] = 'y';
 
                         slidingWindow = createSlidingWindow(options, pvc.LineChart);
-                        slidingWindow._initFromOptions();
+
                         var data = slidingWindow.chart.data,
-                            dimension = data.dimensions(slidingWindow.dimName);
+                            dimension = data.dimensions(slidingWindow.dimension),
                             datum1 = new cdo.Datum(data, {
-                                            category: "2011-02-12",
-                                            series:   "London",
-                                            value:    45                }),
+                                        category: "2011-02-12",
+                                        series:   "London",
+                                        value:    45
+                                    }),
                             datum2 = new cdo.Datum(data, {
-                                            category: "2014-02-12",
-                                            series:   "Lisbon",
-                                            value:    70                });      
+                                        category: "2014-02-12",
+                                        series:   "Lisbon",
+                                        value:    70
+                                    });
 
                         data.add([datum1, datum2]);
+
                         var remove = []
                         slidingWindow.select([datum1, datum2], remove);
 
-                        expect(slidingWindow.dimName).toEqual(dimension.name);
                         expect(slidingWindow.score(datum1)).toEqual(datum1.atoms[dimension.name].value);
                         expect(remove.length).toEqual(1);
                         expect(remove[0]).toEqual(datum1);
-
                     });
 
                     it("should discard no datum if interval is unspecified", function() {
 
                         slidingWindow = createSlidingWindow(options, pvc.LineChart);
-                        slidingWindow._initFromOptions();
+
                         var data = slidingWindow.chart.data,
-                            dimension = data.dimensions(slidingWindow.dimName);
+                            dimension = data.dimensions(slidingWindow.dimension),
                             datum1 = new cdo.Datum(data, {
-                                            category: "2011-02-12",
-                                            series:   "London",
-                                            value:    45                }),
+                                        category: "2011-02-12",
+                                        series:   "London",
+                                        value:    45
+                                    }),
                             datum2 = new cdo.Datum(data, {
-                                            category: "2014-02-12",
-                                            series:   "Lisbon",
-                                            value:    70                });      
+                                        category: "2014-02-12",
+                                        series:   "Lisbon",
+                                        value:    70
+                                    });
 
                         data.add([datum1, datum2]);
+
                         var remove = [];
                         slidingWindow.select([datum1, datum2], remove);
-                        
-                        expect(slidingWindow.dimName).toEqual(dimension.name);
+
                         expect(slidingWindow.score(datum1)).toEqual(datum1.atoms[dimension.name].value);
                         expect(remove.length).toEqual(0);
-
                     });
                 });
 
-                describe(" with different score and select functions - ", function() {
+                describe("with different score and select functions - ", function() {
 
                     var data;
 
-                    it("should discard all datuns if scoring function always returns null", function() {
-                        options['slidingWindowInterval'] = 'y';
+                    it("should discard all datums if scoring function always returns null", function() {
+                        options['slidingWindowLength'] = 'y';
                         options['slidingWindowScore'] = function(d) { return null; } ;
 
                         slidingWindow = createSlidingWindow(options, pvc.LineChart);
-                        slidingWindow._initFromOptions();
                         data = slidingWindow.chart.data;
-                        var dimension = data.dimensions(slidingWindow.dimName);
-                            datum1 = new cdo.Datum(data, {
-                                            category: "2011-02-12",
-                                            series:   "London",
-                                            value:    45                }),
+
+                        var datum1 = new cdo.Datum(data, {
+                                    category: "2011-02-12",
+                                    series:   "London",
+                                    value:    45
+                                }),
                             datum2 = new cdo.Datum(data, {
-                                            category: "2014-02-12",
-                                            series:   "Lisbon",
-                                            value:    70                });      
+                                        category: "2014-02-12",
+                                        series:   "Lisbon",
+                                        value:    70
+                                    });
 
                         data.add([datum1, datum2]);
+
                         var remove = [];
                         slidingWindow.select([datum1, datum2], remove);
 
@@ -160,43 +174,40 @@ define([
                         expect(remove.length).toEqual(2);
                         expect(remove[0]).toEqual(datum1);
                         expect(remove[1]).toEqual(datum2);
-
                     });
 
                     it("should ignore score if select is default and score has no meaning", function() {
-                        options['slidingWindowInterval'] = 'y';
+                        options['slidingWindowLength'] = 'y';
                         options['slidingWindowScore'] = function(d) { return "noMeaningScore"; } ;
 
                         slidingWindow = createSlidingWindow(options, pvc.LineChart);
-                        slidingWindow._initFromOptions();
                         data = slidingWindow.chart.data;
-                        var dimension = data.dimensions(slidingWindow.dimName);
-                            datum1 = new cdo.Datum(data, {
-                                            category: "2011-02-12",
-                                            series:   "London",
-                                            value:    45                }),
+
+                        var datum1 = new cdo.Datum(data, {
+                                        category: "2011-02-12",
+                                        series:   "London",
+                                        value:    45
+                                    }),
                             datum2 = new cdo.Datum(data, {
-                                            category: "2014-02-12",
-                                            series:   "Lisbon",
-                                            value:    70                });  
+                                        category: "2014-02-12",
+                                        series:   "Lisbon",
+                                        value:    70
+                                    });
 
                         data.add([datum1, datum2]);
+
                         var remove = [];
-                        slidingWindow.select([datum1, datum2], remove);    
+                        slidingWindow.select([datum1, datum2], remove);
 
                         expect(remove.length).toEqual(0);
-
                     });
-
                 });
+            });
 
-            });       
-
-            describe(" setting axis defaults", function() {
+            describe("setting axis defaults ", function() {
                 it("should set axis options' defaults", function() {
-                    options['slidingWindowInterval'] = 'w';
+                    options['slidingWindowLength'] = 'w';
                     slidingWindow = createSlidingWindow(options, pvc.LineChart);
-                    slidingWindow._initFromOptions();
                     slidingWindow.setAxisDefaults();
 
                     slidingWindow.chart.axesByType.color.forEach(function(axis) {
@@ -209,20 +220,17 @@ define([
 
                     var axes = slidingWindow.chart.axesList.filter(function(axis) {
                         var dim = axis.role.grouping.firstDimension;
-                        return dim.name == this.dimName;
+                        return dim.name == this.dimension;
                     }, slidingWindow);
 
                     axes.forEach(function(axis) {
-                         expect(axis.option.defaultValue('FixedLength')).toEqual(this.interval);
-                         expect(axis.option('FixedLength')).toEqual(this.interval);
+                         expect(axis.option.defaultValue('FixedLength')).toEqual(this.length);
+                         expect(axis.option('FixedLength')).toEqual(this.length);
                     }, slidingWindow);
-
-        
                 });
 
                 it("should set axis options' defaults except for fixed length", function() {
                     slidingWindow = createSlidingWindow(options, pvc.LineChart);
-                    slidingWindow._initFromOptions();
                     slidingWindow.setAxisDefaults();
 
                     slidingWindow.chart.axesByType.color.forEach(function(axis) {
@@ -235,34 +243,25 @@ define([
 
                     var axes = slidingWindow.chart.axesList.filter(function(axis) {
                         var dim = axis.role.grouping.firstDimension;
-                        return dim.name == this.dimName;
+                        return dim.name == this.dimension;
                     }, slidingWindow);
 
                     axes.forEach(function(axis) {
                          expect(axis.option.defaultValue('FixedLength')).toBe(undefined);
                          expect(axis.option('FixedLength')).toBe(undefined);
                     }, slidingWindow);
-
-        
                 });
-            });   
-
+            });
         });
-
     });
-
 
     function createChart(options, type) {
         var dataSpec = datas['relational, series=city|category=date|value=qty, square form'];
-        var chart = utils.createChart(type, options, dataSpec);
-        return chart;
+        return utils.createChart(type, options, dataSpec);
     }
 
     function createSlidingWindow(chartOptions, chartType) {
         var chart = createChart(chartOptions, chartType);
-        var SlidingWindow = pvc.visual.SlidingWindow;
-        return new SlidingWindow(chart);
+        return chart.slidingWindow;
     }
-
-
 });

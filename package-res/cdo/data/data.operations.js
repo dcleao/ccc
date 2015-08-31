@@ -30,7 +30,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
 
         var whereFun  = def.get(keyArgs, 'where'),
             isNullFun = def.get(keyArgs, 'isNull'),
-            isAdditive     = def.get(keyArgs, 'isAdditive', false),  //CDF603 
+            isAdditive     = def.get(keyArgs, 'isAdditive', false),  //CDF603
             datums = def.query(atomz)
                 .select(function(atoms) {
                     var datum = new cdo.Datum(this, atoms);
@@ -40,33 +40,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
                     return datum;
                 }, this);
 
-        data_setDatums.call(this, datums, {isAdditive: isAdditive, doAtomGC: true}); //CDF603 
-    },
-
-
-    // CDF603
-    // Auxiliar function to remove datums (to avoid repeated code)
-    // removes datums instance from datums, datumById, datumByKey; 
-    // remove from selected and visible if necessary
-    removeDatum: function(datum){
-
-        var datums = this._datums;
-
-        var visDatums   = this._visibleNotNullDatums,
-            selDatums   = this._selectedNotNullDatums,
-            datumsByKey = this._datumsByKey,
-            datumsById  = this._datumsById;
-
-        var id  = datum.id,
-            key = datum.key;
-
-            datums.splice(datums.indexOf(datum), 1);
-            delete datumsById [id ];
-            delete datumsByKey[key];
-
-            if(selDatums && datum.isSelected) selDatums.rem(id);
-            if(datum.isVisible) visDatums.rem(id);
-
+        data_setDatums.call(this, datums, {isAdditive: isAdditive, doAtomGC: true}); //CDF603
     },
 
     clearVirtuals: function() {
@@ -84,7 +58,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
                 if(datum.isVirtual) {
 
                    // CDF603 C
-                    this.removeDatum(datum);
+                    cdo_removeDatumLocal.call(this, datum);
                     L--;
                     removed = true;
                 } else {
@@ -120,17 +94,46 @@ cdo.Data.add(/** @lends cdo.Data# */{
         /*global dim_uninternVirtualAtoms:true*/
         def.eachOwn(this._dimensions, function(dim) { dim_uninternVirtualAtoms.call(dim); });
     },
-   
 
-    score: function(datum){ 
-        return true; 
-    }, 
-    
-    select: function(allData, remove){ 
-        allData.forEach(function(datum){ 
-            if( !this.score(datum)) remove.push(datum); 
-        },this); 
-    }, 
+    score: function(datum) {
+        return 1;
+    },
+
+    select: function(allDatums, remove) {
+        allDatums.forEach(function(datum) {
+            if(this.score(datum) == null) remove.push(datum);
+        }, this);
+    },
+
+    //region Clipping
+    _clipper: null,
+
+    clipper: function(clipper) {
+        if(arguments.length) {
+            this._clipper = clipper;
+            return this;
+        }
+
+        return this._clipper;
+    },
+
+    /**
+     * Clips the given datums by applying the data's set clipper function, if any.
+     * Returns the <i>clipped</i> datums (the ones to be removed).
+     *
+     * The given datums must belong to this data.
+     *
+     * If no clipper function is set, an empty array is returned.
+     *
+     * @param {cdo.Datum[]} datums The array of datums to clip.
+     * @return {cdo.Datum[]} The clipped datums.
+     *
+     * @see #clipper
+     */
+    clipDatums: function(datums) {
+        return (this._clipper && this._clipper.call(null, datums)) || [];
+    },
+    //endregion
 
     /**
      * Adds new datums to the owner data.
@@ -138,11 +141,9 @@ cdo.Data.add(/** @lends cdo.Data# */{
      */
     add: function(datums) {
         /*global cdo_assertIsOwner:true, data_setDatums:true*/
-
         cdo_assertIsOwner.call(this);
-        
-        data_setDatums.call(this, datums, {isAdditive: true, doAtomGC: true});
 
+        data_setDatums.call(this, datums, {isAdditive: true, doAtomGC: true});
     },
 
     /**
@@ -227,11 +228,11 @@ cdo.Data.add(/** @lends cdo.Data# */{
     where: function(whereSpec, keyArgs) {
         // When !whereSpec and any keyArgs, results are not cached.
         // Also, the linked data will not filter incoming new datums as expected.
-        // In the other situations, 
+        // In the other situations,
         //  because the filtering operation is based on a grouping operation,
-        //  the results are partially cached at the grouping layer (the indexes), 
+        //  the results are partially cached at the grouping layer (the indexes),
         //  and the cached indexes will update, but not the new data tha is built in here.
-        // The conclusion is that the whereSpec and keyArgs arguments must be 
+        // The conclusion is that the whereSpec and keyArgs arguments must be
         //  compiled into a single where predicate
         //  so that it can later be applied to incoming new datums.
         //var datums = this.datums(whereSpec, keyArgs);
@@ -361,8 +362,8 @@ cdo.Data.add(/** @lends cdo.Data# */{
         return data_where.call(this, whereSpec, keyArgs).first() || null;
     },
 
-    
-    // TODO: find a proper name for this! 
+
+    // TODO: find a proper name for this!
     //  sumDimensionValueAbs??
     // Would it be confused with the value of the local dimension?
 
@@ -523,7 +524,7 @@ function data_setDatums(addDatums, keyArgs) {
         datums      = oldDatums;
         datumsById  = oldDatumsById;
         datumsByKey = oldDatumsByKey;
-        
+
         // Clear caches
         this._sumAbsCache = null;
     } else {
@@ -535,7 +536,7 @@ function data_setDatums(addDatums, keyArgs) {
             // Clear children (and caches)
             /*global cdo_disposeChildLists:true*/
             cdo_disposeChildLists.call(this);
-            
+
             visDatums.clear();
             selDatums && selDatums.clear();
         }
@@ -554,16 +555,13 @@ function data_setDatums(addDatums, keyArgs) {
     // CDF603
     // Datum evaluation according to a score/select criteria
     // Defaults don't remove anything
-    var remove = [];
-    this.select(datums, remove);
-    remove.forEach( function(rmDatum) { this.removeDatum(rmDatum); }, this );
-
+    this.clipDatums(datums).forEach(cdo_removeDatumLocal, this);
 
     // CDF603
     // Mark and sweep Garbage Collection pushed to the end of function
 
     // TODO: change this to a visiting id method,
-    //  that by keeping the atoms on the previous visit id, 
+    //  that by keeping the atoms on the previous visit id,
     //  would allow not having to do this mark-visited phase.
 
     // Visit atoms of existing datums.
@@ -580,11 +578,11 @@ function data_setDatums(addDatums, keyArgs) {
         }, this);
     }
 
-    if(/*isAdditive && */ newDatums || !isAdditive){
+    if(/*isAdditive && */ newDatums || !isAdditive) {
 
-        if(!isAdditive){ newDatums = datums; }
+        if(!isAdditive) { newDatums = datums; }
 
-        newDatums.forEach(function(newDatum){
+        newDatums.forEach(function(newDatum) {
             data_processDatumAtoms.call(
                 this,
                 newDatum,
@@ -598,7 +596,7 @@ function data_setDatums(addDatums, keyArgs) {
                 if(newDatum.isVisible) visDatums.set(id, newDatum);
             }
 
-        },this);
+        }, this);
     }
 
     // Atom garbage collection. Unintern unused atoms.
@@ -612,7 +610,7 @@ function data_setDatums(addDatums, keyArgs) {
 
 
     // TODO: not distributing to child lists of this data?
-    // Is this assuming that `this` is the root data, 
+    // Is this assuming that `this` is the root data,
     // and thus was not created from grouping, and so having no children?
 
     if(isAdditive) {
@@ -628,7 +626,7 @@ function data_setDatums(addDatums, keyArgs) {
         }
     }
 
-    function maybeAddDatum(newDatum) { 
+    function maybeAddDatum(newDatum) {
          // Ignore.
         if(!newDatum) return;
 
@@ -651,24 +649,23 @@ function data_setDatums(addDatums, keyArgs) {
         datums.push(newDatum);
         datumsByKey[key] = newDatum;
         datumsById [id ] = newDatum;
-        
+
         if(/*isAdditive && */newDatums) newDatums.push(newDatum);
 
         // CDF603
         // removed the marking part of Garbage collector
-        // We can mark as selected/visible, because in the removal it's unmarked 
-            if(!newDatum.isNull) {
-                if(selDatums && newDatum.isSelected) selDatums.set(id, newDatum);
-                if(newDatum.isVisible) visDatums.set(id, newDatum);
-            }
+        // We can mark as selected/visible, because in the removal it's unmarked
 
-
+        if(!newDatum.isNull) {
+            if(selDatums && newDatum.isSelected) selDatums.set(id, newDatum);
+            if(newDatum.isVisible) visDatums.set(id, newDatum);
+        }
     }
 }
 
 /**
  * Processes the atoms of this datum.
- * If a virtual null atom is found then 
+ * If a virtual null atom is found then
  * the null atom of that dimension is interned.
  * If desired the processed atoms are marked as visited.
  *
@@ -681,7 +678,7 @@ function data_setDatums(addDatums, keyArgs) {
  * @internal
  */
 function data_processDatumAtoms(datum, intern, markVisited) {
-    // Avoid using for(var dimName in datum.atoms), 
+    // Avoid using for(var dimName in datum.atoms),
     // cause it needs to traverse the whole, long scope chain
 
     var dims = this._dimensionsList;
@@ -772,6 +769,24 @@ function cdo_addDatumsLocal(newDatums) {
 
         ds.push(newDatum);
     }
+}
+
+// CDF603
+// Auxiliar function to remove datums (to avoid repeated code)
+// Removes datums instance from datums, datumById, datumByKey.
+// Remove from selected and visible, if necessary.
+function cdo_removeDatumLocal(datum) {
+    var datums = this._datums,
+        selDatums = this._selectedNotNullDatums,
+        id = datum.id;
+
+    datums.splice(datums.indexOf(datum), 1);
+
+    delete this._datumsById[id];
+    delete this._datumsByKey[datum.key];
+
+    if(selDatums && datum.isSelected) selDatums.rem(id);
+    if(datum.isVisible) this._visibleNotNullDatums.rem(id);
 }
 
 /**
@@ -894,7 +909,7 @@ function data_wherePredicate(whereSpec, keyArgs) {
             while(i) if(!ps[--i](d)) return false;
             return true;
         };
-        
+
         return wherePredicate;
     }
 }

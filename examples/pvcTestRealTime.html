@@ -225,7 +225,7 @@
         <link type="text/css" href="lib/codemirror/codemirror.css" rel="stylesheet"/>
         <script src="lib/codemirror/codemirror.js" type="text/javascript"></script>
         <script src="lib/codemirror/javascript.js" type="text/javascript"></script>
-        
+
         <script type="text/javascript" src="pvcDocUtils.js"></script>
 
 
@@ -233,7 +233,7 @@
     <script type="text/javascript" src="pvcDocUtils.js"></script>
 
     <script type="text/javascript">
-        
+
 
         function periodicRefresh(chart, count, delta, missingSeries, dataFun) {
 
@@ -243,12 +243,12 @@
                     setTimeout(refresh, delta);
                 }
             }
-            
+
             setTimeout(refresh, delta);
         }
 
         function chart_addData(chart, missingSeries, dataFun) {
-            
+
             var incData = dataFun(chart.data, missingSeries);      // @type cdo.Datum[]
             debugger;
             chart.setData(incData);                   // Update chart data d
@@ -280,7 +280,7 @@
                 indexesT = sampleIndexes(T, N);
             var dateText = randomDate();
             var rows = [];
-            
+
             while(N--) {
                 var territory = _territory[indexesT[N]];
 
@@ -302,10 +302,10 @@
                     }
 
                 var value  = _seriesLastValue[territory] || 0;
-                   
+
                 value += _valueAmplitude * (Math.random() - 0.5);
                 _seriesLastValue[territory] = value;
-                
+
                 rows.push([ territory, region, market, dateText, value ]);
             }
 
@@ -333,13 +333,13 @@
                 while(M--) {
                     var product= _product[indexesP[M]],
                         value  = _seriesLastValue[series] || 0;
-                    
+
 
                     value += _valueAmplitude * (Math.random() - 0.5);
                     _seriesLastValue[series+product] = value;
 
                     rows.push([ series, product, dateText, value]);
-                     
+
                 }
             }
 
@@ -355,16 +355,16 @@
             var indexes = sampleIndexes(S, N);
             var dateText = randomDate();
             var rows = [];
-            
+
 
              while(N--) {
                 var series = _series[indexes[N]],
                     value  = _seriesLastValue[series] || 0;
 
-                    value  += _valueAmplitude * (Math.random() - 0.5); 
+                    value  += _valueAmplitude * (Math.random() - 0.5);
 
                     value=Math.abs(value);
-          
+
                 rows.push([ series, value,  dateText ]);
             }
 
@@ -386,13 +386,13 @@
              while(N--) {
                 var series = _series[indexes[N]],
                     value  = _seriesLastValue[series] || 0;
-                
+
                 value += _valueAmplitude * (Math.random() - 0.5);
                 _seriesLastValue[series] = value;
-                
+
                 rows.push([ series, dateText, value ]);
             }
-            N = _series.length - missingSeries; 
+            N = _series.length - missingSeries;
             }
             _valueAmplitude = 10;
 
@@ -416,7 +416,7 @@
             var indexes = pv.range(S);
             if(N == null) return indexes;
             if(N > S) N = S;
-            
+
             var out = [];
             while(N--) {
                 var j = Math.floor(Math.random() * indexes.length);
@@ -428,7 +428,7 @@
 
         function pad2Digits(v) {
             return v < 10 ? ('0' + v) : v;
-        }        
+        }
 
     </script>
   </head>
@@ -504,8 +504,8 @@ Line charts are often used to visualize time series data.
 </ul>
 <h4>Sliding Window properties</h4>
 <ul>
-  <li>slidingWindowInterval </li>
-  <li>slidingWindowDimName </li>
+  <li>slidingWindowLength </li>
+  <li>slidingWindowDimension </li>
   <li>slidingWindowScore </li>
   <li>slidingWindowSelect </li>
 </ul>
@@ -518,7 +518,7 @@ The following is a timeseries line chart in real time mode<br>
 <textarea cols="55" rows="15" id="pvcLine1Code">
 
 function chartExample1() {
-    
+
     return new pvc.LineChart({
         canvas: "pvcLine1",
         width:  520,
@@ -534,9 +534,9 @@ function chartExample1() {
         timeSeries: true,
 
         slidingWindow:true,
-        slidingWindowInterval:'12w',
+        slidingWindowLength:'12w',
 
-        baseAxisDomainAlign:'max',   
+        baseAxisDomainAlign:'max',
         baseAxisDomainRoundMode: 'tick',
         baseAxisLabelSpacingMin: 2.5,
         baseAxisOffset: 0.02,
@@ -544,9 +544,9 @@ function chartExample1() {
         axisGrid: true,
         selectable: true,
         dotsVisible: true,
-        dot_visible: function(s) { 
-            return this.index 
-                   === 
+        dot_visible: function(s) {
+            return this.index
+                   ===
                    s.parent.childNodes.length - 1;
         },
 
@@ -572,7 +572,7 @@ that connect the lines.<br>
 <textarea cols="55" rows="15" id="pvcLine2Code">
 
 function chartExample2() {
-    
+
     return new pvc.BarChart({
     canvas: "pvcLine2",
     width:  520,
@@ -586,13 +586,13 @@ function chartExample2() {
     orientation: 'horizontal',
 
     readers: 'city, profit, date',
-    dimensions: { 
-            date: { 
-                valueType :  Date       , 
-                rawFormat : "%Y-%m-%d"  , 
+    dimensions: {
+            date: {
+                valueType :  Date       ,
+                rawFormat : "%Y-%m-%d"  ,
                 format    : "%m/%d",
-                isHidden:true     
-                } 
+                isHidden:true
+                }
             },
 
     plots: [
@@ -602,7 +602,7 @@ function chartExample2() {
                 value:    'profit',
                 category:   'city',
                 color: 'city'
-               
+
             }
         },
     ],
@@ -611,8 +611,8 @@ function chartExample2() {
 
     //real time - sliding window
     slidingWindow:true,
-    slidingWindowInterval:'6w',
-    slidingWindowDimName:'date',
+    slidingWindowLength:'6w',
+    slidingWindowDimension:'date',
 
     animate:    false,
     selectable: true,
@@ -649,12 +649,12 @@ function chartExample3() {
         ignoreNulls: false,
         //axisComposite: true,
         readers: 'city, product, date, profit',
-        dimensions: { 
-                date: { 
-                    valueType :  Date       , 
-                    rawFormat : "%Y-%m-%d"  , 
-                    format    : "%m/%d"   
-                    } 
+        dimensions: {
+                date: {
+                    valueType :  Date       ,
+                    rawFormat : "%Y-%m-%d"  ,
+                    format    : "%m/%d"
+                    }
                 },
         visualRoles: {
             category: 'city',
@@ -665,8 +665,8 @@ function chartExample3() {
 
         //real time - sliding window
         slidingWindow:true,
-        slidingWindowInterval:'6w',
-        slidingWindowDimName:'date',
+        slidingWindowLength:'6w',
+        slidingWindowDimension:'date',
 
         orientation: "horizontal",
         valuesVisible: false,
@@ -675,9 +675,9 @@ function chartExample3() {
             panel_strokeStyle: 'black'
         }
     })
-    .setData(relational_one_all_null_series_others_overlapping02, 
+    .setData(relational_one_all_null_series_others_overlapping02,
     {
-        crosstabMode: false, 
+        crosstabMode: false,
         seriesInRows: false
     })
     .render();
@@ -709,10 +709,10 @@ function chartExample4() {
         animate: false,
         readers: 'city, profit, date',
         dimensions: {
-            date:  {  valueType :  Date       , 
-                      rawFormat : "%Y-%m-%d"  , 
-                      format    : "%m/%d"   
-                    } 
+            date:  {  valueType :  Date       ,
+                      rawFormat : "%Y-%m-%d"  ,
+                      format    : "%m/%d"
+                    }
         },
         visualRoles: {
             value:    'profit',
@@ -726,8 +726,8 @@ function chartExample4() {
 
         //real time - sliding window
         slidingWindow:true,
-        slidingWindowInterval:'6w',
-        slidingWindowDimName:'date',
+        slidingWindowLength:'6w',
+        slidingWindowDimension:'date',
 
         crosstabMode: false,
         seriesInRows: false
@@ -745,7 +745,7 @@ function chartExample4() {
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine4"></div>
 
- 
+
 <h3>A Real Time TreeMap</h3>
 <textarea cols="55" rows="15" id="pvcLine5Code">
 
@@ -768,16 +768,16 @@ function chartExample5() {
 
         readers: 'territory, region, market, date, sales',
 
-        visualRoles:{ 
+        visualRoles:{
             'category'  : 'territory, region, market',
             'size'     : 'sales',
             'series'    : 'date'
         },
-        dimensions:{ 
+        dimensions:{
             date:{
-                valueType :  Date       , 
-                rawFormat : "%Y-%m-%d"  , 
-                format    : "%m/%d"   
+                valueType :  Date       ,
+                rawFormat : "%Y-%m-%d"  ,
+                format    : "%m/%d"
             }
         },
 
@@ -823,11 +823,11 @@ function chartExample5() {
             //'RoW~India'      :  'purple'  ,
             //'RoW~Mexico'     :  'orange'
         },
-  
+
         //real time - sliding window
         slidingWindow:true,
-        slidingWindowInterval:'6w',
-        slidingWindowDimName:'date',
+        slidingWindowLength:'6w',
+        slidingWindowDimension:'date',
 
         extensionPoints: {
             //legendLabel_textAlign: 'right'
@@ -847,7 +847,7 @@ periodicRefresh(chart5, /*_count*/ 8, /*_delta*/ 300, /*_seriesMissing*/ 0, rand
 </textarea>
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcLine5"></div>
- 
+
 
 
 

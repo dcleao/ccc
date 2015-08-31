@@ -58,8 +58,8 @@
             for continuous scale types (numeric or timeSeries).
         </c:documentation>
 
-        <c:property name="domainRoundMode" 
-                    type="pvc.options.varia.AxisDomainRoundingMode" 
+        <c:property name="domainRoundMode"
+                    type="pvc.options.varia.AxisDomainRoundingMode"
                     default="'tick'"
                     category="Continuous-Numeric > Style">
             <c:documentation>
@@ -325,7 +325,7 @@
                 clipping is activated in the plot panel.
                 Elements that are drawn beyond its area are clipped.
 
-                This property can be specified with the following options, in order of precedence: 
+                This property can be specified with the following options, in order of precedence:
                 <!-- NEW603 -->
                 <ul>
                     <li> <tt>fixedLength</tt> - The fixed minimum is set and a fixed maximum is calculated, so that the length shown corresponds to the defined fixed length </li>
@@ -398,32 +398,29 @@
             <c:documentation>
                 <!-- NEW603 -->
                 The fixed length of the domain that the axis will show (applies to numeric axes).
-                
+
                 A string value is converted to a number.
-                
+
                 The value may be bigger or smaller than the actual
                 length of the data.
-                
-                This property takes precedence over the property <tt>originIsZero</tt>, if specified either with 
-                <tt>fixedMin</tt>, <tt>fixedMax</tt> or <tt>DomainAlign</tt>.
 
-                This property can be specified with several options to define the initial domain, 
-                that take the following precedence order : 
+                This property takes precedence over the property <tt>originIsZero</tt>, if specified either with
+                <tt>fixedMin</tt>, <tt>fixedMax</tt> or <tt>domainAlign</tt>.
+
+                This property can be specified with several options to define the initial domain,
+                that take the following precedence order:
 
                 <ul>
                     <li> <tt>fixedMin</tt> - The fixed minimum is set and a fixed maximum is calculated, so that the length shown corresponds to the defined fixed length </li>
                     <li> <tt>fixedMax</tt> - The fixed maximum is set and a fixed minimum is calculated, so that the length shown corresponds to the defined fixed length </li>
-                    <li> <tt>DomainAlign</tt> - Fixed minimums and maximums are set so that the length shown corresponds to the defined fixed length; depending on the domain
-                    alignment specified, one of the fixed limits can be equal to the previous limit defined.  </li>
-                    <!--<li> <tt>originIsZero</tt> -  </li>-->
+                    <li> <tt>domainAlign</tt> - The minimum and maximum are set so that the length shown corresponds to the defined fixed length; depending on the domain
+                    alignment specified, one of the fixed limits can be equal to the previous limit defined.</li>
                 </ul>
 
                 See related axis options:
                 <c:link to="#fixedMin" />,
                 <c:link to="#fixedMax" />,
                 <c:link to="#domainAlign" />
-                 <!--<c:link to="#originIsZero" />,-->
-
             </c:documentation>
         </c:property>
 
@@ -432,10 +429,10 @@
                 <!-- NEW603 -->
 
                 The desired domain alignment.
-                
+
                 See related axis option:
                 <c:link to="#fixedLength" />,
-             
+
                 </c:documentation>
         </c:property>
 
@@ -463,14 +460,14 @@
             <c:documentation>
                 <!-- NEW603 -->
                 The ratio value that defines the proportion between a domain interval and a range interval.
-                
+
             </c:documentation>
         </c:property>
 
          <c:property name="preserveRatio" type="boolean" default="false" category="Continuous > Scale">
             <c:documentation>
                 <!-- NEW603 -->
-                Indicates if the initial ratio between domain and range should be preserved between renders. 
+                Indicates if the initial ratio between domain and range should be preserved between renders.
             </c:documentation>
         </c:property>
 

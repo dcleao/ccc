@@ -68,12 +68,12 @@ pvc.BaseChart
         return level;
     },
 
-    _initAxes: function(hasMultiRole) {
-        
+    _initAxes: function() {
+
         // CDF603 C
-        // Get axis state 
+        // Get axis state
         // The state is to be kept between render calls
-        var axesState, 
+        var axesState,
             oldByType = def.copy( {}, this.axesByType );
 
         if(this.axes) {
@@ -147,14 +147,14 @@ pvc.BaseChart
                             ka = {};
                         if(oldByType){
                             var axes = oldByType[type];
-                            if(axes){ 
+                            if(axes){
                                 var axisId = axes[axisIndex].id;
                                 ka = {state: axesState && axesState[axisId]};
                             }
                         }
                         new AxisClass(this, type, axisIndex, ka);
                     }, this, oldByType);
-                    
+
                 } else if(this._axisCreateIfUnbound[type]) {
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
                     if(AxisClass) new AxisClass(this, type, 0);
@@ -467,17 +467,17 @@ pvc.BaseChart
         // If FixedMin + FixedLength specified, max is directly set
         // using both and FixedMax is ignored
         // if width is not null then FixedLength was defined
-        if(min   != null && axis.option.isDefined('FixedMin') && 
+        if(min   != null && axis.option.isDefined('FixedMin') &&
            width != null && max == null) {
             max = min - (0-width);
             maxLocked = (max != null);
             if(maxLocked) {
-                // this shouldn't be necessary since width is always 
+                // this shouldn't be necessary since width is always
                 // greater than 0 and if scaleUsesAbs returns true,
                 // so is min
                 if(max < 0 && axis.scaleUsesAbs()) max = -max;
             }
-        } 
+        }
 
         // Get max from option
         if(max == null && axis.option.isDefined('FixedMax')) {
@@ -493,22 +493,22 @@ pvc.BaseChart
         }
 
         // CDF603 C
-        // If min is null, but FixedMax and FixedLength were defined 
+        // If min is null, but FixedMax and FixedLength were defined
         // the minimum can be set using both
-        if(min == null && width != null && 
+        if(min == null && width != null &&
            max != null && axis.option.isDefined('FixedMax') ) {
             min = max - width;
             minLocked = (min != null);
             if(minLocked) {
-                // this can and will change the length if 
+                // this can and will change the length if
                 // width > max
                 if(min < 0 && axis.scaleUsesAbs()) min = -min;
             }
-        } 
+        }
 
         // CDF603
-        // If min and max are null, but FixedLength was defined 
-        // the maximum and minimum are set according to the specified 
+        // If min and max are null, but FixedLength was defined
+        // the maximum and minimum are set according to the specified
         // or default alignment
         if(min == null && max==null && width != null) {
             var baseExtent = this._getContinuousVisibleExtent(axis); // null when no data
@@ -537,8 +537,8 @@ pvc.BaseChart
             if(min != null) min = min.value;
             if(max != null) max = max.value;
 
-        } 
-            
+        }
+
         if(min == null || max == null) {
             var baseExtent = this._getContinuousVisibleExtent(axis); // null when no data
             if(!baseExtent) return null;
@@ -628,10 +628,10 @@ pvc.BaseChart
 
     _onColorAxisScaleSet: function(axis) {
         switch(axis.index) {
-            case 0: this.colors = axis.scheme(); 
+            case 0: this.colors = axis.scheme();
                     if(axis.option('PreserveMap')) axis.preserveColorMap(); //CDF603
                     break;
-            case 1: if(this._allowV1SecondAxis){ 
+            case 1: if(this._allowV1SecondAxis){
                         this.secondAxisColor = axis.scheme();
                         if(axis.option('PreserveMap')) axis.preserveColorMap(); //CDF603
                     }
@@ -653,7 +653,7 @@ pvc.BaseChart
         return def.lazy(
             def.lazy(this, '_rolesColorScale'),
             grouping.id,
-            this._createRoleColorScale, 
+            this._createRoleColorScale,
             this);
     },
 

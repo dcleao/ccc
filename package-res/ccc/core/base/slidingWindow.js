@@ -3,231 +3,159 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*global axis_optionsDef:true*/
-  
+
 
 //CDF603
 
 def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
-
     init: function(chart) {
-        this.base( chart, 'slidingWindow', 0, {byNaked: false} );
-    },
 
-    type: {
-        methods: {
-            props: ['interval','dimName','score', 'select']
+        this.base(chart, 'slidingWindow', 0, {byNaked: false});
+
+        var o = this.option;
+
+        this.length = o('Length');
+        if(this.length != null) {
+            this.dimension = o('Dimension');
+            this.score = o('Score');
+            this.select = o('Select');
         }
     },
 
-    methods: /** @lends pvc.visual.slidingWindow# */{
-        _initFromOptions: function() {
-            var o = this.option;
-            this.set({
-                interval :  o('Interval'),
-                dimName  :  o('DimName'),
-                score    :  o('Score'),
-                select   :  o('Select')
-            });
-        },
+    methods: /** @lends pvc.visual.SlidingWindow# */{
 
-        set: function(keyArgs) {
+        length: null,
+        dimension: null,
+        select: null,
+        score: null,
 
-            keyArgs = this._readArgs(keyArgs);
+        setAxesDefaults: function() {
+            var colorAxes = this.chart.axesByType.color;
+            if(colorAxes) colorAxes.forEach(function(axis) { axis.setPreserveColorMap(); });
 
-            if(!keyArgs) {
-                if(this.interval != null && this.dimName != null && this.score != null  && this.select != null) return;
-            } else {
-                this.interval = pv.parseDatePrecision(keyArgs.interval, Number.MAX_VALUE);
-                this.dimName = keyArgs.dimName;
-                this.score = keyArgs.score ;
-                this.select = keyArgs.select ;
-            }
-
-        },
-
-        _readArgs: function(keyArgs) {
-            if(keyArgs) {
-                var out = {},
-                    any = 0,
-                    read = function(p) {
-                        var v = keyArgs[p];
-                        if(v != null)
-                            any = true;
-                        else
-                            v = this[p];
-
-                        out[p] = v;
-                    };
-
-                pvc.visual.SlidingWindow.props.forEach(read, this);
-
-                if(any) return out;
-            }
-        },
-
-        _defaultSlidingWindowScore: function(datum) { 
-            return datum.atoms[this.dimName].value; 
-        },
-
-        
-        _defaultSlidingWindowSelect: function(allData, remove) {
-                       
-            var data  = this.chart.data,
-                dName = this.dimName,
-                dim   = data.dimensions(dName),
-                mostRecent   = dim.max().value;
-
-            allData.forEach(function(datum) {
-                var datumScore = this.score(datum),
-                    result;
-
-                if(datumScore !== undefined && datumScore != null){
-                    if(!(typeof(datumScore) == 'number' || datumScore instanceof Date /*|| typeof(datumScore) == 'string'*/)){
-                        if(def.debug >= 2) def.log("[Warning] The default sliding window functions are only applicable to timeseries or numeric scales. Removing nothing");
-                        return;
-                    }
-                    datumScore=dim.read(datumScore);
-                    if(datumScore!=null) datumScore=datumScore.value;
-                    result = mostRecent - datumScore; 
-                    if(result && result > this.interval) 
-                        remove.push(datum);
-
-                } else remove.push(datum);
-                
-            },this);
-
-        },
-
-        setAxisDefaults: function() {
-
-            this.chart.axesByType.color.forEach(function(axis) {
-                this._preserveAxisColorMap( axis );
-            }, this);
-
+            // TODO: Why all axes? The way this is done,
+            //   all bound dimensions that do not have a specified comparer end up
+            //   having a default comparer set, independently of the axis.
+            //
+            // TODO: This way of detecting if a comparer was specified is not the best.
+            // `dimensionGroups` can also be used to specify a comparer.
             this.chart.axesList.forEach(function(axis) {
-                var dims = axis.role.grouping._dimNames;
                 var dimOptions = this.chart.options.dimensions;
 
-                dims.forEach(function(dimName) {
-                    var dim = this.chart.data._dimensions[dimName];
-                    if (dimOptions) var dimComp = dimOptions[dimName];
-                    if(!dimComp || !dimComp.comparer){
-                        dim.type.setComparer(def.ascending); //???
+                axis.role.grouping.dimensionNames().forEach(function(dimName) {
+                    var dimComp = dimOptions && dimOptions[dimName];
+                    if(!dimComp || !dimComp.comparer) {
+                        this.chart.data.dimensions(dimName)
+                            .type.setComparer(def.ascending);
                     }
                 }, this);
-                
             }, this);
 
-            this._preserveLayout();
-            this._setFixedRatio();
+            if(this.length != null) {
+                this.chart.axesList.forEach(function(axis) {
+                    // Axis is bound to the sliding window dimension
+                    // and has a FixedLength option?
+                    if(axis.role.firstDimensionName() === this.dimension &&
+                       axis.option.isDefined('FixedLength')) {
 
-        },
+                        axis.setInitialLength(this.length); //review
 
-        _preserveAxisColorMap: function(axis) { axis.setPreserveColorMap(); },
+                        if(axis.option.isDefined('PreserveRatio') &&
+                           !(axis.option.isSpecified('Ratio') || axis.option.isSpecified('PreserveRatio'))) {
+                            axis.option.specify({PreserveRatio: true});
+                        }
+                    }
+                }, this);
+            }
 
-        _preserveLayout: function() { this.chart.options.preserveLayout = true; },
-
-        _setFixedRatio: function(){
-
-            // get axes with sliding window dimensions
-            var axes = this.chart.axesList.filter(function(axis) {
-                var dim = axis.role.grouping.firstDimension;
-                return dim.name == this.dimName;
-            },this);
-
-            axes.forEach(function(axis) {
-                if(axis.option.isDefined('FixedLength')){
-                    if(this.option.isSpecified('Interval')) axis.setInitialLength(this.interval);    //review
-                } 
-                if((axis.option.isDefined('FixedLength')       && 
-                    axis.option.isDefined('PreserveRatio'))    &&
-                    this.option.isSpecified('Interval')        &&  //review
-                            !(axis.option.isSpecified('Ratio')        || 
-                              axis.option.isSpecified('PreserveRatio'))) {
-                    axis.option.specify({ PreserveRatio : true });
-                }
-
-            },this);
-
+            // This has nothing to do with axes' defaults...
+            this.chart.options.preserveLayout = true;
         }
-
     },
 
-
-  options: {
-
-        Interval: {
+    options: {
+        // The dimension of data to which the window is applied.
+        // Axes bound to this dimension and that have a "FixedLength" option
+        // have "FixedLength" defaulted to `Length`.
+        Dimension:   {
             resolve: '_resolveFull',
-            cast: slidingWindow_castInterval,
-            value: Number.MAX_VALUE
+            cast: slidingWindow_castDimension,
+            getDefault: slidingWindow_defaultDimension
         },
 
-        DimName:   {
+        // The length of the window, a number (after parsing).
+        Length: {
             resolve: '_resolveFull',
-            data: {
-                resolveDefault: function(optionInfo) {
-                    var dv = _defaultDimensionName(this.chart);
-                    optionInfo.defaultValue(dv);
-                    return true;
-                }
+            cast: function(interval) {
+                // TODO: What about numeric domains?
+                return pv.parseDatePrecision(interval, null);
             },
-            cast: slidingWindow_castDimName
+            value: null
         },
 
+        // The datum scoring function.
+        // Must return values of, or derived from, `Dimension`.
         Score: {
             resolve: '_resolveFull',
-            data: {
-                resolveDefault: function(optionInfo) {
-                    optionInfo.defaultValue(this._defaultSlidingWindowScore);
-                    return true;
-                }
-            },
+            cast: def.fun.as,
+            getDefault: function() { return slidingWindow_defaultScore.bind(this); }
         },
 
+        // Selects the datums to _remove_,
+        // based on the score of each datum,
+        // the length and dimension of the window,
+        // and some custom logic.
         Select: {
             resolve: '_resolveFull',
-            data: {
-                resolveDefault: function(optionInfo) {
-                    optionInfo.defaultValue(this._defaultSlidingWindowSelect);
-                    return true;
-                }
-            },
+            cast: def.fun.as,
+            getDefault: function() { return slidingWindow_defaultSelect.bind(this); }
         }
-
     }
-
-
 }));
 
-
-function _defaultDimensionName(chart) {
-
-    var dims, dimName;
-    if(!! chart.axes.base) dimName = chart.axes.base.role.grouping.lastDimensionName(); //cart charts always have a base and ortho axis
-    else{
-        dims = _getDimensionNames(chart); 
-        dimName = !!dims ? dims[0] : undefined;
-    } 
-    return dimName;
-
+function slidingWindow_defaultDimension() {
+    // Cartesian charts always have a base and ortho axis.
+    var baseAxis = this.chart.axes.base;
+    return baseAxis
+        ? baseAxis.role.grouping.lastDimensionName()
+        : this.chart.data.type.dimensionsNames()[0];
 }
 
-function slidingWindow_castDimName(name) {
-    var chart = this.chart;
-    return pvc.parseDimensionName(name, _defaultDimensionName(chart), _getDimensionNames(chart));
+function slidingWindow_castDimension(name) {
+    if(name) {
+        var dimType = this.chart.data.type.dimensions(name, {assertExists: false});
+        if(dimType) return name;
+
+        if(def.debug >= 2)
+            def.warn(def.format("Undefined sliding window dimension with name '{0}'.", [name]));
+    }
 }
 
-
-function slidingWindow_castInterval(interval) {
-    return pv.parseDatePrecision(interval, Number.MAX_VALUE);
+function slidingWindow_defaultScore(datum) {
+    return datum.atoms[this.dimension].value;
 }
 
-function _getDimensionNames(chart) {
-    var dims = chart.data._dimensionsList;
+function slidingWindow_defaultSelect(allData, remove) {
+    var dim = this.chart.data.dimensions(this.dimension),
+        mostRecent = dim.max().value;
 
-    if(!dims) throw def.error("No dimensions found");
+    allData.forEach(function(datum) {
+        var datumScore = this.score(datum);
+        if(datumScore == null) {
+            remove.push(datum);
+        } else {
+            var scoreAtom = dim.read(datumScore);
+            if(scoreAtom == null) {
+                if(def.debug >= 2)
+                    def.warn("The default sliding window functions are only applicable to timeseries or numeric scales. Datum not removed.");
+                return;
+            }
 
-    var dimNames = dims.map(function(dim) { return dim.name; });
+            datumScore = scoreAtom.value;
 
-    return !!dimNames ? dimNames : [];
+            var result = mostRecent - datumScore;
+            if(result && result > this.length)
+                remove.push(datum);
+        }
+    }, this);
 }

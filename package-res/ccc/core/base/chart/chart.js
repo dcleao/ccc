@@ -179,11 +179,11 @@ def
      * This field is set to <tt>false</tt>
      * until the second call to the {@link #_create} method,
      * where it is set to <tt>true</tt> if a previous render
-     * has ocurred, by testing if the plot panels already 
+     * has ocurred, by testing if the plot panels already
      * existed
      * </p>
      * <p>
-     * This will consequently indicate that the chart is a 
+     * This will consequently indicate that the chart is a
      * re-render
      * </p>
      *
@@ -229,7 +229,7 @@ def
         /* Increment create version to allow for cache invalidation  */
         this._createVersion++;
 
-        if(this.isCreated) 
+        if(this.isCreated)
 
         this.isCreated = false;
 
@@ -241,7 +241,7 @@ def
             hasMultiRole;
 
         //CDF603
-        /* Save plots layout information if the preserveLayout option is specified as true 
+        /* Save plots layout information if the preserveLayout option is specified as true
            This has to be done before cleanup */
         if(this.options.preserveLayout && this.plotPanelList && this.plotPanelList.length){
 
@@ -266,7 +266,7 @@ def
 
             this._preserveLayout = true;
         }
-        
+
         // CLEAN UP
         if(isRoot) this.children = [];
         this.plotPanels = {};
@@ -883,14 +883,14 @@ def
 
 //        colors: null,
 
-//CDF603 
+//CDF603
 //SlidingWindow options
 
         slidingWindow: false,
-//      slidingWindowInterval: undefined,       
-//      slidingWindowDimName: undefined,  
-//      slidingWindowScore: undefined, 
-//      slidingWindowSelect: undefined,    
+//      slidingWindowLength: undefined,
+//      slidingWindowDimName: undefined,
+//      slidingWindowScore: undefined,
+//      slidingWindowSelect: undefined,
 
 
         v1StyleTooltipFormat: function(s, c, v, datum) {
