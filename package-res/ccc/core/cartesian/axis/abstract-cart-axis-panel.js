@@ -711,7 +711,27 @@ def
 
     _calcDiscreteTicksIncludeModulo: function() {
         var mode = this.axis.option('OverlappedLabelsMode');
-        if(mode !== 'hide' && mode !== 'rotatethenhide') return 1;
+
+        var canHide = false;
+        var canRotate = false;
+        switch(mode) {
+            case 'hide':
+                canHide = true;
+            break;
+
+            case 'rotate':
+                canRotate = true;
+            break;
+
+            case 'rotatethenhide':
+                canHide = true;
+                canRotate = true;
+            break;
+            
+            default:
+                // Let them lay in the wild
+                return 1;
+        }
 
         var li = this._layoutInfo,
             ticks = li.ticks,
@@ -748,40 +768,60 @@ def
             // The angle that the text makes to the x axis (clockwise,y points downwards)
             a = li.textAngle;
 
-        // * Effective distance between anchors,
-        //   that results from showing only
-        //   one in every 'tickIncludeModulo' (tim) ticks.
-        //
-        //   bEf = (b * tim)
-        //
-        // * The space that separates the closest edges,
-        //   that are parallel to the text direction,
-        //   of the bounding boxes of
-        //   two consecutive (not skipped) labels:
-        //
-        //   sBase  = (b * timh) * |sinOrCos(a)| - h;
-        //
-        // * The same, for the edges orthogonal to the text direction:
-        //
-        //   sOrtho = (b * timw) * |cosOrSin(a)| - w;
-        //
-        // * At least one of the distances, sBase or sOrtho must be
-        //   greater than or equal to sMin:
-        //
-        //   NoOverlap If (sBase >= sMin) Or (sOrtho >= sMin)
-        //
-        // * Resolve each of the inequations in function of tim (timh/timw)
+        var hiddingStep = 1;
 
-        var isH = this.isAnchorTopOrBottom(),
-            sinOrCos = Math.abs( Math[isH ? 'sin' : 'cos'](a)),
-            cosOrSin = Math.abs( Math[isH ? 'cos' : 'sin'](a)),
-            timh = sinOrCos < 1e-8 ? Infinity : Math.ceil((sMinH + h) / (b * sinOrCos)),
-            timw = cosOrSin < 1e-8 ? Infinity : Math.ceil((sMinW + w) / (b * cosOrSin)),
-            tim  = Math.min(timh, timw);
+        while(canRotate || canHide) {
+            // * Effective distance between anchors,
+            //   that results from showing only
+            //   one in every 'tickIncludeModulo' (tim) ticks.
+            //
+            //   bEf = (b * tim)
+            //
+            // * The space that separates the closest edges,
+            //   that are parallel to the text direction,
+            //   of the bounding boxes of
+            //   two consecutive (not skipped) labels:
+            //
+            //   sBase  = (b * timh) * |sinOrCos(a)| - h;
+            //
+            // * The same, for the edges orthogonal to the text direction:
+            //
+            //   sOrtho = (b * timw) * |cosOrSin(a)| - w;
+            //
+            // * At least one of the distances, sBase or sOrtho must be
+            //   greater than or equal to sMin:
+            //
+            //   NoOverlap If (sBase >= sMin) Or (sOrtho >= sMin)
+            //
+            // * Resolve each of the inequations in function of tim (timh/timw)
 
-        if(!isFinite(tim) || tim < 1 || Math.ceil(tickCount / tim) < 2) tim = 1;
+            var isH = this.isAnchorTopOrBottom(),
+                sinOrCos = Math.abs( Math[isH ? 'sin' : 'cos'](a)),
+                cosOrSin = Math.abs( Math[isH ? 'cos' : 'sin'](a)),
+                timh = sinOrCos < 1e-8 ? Infinity : Math.ceil((sMinH + h) / (b * sinOrCos)),
+                timw = cosOrSin < 1e-8 ? Infinity : Math.ceil((sMinW + w) / (b * cosOrSin)),
+                tim  = Math.min(timh, timw);
 
-        return tim;
+            if(!isFinite(tim) || tim < 1 || Math.ceil(tickCount / tim) < 2) tim = 1;
+
+            if(tim > 1) {
+                if(canRotate) {
+                    a += 0.1;
+                    if(a > 0.5) {
+                        canRotate = false;
+                    }
+                } else if(canHide) {
+                    hiddingStep = tim;
+                    canHide = false;
+                }
+            } else {
+                break;
+            }
+        }
+
+        li.textAngle = a;
+
+        return hiddingStep;
     },
 
     /* # For textAngles we're only interested in the [0, pi/2] range.
@@ -1117,6 +1157,7 @@ def
             .font(font)
             .textStyle("#666666")
             .textAlign(layoutInfo.textAlign)
+            .textAngle(layoutInfo.textAngle)
             .textBaseline(layoutInfo.textBaseline);
 
         this._debugTicksPanel(pvTicksPanel);
