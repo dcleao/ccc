@@ -151,11 +151,16 @@ def
              */
             this._calcTicks();
 
-            if(this.scale.type === 'discrete')
+            if(this.scale.type === 'discrete') {
                 this._tickIncludeModulo = this._calcDiscreteTicksIncludeModulo();
+
+                layoutInfo.ticksBBoxes = layoutInfo.maxLabelBBox = null;
+
+            }
 
             /* II - Calculate NEEDED axisSize so that all tick's labels fit */
             this._calcAxisSizeFromLabel(layoutInfo); // -> layoutInfo.requiredAxisSize, layoutInfo.maxLabelBBox, layoutInfo.ticksBBoxes
+
 
             if(layoutInfo.axisSize == null) layoutInfo.axisSize = layoutInfo.requiredAxisSize;
 
@@ -547,7 +552,8 @@ def
     _clearTicksTextDeps: function(ticksInfo) {
         ticksInfo.maxTextWidth =
         ticksInfo.ticksTextLength =
-        ticksInfo.ticksBBoxes = null;
+        ticksInfo.ticksBBoxes =
+        ticksInfo.maxLabelBBox = null;
     },
 
     // --------------
@@ -675,16 +681,16 @@ def
 
         ticksInfo.maxTextWidth = max;
         ticksInfo.ticksBBoxes  = null;
+        ticksInfo.maxLabelBBox = null;
 
         return ticksTextLength;
     },
 
     _calcTicksLabelBBoxes: function(ticksInfo) {
         var me = this,
-            li = me._layoutInfo,
             ticksTextLength = ticksInfo.ticksTextLength ||
                               me._calcTicksTextLength(ticksInfo),
-            maxLen = li.maxTextWidth,
+            maxLen = ticksInfo.maxTextWidth,
             maxBBox;
 
         ticksInfo.ticksBBoxes = ticksTextLength.map(function(len) {
@@ -693,7 +699,7 @@ def
             return labelBBox;
         }, me);
 
-        li.maxLabelBBox = maxBBox;
+        ticksInfo.maxLabelBBox = maxBBox;
     },
 
     _calcLabelBBox: function(textWidth) {
@@ -727,7 +733,7 @@ def
                 canHide = true;
                 canRotate = true;
             break;
-            
+
             default:
                 // Let them lay in the wild
                 return 1;
@@ -745,83 +751,99 @@ def
 
         // How much are label anchors separated from each other
         // (in the axis direction)
-        var b = this.scale.range().step, // don't use .band, cause it does not include margins...
-            h = li.textHeight,
-            w = li.maxTextWidth;  // Should use the average value?
+        var b = this.scale.range().step; // don't use .band, cause it does not include margins...
+        var h = li.textHeight;
+        var w = li.maxTextWidth;  // Should use the average value?
 
         if(!(w > 0 && h > 0 && b > 0)) return 1;
 
         // Minimum space that the user wants separating
         // the closest edges of the bounding boxes of two consecutive labels,
         // measured perpendicularly to the label text direction.
-        var sMin = h * this.labelSpacingMin, /* parameter in em */
-            sMinH = sMin, // Between baselines
+        var sMin  = h * this.labelSpacingMin; /* parameter in em */
+        var sMinH = sMin; // Between baselines
+        var hEf = sMinH + h;
 
-            // Horizontal distance between labels' text is easily taken
-            // to the distance between words of the same label.
-            // Vertically, it is much easier to differentiate different lines.
-            // So the minimum horizontal space between labels has the length
-            // a white space character, and sMin is the additional required spacing.
-            spaceW = pv.Text.measureWidth('x', this.font),
-            sMinW  = spaceW + sMin, // Between sides (orthogonal to baseline)
+        // Horizontal distance between labels' text is easily confused with
+        // the distance between words of the same label.
+        // Vertically, it is much easier to differentiate different lines.
+        // So, the minimum horizontal space between labels has the length of
+        // a white space character, and sMin is the additional required spacing.
+        var spaceW = pv.Text.measureWidth('x', this.font);
+        var sMinW  = sMin + spaceW; // Between sides (orthogonal to baseline)
+        var wEf = sMinW + w;
 
-            // The angle that the text makes to the x axis (clockwise,y points downwards)
-            a = li.textAngle;
+        // The angle that the text makes to the x axis (clockwise, y points downwards)
+        var a = li.textAngle;
 
-        var hiddingStep = 1;
+        var isH = this.isAnchorTopOrBottom();
 
-        while(canRotate || canHide) {
-            // * Effective distance between anchors,
-            //   that results from showing only
-            //   one in every 'tickIncludeModulo' (tim) ticks.
-            //
-            //   bEf = (b * tim)
-            //
-            // * The space that separates the closest edges,
-            //   that are parallel to the text direction,
-            //   of the bounding boxes of
-            //   two consecutive (not skipped) labels:
-            //
-            //   sBase  = (b * timh) * |sinOrCos(a)| - h;
-            //
-            // * The same, for the edges orthogonal to the text direction:
-            //
-            //   sOrtho = (b * timw) * |cosOrSin(a)| - w;
-            //
-            // * At least one of the distances, sBase or sOrtho must be
-            //   greater than or equal to sMin:
-            //
-            //   NoOverlap If (sBase >= sMin) Or (sOrtho >= sMin)
-            //
-            // * Resolve each of the inequations in function of tim (timh/timw)
+        // * Effective distance between anchors,
+        //   that results from showing only
+        //   one in every 'tickIncludeModulo' (tim) ticks.
+        //
+        //   bEf = (b * tim)
+        //
+        // * The space that separates the closest edges,
+        //   that are parallel to the text direction,
+        //   of the bounding boxes of
+        //   two consecutive (not skipped) labels:
+        //
+        //   sBase  = (b * timh) * |sinOrCos(a)| - h;
+        //
+        // * The same, for the edges orthogonal to the text direction:
+        //
+        //   sOrtho = (b * timw) * |cosOrSin(a)| - w;
+        //
+        // * At least one of the distances, sBase or sOrtho must be
+        //   greater than or equal to sMin:
+        //
+        //   NoOverlap If (sBase >= sMin) Or (sOrtho >= sMin)
+        //
+        // * Resolve each of the inequations in function of tim (timh/timw)
+        //
+        //   sBase >= sMin   <=>
+        //   timh >= hEf / (b * |sinOrCos(a)|)
+        //
+        //   sOrtho >= sMin  <=>
+        //   timw >= wEf / (b * |cosOrSin(a)|)
 
-            var isH = this.isAnchorTopOrBottom(),
-                sinOrCos = Math.abs( Math[isH ? 'sin' : 'cos'](a)),
-                cosOrSin = Math.abs( Math[isH ? 'cos' : 'sin'](a)),
-                timh = sinOrCos < 1e-8 ? Infinity : Math.ceil((sMinH + h) / (b * sinOrCos)),
-                timw = cosOrSin < 1e-8 ? Infinity : Math.ceil((sMinW + w) / (b * cosOrSin)),
-                tim  = Math.min(timh, timw);
+        var tim = calcTickIncludeModulo();
+        // tim > 1 <=> Not all labels fit without overlapping.
+        // Need to rotate or to only show one every `tim`.
+        if(tim > 1 && canRotate) {
+            var aMin = calcSmallestAngleWithoutOverlap();
+            if(aMin != null) {
+                li.textAngle = aMin;
+                return 1;
+            }
+            // else, even with rotation, would always overlap, so use `tim`.
+        }
+
+        return canHide ? tim : 1;
+
+        // ~ isH, a, hEf, wEf, b, tickCount
+        function calcTickIncludeModulo() {
+            var sinOrCos = Math.abs( Math[isH ? 'sin' : 'cos'](a) );
+            var cosOrSin = Math.abs( Math[isH ? 'cos' : 'sin'](a) );
+            var timh = sinOrCos < 1e-8 ? Infinity : Math.ceil(hEf / (b * sinOrCos));
+            var timw = cosOrSin < 1e-8 ? Infinity : Math.ceil(wEf / (b * cosOrSin));
+            var tim  = Math.min(timh, timw);
 
             if(!isFinite(tim) || tim < 1 || Math.ceil(tickCount / tim) < 2) tim = 1;
 
-            if(tim > 1) {
-                if(canRotate) {
-                    a += 0.1;
-                    if(a > 0.5) {
-                        canRotate = false;
-                    }
-                } else if(canHide) {
-                    hiddingStep = tim;
-                    canHide = false;
-                }
-            } else {
-                break;
-            }
+            return tim;
         }
 
-        li.textAngle = a;
-
-        return hiddingStep;
+        // ~ isH, hEf, wEf, b
+        function calcSmallestAngleWithoutOverlap() {
+            // Determine the smallest angle with no overlap, if any.
+            var sinOrCos = Math.abs(hEf / b);
+            var cosOrSin = Math.abs(wEf / b);
+            var s = isH ? sinOrCos : cosOrSin;
+            //var c = isH ? cosOrSin : sinOrCos;
+            return s > 1 ?  null : Math.asin(s);
+        }
     },
 
     /* # For textAngles we're only interested in the [0, pi/2] range.

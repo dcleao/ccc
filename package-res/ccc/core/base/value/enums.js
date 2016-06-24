@@ -103,6 +103,7 @@ pvc.parseOverlappedLabelsMode = function(mode) {
         switch(mode) {
             case 'leave':
             case 'hide':
+            case 'rotate':
             case 'rotatethenhide':
                 break;
 
