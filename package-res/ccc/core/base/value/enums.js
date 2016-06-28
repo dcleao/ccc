@@ -29,6 +29,9 @@ pvc.parseShape = pvc.makeEnumParser('shape', pv.Scene.hasSymbol, null);
 pvc.parseDataTypeCheckingMode =
     pvc.makeEnumParser('typeCheckingMode', ['none', 'minimum', 'extended'], 'minimum');
 
+pvc.parseLabelRotationDirection =
+    pvc.makeEnumParser('labelRotationDirection', ['clockwise', 'counterclockwise'], 'clockwise');
+
 pvc.parseContinuousColorScaleType = function(scaleType) {
     if(scaleType) {
         scaleType = (''+scaleType).toLowerCase();
@@ -103,6 +106,7 @@ pvc.parseOverlappedLabelsMode = function(mode) {
         switch(mode) {
             case 'leave':
             case 'hide':
+            case 'rotate':
             case 'rotatethenhide':
                 break;
 

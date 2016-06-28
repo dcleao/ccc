@@ -177,8 +177,6 @@ def
 
     _readTextProperties: function(layoutInfo) {
         var textAngle = this._getExtension('label', 'textAngle');
-        layoutInfo.isTextAngleFixed = (textAngle != null);
-
         layoutInfo.textAngle  = def.number.to(textAngle, 0);
         layoutInfo.textMargin = def.number.to(this._getExtension('label', 'textMargin'), 3);
 
@@ -710,8 +708,37 @@ def
     // --------------
 
     _calcDiscreteTicksIncludeModulo: function() {
+        var FLAT_ANGLE = Math.PI;
+        var RIGHT_ANGLE = FLAT_ANGLE / 2;
+        var FULL_ANGLE = FLAT_ANGLE * 2;
+
         var mode = this.axis.option('OverlappedLabelsMode');
-        if(mode !== 'hide' && mode !== 'rotatethenhide') return 1;
+        var direction = this.axis.option('LabelRotationDirection') === "counterclockwise" ? -1 : 1;
+        var desired_angles = this.axis.option('LabelDesiredAngles');
+        desired_angles.sort(function(v1, v2) {
+            return Math.abs(v1) - Math.abs(v2);
+        });
+
+        var canHide = false;
+        var canRotate = false;
+        switch(mode) {
+            case 'hide':
+                canHide = true;
+            break;
+
+            case 'rotate':
+                canRotate = true;
+            break;
+
+            case 'rotatethenhide':
+                canHide = true;
+                canRotate = true;
+            break;
+            
+            default:
+                // Let them lay in the wild
+                return 1;
+        }
 
         var li = this._layoutInfo,
             ticks = li.ticks,
@@ -727,7 +754,7 @@ def
         // (in the axis direction)
         var b = this.scale.range().step, // don't use .band, cause it does not include margins...
             h = li.textHeight,
-            w = li.maxTextWidth;  // Should use the average value?
+            w = li.maxTextWidth;
 
         if(!(w > 0 && h > 0 && b > 0)) return 1;
 
@@ -743,45 +770,117 @@ def
             // So the minimum horizontal space between labels has the length
             // a white space character, and sMin is the additional required spacing.
             spaceW = pv.Text.measureWidth('x', this.font),
-            sMinW  = spaceW + sMin, // Between sides (orthogonal to baseline)
+            sMinW  = spaceW + sMin; // Between sides (orthogonal to baseline)
 
-            // The angle that the text makes to the x axis (clockwise,y points downwards)
-            a = li.textAngle;
+        var isH = this.isAnchorTopOrBottom();
 
-        // * Effective distance between anchors,
-        //   that results from showing only
-        //   one in every 'tickIncludeModulo' (tim) ticks.
-        //
-        //   bEf = (b * tim)
-        //
-        // * The space that separates the closest edges,
-        //   that are parallel to the text direction,
-        //   of the bounding boxes of
-        //   two consecutive (not skipped) labels:
-        //
-        //   sBase  = (b * timh) * |sinOrCos(a)| - h;
-        //
-        // * The same, for the edges orthogonal to the text direction:
-        //
-        //   sOrtho = (b * timw) * |cosOrSin(a)| - w;
-        //
-        // * At least one of the distances, sBase or sOrtho must be
-        //   greater than or equal to sMin:
-        //
-        //   NoOverlap If (sBase >= sMin) Or (sOrtho >= sMin)
-        //
-        // * Resolve each of the inequations in function of tim (timh/timw)
+        var min_angle;
+        var max_side_size = Math.sqrt(Math.pow(b, 2) - 1);
+        if(max_side_size > h + sMinH) {
+            min_angle = b > w ? 0 : Math.asin( (h+sMinH) / b );
+        } else {
+            // no minimum non-overlapping angle exists
+            // 2π will be normalized to 0 if used
+            min_angle = FULL_ANGLE;
+        }
 
-        var isH = this.isAnchorTopOrBottom(),
-            sinOrCos = Math.abs( Math[isH ? 'sin' : 'cos'](a)),
-            cosOrSin = Math.abs( Math[isH ? 'cos' : 'sin'](a)),
-            timh = sinOrCos < 1e-8 ? Infinity : Math.ceil((sMinH + h) / (b * sinOrCos)),
-            timw = cosOrSin < 1e-8 ? Infinity : Math.ceil((sMinW + w) / (b * cosOrSin)),
-            tim  = Math.min(timh, timw);
+        // The angle that the text makes to the x axis (clockwise,y points downwards)
+        // it is normalized to the interval [0, 2π[
+        var a;
+        if(canRotate && isH) {
+            if(desired_angles.length > 0) {
+                // choose the first angle above the minimum non-overlapping angle
+                // if none, chooses to the last desired angle
+                for (var i = 0; i !== desired_angles.length; ++i) {
+                    a = pvc.normAngle(desired_angles[i] * direction);
 
-        if(!isFinite(tim) || tim < 1 || Math.ceil(tickCount / tim) < 2) tim = 1;
+                    // angular distance to the closest axis
+                    var abs_angle = a > FLAT_ANGLE ? Math.abs(a - FULL_ANGLE) : a;
+                    var angle_to_axis = abs_angle < RIGHT_ANGLE ? abs_angle : abs_angle - FLAT_ANGLE;
+                    if(angle_to_axis >= min_angle) {
+                        // no need for hidding, it will never overlap
+                        canHide = false;
 
-        return tim;
+                        break;
+                    }
+                }
+            } else if(min_angle != FULL_ANGLE) {
+                // if no desired angles are provided, choose the minimum non-overlapping angle
+                a = pvc.normAngle(min_angle * direction);
+
+                // no need for hidding, it will never overlap
+                canHide = false;
+            } else {
+                // no minimum angle nor desired angle, falback to textAngle
+                a = pvc.normAngle(li.textAngle * direction);
+            }
+
+            li.lockedTextAngle = a;
+            li.textAngle = a;
+
+            var align = "center";
+            if(a > 0 && a < FLAT_ANGLE) {
+                align = "left";
+            } else if(a > FLAT_ANGLE) {
+                align = "right";
+            }
+
+            li.lockedTextAlign = align;
+            li.textAlign = align;
+
+            var baseline = "middle";
+            if(a >= 0 && a < RIGHT_ANGLE || a > FULL_ANGLE - RIGHT_ANGLE && a < FULL_ANGLE) {
+                baseline = "top";
+            } else if(a > RIGHT_ANGLE && a < FLAT_ANGLE || a > FLAT_ANGLE && a < FLAT_ANGLE + RIGHT_ANGLE) {
+                baseline = "bottom";
+            }
+
+            li.lockedTextBaseline = baseline;
+            li.textBaseline = baseline;
+        } else {
+            a = pvc.normAngle(li.textAngle * direction);
+        }
+
+        var hiddingStep = 1;
+
+        if(canHide) {
+            // * Effective distance between anchors,
+            //   that results from showing only
+            //   one in every 'tickIncludeModulo' (tim) ticks.
+            //
+            //   bEf = (b * tim)
+            //
+            // * The space that separates the closest edges,
+            //   that are parallel to the text direction,
+            //   of the bounding boxes of
+            //   two consecutive (not skipped) labels:
+            //
+            //   sBase  = (b * timh) * |sinOrCos(a)| - h;
+            //
+            // * The same, for the edges orthogonal to the text direction:
+            //
+            //   sOrtho = (b * timw) * |cosOrSin(a)| - w;
+            //
+            // * At least one of the distances, sBase or sOrtho must be
+            //   greater than or equal to sMin:
+            //
+            //   NoOverlap If (sBase >= sMin) Or (sOrtho >= sMin)
+            //
+            // * Resolve each of the inequations in function of tim (timh/timw)
+            var sinOrCos = Math.abs( Math[isH ? 'sin' : 'cos'](a)),
+                cosOrSin = Math.abs( Math[isH ? 'cos' : 'sin'](a)),
+                timh = sinOrCos < 1e-8 ? Infinity : Math.ceil((sMinH + h) / (b * sinOrCos)),
+                timw = cosOrSin < 1e-8 ? Infinity : Math.ceil((sMinW + w) / (b * cosOrSin)),
+                tim  = Math.min(timh, timw);
+
+            if(!isFinite(tim) || tim < 1 || Math.ceil(tickCount / tim) < 2) tim = 1;
+
+            hiddingStep = tim;
+        }
+
+        li.textAngle = a;
+
+        return hiddingStep;
     },
 
     /* # For textAngles we're only interested in the [0, pi/2] range.
@@ -1115,9 +1214,25 @@ def
             .lock(anchorOpposite, this.tickLength)
             .lock(anchorOrtho,    0)
             .font(font)
-            .textStyle("#666666")
-            .textAlign(layoutInfo.textAlign)
-            .textBaseline(layoutInfo.textBaseline);
+            .textStyle("#666666");
+
+        if(layoutInfo.lockedTextAngle !== undefined) {
+            this.pvLabel.lock('textAngle', layoutInfo.lockedTextAngle);
+        } else {
+            this.pvLabel.textAngle(layoutInfo.textAngle)
+        }
+
+        if(layoutInfo.lockedTextAlign !== undefined) {
+            this.pvLabel.lock('textAlign', layoutInfo.lockedTextAlign);
+        } else {
+            this.pvLabel.textAlign(layoutInfo.textAlign)
+        }
+
+        if(layoutInfo.lockedTextBaseline !== undefined) {
+            this.pvLabel.lock('textBaseline', layoutInfo.lockedTextBaseline);
+        } else {
+            this.pvLabel.textBaseline(layoutInfo.textBaseline)
+        }
 
         this._debugTicksPanel(pvTicksPanel);
     },
