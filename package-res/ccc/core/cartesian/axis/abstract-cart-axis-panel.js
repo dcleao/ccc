@@ -155,24 +155,16 @@ def
                 this._tickIncludeModulo = this._calcDiscreteTicksIncludeModulo();
 
             /* II - Calculate NEEDED axisSize so that all tick's labels fit */
-            this._calcAxisSizeFromLabel(layoutInfo); // -> layoutInfo.requiredAxisSize, layoutInfo.maxLabelBBox, layoutInfo.ticksBBoxes
+            this._calcAxisSizeFromLabelBBox(layoutInfo); // -> layoutInfo.requiredAxisSize, layoutInfo.maxLabelBBox
 
             if(layoutInfo.axisSize == null) layoutInfo.axisSize = layoutInfo.requiredAxisSize;
 
             /* III - Calculate Trimming Length if: FIXED/NEEDED > AVAILABLE */
-            this._calcMaxTextLengthThatFits();
+            this._calcMaxTextLengthThatFits(); // -> layoutInfo.maxTextWidth, layoutInfo.maxLabelBBox
 
             /* IV - Calculate overflow paddings */
             this._calcOverflowPaddings();
-
         }
-    },
-
-    _calcAxisSizeFromLabel: function(layoutInfo) {
-        if(this.showLabels) {
-            this._calcTicksLabelBBoxes(layoutInfo);
-        }
-        this._calcAxisSizeFromLabelBBox(layoutInfo);
     },
 
     _readTextProperties: function(layoutInfo) {
@@ -205,13 +197,15 @@ def
     },
 
     _calcAxisSizeFromLabelBBox: function(layoutInfo) {
-        var maxLabelBBox = layoutInfo.maxLabelBBox,
-            // The length not over the plot area
-            length = maxLabelBBox ? this._getLabelBBoxQuadrantLength(maxLabelBBox, this.anchor) : 0,
-            axisSize = (this.showTicks || this.showLabels ? this.tickLength : 0) + length,
+        var maxLabelBBox = this.showLabels ? this._calcMaxLabelBBox() : null;
 
-            // Add equal margin on both sides?
-            angle = maxLabelBBox ? maxLabelBBox.sourceAngle : 0;
+        // The length not over the plot area
+        var length = maxLabelBBox ? this._getLabelBBoxQuadrantLength(maxLabelBBox, this.anchor) : 0;
+
+        var axisSize = (this.showTicks || this.showLabels ? this.tickLength : 0) + length;
+
+        // Add equal margin on both sides?
+        var angle = maxLabelBBox ? maxLabelBBox.sourceAngle : 0;
 
         if(this.showLabels && !(angle === 0 && this.isAnchorTopOrBottom()))
             // Text height already has some free space in that case so no need to add more.
@@ -261,9 +255,8 @@ def
             if(def.debug >= 2) this.log.warn("Layout cannot change. Skipping calculation of overflow paddings.");
             return;
         }
-        if(this.showLabels) {
-            this._calcOverflowPaddingsFromLabelBBox();
-        }
+
+        if(this.showLabels) this._calcOverflowPaddingsFromLabelBBox();
     },
 
     _calcOverflowPaddingsFromLabelBBox: function() {
@@ -274,7 +267,7 @@ def
             tickCount = ticks.length;
 
         if(tickCount) {
-            var ticksBBoxes   = li.ticksBBoxes,
+            var ticksBBoxes   = li.ticksBBoxes || this._calcTicksLabelBBoxes(li),
                 paddings      = li.paddings,
                 isTopOrBottom = me.isAnchorTopOrBottom(),
                 begSide       = isTopOrBottom ? 'left'  : 'bottom',
@@ -327,7 +320,7 @@ def
     _calcMaxTextLengthThatFits: function() {
         var layoutInfo = this._layoutInfo;
 
-        if(this.compatVersion() <= 1) {
+        if(!this.showLabels || this.compatVersion() <= 1) {
             layoutInfo.maxTextWidth = null;
             return;
         }
@@ -438,6 +431,7 @@ def
             }
 
             layoutInfo.maxTextWidth = maxTextWidth;
+            layoutInfo.maxLabelBBox = this._calcLabelBBox(maxTextWidth);
 
             if(def.debug >= 3)
                 this.log("Trimming labels' text at length " + maxTextWidth.toFixed(2) +
@@ -671,8 +665,9 @@ def
                 return len;
             });
 
-        ticksInfo.maxTextWidth = max;
+        ticksInfo.maxTextWidth = ticksInfo.maxTextWidthReal = max;
         ticksInfo.ticksBBoxes  = null;
+        ticksInfo.maxLabelBBox = null;
 
         return ticksTextLength;
     },
@@ -680,18 +675,27 @@ def
     _calcTicksLabelBBoxes: function(ticksInfo) {
         var me = this,
             li = me._layoutInfo,
-            ticksTextLength = ticksInfo.ticksTextLength ||
-                              me._calcTicksTextLength(ticksInfo),
-            maxLen = li.maxTextWidth,
-            maxBBox;
+            ticksTextLength = ticksInfo.ticksTextLength || me._calcTicksTextLength(ticksInfo),
+            maxLen = li.maxTextWidth || li.maxTextWidthReal,
+            maxBBox = null;
 
         ticksInfo.ticksBBoxes = ticksTextLength.map(function(len) {
-            var labelBBox = me._calcLabelBBox(len);
+            var labelBBox = me._calcLabelBBox(Math.min(len, maxLen));
             if(!maxBBox && len === maxLen) maxBBox = labelBBox;
             return labelBBox;
         }, me);
 
         li.maxLabelBBox = maxBBox;
+
+        return ticksInfo.ticksBBoxes;
+    },
+
+    _calcMaxLabelBBox: function() {
+        var li = this._layoutInfo;
+
+        if(!li.ticksTextLength) this._calcTicksTextLength(li);
+
+        return (li.maxLabelBBox = this._calcLabelBBox(li.maxTextWidth));
     },
 
     _calcLabelBBox: function(textWidth) {
