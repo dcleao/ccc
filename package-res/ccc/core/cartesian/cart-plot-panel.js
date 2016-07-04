@@ -35,17 +35,17 @@ def
 
         if(clientSizeInfo) {
            clientSize = layoutInfo.clientSize;
-           var clientSizeFixed = clientSizeInfo.value,
-               clientSizeMin   = clientSizeInfo.min,
-               clientSizeMax   = clientSizeInfo.max;
+           var clientSizeFix = clientSizeInfo.value,
+               clientSizeMin = clientSizeInfo.min,
+               clientSizeMax = clientSizeInfo.max;
 
-            if(clientSizeFixed.width != null)
-                clientSize.width  = clientSizeFixed.width;
+            if(clientSizeFix.width != null)
+                clientSize.width  = clientSizeFix.width;
             else
                 clientSize.width  = Math.max(Math.min(clientSize.width,  clientSizeMax.width ), clientSizeMin.width );
 
-            if(clientSizeFixed.height != null)
-                clientSize.height = clientSizeFixed.height;
+            if(clientSizeFix.height != null)
+                clientSize.height = clientSizeFix.height;
             else
                 clientSize.height = Math.max(Math.min(clientSize.height, clientSizeMax.height), clientSizeMin.height);
         }

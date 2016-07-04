@@ -65,6 +65,7 @@ def
     this.margins  = new pvc_Sides(margins);
     this.paddings = new pvc_Sides(options && options.paddings);
     this.size     = new pvc_Size (options && options.size    );
+    this.sizeMin  = new pvc_Size (options && options.sizeMin );
     this.sizeMax  = new pvc_Size (options && options.sizeMax );
 
     this.parent = parent || null;
@@ -292,134 +293,243 @@ def
     /* LAYOUT PHASE */
 
     /**
-     * Calculates and sets its size,
-     * taking into account a specified total size.
+     * Calculates and sets the panel's size.
      *
-     * @param {pvc.Size} [availableSize] The total size available for the panel.
-     * <p>
-     * On root panels this argument is not specified,
-     * and the panels' current {@link #width} and {@link #height} are used as default.
-     * </p>
      * @param {object}  [ka] Keyword arguments.
      * @param {boolean} [ka.force=false] Indicates that the layout should be
      * performed even if it has already been done.
-     * @param {pvc.Size} [ka.referenceSize] The size that should be used for
-     * percentage size calculation.
-     * This will typically be the <i>client</i> size of the parent.
-     * @param {pvc.Sides} [ka.paddings] The paddings that should be used for
-     * the layout. Default to the panel's paddings {@link #paddings}.
-     * @param {pvc.Sides} [ka.margins] The margins that should be used for
-     * the layout. Default to the panel's margins {@link #margins}.
+     * @param {pvc.ISize} [ka.size] The total size available for the panel.
+     *
+     * On root panels this argument need not be specified,
+     * and the panels' {@link #size} is used as default.
+     *
+     * @param {pvc.ISize} [ka.sizeRef] The size to use for percentage size calculations.
+     * Typically, this is the _client size_ of the parent.
+     *
+     * @param {pvc.Sides} [ka.paddings] The paddings to use in the layout.
+     *
+     * Defaults to the panel's {@link #paddings}.
+     *
+     * @param {pvc.Sides} [ka.margins] The margins to use in the layout.
+     *
+     * Defaults to the panel's {@link #margins}.
+     *
      * @param {boolean} [ka.canChange=true] Whether this is a last time layout.
      */
-    layout: function(availableSize, ka) {
-        if(!this._layoutInfo || def.get(ka, 'force', false)) {
+    layout: function(ka) {
+        var layoutInfoPrev = this._layoutInfo || null;
+        if(layoutInfoPrev) {
+            if(!def.get(ka, 'force', false)) return;
 
-            var referenceSize = def.get(ka, 'referenceSize');
-            if(!referenceSize && availableSize) referenceSize = def.copyOwn(availableSize);
-
-            // Does this panel have a **desired** fixed size specified?
-
-            // * size may have no specified components
-            // * referenceSize may be null
-            var desiredSize = this.size.resolve(referenceSize),
-                sizeMax     = this.sizeMax.resolve(referenceSize);
-
-            if(!availableSize) {
-                if(desiredSize.width == null || desiredSize.height == null)
-                    throw def.error.operationInvalid("Panel layout without width or height set.");
-
-                availableSize = def.copyOwn(desiredSize);
-            }
-
-            if(!referenceSize && availableSize) referenceSize = def.copyOwn(availableSize);
-
-            // Apply max size to available size
-            if(sizeMax.width != null && availableSize.width > sizeMax.width)
-                availableSize.width = sizeMax.width;
-
-            if(sizeMax.height != null && availableSize.height > sizeMax.height)
-                availableSize.height = sizeMax.height;
-
-            var halfBorder   = this.borderWidth / 2,
-                realMargins  = (def.get(ka, 'margins' ) || this.margins ).resolve(referenceSize),
-                realPaddings = (def.get(ka, 'paddings') || this.paddings).resolve(referenceSize),
-                margins  = pvc_Sides.inflate(realMargins,  halfBorder),
-                paddings = pvc_Sides.inflate(realPaddings, halfBorder),
-                spaceWidth  = margins.width  + paddings.width,
-                spaceHeight = margins.height + paddings.height,
-                availableClientSize = new pvc_Size(
-                    Math.max(availableSize.width  - spaceWidth,  0),
-                    Math.max(availableSize.height - spaceHeight, 0)),
-                desiredClientSize = def.copyOwn(desiredSize);
-
-            if(desiredClientSize.width != null)
-                desiredClientSize.width = Math.max(desiredClientSize.width - spaceWidth, 0);
-
-            if(desiredClientSize.height != null)
-                desiredClientSize.height = Math.max(desiredClientSize.height - spaceHeight, 0);
-
-            var prevLayoutInfo = this._layoutInfo || null,
-                canChange = def.get(ka, 'canChange', true),
-                layoutInfo = this._layoutInfo = {
-                    canChange:         canChange,
-                    referenceSize:     referenceSize,
-
-                    realMargins:       realMargins,
-                    realPaddings:      realPaddings,
-
-                    borderWidth:       this.borderWidth,
-
-                    margins:           margins,
-                    paddings:          paddings,
-
-                    desiredClientSize: desiredClientSize,
-                    clientSize:        availableClientSize,
-
-                    pageClientSize:    prevLayoutInfo ? prevLayoutInfo.pageClientSize : availableClientSize.clone(),
-                    previous:          prevLayoutInfo
-                };
-
-            if(prevLayoutInfo) {
-                // Free old memory
-                delete prevLayoutInfo.previous;
-                delete prevLayoutInfo.pageClientSize;
-            }
-
-            var clientSize = this._calcLayout(layoutInfo);
-
-            var size;
-            if(!clientSize) {
-                size = availableSize; // use all available size
-                clientSize = availableClientSize;
-            } else {
-                layoutInfo.clientSize = clientSize;
-                size = {
-                    width:  clientSize.width  + spaceWidth,
-                    height: clientSize.height + spaceHeight
-                };
-            }
-
-            this.isVisible = (clientSize.width > 0 && clientSize.height > 0);
-
-            delete layoutInfo.desiredClientSize;
-
-            layoutInfo.size = size;
-
-            this.width  = size.width;
-            this.height = size.height;
-
-            if(!canChange && prevLayoutInfo) delete layoutInfo.previous;
-
-            if(def.debug >= 10) {
-                this.log("Size       = " + def.describe(size));
-                this.log("Margins    = " + def.describe(layoutInfo.margins));
-                this.log("Paddings   = " + def.describe(layoutInfo.paddings));
-                this.log("ClientSize = " + def.describe(layoutInfo.clientSize));
-            }
-
-            this._onLaidOut();
+            // Release the previous layout's previous layout...
+            layoutInfoPrev.previous = null;
         }
+
+        var canChange = def.get(ka, 'canChange', true);
+
+        // NOTE: If !size && !sizeRef && any of sizeFix/Min/Max have percentages,
+        // then all of sizeFix/Min/Max will have width and height equal to null,
+        // and the sizeFix.width == null test will fail, below, resulting in an error being thrown.
+
+        var sizeAvailable = def.get(ka, 'size');
+        var sizeRef = def.get(ka, 'sizeRef') || (sizeAvailable && def.copyOwn(sizeAvailable));
+
+        var sizeMin = this.sizeMin.resolve(sizeRef);
+        var sizeMax = this.sizeMax.resolve(sizeRef);
+        var sizeFix = this.size   .resolve(sizeRef);
+
+        // Normalize
+        pvc_Size.applyMin(sizeMax, sizeMin);
+        pvc_Size.applyMinMax(sizeFix, sizeMin, sizeMax);
+
+        if(!sizeAvailable) {
+            // The root panel of a chart.
+            if(sizeFix.width == null || sizeFix.height == null)
+                throw def.error.operationInvalid("Panel layout without width or height set.");
+
+            sizeAvailable = def.copyOwn(sizeFix);
+
+            if(!sizeRef) sizeRef = def.copyOwn(sizeAvailable);
+        }
+
+        // assert sizeAvailable && sizeRef
+
+        // Apply bounds to available size
+        pvc_Size.applyMinMax(sizeAvailable, sizeMin, sizeMax);
+
+        var margins  = (def.get(ka, 'margins' ) || this.margins ).resolve(sizeRef);
+        var paddings = (def.get(ka, 'paddings') || this.paddings).resolve(sizeRef);
+
+        var borderHalf = this.borderWidth / 2;
+        margins  = pvc_Sides.inflate(margins,  borderHalf);
+        paddings = pvc_Sides.inflate(paddings, borderHalf);
+
+        var spaceW = margins.width  + paddings.width;
+        var spaceH = margins.height + paddings.height;
+
+        var clientSizeAvailable = pvc_Size.deflate(sizeAvailable, spaceW, spaceH);
+        var clientSizeFix       = pvc_Size.deflate(sizeFix, spaceW, spaceH);
+
+        /**
+         * The `ILayoutInfoRestrictions` interface contains restriction information that
+         * supports the layout operation but that is not relevant after its completed.
+         *
+         * @name pvc.visual.ILayoutInfoRestrictions
+         * @interface
+         */
+        var liRestrictions = /** @lends pvc.visual.ILayoutInfoRestrictions */{
+            canChange: canChange,
+            sizeMin:   sizeMin,
+            sizeMax:   sizeMax,
+            size:      sizeFix,
+            clientSizeMin: pvc_Size.deflate(sizeMin, spaceW, spaceH),
+            clientSizeMax: pvc_Size.deflate(sizeMax, spaceW, spaceH),
+            clientSize:    clientSizeFix
+        };
+
+        /**
+         * The `ILayoutInfo` interface contains information that
+         * supports the layout operation and also describes the result of one.
+         *
+         * @name pvc.visual.ILayoutInfo
+         * @interface
+         */
+        var li = this._layoutInfo = /** @lends pvc.visual.ILayoutInfo */{
+                /**
+                 * The reference size relative to which percentage values are resolved.
+                 * @type {!pvc.visual.ISize}
+                 */
+                sizeRef:       sizeRef,
+                referenceSize: sizeRef, // @deprecated use sizeRef instead
+                desiredClientSize: clientSizeFix, // @deprecated  use clientSizeFix instead
+
+                /**
+                 * The resolved border width.
+                 *
+                 * A non-negative number.
+                 * @type {number}
+                 */
+                borderWidth: this.borderWidth,
+
+                /**
+                 * The resolved panel margins.
+                 *
+                 * @type {!pvc.visual.ISidesExt}
+                 */
+                margins: margins,
+
+                /**
+                 * The resolved panel paddings.
+                 *
+                 * @type {!pvc.visual.ISidesExt}
+                 */
+                paddings: paddings,
+
+                /**
+                 * The resolved panel spacings.
+                 *
+                 * @type {!pvc.visual.ISize}
+                 */
+                spacings: {width: spaceW, height: spaceH},
+
+                /**
+                 * The size of the panel.
+                 *
+                 * When laying out,
+                 * it is the size that the parent has available for the child,
+                 * without itself growing or without enabling scrolling.
+                 *
+                 * @type {!pvc.visual.ISize}
+                 */
+                size: sizeAvailable,
+
+                /**
+                 * The client size of the panel.
+                 *
+                 * When laying out,
+                 * it is the client size that the parent has available for the child,
+                 * without itself growing or without enabling scrolling.
+                 *
+                 * The value of this property is equal to
+                 * {@link pvc.visual.LayoutInfo#size} minus {@link pvc.visual.LayoutInfo#spacings}.
+                 *
+                 * @type {!pvc.visual.ISize}
+                 */
+                clientSize: clientSizeAvailable,
+
+                /**
+                 * The page client size of the panel.
+                 *
+                 * The client size of the first layout iteration of the panel.
+                 *
+                 * @type {!pvc.visual.ISize}
+                 */
+                clientSizePage: layoutInfoPrev ? layoutInfoPrev.clientSizePage : pvc_Size.clone(clientSizeAvailable),
+
+                /**
+                 * The layout information of the previous layout iteration, if any.
+                 *
+                 * This property is set to `null` upon the end of a layout operation.
+                 *
+                 * @type {pvc.visual.ILayoutInfoExtra}
+                 */
+                previous: layoutInfoPrev,
+
+                /**
+                 * The extra information that is available during the layout operation,
+                 * but that is set to `null`, afterwards.
+                 *
+                 * @type {pvc.visual.ILayoutInfoRestrictions}
+                 */
+                restrictions: liRestrictions
+            };
+
+        // ---
+
+        if(def.debug >= 10) {
+            this.log("Size          -> " + def.describe(li.size));
+            this.log(" Margins      -> " + def.describe(li.margins));
+            this.log("  Paddings    -> " + def.describe(li.paddings));
+            this.log("   ClientSize -> " + def.describe(li.clientSize));
+        }
+
+        // ---
+
+        var clientSizeNeeds = this._calcLayout(li) || clientSizeAvailable;
+
+        // ---
+
+        // TODO: auto-clip when clientSizeNeeds exceeds clientSizeMax ?
+
+        // Can grow beyond actually-available size, but not beyond a specified max size.
+        li.clientSize = pvc_Size.applyMinMax(clientSizeNeeds, liRestrictions.clientSizeMin, liRestrictions.clientSizeMax);
+
+        var sizeNeeds = li.size = pvc_Size.inflate(clientSizeNeeds, spaceW, spaceH);
+
+        // ---
+        // Free memory
+
+        li.desiredClientSize =
+        li.restrictions = li.previous = null;
+
+        // ---
+
+        this.isVisible = (clientSizeNeeds.width > 0 && clientSizeNeeds.height > 0);
+        this.width  = this.isVisible ? sizeNeeds.width  : 0;
+        this.height = this.isVisible ? sizeNeeds.height : 0;
+
+        // ---
+
+        if(def.debug >= 10) {
+            this.log("   ClientSize <- " + def.describe(li.clientSize));
+            this.log("  Paddings    <- " + def.describe(li.paddings));
+            this.log(" Margins      <- " + def.describe(li.margins));
+            this.log("Size          <- " + def.describe(li.size));
+        }
+
+        // ---
+
+        this._onLaidOut();
     },
 
     _onLaidOut: function() {
@@ -439,22 +549,15 @@ def
         };
     },
 
-    getLayoutSize: function() {
-        return this._layoutInfo ? this._layoutInfo.size : undefined;
+    /**
+     * Gets the layout information object.
+     *
+     * @return {pvc.visual.ILayoutInfo} The layout info, if any, or `null`, if none.
+     */
+    getLayout: function() {
+        return this._layoutInfo || null;
     },
 
-    getLayoutClientSize: function() {
-        return this._layoutInfo ? this._layoutInfo.clientSize : undefined;
-    },
-
-    getLayoutMargins: function() {
-        return this._layoutInfo ? this._layoutInfo.margins : undefined;
-    },
-
-    getLayoutPaddings: function() {
-        return this._layoutInfo ? this._layoutInfo.paddings : undefined;
-    },
-    
     /**
      * Override to calculate panel client size.
      * <p>
@@ -474,12 +577,12 @@ def
      * The object is supplied with the following properties:
      * </p>
      * <ul>
-     *    <li>referenceSize - size that should be used for percentage size calculation.
+     *    <li>sizeRef - size that should be used for percentage size calculation.
      *        This will typically be the <i>client</i> size of the parent.
      *    </li>
      *    <li>margins - the resolved margins object. All components are present, possibly with the value 0.</li>
      *    <li>paddings - the resolved paddings object. All components are present, possibly with the value 0.</li>
-     *    <li>desiredClientSize - the desired fixed client size. Do ignore a null width or height property value.</li>
+     *    <li>clientSizeFix - the desired fixed client size. Do ignore a null width or height property value.</li>
      *    <li>clientSize - the available client size, already limited by a maximum size if specified.</li>
      * </ul>
      * <p>
@@ -524,10 +627,10 @@ def
             clientSize = def.copyOwn(layoutInfo.clientSize);
             var childKeyArgs = {
                 force: true,
-                referenceSize: clientSize
+                sizeRef: clientSize
             };
 
-            if(useLog) me.log.group("CCC DOCK LAYOUT clientSize = " + def.describe(clientSize));
+            if(useLog) me.log.group("CCC DOCK LAYOUT");
             try {
                 doMaxTimes(5, layoutCycle, me);
             } finally {
@@ -604,10 +707,11 @@ def
                 if(useLog) child.log.group("Iteration #" + (iteration + 1) + " / " + maxTimes);
                 try {
 
+                    childKeyArgs.size      = new pvc_Size(remSize);
                     childKeyArgs.paddings  = paddings;
                     childKeyArgs.canChange = remTimes > 0;
 
-                    child.layout(new pvc_Size(remSize), childKeyArgs);
+                    child.layout(childKeyArgs);
              
                     if(child.isVisible) {
                         resized = checkChildResize.call(this, child, canResize);
@@ -739,7 +843,7 @@ def
                     sideOTo = altMap[aoMap[side]];
 
                     var lenProp = aolMap[sideo],
-                        pageLen = Math.min(remSize[lenProp], layoutInfo.pageClientSize[lenProp]);
+                        pageLen = Math.min(remSize[lenProp], layoutInfo.clientSizePage[lenProp]);
                     sideOPosParentOffset = pageLen / 2;
                     break;
             }
@@ -1197,8 +1301,8 @@ def
 
     createAnchoredSize: function(anchorLength, size) {
         return this.isAnchorTopOrBottom()
-            ? new pvc_Size(size.width, Math.min(size.height, anchorLength))
-            : new pvc_Size(Math.min(size.width, anchorLength), size.height);
+            ? {width: size.width, height: Math.min(size.height, anchorLength)}
+            : {width: Math.min(size.width, anchorLength), height: size.height};
     },
 
     /* EXTENSION */

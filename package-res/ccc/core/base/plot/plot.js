@@ -270,6 +270,11 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
             cast: String
         },
 
+        SizeMin: {
+            resolve: '_resolveFull',
+            cast: pvc_Size.to
+        },
+
         ValuesVisible: {
             resolve: '_resolveFull',
             data: {

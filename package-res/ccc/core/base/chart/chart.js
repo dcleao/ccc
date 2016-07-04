@@ -220,11 +220,7 @@ def
             this._preservedPlotsLayoutInfo = {};
 
             this.plotPanelList.forEach(function(plotPanel) {
-                this._preservedPlotsLayoutInfo[plotPanel.plot.id] = {
-                    margins:  plotPanel.getLayoutMargins(),
-                    paddings: plotPanel.getLayoutPaddings(),
-                    size:     plotPanel.getLayoutSize()
-                };
+                this._preservedPlotsLayoutInfo[plotPanel.plot.id] = plotPanel._getLayoutState();
             }, this);
 
             this._preserveLayout = true;

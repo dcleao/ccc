@@ -73,7 +73,7 @@
 
             var _useLog = def.debug >= 10;
 
-            var _canChangeInitial = _layoutInfo.canChange !== false;
+            var _canChangeInitial = _layoutInfo.restrictions.canChange !== false;
 
             // Anchor properties conversion maps.
             var _aolMap = pvc.BasePanel.orthogonalLength;
@@ -88,7 +88,7 @@
             var MarginsChanged = 16;
 
             // keyArgs for child.layout() calls.
-            var _childLayoutKeyArgs = {force: true, referenceSize: _layoutInfo.clientSize};
+            var _childLayoutKeyArgs = {force: true, sizeRef: _layoutInfo.clientSize};
 
             // -----------
             // Layout state
@@ -116,7 +116,7 @@
             var _fillChildren = [];
             var _sideChildren = [];
 
-            if(_useLog) _me.log.group("CCC GRID LAYOUT clientSize = " + def.describe(_fillSize));
+            if(_useLog) _me.log.group("CCC GRID LAYOUT");
             try {
                 doLayout();
             } finally {
@@ -194,7 +194,7 @@
                     if(a === 'fill') {
                         _fillChildren.push(child);
 
-                        var oneChildPaddings = child.paddings.resolve(_childLayoutKeyArgs.referenceSize);
+                        var oneChildPaddings = child.paddings.resolve(_childLayoutKeyArgs.sizeRef);
 
                         // After the op. it's not a pvc.Side anymore, just an object with same named properties.
                         _childPaddings = pvc_Sides.resolvedMax(_childPaddings, oneChildPaddings);
@@ -295,10 +295,11 @@
                             _fillSize[aoLen] += olenPrev;
                         }
 
+                        _childLayoutKeyArgs.size      = new pvc_Size(_fillSize);
                         _childLayoutKeyArgs.paddings  = filterAnchorPaddings(anchor, _childPaddings);
                         _childLayoutKeyArgs.canChange = canChangeChild;
 
-                        child.layout(new pvc_Size(_fillSize), _childLayoutKeyArgs);
+                        child.layout(_childLayoutKeyArgs);
 
                         var olen = 0;
 
@@ -434,24 +435,27 @@
             }
 
             function phase2_layoutChild(child, canChangeChild, isFill) {
-                var availableSize;
+                var size, pads;
                 if(isFill) {
-                    availableSize = new pvc_Size(_fillSize);
-                    _childLayoutKeyArgs.paddings = new pvc_Sides(_childPaddings);
+                    size = pvc_Size.clone(_fillSize);
+                    pads = new pvc_Sides(_childPaddings);
                 } else {
                     var anchor = child.anchor;
                     var al  = _alMap [anchor];
                     var aol = _aolMap[anchor];
-                    availableSize = new pvc_Size();
-                    availableSize[al ] = _fillSize[al];
-                    availableSize[aol] = child[aol]; // fixed in phase 1
 
-                    _childLayoutKeyArgs.paddings = filterAnchorPaddings(anchor, _childPaddings);
+                    size = {width: null, height: null};
+                    size[al ] = _fillSize[al];
+                    size[aol] = child[aol]; // fixed in phase 1
+
+                    pads = filterAnchorPaddings(anchor, _childPaddings);
                 }
 
+                _childLayoutKeyArgs.size = size;
+                _childLayoutKeyArgs.paddings = pads;
                 _childLayoutKeyArgs.canChange = canChangeChild;
 
-                child.layout(availableSize, _childLayoutKeyArgs);
+                child.layout(_childLayoutKeyArgs);
             }
 
             function positionSide(child, anchorOrAlign) {

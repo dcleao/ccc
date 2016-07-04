@@ -157,7 +157,7 @@ define([
         // Overflow paddings are converted into the cartesian docking grid's paddings.
         // Whenever labels are shown, they overflow, cause they have a specified angle...
         var cartGrid = barChart.axesPanels[axisType].parent;
-        var paddings = cartGrid.getLayoutPaddings();
+        var paddings = cartGrid.getLayout().paddings;
         var hasLabelOverflow = paddings.left > 0 || paddings.right > 0 || paddings.top > 0 || paddings.bottom > 0;
         expect(hasLabelOverflow).toBe(showLabel);
 

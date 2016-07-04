@@ -14,7 +14,9 @@ def
     // Prevent the border from affecting the box model,
     // providing a static 0 value, independently of the actual drawn value...
     //this.borderWidth = 0;
-    
+
+    options.sizeMin = plot.option('SizeMin');
+
     this.base(chart, parent, options);
     
     this.plot = plot;

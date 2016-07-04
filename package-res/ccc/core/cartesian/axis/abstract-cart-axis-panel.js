@@ -106,7 +106,7 @@ def
         }
 
         if(scale.isNull) {
-            layoutInfo.axisSize = layoutInfo.desiredClientSize[this.anchorOrthoLength()] || 0;
+            layoutInfo.axisSize = layoutInfo.restrictions.clientSize[this.anchorOrthoLength()] || 0;
         } else {
             // Ensure minimum length before anything else.
             var a_length  = this.anchorLength(),
@@ -136,7 +136,7 @@ def
 
     _calcLayoutCore: function(layoutInfo) {
         // Fixed axis size?
-        var axisSize = layoutInfo.desiredClientSize[this.anchorOrthoLength()];
+        var axisSize = layoutInfo.restrictions.clientSize[this.anchorOrthoLength()];
 
         layoutInfo.axisSize = axisSize; // may be undefined
 
@@ -251,7 +251,7 @@ def
     },
 
     _calcOverflowPaddings: function() {
-        if(!this._layoutInfo.canChange) {
+        if(!this._layoutInfo.restrictions.canChange) {
             if(def.debug >= 2) this.log.warn("Layout cannot change. Skipping calculation of overflow paddings.");
             return;
         }
@@ -748,7 +748,7 @@ def
             ticks = li.ticks,
             tickCount = ticks.length;
 
-        if(tickCount <= 2) return 1;
+        if(tickCount < 2) return 1;
 
         // Calculate includeModulo depending on labelSpacingMin
 
