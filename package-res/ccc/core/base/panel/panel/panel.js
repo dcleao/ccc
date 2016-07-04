@@ -327,6 +327,8 @@ def
 
         var canChange = def.get(ka, 'canChange', true);
 
+        // ---
+
         // NOTE: If !size && !sizeRef && any of sizeFix/Min/Max have percentages,
         // then all of sizeFix/Min/Max will have width and height equal to null,
         // and the sizeFix.width == null test will fail, below, resulting in an error being thrown.
@@ -334,13 +336,15 @@ def
         var sizeAvailable = def.get(ka, 'size');
         var sizeRef = def.get(ka, 'sizeRef') || (sizeAvailable && def.copyOwn(sizeAvailable));
 
-        var sizeMin = this.sizeMin.resolve(sizeRef);
+        var sizeMin = !this.chart.parent ? this.sizeMin.resolve(sizeRef) : {width: 0, height: 0};
         var sizeMax = this.sizeMax.resolve(sizeRef);
         var sizeFix = this.size   .resolve(sizeRef);
 
         // Normalize
         pvc_Size.applyMin(sizeMax, sizeMin);
         pvc_Size.applyMinMax(sizeFix, sizeMin, sizeMax);
+
+        // ---
 
         if(!sizeAvailable) {
             // The root panel of a chart.
@@ -561,8 +565,6 @@ def
                 // it must update the child's layoutInfo.size and width and height properties accordingly.
                 var pct = this.margins.getDirectionPercentage(a_len) + this.paddings.getDirectionPercentage(a_len);
 
-                console.info("a_len: " +  a_len + " pct: " + pct.toFixed(4) );
-
                 pct = Math.max(0, Math.min(1, pct));
                 if(pct > 0) addLen = addLen / (1 - pct);
 
@@ -571,7 +573,7 @@ def
                 // Any fixed margins/paddings components are already in sizeNeeds.
                 sizeNeeds[a_len] += addLen;
 
-            } else if(addLen < pv.epsilon) {
+            } else if(addLen < 0) {
                 // Assume parent/sizeRef won't change, and so won't our margins and paddings.
                 sizeNeeds[a_len] = clientSizeNeeds[a_len] + li.spacings[a_len];
             }
@@ -943,7 +945,8 @@ def
             delete this._signs;
 
             //region Root Layout
-            if(def.debug >= 10) this.log.group("Root panel layout");
+            var useLogRoot = def.debug >= 10 && this.isRoot;
+            if(useLogRoot) this.log.group("Root panel layout");
             try {
                 this.layout();
 
@@ -955,12 +958,12 @@ def
                     }
                 }
             } catch(ex) {
-                if(def.debug >= 10) this.log.groupEnd();
-
                 if(ex instanceof InvalidDataException)
                     this._invalidDataError = invalidDataError = ex;
                 else
                     throw ex;
+            } finally {
+                if(useLogRoot) this.log.groupEnd();
             }
             //endregion
 
