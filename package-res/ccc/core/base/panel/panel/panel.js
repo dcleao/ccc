@@ -354,8 +354,7 @@ def
 
         // assert sizeAvailable && sizeRef
 
-        // Apply bounds to available size
-        pvc_Size.applyMinMax(sizeAvailable, sizeMin, sizeMax);
+        // ---
 
         var margins  = (def.get(ka, 'margins' ) || this.margins ).resolve(sizeRef);
         var paddings = (def.get(ka, 'paddings') || this.paddings).resolve(sizeRef);
@@ -366,6 +365,21 @@ def
 
         var spaceW = margins.width  + paddings.width;
         var spaceH = margins.height + paddings.height;
+
+        // ---
+
+        // This client size is not affected by sizeMin, to that, below, clientSize increase detection works.
+        var clientSizeAvailableInput = pvc_Size.deflate(sizeAvailable, spaceW, spaceH);
+
+        if(def.debug >= 10) {
+            this.log("Size          -> " + def.describe(sizeAvailable));
+            this.log(" Margins      -> " + def.describe(margins));
+            this.log("  Paddings    -> " + def.describe(paddings));
+            this.log("   ClientSize -> " + def.describe(clientSizeAvailableInput));
+        }
+
+        // Apply bounds to available size
+        pvc_Size.applyMinMax(sizeAvailable, sizeMin, sizeMax);
 
         var clientSizeAvailable = pvc_Size.deflate(sizeAvailable, spaceW, spaceH);
         var clientSizeFix       = pvc_Size.deflate(sizeFix, spaceW, spaceH);
@@ -476,22 +490,12 @@ def
                 previous: layoutInfoPrev,
 
                 /**
-                 * The extra information that is available during the layout operation,
-                 * but that is set to `null`, afterwards.
+                 * The restrictions information that is available only during the layout operation.
                  *
                  * @type {pvc.visual.ILayoutInfoRestrictions}
                  */
                 restrictions: liRestrictions
             };
-
-        // ---
-
-        if(def.debug >= 10) {
-            this.log("Size          -> " + def.describe(li.size));
-            this.log(" Margins      -> " + def.describe(li.margins));
-            this.log("  Paddings    -> " + def.describe(li.paddings));
-            this.log("   ClientSize -> " + def.describe(li.clientSize));
-        }
 
         // ---
 
@@ -504,7 +508,17 @@ def
         // Can grow beyond actually-available size, but not beyond a specified max size.
         li.clientSize = pvc_Size.applyMinMax(clientSizeNeeds, liRestrictions.clientSizeMin, liRestrictions.clientSizeMax);
 
-        var sizeNeeds = li.size = pvc_Size.inflate(clientSizeNeeds, spaceW, spaceH);
+        var clientSizeIncrease = {width: 0, height: 0};
+        var sizeIncrease = {width: 0, height: 0};
+
+        // Assuming li.size is not mutated by _calcLayout code.
+        var sizeNeeds = li.size;
+
+        processSizeDirection.call(this, 'width' );
+        processSizeDirection.call(this, 'height');
+
+        li.clientSizeIncrease = (clientSizeIncrease.width || clientSizeIncrease.height) ? clientSizeIncrease : null;
+        li.sizeIncrease       = (sizeIncrease.width       || sizeIncrease.height      ) ? sizeIncrease       : null;
 
         // ---
         // Free memory
@@ -530,6 +544,38 @@ def
         // ---
 
         this._onLaidOut();
+
+        function processSizeDirection(a_len) {
+            var addLen = clientSizeNeeds[a_len] - clientSizeAvailableInput[a_len];
+            if(addLen > pv.epsilon) {
+                if(def.debug >= 10) this.log("Increased " + a_len + " by " + addLen);
+
+                clientSizeIncrease[a_len] = addLen;
+
+                // Determine the required addSize taking into account the new values of child margins and
+                // paddings that are percentages.
+                // This assumes that the parent layout is such that increments in a child's client-size are ultimately
+                // transformed into _proportional_ increments of the paren't own client-size,
+                // and can only be interpreted that way.
+                // If the layout performed by the parent does not conform with this in some way,
+                // it must update the child's layoutInfo.size and width and height properties accordingly.
+                var pct = this.margins.getDirectionPercentage(a_len) + this.paddings.getDirectionPercentage(a_len);
+
+                console.info("a_len: " +  a_len + " pct: " + pct.toFixed(4) );
+
+                pct = Math.max(0, Math.min(1, pct));
+                if(pct > 0) addLen = addLen / (1 - pct);
+
+                sizeIncrease[a_len] = addLen;
+
+                // Any fixed margins/paddings components are already in sizeNeeds.
+                sizeNeeds[a_len] += addLen;
+
+            } else if(addLen < pv.epsilon) {
+                // Assume parent/sizeRef won't change, and so won't our margins and paddings.
+                sizeNeeds[a_len] = clientSizeNeeds[a_len] + li.spacings[a_len];
+            }
+        }
     },
 
     _onLaidOut: function() {
@@ -762,36 +808,33 @@ def
         }
 
         function checkChildResize(child, canResize) {
-            var resized = false,
-                addWidth = child.width - remSize.width;
-            if(addWidth > pv.epsilon) {
-                if(useLog) child.log("Child increased width = " + addWidth);
+            var resized = false;
 
-                if(!canResize) {
-                    if(useLog)
-                        child.log.warn("Child wanted more width, but layout iterations limit has been reached.");
-                } else {
-                    resized = true;
-                    remSize   .width += addWidth;
-                    clientSize.width += addWidth;
-                }
-            }
-
-            var addHeight = child.height - remSize.height;
-            if(addHeight > pv.epsilon) {
-                if(useLog) child.log("Child increased height =" + addHeight);
-
-                if(!canResize) {
-                    if(useLog)
-                        child.log.warn("Child wanted more height, but layout iterations limit has been reached.");
-                } else {
-                    resized = true;
-                    remSize   .height += addHeight;
-                    clientSize.height += addHeight;
-                }
+            var sizeIncrease = child.getLayout().sizeIncrease;
+            if(sizeIncrease) {
+                if(child.anchor === "fill")
+                    pvc_Size.names.forEach(checkDimension);
+                else
+                    checkDimension(child.anchorLength());
             }
 
             return resized;
+
+            function checkDimension(a_len) {
+                var addLen = sizeIncrease[a_len];
+                if(addLen > 0.1) {
+                    if(!canResize) {
+                        if(useLog)
+                            child.log.warn("Child wanted more " +
+                                a_len + ", but layout iterations limit has been reached.");
+                    } else {
+                        resized = true;
+
+                        remSize[a_len] += addLen;
+                        clientSize[a_len] += addLen;
+                    }
+                }
+            }
         }
 
         function positionChild(child) {
@@ -899,15 +942,27 @@ def
 
             delete this._signs;
 
-            // Layout
+            //region Root Layout
+            if(def.debug >= 10) this.log.group("Root panel layout");
             try {
                 this.layout();
+
+                if(this.isRoot) {
+                    var li = this._layoutInfo;
+                    if(li && li.sizeIncrease) {
+                        // Repeat, at most once, with the updated size.
+                        this.layout({size: def.copyOwn(li.size), force: true, canChange: false});
+                    }
+                }
             } catch(ex) {
+                if(def.debug >= 10) this.log.groupEnd();
+
                 if(ex instanceof InvalidDataException)
                     this._invalidDataError = invalidDataError = ex;
                 else
                     throw ex;
             }
+            //endregion
 
             // Must repeat chart._create
             // In principle, no invalidDataError will have been thrown

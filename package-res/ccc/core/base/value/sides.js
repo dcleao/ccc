@@ -132,6 +132,17 @@ pvc_Sides.updateSize = function(sides) {
     return sides;
 };
 
+pvc_Sides.prototype.getDirectionPercentage = function(a_length) {
+    var sides = a_length === 'width' ? pvc_Sides.hnames : pvc_Sides.vnames;
+
+    var me = this;
+    return sides.reduce(function(pct, side) {
+        var value = me[side];
+        var pctValue = (value != null && typeof value !== 'number')  ? value.percent : 0;
+        return pctValue + pct;
+    }, 0);
+};
+
 pvc_Sides.resolvedMax = function(a, b) {
     var sides = {};
 

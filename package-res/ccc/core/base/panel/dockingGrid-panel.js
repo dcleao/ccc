@@ -537,31 +537,31 @@
 
             function checkChildSizeIncreased(child, canChangeChild) {
                 var layoutChange = 0;
+                var sizeIncrease = child.getLayout().sizeIncrease;
+
+                if(sizeIncrease) {
+                    if(child.anchor === "fill")
+                        pvc_Size.names.forEach(checkDimension);
+                    else
+                        checkDimension(child.anchorLength());
+                }
+
+                return layoutChange;
 
                 function checkDimension(a_len) {
-                    var availableLen = _fillSize[a_len] || 0;
-                    var childLen  = child[a_len] || 0;
-                    var excessLen = childLen - availableLen;
-                    if(excessLen > pv.epsilon) {
+                    var addLen = sizeIncrease[a_len];
+                    if(addLen) {
                         if(!canChangeChild) {
-                            if(_useLog) child.log.warn("CANNOT change child size but child wanted to: " +
-                                    a_len + "=" + childLen + " available=" + availableLen);
+                            if(_useLog)
+                                child.log.warn("Child wanted more " +
+                                    a_len + ", but layout iterations limit has been reached.");
                         } else {
                             layoutChange |= OwnClientSizeChanged;
 
-                            _layoutInfo.clientSize[a_len] += excessLen;
-
-                            if(_useLog) child.log("changed child size " + a_len + " <- " + childLen);
+                            _layoutInfo.clientSize[a_len] += addLen;
                         }
                     }
                 }
-
-                if(child.anchor === "fill")
-                    pvc_Size.names.forEach(checkDimension);
-                else
-                    checkDimension(child.anchorLength());
-
-                return layoutChange;
             }
 
             function checkChildOverflowPaddingsChanged(child, canChangeChild) {
