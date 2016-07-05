@@ -137,10 +137,13 @@ pvc_Sides.prototype.getDirectionPercentage = function(a_length) {
 
     var me = this;
     return sides.reduce(function(pct, side) {
-        var value = me[side];
-        var pctValue = (value != null && typeof value !== 'number')  ? value.percent : 0;
-        return pctValue + pct;
+        return (me.getSidePercentage(side) || 0) + pct;
     }, 0);
+};
+
+pvc_Sides.prototype.getSidePercentage = function(side) {
+    var value = this[side];
+    return (value != null && typeof value !== 'number') ? value.percent : null;
 };
 
 pvc_Sides.resolvedMax = function(a, b) {

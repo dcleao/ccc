@@ -524,6 +524,27 @@ def
         li.clientSizeIncrease = (clientSizeIncrease.width || clientSizeIncrease.height) ? clientSizeIncrease : null;
         li.sizeIncrease       = (sizeIncrease.width       || sizeIncrease.height      ) ? sizeIncrease       : null;
 
+        if(li.sizeIncrease) {
+            // Update margins and paddings
+            var sizeRef2 = def.copyOwn(sizeRef);
+            if(sizeIncrease.width ) sizeRef2.width  += sizeIncrease.width;
+            if(sizeIncrease.height) sizeRef2.height += sizeIncrease.height;
+
+            margins  = (def.get(ka, 'margins' ) || this.margins ).resolve(sizeRef2);
+            paddings = (def.get(ka, 'paddings') || this.paddings).resolve(sizeRef2);
+
+            margins  = pvc_Sides.inflate(margins,  borderHalf);
+            paddings = pvc_Sides.inflate(paddings, borderHalf);
+
+            spaceW = margins.width  + paddings.width;
+            spaceH = margins.height + paddings.height;
+
+            li.margins = margins;
+            li.paddings = paddings;
+            li.spacings.width = spaceW;
+            li.spacings.height = spaceH;
+        }
+
         // ---
         // Free memory
 
@@ -945,25 +966,13 @@ def
             delete this._signs;
 
             //region Root Layout
-            var useLogRoot = def.debug >= 10 && this.isRoot;
-            if(useLogRoot) this.log.group("Root panel layout");
             try {
                 this.layout();
-
-                if(this.isRoot) {
-                    var li = this._layoutInfo;
-                    if(li && li.sizeIncrease) {
-                        // Repeat, at most once, with the updated size.
-                        this.layout({size: def.copyOwn(li.size), force: true, canChange: false});
-                    }
-                }
             } catch(ex) {
                 if(ex instanceof InvalidDataException)
                     this._invalidDataError = invalidDataError = ex;
                 else
                     throw ex;
-            } finally {
-                if(useLogRoot) this.log.groupEnd();
             }
             //endregion
 
