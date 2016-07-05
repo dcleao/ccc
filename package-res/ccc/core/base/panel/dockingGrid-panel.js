@@ -81,7 +81,6 @@
             var _alMap  = pvc.BasePanel.parallelLength;
 
             // LayoutChanged bit codes.
-            var LoopDetected = 1;
             var NormalPaddingsChanged = 2;
             var OverflowPaddingsChanged = 4;
             var OwnClientSizeChanged = 8;
@@ -107,9 +106,6 @@
 
             //  Settled in phase2
             var _childPaddings = new pvc_Sides(0);
-
-            //  . cycle detection
-            var _childPaddingsHistory = {};
 
             // ---
 
@@ -351,7 +347,7 @@
                         layoutChange = phase2_iteration(i === 1, i === MAX_TIMES);
 
                         // When i < MAX_TIMES, layoutChange can be one of:
-                        //   OwnClientSizeChanged, LoopDetected, NormalPaddingsChanged
+                        //   OwnClientSizeChanged, NormalPaddingsChanged
                         // WHen i === MAX_TIMES, layoutChange must be 0.
 
                         if(layoutChange && (layoutChange & OwnClientSizeChanged) !== 0) {
@@ -405,11 +401,6 @@
                             if((layoutChange = checkChildPaddingsChanged(child, canChangeChild))) {
 
                                 // assert canChangeChild
-
-                                if(layoutChange & LoopDetected) {
-                                    phase2_iteration(false, true);
-                                    return 0; // DONE
-                                }
 
                                 // => layoutChange & NormalPaddingsChanged
                                 return NormalPaddingsChanged;
@@ -497,7 +488,7 @@
                     // Compare requested paddings with existing paddings
                     getAnchorPaddingsNames(anchor).forEach(function(side) {
                         var value = _childPaddings[side] || 0;
-                        var requestValue = Math.floor(10000 * (requestPaddings[side] || 0)) / 10000;
+                        var requestValue = Math.floor(10 * (requestPaddings[side] || 0)) / 10;
 
                         // STABILITY requirement
                         if(pv.floatGreater(requestValue, value)) {
@@ -515,16 +506,6 @@
                     });
 
                     if(layoutChange) {
-                        var paddingKey = getPaddingsKey(_childPaddings, 0);
-                        if(def.hasOwn(_childPaddingsHistory, paddingKey)) {
-                            // LOOP detected
-                            if(def.debug >= 2) child.log.warn("Layout - Paddings - LOOP detected!");
-
-                            layoutChange |= LoopDetected;
-                        } else {
-                            _childPaddingsHistory[paddingKey] = true;
-                        }
-
                         // Calculate width and height
                         _childPaddings.width  = _childPaddings.left + _childPaddings.right ;
                         _childPaddings.height = _childPaddings.top  + _childPaddings.bottom;
@@ -627,14 +608,6 @@
             case 'bottom': return pvc_Sides.hnames;
             case 'fill':   return pvc_Sides.names;
         }
-    }
-
-    function getPaddingsKey(paddings, precision) {
-        if(precision == null) precision = 0;
-        return pvc_Sides
-            .names
-            .map(function(side) { return (paddings[side] || 0).toFixed(precision); })
-            .join('|');
     }
     //endregion
 }());
