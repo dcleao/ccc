@@ -127,7 +127,20 @@ var NumFormStyle = numFormStyle.of = def('cdo.NumberFormatStyle', def.FieldsBase
          * @param {string[]} [_] The new array of abbreviations.
          * @return {cdo.NumberFormatStyle} <tt>this</tt> or the current array of abbreviations.
          */
-        abbreviations: {fail: def.array.empty}
+        abbreviations: {fail: def.array.empty},
+
+        /**
+         * Gets or sets the array of submultiple abbreviations.
+         *
+         * There is no maximum number of units submultiple abbreviations.
+         * The first element of the array represents the milli unit,
+         * the second micro, the third nano...
+         *
+         * @function
+         * @param {string[]} [_] The new array of submultiple abbreviations.
+         * @return {cdo.NumberFormatStyle} <tt>this</tt> or the current array of submultiple abbreviations.
+         */
+        subAbbreviations: {}
     },
 
     methods: /** @lends cdo.NumberFormatStyle# */ {
@@ -150,7 +163,8 @@ var NumFormStyle = numFormStyle.of = def('cdo.NumberFormatStyle', def.FieldsBase
                     .groupSizes(other.groupSizes())
                     .negativeSign(other.negativeSign())
                     .currency(other.currency())
-                    .abbreviations(other.abbreviations());
+                    .abbreviations(other.abbreviations())
+                    .subAbbreviations(other.subAbbreviations());
 
             if(def.string.is(other)) {
                 var formP = langProvider(other);
@@ -178,6 +192,7 @@ numFormStyle.defaults = numFormStyle({
     group:        ",",
     groupSizes:   [3],
     abbreviations: ['k','m', 'b', 't'],
+    subAbbreviations: [],
     negativeSign: "-",
     currency:     "$"
 });

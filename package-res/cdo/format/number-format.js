@@ -158,6 +158,7 @@ numForm.defaults = numForm().style(numFormStyle());
  */
 numForm.cacheLimit = 20;
 
+var log1000 = Math.log(1000);
 var numForm_cache = {}, numForm_cacheCount = 0;
 
 function numForm_cachedFormatter(mask) {
@@ -618,6 +619,26 @@ function numForm_buildFormatSectionPosNeg(section) {
         var scale = section.scale;
 
         if(section.abbreviationOn) {
+            var logValue = Math.log(value) / log1000;
+            var power, powerMax;
+
+            if(logValue > 0) {
+                // Account for floating point precision errors.
+                powerMax = style.abbreviations.length;
+                power = Math.min(Math.floor(logValue + 1e-10), powerMax);
+                if(power) {
+                    scale -= power * 3;
+                    abbreviation = power;
+                }
+            } else if(logValue < 0) {
+                powerMax = style.subAbbreviations.length;
+                power = Math.min(Math.floor(-logValue - 1e-10), powerMax);
+                if(power) {
+                    scale += power * 3;
+                    abbreviation = -power;
+                }
+            }
+            /*
             var L = style.abbreviations.length;
             for(var i = L; i > 0; i--) {
                 var y = i*3;
@@ -626,7 +647,7 @@ function numForm_buildFormatSectionPosNeg(section) {
                     abbreviation = i-1;
                     break;
                 }
-            }
+            }*/
         }
 
         // 2) exponent scaling
@@ -834,6 +855,9 @@ function numFormRt_currencySymbol(style) {
 // token-read-function
 function numForm_abbreviationSymbol(style, text, exponent, abbreviation) {
     if(abbreviation != null) {
-        return style.abbreviations[abbreviation];
+        // > 0 or < 0 ; 0 is not used
+        return abbreviation > 0
+            ? style.abbreviations[abbreviation - 1]
+            : style.subAbbreviations[-abbreviation - 1];
     }
 }
