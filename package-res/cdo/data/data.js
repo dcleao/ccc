@@ -397,7 +397,7 @@ def.type('cdo.Data', cdo.Complex)
     /**
      * Gets an atom if it was specified.
      *
-     * Note thar a specified atom can have the `null` value.
+     * Note that a specified atom can have the `null` value.
      *
      * @param {string} dimName - The name of the atom's dimension.
      * @return {cdo.Atom} The atom is specified; `null`, if not.
