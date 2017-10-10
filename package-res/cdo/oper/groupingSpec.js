@@ -39,7 +39,7 @@ def
  * @property {boolean} isNull Indicates that there are no levels, and dimensions.
  * @property {boolean} isSingleDimension Indicates that there is only one level and dimension.
  * @property {boolean} isSingleLevel Indicates that there is only one level.
- * @property {boolean} hasExtensionDataSets Indicates if there are any extension complex types.
+ * @property {boolean} hasExtensionComplexTypes Indicates if there are any extension complex types.
  * @property {cdo.ComplexType} type The complex type against which dimension names were resolved.
  * @property {string[]} extensionComplexTypeNames The names of extension complex types, if any.
  * @property {cdo.GroupingLevelSpec} levels An array of level specifications.
@@ -62,51 +62,54 @@ def.type('cdo.GroupingSpec')
     // Bound at construction time?
     this.complexType = complexType || null;
 
-    var extensionComplexTypeNames = null;
+    var referencedExtensionComplexTypeNamesMap = null;
 
     var levelKeys = [];
 
-    // Accumulated dimension names, from first level to last.
-    var accDimNames = [];
+    // Accumulated main dimension names, from first level to last.
+    var accMainDimNames = [];
 
     this.levels = def.query(levelSpecs || undefined) // -> null query
         // Filter out empty levels....
         .where(function(levelSpec) {
-            return levelSpec.dimensions.length > 0;
+            return levelSpec.allDimensions.length > 0;
         })
         .select(function(levelSpec) {
 
             levelKeys.push(levelSpec.key);
 
-            levelSpec.dimensions.forEach(function(dimSpec) {
+            levelSpec.allDimensions.forEach(function(dimSpec) {
 
-                // Register used complex type names.
+                // Register referenced complex type names.
                 if(dimSpec.dataSetName) {
-                    if(!extensionComplexTypeNames) extensionComplexTypeNames = Object.create(null);
-                    extensionComplexTypeNames[dimSpec.dataSetName] = true;
-                }
+                    if(!referencedExtensionComplexTypeNamesMap) {
+                        referencedExtensionComplexTypeNamesMap = Object.create(null);
+                    }
 
-                // Accumulate dimension names.
-                accDimNames.push(dimSpec.name);
+                    referencedExtensionComplexTypeNamesMap[dimSpec.dataSetName] = true;
+                } else {
+                    // Accumulate main dimension names.
+                    accMainDimNames.push(dimSpec.name);
+                }
             });
 
-            // Provide the level with the accumulated dimensions names.
-            levelSpec._setAccDimNames(accDimNames.slice(0));
+            // Provide the level with the accumulated main dimensions names.
+            levelSpec._setAccDimNames(accMainDimNames.slice(0));
 
             return levelSpec;
         })
         .array();
 
     this.extensionComplexTypesMap = null;
-    this.extensionComplexTypeNames = extensionComplexTypeNames;
+    this.extensionComplexTypeNames =
+        referencedExtensionComplexTypeNamesMap && Object.keys(referencedExtensionComplexTypeNamesMap);
 
-    if(extensionComplexTypeNames) {
+    if(referencedExtensionComplexTypeNamesMap) {
         this._setExtensionComplexTypesMap(extensionComplexTypesMap);
     }
 
-    // TODO: should be only main names here?
     // TODO: should this contain only distinct dimension names?
-    this._dimNames = accDimNames;
+    this._dimNames = accMainDimNames;
 
     this.depth = this.levels.length;
 
@@ -119,7 +122,7 @@ def.type('cdo.GroupingSpec')
     // @see #ensure
     this._cacheKey = this._calcCacheKey();
 
-    // NOTE: `levelKeys` already reflects `extensionComplexTypeNames`.
+    // NOTE: `levelKeys` already reflects `referencedExtensionComplexTypeNamesMap`.
     this.key = this._cacheKey + "##" + levelKeys.join('||');
 })
 .add(/** @lends cdo.GroupingSpec# */{
@@ -133,7 +136,7 @@ def.type('cdo.GroupingSpec')
     },
 
     /**
-     * Late binds a grouping specification to a complex type and, optionally, a set of extension complex types.
+     * Late binds a grouping specification to a complex type and, optionally, to a set of extension complex types.
      *
      * @param {!cdo.ComplexType} complexType A complex type.
      * @param {Object.<string, cdo.ComplexType>} [extensionComplexTypesMap] A map of extension complex types by name.
@@ -151,9 +154,13 @@ def.type('cdo.GroupingSpec')
         });
     },
 
+    get isBound() {
+        return !!this.complexType;
+    },
+
     _setExtensionComplexTypesMap: function(extensionComplexTypesMap) {
 
-        if(this.hasExtensionDataSets) {
+        if(this.hasExtensionComplexTypes) {
             if(!extensionComplexTypesMap) {
                 throw def.error.operationInvalid("Expects a map of extension types.");
             }
@@ -166,12 +173,22 @@ def.type('cdo.GroupingSpec')
 
     /**
      * Obtains an enumerable of the contained dimension specifications.
+     *
      * @type def.Query
      */
     dimensions: function() {
         return def.query(this.levels).prop('dimensions').selectMany();
     },
 
+    get allDimensions() {
+        return def.query(this.levels).prop('allDimensions').selectMany();
+    },
+
+    /**
+     * The names of the main dimensions of this grouping.
+     *
+     * @type {!string[]}
+     */
     dimensionNames: function() {
         return this._dimNames;
     },
@@ -184,11 +201,11 @@ def.type('cdo.GroupingSpec')
         return this.depth === 1;
     },
 
-    get isSingleDimension(){
+    get isSingleDimension() {
         return this._dimNames.length === 1;
     },
 
-    get hasExtensionDataSets() {
+    get hasExtensionComplexTypes() {
         return !!this.extensionComplexTypeNames;
     },
 
@@ -260,6 +277,7 @@ def.type('cdo.GroupingSpec')
         return dt && dt.valueType;
     },
 
+    // region Ensure
     /**
      * Obtains a version of this grouping specification
      * that conforms to the specified arguments.
@@ -355,6 +373,7 @@ def.type('cdo.GroupingSpec')
             rootLabel:      def.get(ka, 'rootLabel'     ) || this.rootLabel
         });
     },
+    // endregion
 
     toString: function() {
         return this.levels.map(String).join(', ');
@@ -374,21 +393,23 @@ def.type('cdo.GroupingSpec')
  * @class
  */
 def.type('cdo.GroupingLevelSpec')
-.init(function(dimSpecs, complexType, extensionComplexTypesMap) {
+.init(function(allDimSpecs) {
 
     // Collect keys and names.
-    var dimKeys = [];
+    var allDimKeys = [];
     var dimNames = [];
-    var hasExtensionDimensions = false;
+    var dimensions = [];
 
-    this.dimensions = def.query(dimSpecs)
+    this.dimensions = dimensions;
+
+    this.allDimensions = def.query(allDimSpecs)
        .select(function(dimSpec) {
 
-           dimKeys.push(dimSpec.key);
-           dimNames.push(dimSpec.name);
+           allDimKeys.push(dimSpec.key);
 
-           if(dimSpec.dataSetName) {
-               hasExtensionDimensions = true;
+           if(!dimSpec.dataSetName) {
+               dimNames.push(dimSpec.name);
+               dimensions.push(dimSpec);
            }
 
            return dimSpec;
@@ -403,18 +424,19 @@ def.type('cdo.GroupingLevelSpec')
     // Set by #_setAccDimNames.
     this._accDimNames = null;
 
-    this.key = dimKeys.join(',');
+    this.key = allDimKeys.join(',');
 
     this.mainDatumComparer = this.compareMainDatums.bind(this);
 
-    this.hasExtensionDimensions = hasExtensionDimensions;
+    this.hasExtensionDimensions = this.depth !== dimensions.length;
 })
-.add( /** @lends cdo.GroupingLevelSpec */{
+.add( /** @lends cdo.GroupingLevelSpec# */{
 
     _setAccDimNames: function(accDimNames) {
         this._accDimNames = accDimNames;
     },
 
+    // Accumulated main dimensions names.
     accDimensionNames: function() {
         return this._accDimNames;
     },
@@ -424,23 +446,23 @@ def.type('cdo.GroupingLevelSpec')
     },
 
     lastDimension: function() {
-        return this.dimensions[this.depth - 1];
+        return this.allDimensions[this.depth - 1];
     },
 
     bind: function(complexType, extensionComplexTypesMap) {
 
-        this.dimensions.forEach(function(dimSpec) {
+        this.allDimensions.forEach(function(dimSpec) {
             dimSpec.bindComplexType(complexType, extensionComplexTypesMap);
         });
     },
 
     compareMainDatums: function(datumA, datumB) {
-        var dims = this.dimensions,
-            D = this.depth,
-            result;
+        var dims = this.dimensions;
+        var D = dims.length;
+        var result;
 
         for(var i = 0 ; i < D ; i++)
-            if((result = dims[i].compareMainDatums(datumA, datumB))/* !== 0*/)
+            if((result = dims[i].compareMainDatums(datumA, datumB)) !== 0)
                 return result;
         return 0;
     },
@@ -465,7 +487,7 @@ def.type('cdo.GroupingLevelSpec')
     },
 
     toString: function() {
-        return def.query(this.dimensions).select(String).array().join('|');
+        return def.query(this.allDimensions).select(String).array().join('|');
     }
 });
 
@@ -474,21 +496,21 @@ def.type('cdo.GroupingLevelSpec')
  * @class
  */
 def.type('cdo.GroupingDimensionSpec')
-.init(function(name, reverse, dimensionType) {
+.init(function(fullName, reverse, dimensionType) {
 
-    // e.g. "valueRole.dimension"
-    this.name = name;
+    // e.g. "valueRole.dim"
+    this.fullName = fullName;
 
-    // Parse name into dataSetName and localName.
-    var m = /^(?:(.+?)\.)?(.+)$/.exec(name);
+    // Parse name into dataSetName and name.
+    var m = /^(?:(.+?)\.)?(.+)$/.exec(fullName);
 
     // main dataSet has name null
     this.dataSetName = (m && m[1]) || null; // e.g. "valueRole"
-    this.localName = m ? m[2] : name;       // e.g. "dimension"
+    this.name = m ? m[2] : fullName;        // e.g. "dim"
 
     this.reverse = !!reverse;
 
-    this.key = name + ":" + (reverse ? '0' : '1');
+    this.key = fullName + ":" + (reverse ? '0' : '1');
 
     this.dimensionType = null;
     this.mainAtomComparer = null;
@@ -505,10 +527,24 @@ def.type('cdo.GroupingDimensionSpec')
      * @return {!cdo.GroupingDimensionSpec} `this` instance.
      */
     bindComplexType: function(complexType, extensionComplexTypesMap) {
-        /*jshint expr:true */
+
         complexType || def.fail.argumentRequired('complexType');
 
-        this.bind(complexType.dimensions(this.name));
+        var dimComplexType;
+        if(this.dataSetName) {
+            var extensionComplexType = def.get(extensionComplexTypesMap, this.dataSetName);
+            if(!extensionComplexType)
+                throw def.error.operationInvalid("The data set name '{0}' of dimension '{1}' is not defined.", [
+                    this.dataSetName,
+                    this.fullName
+                ]);
+
+            dimComplexType = extensionComplexType;
+        } else {
+            dimComplexType = complexType;
+        }
+
+        this.bind(dimComplexType.dimensions(this.name));
 
         return this;
     },
@@ -516,7 +552,7 @@ def.type('cdo.GroupingDimensionSpec')
     /**
      * Late binds a dimension specification to its dimension type.
      *
-     * @param {!cdo.DimensionType} dimentionType - A dimension type.
+     * @param {!cdo.DimensionType} dimensionType - A dimension type.
      *
      * @return {!cdo.GroupingDimensionSpec} `this` instance.
      */
@@ -527,7 +563,7 @@ def.type('cdo.GroupingDimensionSpec')
         return this;
     },
 
-    // TODO: Create this method to suite the specific case, known since bind...
+    // TODO: Define this method to suite the specific case, which is known since bind...
     compareMainDatums: function(datumA, datumB) {
         if(this.dimensionType.isComparable) {
             var name = this.name;
@@ -539,7 +575,7 @@ def.type('cdo.GroupingDimensionSpec')
     },
 
     toString: function() {
-        return this.name +
+        return this.fullName +
             (this.dimensionType ? (' ("' + this.dimensionType.label + '")') : '') +
             (this.reverse       ? ' desc'                                   : '');
     }

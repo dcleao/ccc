@@ -64,32 +64,37 @@ def
     },
 
     /**
-     * Obtains the visual roles owned by the panel that are played by a given dimension name,
-     * in definition order.
+     * Obtains the visual roles owned by the panel, in definition order,
+     * that are played by a main dimension, given its name.
+     *
      * Optionally, returns the chart-level visual roles as well.
      *
      * Do NOT modify the returned array.
      *
-     * @param {string} dimName The name of the dimension.
+     * @param {string} mainDimName The name of the main dimension.
      * @param {boolean} [includeChart=false] Indicates whether chart visual roles should be included as well.
+     *
      * @return {pvc.visual.Role[]} The array of visual roles or <tt>null</tt>, if none.
+     *
      * @see pvc.BaseChart#visualRolesOf
+     *
      * @virtual
      */
-    visualRolesOf: function(dimName, includeChart) {
+    visualRolesOf: function(mainDimName, includeChart) {
         var visualRolesByDim = this._visRolesByDim;
         if(!visualRolesByDim) {
             visualRolesByDim = this._visRolesByDim = {};
-            this.visualRoleList.forEach(function(r) {
-                var g = r.grouping;
-                if(g) g.dimensionNames().forEach(function(n) {
-                    def.array.lazy(visualRolesByDim, n).push(r);
+
+            this.visualRoleList.forEach(function(role) {
+                var grouping = role.grouping;
+                if(grouping) grouping.dimensionNames().forEach(function(dimName) {
+                    def.array.lazy(visualRolesByDim, dimName).push(role);
                 });
             });
         }
 
-        var plotVisRoles  = def.getOwn(visualRolesByDim, dimName, null),
-            chartVisRoles = includeChart ? this.chart.visualRolesOf(dimName) : null;
+        var plotVisRoles  = def.getOwn(visualRolesByDim, mainDimName, null),
+            chartVisRoles = includeChart ? this.chart.visualRolesOf(mainDimName) : null;
 
         return plotVisRoles && chartVisRoles ? plotVisRoles.concat(chartVisRoles) : (plotVisRoles || chartVisRoles);
     },

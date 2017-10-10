@@ -40,30 +40,30 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
             var dimOpts = chart.options.dimensions;
             var dimGroupOpts = chart.options.dimensionGroups;
 
-            complexType.dimensionsList().forEach(function(dimType) {
-                if(!dimType.isDiscrete)
+            complexType.dimensionsList().forEach(function(mainDimType) {
+                if(!mainDimType.isDiscrete)
                     return;
 
-                var dimName = dimType.name;
+                var mainDimName = mainDimType.name;
 
                 // If a comparer is already specified don't override it.
-                var dimSpecs = dimOpts && dimOpts[dimName];
+                var dimSpecs = dimOpts && dimOpts[mainDimName];
                 if(dimSpecs && dimSpecs.comparer)
                     return;
 
-                var dimGroup = cdo.DimensionType.dimensionGroupName(dimName);
+                var dimGroup = cdo.DimensionType.dimensionGroupName(mainDimName);
                 var dimGroupSpecs = dimGroupOpts && dimGroupOpts[dimGroup];
                 if(dimGroupSpecs && dimGroupSpecs.comparer)
                     return;
 
                 // Is dimension playing any visual roles?
-                var visualRoles = chart.visualRolesOf(dimName, /*includePlotLevel:*/true);
+                var visualRoles = chart.visualRolesOf(mainDimName, /*includePlotLevel:*/true);
                 if(!visualRoles)
                     return;
 
                 // Apply comparer.
                 // Sets `isComparable` as well.
-                dimType.setComparer(def.ascending);
+                mainDimType.setComparer(def.ascending);
             });
         },
 
@@ -127,9 +127,12 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
 
 function slidingWindow_defaultDimensionName() {
     // Cartesian charts always have (at least) a base and ortho axis
+    // Unfortunately, the sliding window is initialized while the visual roles' pre-bindings are not yet committed.
     var baseAxis = this.chart.axes.base;
-    return baseAxis
-        ? baseAxis.role.grouping.lastDimensionName()
+    var baseGrouping = baseAxis && (baseAxis.role.grouping || baseAxis.role.preBoundGrouping());
+
+    return baseGrouping
+        ? baseGrouping.lastDimensionName()
         : this.chart.data.type.dimensionsNames()[0];
 }
 

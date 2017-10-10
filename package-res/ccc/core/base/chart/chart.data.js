@@ -243,13 +243,16 @@ pvc.BaseChart
     },
 
     _createNewVisualRolesContext: function() {
-        var options  = this.options,
+        var chart    = this,
+            options  = this.options,
             chartRolesOptions = options.visualRoles,
             roles    = this.visualRoles,
             roleList = this.visualRoleList,
             context  = function(rn) { return def.getOwn(roles, rn); };
 
-        context.query = function() { return def.query(roleList); };
+        context.query = function() {
+            return def.query(roleList);
+        };
 
         // Accept visual roles directly in the options as <roleName>Role,
         // for chart roles or for the main plot roles.
@@ -264,6 +267,10 @@ pvc.BaseChart
                 if(chartRolesOptions && (v = chartRolesOptions[name]) !== U) return v;
             }
             if(plot && (opts = plot._visualRolesOptions)) return opts[name];
+        };
+
+        context.getExtensionComplexTypesMap = function() {
+            return chart.boundDimensionsComplexTypesMap;
         };
 
         return context;
@@ -399,27 +406,27 @@ pvc.BaseChart
 
         var plot2SeriesSet = def.query(plot2Series).uniqueIndex(),
             hasOwnProp = def.hasOwnProp,
-            seriesDimNames, dataPartDim, part1Atom, part2Atom, buildSeriesKey,
+            mainSeriesDimNames, dataPartDim, part1Atom, part2Atom, buildSeriesKey,
             init = function(datum) {
                 // LAZY init
                 if(serRole.isBound()) {
 
-                    // NOTE: that `plot2Series` only works when the series visual role does
+                    // NOTE: that `plot2Series` only works as expected when the series visual role does
                     // *not* contain a measure discriminator dimension.
                     //
                     // Passing plot2Series = ["Cars~Quantity", "Places~Quantity"]
-                    // with seriesRole = ["ProductLine", "valueRole.dimension"]
+                    // with seriesRole = ["ProductLine", "valueRole.dim"]
                     //
                     // will not work because discriminator dimensions are not part of datums themselves
                     // and are only defined in the data groups that are the result of groupings of plot visual roles...
 
-                    seriesDimNames = serRole.grouping.dimensionNames();
+                    mainSeriesDimNames = serRole.grouping.dimensionNames();
                     dataPartDim = datum.owner.dimensions(dataPartDimName);
-                    if(seriesDimNames.length > 1) {
+                    if(mainSeriesDimNames.length > 1) {
                         buildSeriesKey = cdo.Complex.compositeKey;
                     } else {
-                        seriesDimNames = seriesDimNames[0];
-                        buildSeriesKey = function(dat, serDimName) { return dat.atoms[serDimName].key; };
+                        mainSeriesDimNames = mainSeriesDimNames[0];
+                        buildSeriesKey = function(dat, mainSeriesDimName) { return dat.atoms[mainSeriesDimName].key; };
                     }
                 }
                 init = null;
@@ -430,7 +437,7 @@ pvc.BaseChart
             calculation: function(datum, atoms) {
                 init && init(datum);
                 if(dataPartDim) { // when serRole is unbound
-                    var seriesKey = buildSeriesKey(datum, seriesDimNames);
+                    var seriesKey = buildSeriesKey(datum, mainSeriesDimNames);
                     atoms[dataPartDimName] =
                         hasOwnProp.call(plot2SeriesSet, seriesKey)
                             ? (part2Atom || (part2Atom = dataPartDim.intern('1')))

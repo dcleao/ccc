@@ -28,6 +28,10 @@ define([
             return rolesOptions[role.prettyId()]; // note: null is a valid config value!
         };
 
+        context.getExtensionComplexTypesMap = function() {
+            return null;
+        };
+
         return context;
     }
 
@@ -38,7 +42,8 @@ define([
             spec = Object.create(spec);
             spec.index = index;
 
-            var role = new pvc.visual.Role(spec.name, spec);
+            var chartMock = {};
+            var role = new pvc.visual.Role(chartMock, spec.name, spec);
 
             var prettyId;
             (spec.testNames || [role.name]).forEach(function(testName, index) {

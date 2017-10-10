@@ -60,7 +60,7 @@ pvc.visual.rolesBinder = function() {
     var state = NOT_STARTED;
 
     var context;
-    var complexTypeProj;
+    var mainComplexTypeProj;
     var logger;
     var doLog;
 
@@ -79,16 +79,16 @@ pvc.visual.rolesBinder = function() {
      *
      * @type {!Object.<string, pvc.visual.Role>}
      */
-    var dimToSingleRoleMap = Object.create(null);
+    var mainDimToSingleRoleMap = Object.create(null);
 
     /**
      * Marks if at least one role was previously found to be bound to a dimension.
      *
-     * This map is only used to help build the `dimToSingleRoleMap` map.
+     * This map is only used to help build the `mainDimToSingleRoleMap` map.
      *
      * @type {!Object.<string, boolean>}
      */
-    var dimHasRoleBoundToSet = Object.create(null);
+    var mainDimHasRoleBoundToSet = Object.create(null);
 
     return {
         // region accessors
@@ -130,6 +130,12 @@ pvc.visual.rolesBinder = function() {
          * returns a visual role's options object for a given visual role, if any,
          * or <tt>null</tt> if none.
          *
+         * Also, it contains a `getExtensionComplexTypesMap` method that
+         * returns
+         * a map of the current extension complex types, indexed by extension name,
+         * if there is at least one extension,
+         * or `null` if not.
+         *
          * @param {function} [_] The visual roles context.
          * @return {pvc.visual.RolesBinder|function} <tt>this</tt> or the current visual roles context.
          */
@@ -143,7 +149,7 @@ pvc.visual.rolesBinder = function() {
         },
 
         /**
-         * Gets or sets the complex type project instance.
+         * Gets or sets the main complex type project instance.
          *
          * Must be set before calling {@link pvc.visual.RolesBinder#init}.
          *
@@ -163,10 +169,10 @@ pvc.visual.rolesBinder = function() {
         complexTypeProject: function(_) {
             if(arguments.length) {
                 visualRolesBinder_assertState(state, NOT_STARTED);
-                complexTypeProj = _;
+                mainComplexTypeProj = _;
                 return this;
             }
-            return complexTypeProj;
+            return mainComplexTypeProj;
         },
         // endregion
 
@@ -180,7 +186,7 @@ pvc.visual.rolesBinder = function() {
 
         visualRolesBinder_assertState(state, NOT_STARTED);
         if(!context) throw def.error.argumentRequired('context');
-        if(!complexTypeProj) throw def.error.argumentRequired('complexTypeProject');
+        if(!mainComplexTypeProj) throw def.error.argumentRequired('complexTypeProject');
 
         state = INIT_DURING;
         doLog = !!logger && logger.level() >= 3;
@@ -244,6 +250,7 @@ pvc.visual.rolesBinder = function() {
         }
 
         // Note this is an unbound grouping.
+        // May contain extension dimensions.
         var grouping = parsed.grouping;
         if(grouping) {
             preBindRoleToGrouping(role, grouping);
@@ -284,27 +291,33 @@ pvc.visual.rolesBinder = function() {
 
         role.preBind(grouping);
 
+        // Note that if a role only has extension dimensions, still it is not null.
         if(grouping.isNull) {
             visRoleBinder_assertUnboundRoleIsOptional(role); // throws if required
         } else {
-            //role.setSourceRole(null); // if any
-            grouping.dimensionNames().forEach(function(dimName) {
-                registerRoleAndDimensionBinding(role, dimName);
+
+            // role.setSourceRole(null); // if any
+
+            // NOTE: the existence of extension dimensions is validated in the bind phase.
+            grouping.dimensionNames().forEach(function(mainDimName) {
+                registerRoleAndMainDimensionBinding(role, mainDimName);
             });
         }
     }
 
-    function registerRoleAndDimensionBinding(role, dimName) {
-        if(!dimHasRoleBoundToSet[dimName]) {
-            dimHasRoleBoundToSet[dimName] = true;
+    // Main dimension is a dimension of the chart's main data set.
+    // Do not confuse with the concept of main plot.
+    function registerRoleAndMainDimensionBinding(role, mainDimName) {
+        if(!mainDimHasRoleBoundToSet[mainDimName]) {
+            mainDimHasRoleBoundToSet[mainDimName] = true;
 
-            dimToSingleRoleMap[dimName] = role;
+            mainDimToSingleRoleMap[mainDimName] = role;
 
             // Defines the dimension in the complex type project.
-            complexTypeProj.setDim(dimName);
+            mainComplexTypeProj.setDim(mainDimName);
         } else {
             // Two or more roles exist.
-            delete dimToSingleRoleMap[dimName];
+            delete mainDimToSingleRoleMap[mainDimName];
         }
     }
 
@@ -378,13 +391,13 @@ pvc.visual.rolesBinder = function() {
     // The order of application is not relevant.
     function applySingleRoleDefaultsToDimensions() {
 
-        def.eachOwn(dimToSingleRoleMap, function(role, dimName) {
+        def.eachOwn(mainDimToSingleRoleMap, function(role, dimName) {
 
-            complexTypeProj.setDimDefaults(dimName, role.dimensionDefaults);
+            mainComplexTypeProj.setDimDefaults(dimName, role.dimensionDefaults);
         });
 
         // Reset the map so that role dimension defaults are not applied twice.
-        dimToSingleRoleMap = Object.create(null);
+        mainDimToSingleRoleMap = Object.create(null);
     }
     // endregion
 
@@ -452,31 +465,31 @@ pvc.visual.rolesBinder = function() {
         // --------------
 
         // Try to bind automatically to defaultDimensionName.
-        var defaultDimName = role.defaultDimensionGroup;
-        if(defaultDimName) {
+        var defaultMainDimName = role.defaultDimensionGroup;
+        if(defaultMainDimName) {
             if(role.defaultDimensionGreedy) {
                 // e.g.: "category*"
 
                 // TODO: does not respect any index explicitly specified before the *. It could mean >=...
-                var groupDimNames = complexTypeProj.groupDimensionsNames(defaultDimName);
-                if(groupDimNames) {
-                    return preBindRoleToDimensions(role, groupDimNames);
+                var groupMainDimNames = mainComplexTypeProj.groupDimensionsNames(defaultMainDimName);
+                if(groupMainDimNames) {
+                    return preBindRoleToMainDimensions(role, groupMainDimNames);
                 }
 
                 // Continue to auto create dimension
 
-            } else if(complexTypeProj.hasDim(defaultDimName)) {
+            } else if(mainComplexTypeProj.hasDim(defaultMainDimName)) {
                 // e.g.: "category"
 
-                return preBindRoleToDimensions(role, defaultDimName);
+                return preBindRoleToMainDimensions(role, defaultMainDimName);
             }
 
             if(role.autoCreateDimension) {
                 // Create a hidden dimension and bind the role to it.
                 // Dimension will receive only null data.
-                complexTypeProj.setDim(defaultDimName, {isHidden: true});
+                mainComplexTypeProj.setDim(defaultMainDimName, {isHidden: true});
 
-                return preBindRoleToDimensions(role, defaultDimName);
+                return preBindRoleToMainDimensions(role, defaultMainDimName);
             }
 
             // default dimension(s) is not defined and not autoCreateDimension.
@@ -498,9 +511,9 @@ pvc.visual.rolesBinder = function() {
         roleIsUnbound(role);
     }
 
-    function preBindRoleToDimensions(role, dimNames) {
+    function preBindRoleToMainDimensions(role, mainDimNames) {
 
-        var grouping = cdo.GroupingSpec.parse(dimNames);
+        var grouping = cdo.GroupingSpec.parse(mainDimNames);
 
         preBindRoleToGrouping(role, grouping);
     }
@@ -509,8 +522,6 @@ pvc.visual.rolesBinder = function() {
         // Throws if role is required
         visRoleBinder_assertUnboundRoleIsOptional(role); // throws if required
 
-        // Unbind role from any previous binding
-        role.bind(null);
         role.setSourceRole(null); // if any
     }
     // endregion
@@ -523,10 +534,43 @@ pvc.visual.rolesBinder = function() {
 
         // Commits existing pre-bindings for the given complex type.
         // Validates existence of dimensions referenced in the grouping specifications.
-        // Roles that are pre-bound to null groupings discard these (they are not required).
+        // Roles that are pre-bound to null groupings discard these (these roles are not required; remain unbound).
+
+        // 1. Bind measure visual roles first. This will populate their chart's data sets of bound dimensions
+        //    (see getBoundDimensionsDataSetOf).
         context.query()
-            .where(function(role) { return role.isPreBound();   })
+            .where(function(role) { return role.isMeasure && role.isPreBound(); })
             .each (function(role) { role.postBind(complexType); });
+
+        // 2. Gets the `extensionComplexTypesMap` to pass to bind() of non-measure visual roles.
+
+        // The complex type is shared by all same visual roles with the same local plot name (and dataSetName).
+        // However, note, a plot-level key role should only be able to reference measure roles' dimensions of
+        // the same plot, so there's some work to build the appropriate referenceable complex types.
+        // A special case is that of the data part role, which cannot reference any measure role's dimension.
+
+        var chartLevelExtensionComplexTypesMap = null;
+
+        // 3. Bind non-measure visual roles with complexType and extensionComplexTypesMap.
+        context.query()
+            .where(function(role) { return !role.isMeasure && role.isPreBound(); })
+            .each (function(role) {
+                var extensionComplexTypesMap;
+
+                if(role.name === "dataPart") {
+                    extensionComplexTypesMap = null;
+                } else if(role.plot) {
+                    extensionComplexTypesMap = role.plot.boundDimensionsComplexTypesMap;
+                } else {
+                    if(chartLevelExtensionComplexTypesMap === null) {
+                        chartLevelExtensionComplexTypesMap = context.getExtensionComplexTypesMap();
+                    }
+
+                    extensionComplexTypesMap = chartLevelExtensionComplexTypesMap;
+                }
+
+                role.postBind(complexType, extensionComplexTypesMap);
+            });
 
         // -------
 

@@ -32,7 +32,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
 
         var whereFun  = def.get(keyArgs, 'where'),
             isNullFun = def.get(keyArgs, 'isNull'),
-            isAdditive     = def.get(keyArgs, 'isAdditive', false),  
+            isAdditive     = def.get(keyArgs, 'isAdditive', false),
             datums = def.query(atomz)
                 .select(function(atoms) {
                     var datum = new cdo.Datum(this, atoms);
@@ -42,7 +42,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
                     return datum;
                 }, this);
 
-        data_setDatums.call(this, datums, {isAdditive: isAdditive, doAtomGC: true}); 
+        data_setDatums.call(this, datums, {isAdditive: isAdditive, doAtomGC: true});
     },
 
 
@@ -95,7 +95,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
         /*global dim_uninternVirtualAtoms:true*/
         def.eachOwn(this._dimensions, function(dim) { dim_uninternVirtualAtoms.call(dim); });
     },
-   
+
     /**
      * Adds new datums to the owner data.
      * @param {cdo.Datum[]|def.Query} datums The datums to add.
@@ -104,7 +104,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
         /*global cdo_assertIsOwner:true, data_setDatums:true*/
 
         cdo_assertIsOwner.call(this);
-        
+
         data_setDatums.call(this, datums, {isAdditive: true, doAtomGC: true});
     },
 
@@ -185,24 +185,28 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * @param {object} [keyArgs] Keyword arguments object.
      * See {@link #datums} for information on available keyword arguments.
      *
-     * @returns {cdo.Data} A linked data containing the filtered datums.
+     * @returns {!cdo.Data} A linked data containing the filtered datums.
      */
     where: function(whereSpec, keyArgs) {
         // When !whereSpec and any keyArgs, results are not cached.
         // Also, the linked data will not filter incoming new datums as expected.
-        // In the other situations, 
+        // In the other situations,
         //  because the filtering operation is based on a grouping operation,
-        //  the results are partially cached at the grouping layer (the indexes), 
+        //  the results are partially cached at the grouping layer (the indexes),
         //  and the cached indexes will update, but not the new data tha is built in here.
-        // The conclusion is that the whereSpec and keyArgs arguments must be 
+        // The conclusion is that the whereSpec and keyArgs arguments must be
         //  compiled into a single where predicate
         //  so that it can later be applied to incoming new datums.
         //var datums = this.datums(whereSpec, keyArgs);
         var datums;
         if(!whereSpec) {
-            if(!keyArgs) return def.query(this._datums);
-
-            datums = data_whereState(def.query(this._datums), keyArgs);
+            if(!this._datums) {
+                datums = [];
+            } else if(!keyArgs) {
+                datums = this._datums;
+            } else {
+                datums = data_whereState(def.query(this._datums), keyArgs);
+            }
         } else {
             whereSpec = data_processWhereSpec.call(this, whereSpec, keyArgs);
             datums = data_where.call(this, whereSpec, keyArgs);
@@ -324,8 +328,8 @@ cdo.Data.add(/** @lends cdo.Data# */{
         return data_where.call(this, whereSpec, keyArgs).first() || null;
     },
 
-    
-    // TODO: find a proper name for this! 
+
+    // TODO: find a proper name for this!
     //  sumDimensionValueAbs??
     // Would it be confused with the value of the local dimension?
 
@@ -434,7 +438,7 @@ function data_lowestCommonAncestor(listA, listB) {
  *
  * @name cdo.Data#_setDatums
  * @function
- * @param {cdo.Datum[]|def.Query} addDatums An array or enumerable of datums.
+ * @param {cdo.Datum[]|def.Query} addDatums An array or enumerable of datums. When an array, it is not mutated.
  *
  * @param {object} [keyArgs] Keyword arguments.
  * @param {boolean} [keyArgs.isAdditive=false] Indicates that the specified datums are to be added,
@@ -448,7 +452,7 @@ function data_setDatums(addDatums, keyArgs) {
     // But may be an empty list
     /*jshint expr:true */
     addDatums || def.fail.argumentRequired('addDatums');
-                    
+
     var i, L,
         doAtomGC   = def.get(keyArgs, 'doAtomGC',   false),
         isAdditive = def.get(keyArgs, 'isAdditive', false),
@@ -486,7 +490,7 @@ function data_setDatums(addDatums, keyArgs) {
         datums      = oldDatums;
         datumsById  = oldDatumsById;
         datumsByKey = oldDatumsByKey;
-        
+
         // Clear caches
         this._sumAbsCache = null;
     } else {
@@ -498,7 +502,7 @@ function data_setDatums(addDatums, keyArgs) {
             // Clear children (and caches)
             /*global cdo_disposeChildLists:true*/
             cdo_disposeChildLists.call(this);
-            
+
             visDatums.clear();
             selDatums && selDatums.clear();
         }
@@ -521,7 +525,7 @@ function data_setDatums(addDatums, keyArgs) {
     // Mark and sweep Garbage Collection pushed to the end of function
 
     // TODO: change this to a visiting id method,
-    //  that by keeping the atoms on the previous visit id, 
+    //  that by keeping the atoms on the previous visit id,
     //  would allow not having to do this mark-visited phase.
 
     // Visit atoms of existing datums.
@@ -569,7 +573,7 @@ function data_setDatums(addDatums, keyArgs) {
     }
 
     // TODO: not distributing to child lists of this data?
-    // Is this assuming that `this` is the root data, 
+    // Is this assuming that `this` is the root data,
     // and thus was not created from grouping, and so having no children?
 
     if(isAdditive) {
@@ -585,7 +589,7 @@ function data_setDatums(addDatums, keyArgs) {
         }
     }
 
-    function maybeAddDatum(newDatum) { 
+    function maybeAddDatum(newDatum) {
          // Ignore.
         if(!newDatum) return;
 
@@ -608,11 +612,11 @@ function data_setDatums(addDatums, keyArgs) {
         datums.push(newDatum);
         datumsByKey[key] = newDatum;
         datumsById [id ] = newDatum;
-        
+
         if(/*isAdditive && */newDatums) newDatums.push(newDatum);
 
         // removed the marking part of Garbage collector
-        // We can mark as selected/visible, because in the removal it's unmarked 
+        // We can mark as selected/visible, because in the removal it's unmarked
         if(!newDatum.isNull) {
             if(selDatums && newDatum.isSelected) selDatums.set(id, newDatum);
             if(newDatum.isVisible) visDatums.set(id, newDatum);
@@ -622,7 +626,7 @@ function data_setDatums(addDatums, keyArgs) {
 
 /**
  * Processes the atoms of this datum.
- * If a virtual null atom is found then 
+ * If a virtual null atom is found then
  * the null atom of that dimension is interned.
  * If desired the processed atoms are marked as visited.
  *
@@ -635,7 +639,7 @@ function data_setDatums(addDatums, keyArgs) {
  * @internal
  */
 function data_processDatumAtoms(datum, intern, markVisited) {
-    // Avoid using for(var dimName in datum.atoms), 
+    // Avoid using for(var dimName in datum.atoms),
     // cause it needs to traverse the whole, long scope chain
 
     var dims = this._dimensionsList;
@@ -691,9 +695,9 @@ function cdo_addDatumsSimple(newDatums) {
     }
 
     // Distribute added datums by linked children
-    var list = this._linkChildren,
-        L = list && list.length;
-    if(L) for(var i = 0 ; i < L ; i++) cdo_addDatumsSimple.call(list[i], newDatums);
+    var linkChildren = this._linkChildren,
+        L = linkChildren && linkChildren.length;
+    if(L) for(var i = 0 ; i < L ; i++) cdo_addDatumsSimple.call(linkChildren[i], newDatums);
 }
 
 function cdo_addDatumsLocal(newDatums) {
@@ -730,7 +734,7 @@ function cdo_addDatumsLocal(newDatums) {
 
 
 // Auxiliar function to remove datums (to avoid repeated code)
-// removes datums instance from datums, datumById, datumByKey; 
+// removes datums instance from datums, datumById, datumByKey;
 // remove from selected and visible if necessary
 function cdo_removeDatumLocal(datum) {
 
@@ -867,7 +871,7 @@ function data_wherePredicate(whereSpec, keyArgs) {
             while(i) if(!ps[--i](d)) return false;
             return true;
         };
-        
+
         return wherePredicate;
     }
 }

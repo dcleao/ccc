@@ -310,12 +310,12 @@ def
                 customTooltip = options.customTooltip;
 
             if(!customTooltip) customTooltip = function(s,c,d) {
-                return  (d != null && d[0] !== undefined) ? d.join(', ') : d;
+                return (d != null && d[0] !== undefined) ? d.join(', ') : d;
             };
 
-            var roles   = this.visualRoles,
-                seriesDimsNames = roles.series.grouping.dimensionNames(),
-                categDimsNames  = roles.category.grouping.dimensionNames();
+            var roles = this.visualRoles,
+                seriesMainDimsNames = roles.series.grouping.dimensionNames(),
+                categMainDimsNames  = roles.category.grouping.dimensionNames();
 
             // For use in keyArgs.tooltipArgs
             return {
@@ -324,8 +324,8 @@ def
                         var group = context.scene.group;
                         if(!group) return ""; // null scene
 
-                        var s = cdo.Complex.values(group, seriesDimsNames),
-                            c = cdo.Complex.values(group, categDimsNames),
+                        var s = cdo.Complex.values(group, seriesMainDimsNames),
+                            c = cdo.Complex.values(group, categMainDimsNames),
                             d = [],
                             vars = context.scene.vars;
 

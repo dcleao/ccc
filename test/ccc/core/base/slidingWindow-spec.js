@@ -164,9 +164,10 @@ define([
 
             it("should set default comparer for all discrete and bound dimensions", function() {
                 var complexType = slidingWindow.chart.data.type;
-                complexType._dimsNames.forEach(function(dim) {
-                    if(slidingWindow.chart.visualRolesOf(dim) && complexType.dimensions(dim).isDiscrete){
-                        expect(complexType.dimensions(dim)._comparer).toEqual(def.ascending);
+                complexType._dimsNames.forEach(function(mainDimName) {
+                    if(slidingWindow.chart.visualRolesOf(mainDimName) &&
+                       complexType.dimensions(mainDimName).isDiscrete) {
+                        expect(complexType.dimensions(mainDimName)._comparer).toEqual(def.ascending);
                     }
                 }, slidingWindow);
             });
