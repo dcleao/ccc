@@ -4,7 +4,7 @@
 
 /**
  * Initializes an abstract cartesian plot.
- * 
+ *
  * @name pvc.visual.CartesianPlot
  * @class Represents an abstract cartesian plot.
  * @extends pvc.visual.Plot
@@ -41,8 +41,7 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
 
             this.base();
 
-            var dataPartValue = this.option('DataPart'),
-                baseRole   = this._getBaseRole(),
+            var baseRole   = this._getBaseRole(),
                 orthoRoles = this._getOrthoRoles();
 
             if(baseRole)
@@ -50,8 +49,7 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
                     this,
                     /*axisType*/'base',
                     this.option('BaseAxis') - 1,
-                    baseRole, // Single role
-                    dataPartValue));
+                    baseRole)); // Single role
 
             // Configure Ortho Axis Data Cell
             if(orthoRoles) {
@@ -66,7 +64,6 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
                         /*axisType*/'ortho',
                         orthoAxisIndex,
                         orthoRole,
-                        dataPartValue,
                         isStacked,
                         nullInterpolationMode,
                         trend));
@@ -143,21 +140,21 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
 function pvc_castTrend(trend) {
     // The trend plot itself cannot have trends...
     if(this.name === 'trend') return null;
-    
+
     var type = this.option('TrendType');
     if(!type && trend) type = trend.type;
-    
+
     if(!type || type === 'none') return null;
-    
+
     trend = trend ? Object.create(trend) : {};
-    
+
     var trendInfo = pvc.trends.get(type);
     trend.info = trendInfo;
     trend.type = type;
-   
+
     var label = this.option('TrendLabel');
-    
+
     trend.label = label != null ? String(label) : trendInfo.dataPartAtom.f;
-    
+
     return trend;
 }

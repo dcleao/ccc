@@ -4,7 +4,7 @@
 
 /**
  * Initializes an abstract metric XY plot.
- * 
+ *
  * @name pvc.visual.MetricXYPlot
  * @class Represents an abstract metric XY plot.
  * @extends pvc.visual.CartesianPlot
@@ -45,6 +45,9 @@ def('pvc.visual.MetricXYPlot', pvc.visual.CartesianPlot.extend({
 
         /** @override */
         generateTrendsDataCell: function(newDatums, dataCell, baseData) {
+
+            if(dataCell.plot !== this) throw def.error.operationInvalid("DataCell not of this plot.");
+
             var serRole = this.visualRoles.series,
                 xRole   = this.visualRoles.x,
                 yRole   = dataCell.role,
@@ -57,7 +60,7 @@ def('pvc.visual.MetricXYPlot', pvc.visual.CartesianPlot.extend({
                 yDimName = yRole.lastDimensionName(),
 
                 // Visible part data, possibly grouped by series (if series is bound)
-                data = this.chart.visiblePlotData(this, dataCell.dataPartValue, {baseData: baseData}), // [ignoreNulls=true]
+                data = this.chart.visiblePlotData(this, {baseData: baseData}), // [ignoreNulls=true]
                 dataPartAtom = this.chart._getTrendDataPartAtom(),
                 dataPartDimName = dataPartAtom.dimension.name;
 

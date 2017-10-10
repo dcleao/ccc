@@ -6,7 +6,7 @@
 
 /**
  * Initializes a pie plot.
- * 
+ *
  * @name pvc.visual.PiePlot
  * @class Represents a pie plot.
  * @extends pvc.visual.Plot
@@ -65,21 +65,17 @@ def('pvc.visual.PiePlot', pvc.visual.Plot.extend({
 
             this.base();
 
-            var dataPartValue = this.option('DataPart');
-
             this._addDataCell(new pvc.visual.DataCell(
                 this,
                 /*axisType*/'category',
                 /*axisIndex*/this.index,
-                /*role*/this.visualRole('category'),
-                dataPartValue));
+                /*role*/this.visualRole('category')));
 
             this._addDataCell(new pvc.visual.DataCell(
                 this,
                 /*axisType*/'angle',
                 /*axisIndex*/this.index,
-                /*role*/this.visualRoles.value,
-                dataPartValue));
+                /*role*/this.visualRoles.value));
         }
     },
 

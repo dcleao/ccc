@@ -74,8 +74,7 @@ def('pvc.visual.TreemapPlot', pvc.visual.Plot.extend({
                     this,
                     /*axisType*/ 'size',
                     this.option('SizeAxis') - 1,
-                    this.visualRole('size'),
-                    this.option('DataPart')));
+                    this.visualRole('size')));
         }
     },
 

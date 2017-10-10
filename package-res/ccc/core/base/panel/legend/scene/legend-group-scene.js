@@ -66,7 +66,7 @@ def
             var renderer = dc.legendSymbolRenderer();
             if(renderer) {
                 anyRenderer = true;
-                var pvDPSymPanel = createDataPartSymbolPanel(dc.plot.option('DataPart'));
+                var pvDPSymPanel = createDataPartSymbolPanel(dc.dataPartValue);
                 renderer(legendPanel, pvDPSymPanel, wrapper, def.indexedId('', legendBaseIndex + index));
             }
         });

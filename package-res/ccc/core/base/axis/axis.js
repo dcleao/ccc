@@ -32,9 +32,9 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
         // uses the state of the axis to update its objects
         // elements of state will be elements of axis
         this._state = {};
-        if(keyArgs && keyArgs.state) def.copy(this._state, keyArgs.state); 
+        if(keyArgs && keyArgs.state) def.copy(this._state, keyArgs.state);
 
-        
+
     },
 
     methods: /** @lends pvc.visual.Axis# */{
@@ -115,8 +115,13 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
             var domainData = this._domainData;
             if(!domainData) {
-                var dataPartValues = this.dataCells.map(dataCell_dataPartValue),
-                    partsData = this.chart.partData(dataPartValues);
+                var dataPartValues = def.query(this.dataCells)
+                    .select(def.propGet('dataPartValue'))
+                    .distinct()
+                    .array();
+
+                var partsData = this.chart.partData(dataPartValues);
+
                 this._domainData = domainData = this._createDomainData(partsData);
             }
             return domainData;
@@ -128,6 +133,7 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
             var dataCell = dataCells[cellIndex],
                 partData = this.chart.partData(dataCell.dataPartValue);
+
             return this._createDomainData(partData);
         },
 
@@ -386,6 +392,6 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
 function axis_groupingScaleType(grouping) {
     return grouping.isDiscrete()                      ? 'discrete'   :
-           grouping.lastDimensionValueType() === Date ? 'timeSeries' : 
+           grouping.lastDimensionValueType() === Date ? 'timeSeries' :
            'numeric';
 }

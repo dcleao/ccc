@@ -213,8 +213,6 @@ def
      */
     data: null,
 
-    dataPartValue: null,
-
     /**
      * Indicates if the top root panel is rendering with animation
      * and, if so, the current phase of animation.
@@ -295,10 +293,6 @@ def
         if(sign.selectableByRubberband())
             def.array.lazy(this, '_rubberSelectableMarks').push(sign.pvMark);
     },
-
-    visibleData: function(ka) { return this.chart.visibleData(this.dataPartValue, ka); },
-
-    partData: function() { return this.chart.partData(this.dataPartValue); },
 
     /* LAYOUT PHASE */
 

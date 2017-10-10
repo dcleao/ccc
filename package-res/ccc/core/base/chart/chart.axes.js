@@ -69,10 +69,10 @@ pvc.BaseChart
     },
 
     _initAxes: function() {
-        
-        // Get axis state 
+
+        // Get axis state
         // The state is to be kept between render calls
-        var axesState, 
+        var axesState,
             oldByType = this.axesByType;
 
         if(this.axes) {
@@ -85,7 +85,7 @@ pvc.BaseChart
         var getAxisState = function(type, axisIndex){
                 if(oldByType){
                     var axes = oldByType[type];
-                    if(axes){ 
+                    if(axes){
                         var axisId = axes[axisIndex].id,
                             state  = axesState ? axesState[axisId] : undefined;
 
@@ -156,7 +156,7 @@ pvc.BaseChart
                         var axisIndex = dataCells[0].axisIndex;
                         new AxisClass(this, type, axisIndex, {state: getAxisState(type, axisIndex)});
                     }, this);
-                    
+
                 } else if(this._axisCreateIfUnbound[type]) {
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
                     if(AxisClass) new AxisClass(this, type, 0);
@@ -611,7 +611,7 @@ pvc.BaseChart
         // -> Any isNull
         this._warnSingleContinuousValueRole(axis.role);
 
-        var visibleDomainData = this.visiblePlotData(axis.dataCell.plot, axis.dataCell.dataPartValue), // [ignoreNulls=true]
+        var visibleDomainData = this.visiblePlotData(axis.dataCell.plot), // [ignoreNulls=true]
             normByCateg = axis.option('NormByCategory'),
             scaleOptions = {
                 type:        axis.option('ScaleType'),
@@ -638,9 +638,9 @@ pvc.BaseChart
 
     _onColorAxisScaleSet: function(axis) {
         switch(axis.index) {
-            case 0: this.colors = axis.scheme(); 
+            case 0: this.colors = axis.scheme();
                     break;
-            case 1: if(this._allowV1SecondAxis){ 
+            case 1: if(this._allowV1SecondAxis){
                         this.secondAxisColor = axis.scheme();
                     }
                     break;
@@ -661,7 +661,7 @@ pvc.BaseChart
         return def.lazy(
             def.lazy(this, '_rolesColorScale'),
             grouping.id,
-            this._createRoleColorScale, 
+            this._createRoleColorScale,
             this);
     },
 

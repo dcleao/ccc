@@ -64,7 +64,9 @@ def
      * @override
      */
     _createCore: function() {
+
         this.base();
+
         var me = this,
             chart = me.chart,
             plot = me.plot,

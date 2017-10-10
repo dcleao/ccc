@@ -4,7 +4,7 @@
 
 /**
  * Initializes an abstract categorical plot.
- * 
+ *
  * @name pvc.visual.CategoricalPlot
  * @class Represents an abstract categorical plot.
  * @extends pvc.visual.CartesianPlot
@@ -49,8 +49,8 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
         },
 
         /**
-         * Obtains the extent of the specified value axis' role
-         * and data part values.
+         * Obtains the extent of the specified data cell when represented in a given chart,
+         * by this plot and using a given axis.
          *
          * <p>
          * Takes into account that values are shown grouped per category.
@@ -93,9 +93,8 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
 
             chart._warnSingleContinuousValueRole(valueRole);
 
-            var dataPartValue = valueDataCell.dataPartValue,
-                valueDimName = valueRole.lastDimensionName(),
-                data = chart.visiblePlotData(this, dataPartValue), // [ignoreNulls=true]
+            var valueDimName = valueRole.lastDimensionName(),
+                data = chart.visiblePlotData(this), // [ignoreNulls=true]
                 useAbs = valueAxis.scaleUsesAbs();
 
             if(valueAxis.type !== 'ortho' || !valueDataCell.isStacked)
@@ -187,13 +186,15 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
 
         /** @override */
         interpolateDataCell: function(dataCell, baseData) {
+
+            if(dataCell.plot !== this) throw def.error.operationInvalid("DataCell not of this plot.");
+
             var InterpType = this._getNullInterpolationOperType(dataCell.nullInterpolationMode);
             if(InterpType) {
                 this.chart._warnSingleContinuousValueRole(dataCell.role);
 
-                var partValue   = dataCell.dataPartValue,
-                    partData    = this.chart.partData(partValue, baseData),
-                    visibleData = this.chart.visiblePlotData(this, partValue, {baseData: baseData});// [ignoreNulls=true]
+                var partData = this.chart.partData(this.dataPartValue, baseData),
+                    visibleData = this.chart.visiblePlotData(this, {baseData: baseData});// [ignoreNulls=true]
                 if(visibleData.childCount() > 0) {
                     new InterpType(
                         baseData,
@@ -219,6 +220,9 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
 
         /** @override */
         generateTrendsDataCell: function(newDatums, dataCell, baseData) {
+
+            if(dataCell.plot !== this) throw def.error.operationInvalid("DataCell not of this plot.");
+
             var serRole = this.visualRoles.series,
                 xRole   = this.visualRoles.category,
                 yRole   = dataCell.role,
@@ -235,7 +239,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
             var sumKeyArgs = {zeroIfNone: false},
                 partData = this.chart.partData(dataCell.dataPartValue, baseData),
                 // Visible data grouped by category and then series
-                data = this.chart.visiblePlotData(this, dataCell.dataPartValue, {baseData: baseData}), // [ignoreNulls=true]
+                data = this.chart.visiblePlotData(this, {baseData: baseData}), // [ignoreNulls=true]
                 dataPartAtom = this.chart._getTrendDataPartAtom(),
                 dataPartDimName = dataPartAtom.dimension.name,
                 // TODO: It is usually the case, but not certain, that the base axis'

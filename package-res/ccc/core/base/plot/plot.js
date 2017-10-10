@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/** 
+/**
  * Registry of plot classes by type.
  * @type Object.<string, function>
  */
@@ -10,7 +10,7 @@ var pvc_plotClassByType = {};
 
 /**
  * Initializes a plot.
- * 
+ *
  * @name pvc.visual.Plot
  * @class Represents a plot.
  * @extends pvc.visual.OptionsBase
@@ -70,6 +70,8 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
 
         this.dataCellList = [];
         this.dataCellsByRole = {}; // role name -> [] dataCells
+
+        this.dataPartValue = this.option('DataPart');
 
         // -------------
 
@@ -199,10 +201,12 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
         },
 
 
-        interpolateDataCell: function(/*dataCell, baseData*/) {
+        interpolateDataCell: function(dataCell/*, baseData*/) {
+            if(dataCell.plot !== this) throw def.error.operationInvalid("DataCell not of this plot.");
         },
 
-        generateTrendsDataCell: function(/*newDatums, dataCell, baseData*/) {
+        generateTrendsDataCell: function(newDatums, dataCell/*, baseData*/) {
+            if(dataCell.plot !== this) throw def.error.operationInvalid("DataCell not of this plot.");
         },
 
 
@@ -218,7 +222,12 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
          * @virtual
          */
         getContinuousVisibleCellExtent: function(chart, valueAxis, valueDataCell) {
-            if(valueDataCell.plot !== this) throw def.error.operationInvalid("Datacell not of this plot.");
+
+            if(valueDataCell.plot !== this)
+                throw def.error.operationInvalid("Datacell not of this plot.");
+
+            // if(valueDataCell.axisType !== valueAxis.type || valueDataCell.axisIndex !== valueAxis.index)
+            //   throw def.error.operationInvalid("valueAxis and valueDataCell do not match.");
 
             var valueRole = valueDataCell.role;
 
@@ -227,10 +236,10 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
             // not supported/implemented?
             if(valueRole.name === 'series') throw def.error.notImplemented();
 
-            var isSumNorm = valueAxis.scaleSumNormalized(),
-                data    = chart.visiblePlotData(this, valueDataCell.dataPartValue), // [ignoreNulls=true]
+            var data = chart.visiblePlotData(this), // [ignoreNulls=true]
                 dimName = valueRole.lastDimensionName();
-            if(isSumNorm) {
+
+            if(valueAxis.scaleSumNormalized()) {
                 var sum = data.dimensionsSumAbs(dimName);
                 if(sum) return {min: 0, max: sum};
             } else {
@@ -254,9 +263,8 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
                 return new pvc.visual.ColorDataCell(
                     this,
                     /*axisType*/'color',
-                        this.option('ColorAxis') - 1,
-                    colorRole,
-                    this.option('DataPart'));
+                    this.option('ColorAxis') - 1,
+                    colorRole);
         }
     },
 

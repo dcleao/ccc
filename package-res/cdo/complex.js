@@ -84,28 +84,49 @@ def
         // Fill the atoms map
 
         var ownerDims = owner._dimensions,
-            addAtom = function(dimName) { // ownerDims, atomsBase, atomsMap, atomsByName
+            addAtom = function(dimName) {
+
+                // ownerDims, atomsBase, atomsMap, atomsByName
+
                 var v = atomsByName[dimName],
                     // Need to intern, even if null.
                     atom = ownerDims[dimName].intern(v);
 
                 // Don't add atoms already in base proto object.
-                // (virtual) nulls are already in the root proto object.
+                // With the exception of (virtual) nulls, which are present at the root proto object,
+                // for every dimension, inheriting an atom means that its value is already fixed at a higher level
+                // (due to a group by operation).
+                // Let's not shadow inherited atoms with an equal atom...
+                // Should it even be possible that a non-null inherited atom would be different from the one
+                // being received?
+                // See also Complex#getSpecifiedAtom(.).
                 if(v != null && (!atomsBase || atom !== atomsBase[dimName])) {
                     atomsMap[dimName] = atom;
                 }
             };
 
         if(!dimNamesSpecified) {
-            for(dimName in atomsByName) addAtom(dimName);
+            for(dimName in atomsByName) {
+                addAtom(dimName);
+            }
         } else {
             i = D;
-            while(i--) addAtom(dimNames[i]);
+            while(i--) {
+                addAtom(dimNames[i]);
+            }
         }
 
         if(calculate) {
             // May be null
             atomsByName = type._calculate(me);
+
+            // Assuming that `atomsByName` only contains dimensions declared by calculations.
+
+            // When creating trend datums (a virtual datum), the "dataPart" role's dimension value is
+            // explicitly set to "trend", and is present in `atomsMap`.
+            // This explicitly overrides any "dataPart" calculations that are performed for arbitrary datums.
+            // Ignoring calculated dimensions that are *own* properties of `atomsMap`...
+
             // Not yet added?
             for(dimName in atomsByName) if(!def.hasOwnProp.call(atomsMap, dimName)) addAtom(dimName);
         }
@@ -181,7 +202,7 @@ def
     /**
      * Gets an atom if it was specified.
      *
-     * Note thar a specified atom can have the `null` value.
+     * Note that a specified atom can have the `null` value.
      *
      * @param {string} dimName - The name of the atom's dimension.
      * @return {cdo.Atom} The atom is specified; `null`, if not.

@@ -119,7 +119,7 @@ def.type('cdo.Data', cdo.Complex)
             this._wherePred = keyArgs.where || null;
 
             /*
-             * Inherit link parent atoms.
+             * Inherit link parent's atoms.
              */
             atomsBase = linkParent.atoms;
             atomsIsSet = Object.create(linkParent.atomsIsSet);
@@ -397,7 +397,10 @@ def.type('cdo.Data', cdo.Complex)
     /**
      * Gets an atom if it was specified.
      *
-     * Note thar a specified atom can have the `null` value.
+     * Note that a specified atom can have the `null` value.
+     *
+     * This method allows distinguishing between the root, virtual null atom and a specified null atom,
+     * which result from group by operations where a grouping dimension contains null values.
      *
      * @param {string} dimName - The name of the atom's dimension.
      * @return {cdo.Atom} The atom is specified; `null`, if not.

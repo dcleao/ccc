@@ -7,27 +7,26 @@
  *
  * @name pvc.visual.DataCell
  * @class Describes data requirements of a plot
- *        in terms of a role, given its name, 
- *        a data part value and 
+ *        in terms of a role, given its name,
+ *        a data part value and
  *        an axis, given its type and index.
- * 
+ *
  * @constructor
  */
 def
 .type('pvc.visual.DataCell')
-.init(function(plot, axisType, axisIndex, role, dataPartValue) {
+.init(function(plot, axisType, axisIndex, role) {
     this.plot = plot;
+    this.dataPartValue = plot.dataPartValue;
+
     this.axisType = axisType;
     this.axisIndex = axisIndex;
     this.role = role;
-    this.dataPartValue = dataPartValue;
 
-    this.key = [axisType, axisIndex, role.prettyId(), dataPartValue].join("~");
+    this.key = [axisType, axisIndex, role.prettyId(), this.dataPartValue].join("~");
 })
 .add(/** @lends pvc.visual.DataCell# */{
     legendVisible: function() {
         return this.role.legend().visible;
     }
 });
-
-function dataCell_dataPartValue(dc) { return dc.dataPartValue; }

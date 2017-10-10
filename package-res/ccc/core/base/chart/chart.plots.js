@@ -10,7 +10,7 @@ pvc.BaseChart
             this.plots = {};
             this.plotList = [];
             this.plotsByType = {};
-            
+
             this._createPlotsInternal();
             var trendPlotDefExt = this._defPlotsExternal();
             this._initPlotTrend(trendPlotDefExt);
@@ -22,15 +22,15 @@ pvc.BaseChart
 
         this._initPlotsEnd();
     },
-    
+
     // Any plots enforced by the chart type.
     _createPlotsInternal: function() {
         // NOOP
     },
 
     _defPlotsExternal: function() {
-        var plots = this.plots, 
-            plotDefs = this.options.plots, 
+        var plots = this.plots,
+            plotDefs = this.options.plots,
             trendPlotDefExt;
 
         if(plotDefs) plotDefs.forEach(function(plotDef) {
@@ -83,7 +83,7 @@ pvc.BaseChart
 
     _createPlotExternal: function(name, type, plotSpec) {
         if(!type) throw def.error.argumentInvalid("plots", "Plot 'type' option is required.");
-        
+
         var PlotClass = pvc.visual.Plot.getClass(type);
         if(!PlotClass)
             throw def.error.argumentInvalid("plots", "The plot type '{0}' is not defined.", [type]);
@@ -102,28 +102,28 @@ pvc.BaseChart
     // Called by the pvc.visual.Plot class
     _addPlot: function(plot) {
         var plots = this.plots,
-            index = plot.index, 
-            name  = plot.name, 
+            index = plot.index,
+            name  = plot.name,
             id    = plot.id;
-        
+
         if(name && def.hasOwn(plots, name))
             throw def.error.operationInvalid("Plot name '{0}' already taken.", [name]);
-        
+
         if(def.hasOwn(plots, id))
             throw def.error.operationInvalid("Plot id '{0}' already taken.", [id]);
-        
+
         var typePlots = def.array.lazy(this.plotsByType, plot.type);
         if(def.hasOwn(typePlots, index))
             throw def.error.operationInvalid("Plot index '{0}' of type '{1}' already taken.", [index, plot.type]);
-        
+
         plot.globalIndex = this.plotList.length;
 
         var isMain = !plot.globalIndex;
 
         typePlots[index] = plot;
-        
+
         this.plotList.push(plot);
-        
+
         plots[id] = plot;
         if(name) plots[name] = plot;
         if(isMain) plots.main = plot;
@@ -149,20 +149,24 @@ pvc.BaseChart
     },
 
     _registerPlotVisualRoles: function(plot) {
-        var name = plot.name,
-            id = plot.id,
+        var plotName = plot.name,
+            plotId = plot.id,
             isMain = plot.isMain;
 
         plot.visualRoleList.forEach(function(role) {
-            var rname = role.name, names = [];
+            var roleName = role.name, names = [];
 
+            // The visual roles of the main plot get bare aliases in the chart
+            // visual roles' map.
             if(isMain) {
                 // Prevent collision with chart level roles.
-                if(!(rname in this.visualRoles)) names.push(rname);
-                names.push("main." + rname);
+                if(!(roleName in this.visualRoles)) names.push(roleName);
+
+                names.push("main." + roleName);
             }
-            names.push(id + "." + rname);
-            if(name) names.push(name + "." + rname);
+
+            names.push(plotId + "." + roleName);
+            if(plotName) names.push(plotName + "." + roleName);
 
             this._addVisualRoleCore(role, names);
         }, this);

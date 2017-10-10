@@ -33,8 +33,8 @@ def
 
         this.base();
 
-        var data      = this.visibleData({ignoreNulls: false}),
-            baseAxis  = this.axes.base,
+        var data = this.visibleData({ignoreNulls: false}),
+            baseAxis = this.axes.base,
 
             // Need to use the order that the axis uses.
             // Note that the axis may show data from multiple plots,

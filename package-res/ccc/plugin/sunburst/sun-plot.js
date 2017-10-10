@@ -73,8 +73,7 @@ def('pvc.visual.SunburstPlot', pvc.visual.Plot.extend({
                     this,
                     /*axisType*/ 'size',
                     this.option('SizeAxis') - 1,
-                    this.visualRoles.size,
-                    this.option('DataPart')));
+                    this.visualRoles.size));
         }
     },
     options: {

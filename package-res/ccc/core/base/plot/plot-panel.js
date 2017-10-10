@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/** 
+/**
  * Registry of plot panel classes by type.
  * @type Object.<string, function>
  */
@@ -22,10 +22,11 @@ def
     if(options.paddings == null) options.paddings = chart._axisOffsetPct;
 
     this.base(chart, parent, options);
-    
+
     this.plot = plot;
+    this.dataPartValue = plot.dataPartValue;
+
     this._extensionPrefix = plot.extensionPrefixes;
-    this.dataPartValue  = plot.option('DataPart');
     this.axes.color     = chart._getAxis('color', (plot.option('ColorAxis') || 0) - 1);
     this.orientation    = plot.option('Orientation'  );
     this.valuesVisible  = plot.option('ValuesVisible');
@@ -34,7 +35,7 @@ def
     this.valuesFont     = plot.option('ValuesFont'   );
     this.valuesOverflow = plot.option('ValuesOverflow');
     this.valuesOptimizeLegibility = plot.option('ValuesOptimizeLegibility');
-    
+
     this.visualRoles = plot.visualRoles;
     this.visualRoleList = plot.visualRoleList;
 })
@@ -44,7 +45,13 @@ def
     visualRoles: null,
 
     /** @override */
-    visibleData: function(ka) { return this.chart.visiblePlotData(this.plot, this.dataPartValue, ka); },
+    visibleData: function(ka) {
+        return this.chart.visiblePlotData(this.plot, ka);
+    },
+
+    partData: function() {
+        return this.chart.partData(this.dataPartValue);
+    },
 
     _getExtensionId: function() {
         // NOTE: 'chart' is deprecated. Use 'plot'.

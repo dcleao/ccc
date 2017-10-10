@@ -358,6 +358,9 @@ function(dimTypeSpecs) {
                 var calc = calcs[i]; // NOTE: on purpose to make `this` be null
                 calc(complex, valuesByName);
             }
+
+            // TODO: not limiting the output of calculation functions to _calculatedDimNames ...
+
             return valuesByName;
         }
     },
