@@ -70,20 +70,34 @@ pvc.BaseChart
      */
     _multiChartPanel: null,
 
-    _initChartPanels: function(hasMultiRole) {
-        this._initBasePanel ();
+    _initChartPanels: function() {
+
+        var hasMultiRole = this.visualRoles.multiChart.isBound();
+        var isRoot = !this.parent;
+
+        this._initBasePanel();
+
         this._initTitlePanel();
 
-        // null on small charts or when not enabled
-        var legendPanel = this._initLegendPanel();
+        if(isRoot) {
+            // null when disabled
+            var legendPanel = this._initLegendPanel();
 
-        // Is multi-chart root?
-        var isMultichartRoot = hasMultiRole && !this.parent;
-        if(isMultichartRoot) this._initMultiChartPanel();
+            // Is multi-chart root?
+            if(hasMultiRole) {
+                this._initMultiChartPanel();
 
-        if(legendPanel) this._initLegendScenes(legendPanel);
+                // All child small charts have been constructed and _create'd by now.
+            }
 
-        if(!isMultichartRoot) {
+            if(legendPanel) {
+                this._initLegendScenes(legendPanel);
+            }
+        }
+
+        // Is leaf (not a multi-chart root)?
+        var isLeaf = !(isRoot && hasMultiRole);
+        if(isLeaf) {
             var o = this.options;
 
             this.contentPanel = this._createContentPanel(

@@ -26,6 +26,67 @@ pvc.BaseChart
      */
     _measureVisualRoles: null,
 
+    _constructVisualRoles: function(/*options*/) {
+        var parent = this.parent;
+        if(parent) {
+            this.visualRoles = parent.visualRoles;
+            this.visualRoleList = parent.visualRoleList;
+        }
+    },
+
+    // region initVisualRoles
+    _initVisualRoles: function() {
+        var parent = this.parent;
+        if(!parent) {
+            this.visualRoles = {};
+            this.visualRoleList = [];
+
+            this._createChartVisualRoles();
+        }
+    },
+
+    _addVisualRole: function(name, keyArgs) {
+        keyArgs = def.set(keyArgs, 'index', this.visualRoleList.length);
+        var role = new pvc.visual.Role(name, keyArgs),
+            names = [name];
+
+        // There's a way to refer to chart visual roles without danger
+        // of matching the main plot's visual roles.
+        if(!role.plot) names.push("$." + name);
+
+        return this._addVisualRoleCore(role, names);
+    },
+
+    _addVisualRoleCore: function(role, names) {
+        if(!names) names = role.name;
+
+        this.visualRoleList.push(role);
+        if(def.array.is(names))
+            names.forEach(function(name) { this.visualRoles[name] = role; }, this);
+        else
+            this.visualRoles[names] = role;
+        return role;
+    },
+
+    /**
+     * Creates the chart-level visual roles.
+     * @virtual
+     */
+    _createChartVisualRoles: function() {
+        this._addVisualRole('multiChart', {
+            defaultDimension: 'multiChart*',
+            requireIsDiscrete: true
+        });
+
+        this._addVisualRole('dataPart', {
+            defaultDimension: 'dataPart',
+            requireIsDiscrete: true,
+            requireSingleDimension: true,
+            dimensionDefaults: {isHidden: true, comparer: def.compare}
+        });
+    },
+    // endregion
+
     /**
      * Obtains an existing visual role given its name.
      * An error is thrown if a role with the specified name is not defined.
@@ -96,58 +157,6 @@ pvc.BaseChart
             });
         }
         return def.getOwn(visualRolesByDim, dimName, null);
-    },
-
-    _constructVisualRoles: function(/*options*/) {
-        var parent = this.parent;
-        if(parent) {
-            this.visualRoles = parent.visualRoles;
-            this.visualRoleList = parent.visualRoleList;
-        } else {
-            this.visualRoles = {};
-            this.visualRoleList = [];
-        }
-    },
-
-    _addVisualRole: function(name, keyArgs) {
-        keyArgs = def.set(keyArgs, 'index', this.visualRoleList.length);
-        var role = new pvc.visual.Role(name, keyArgs),
-            names = [name];
-
-        // There's a way to refer to chart visual roles without danger
-        // of matching the main plot's visual roles.
-        if(!role.plot) names.push("$." + name);
-
-        return this._addVisualRoleCore(role, names);
-    },
-
-    _addVisualRoleCore: function(role, names) {
-        if(!names) names = role.name;
-
-        this.visualRoleList.push(role);
-        if(def.array.is(names))
-            names.forEach(function(name) { this.visualRoles[name] = role; }, this);
-        else
-            this.visualRoles[names] = role;
-        return role;
-    },
-
-    /**
-     * Initializes the chart-level visual roles.
-     * @virtual
-     */
-    _initChartVisualRoles: function() {
-        this._addVisualRole('multiChart', {
-            defaultDimension: 'multiChart*',
-            requireIsDiscrete: true
-        });
-
-        this._addVisualRole('dataPart', {
-            defaultDimension: 'dataPart',
-            requireIsDiscrete: true,
-            requireSingleDimension: true,
-            dimensionDefaults: {isHidden: true, comparer: def.compare}
-        });
     },
 
     _getDataPartDimName: function(useDefault) {

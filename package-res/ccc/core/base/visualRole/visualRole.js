@@ -80,6 +80,9 @@ def
 def
 .type('pvc.visual.Role')
 .init(function(name, keyArgs) {
+
+    this.uid = "r" + def.nextId("visual-role");
+
     this.name  = name;
     this.label = def.get(keyArgs, 'label') || def.titleFromName(name);
     this.index = def.get(keyArgs, 'index') || 0;
@@ -483,8 +486,8 @@ def
     },
 
     canHaveSource: function(source) {
-        var tvt = this.valueType;
-        return tvt == null || tvt === source.valueType;
+        var valueType = this.valueType;
+        return valueType == null || valueType === source.valueType;
     },
 
     _updateBind: function(groupingSpec) {
@@ -501,7 +504,13 @@ def
 })
 .type()
 .add(/** @lends pvc.visual.Role */{
-    parse: function(lookup, name, config) {
+    /**
+     * Processes a visual role configuration and returns a processed version of it.
+     * Used by {@link pvc.visual.rolesBinder}.
+     *
+     * @private
+     */
+    readConfig: function(config, name, lookup) {
         // Process the visual role configuration.
         // * a string with the grouping dimensions, or
         // * {dimensions: "product", isReversed:true, from: "series", legend: null}
@@ -522,10 +531,14 @@ def
                 groupSpec = config.dimensions;
             }
         } else if(config === null || def.string.is(config)) {
+            // null or "" groupings are relevant.
             groupSpec = config;
         }
 
-        if(groupSpec !== undefined) parsed.grouping = cdo.GroupingSpec.parse(groupSpec);
+        // null or "" groupings are relevant.
+        if(groupSpec !== undefined) {
+            parsed.grouping = cdo.GroupingSpec.parse(groupSpec);
+        }
 
         return parsed;
     }

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*global axis_optionsDef:true*/
-  
+
 def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
 
     init: function(chart) {
@@ -16,10 +16,11 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
         dimension: null,
         select:    slidingWindow_defaultSelect,
 
+        // Requires axes to be initialized!
         initFromOptions: function() {
             if(this.length) {
-                this.dimension =  this.option('Dimension');
-                this.override('select', this.option('Select'))
+                this.dimension = this.option('Dimension');
+                this.override('select', this.option('Select'));
             }
         },
 
@@ -27,8 +28,13 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
             data.select = this.select.bind(this);
         },
 
-        // called from Chart#_loadData, after complexType creation and _initSlidingWindow.
-        // called before _initAxes.
+        /**
+         * Sets an ascending comparer in every discrete dimension
+         * that does not have an explicitly configured comparer and
+         * to which at least one visual role is bound.
+         *
+         * @param {cdo.ComplexType} complexType - The complex type of the chart's main data.
+         */
         setDimensionsOptions: function(complexType) {
             var chart = this.chart;
             var dimOpts = chart.options.dimensions;
@@ -40,10 +46,6 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
 
                 var dimName = dimType.name;
 
-                // Is dimension playing any visual roles?
-                var visualRoles = chart.visualRolesOf(dimName, /*includePlotLevel:*/true);
-                if(!visualRoles) return;
-
                 // If a comparer is already specified don't override it.
                 var dimSpecs = dimOpts && dimOpts[dimName];
                 if(dimSpecs && dimSpecs.comparer)
@@ -54,12 +56,14 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
                 if(dimGroupSpecs && dimGroupSpecs.comparer)
                     return;
 
-                // Apply comparer.
-                // Sets isComparable as well.
-                dimType.setComparer(def.ascending);
+                // Is dimension playing any visual roles?
+                var visualRoles = chart.visualRolesOf(dimName, /*includePlotLevel:*/true);
+                if(!visualRoles)
+                    return;
 
-                // Re-bind the grouping so the new comparer is set in the grouping levels.
-                visualRoles.forEach(function(role) { role.grouping.bind(complexType); });
+                // Apply comparer.
+                // Sets `isComparable` as well.
+                dimType.setComparer(def.ascending);
             });
         },
 
@@ -67,7 +71,7 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
             if(chart.options.preserveLayout == null) chart.options.preserveLayout = true;
         },
 
-        // called from Chart#_initData
+        // called from Chart#_initAxesEnd
         setAxesDefaults: function(chart) {
             chart.axesList.forEach(function(axis) {
                 var role = axis.role;
@@ -110,7 +114,7 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
             resolve: '_resolveFull',
             cast: function(interval) {
                 return pv.parseDatePrecision(interval, null);
-            },
+            }
         },
 
         Select: {
@@ -131,7 +135,7 @@ function slidingWindow_defaultDimensionName() {
 }
 
 function slidingWindow_defaultSelect(allData) {
-                       
+
     var dim = this.chart.data.dimensions(this.dimension),
         maxAtom = dim.max(),
         mostRecent = maxAtom.value,
@@ -156,10 +160,10 @@ function slidingWindow_defaultSelect(allData) {
             // Using the scoring function on both atoms guarantees that even if
             // the scoring function is overridden, result is still valid.
             datumScore = scoreAtom.value;
-            var result = (+mostRecent) - (+datumScore); 
-            if(result && result > this.length) 
+            var result = (+mostRecent) - (+datumScore);
+            if(result && result > this.length)
                 toRemove.push(datum);
-        }     
+        }
     }
 
     return toRemove;

@@ -4,21 +4,27 @@
 
 pvc.BaseChart
 .add({
-    _initPlots: function() {
+    _constructPlots: function(/*options*/) {
         var parent = this.parent;
-        if(!parent) {
-            this.plots = {};
-            this.plotList = [];
-            this.plotsByType = {};
-
-            this._createPlotsInternal();
-            var trendPlotDefExt = this._defPlotsExternal();
-            this._initPlotTrend(trendPlotDefExt);
-        } else {
+        if(parent) {
             this.plots = parent.plots;
             this.plotList = parent.plotList;
             this.plotsByType = parent.plotsByType;
+
+            this._dataCellsByAxisTypeThenIndex = this.parent._dataCellsByAxisTypeThenIndex;
         }
+    },
+
+    _initPlots: function() {
+
+        this.plots = {};
+        this.plotList = [];
+        this.plotsByType = {};
+
+        this._createPlotsInternal();
+
+        var trendPlotDefExt = this._defPlotsExternal();
+        this._initPlotTrend(trendPlotDefExt);
 
         this._initPlotsEnd();
     },
@@ -131,19 +137,14 @@ pvc.BaseChart
 
     _initPlotsEnd: function() {
         // type -> index -> [datacell array]
-        var dataCellsByAxisTypeThenIndex;
-        if(this.parent) {
-            dataCellsByAxisTypeThenIndex = this.parent._dataCellsByAxisTypeThenIndex;
-        } else {
-            dataCellsByAxisTypeThenIndex = {};
+        var dataCellsByAxisTypeThenIndex = {};
 
-            this.plotList.forEach(function(plot) {
-                plot.initEnd();
+        this.plotList.forEach(function(plot) {
+            plot.initEnd();
 
-                this._registerPlotVisualRoles(plot);
-                this._indexPlotDataCells(plot, dataCellsByAxisTypeThenIndex);
-            }, this);
-        }
+            this._registerPlotVisualRoles(plot);
+            this._indexPlotDataCells(plot, dataCellsByAxisTypeThenIndex);
+        }, this);
 
         this._dataCellsByAxisTypeThenIndex = dataCellsByAxisTypeThenIndex;
     },

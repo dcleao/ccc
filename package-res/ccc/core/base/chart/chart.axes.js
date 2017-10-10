@@ -38,7 +38,7 @@ pvc.BaseChart
     _axisCreateChartLevel: {
         'color': 1,
         'size':  2,
-        'base':  3,
+        'base':  3, // See _initAxes for an explanation.
         'ortho': 3
     },
 
@@ -101,6 +101,8 @@ pvc.BaseChart
         // Clear any previous global color scales
         delete this._rolesColorScale;
 
+        // ATTENTION: requires visual-roles' binding to have been done before!
+
         // Filter only bound dataCells.
         // ATTENTION: the splicing here performed breaks the correspondence between array index and axisIndex.
         // So the indexing on axisIndex is no longer valid after this!!
@@ -148,18 +150,27 @@ pvc.BaseChart
             if((this._axisCreateChartLevel[type] & chartLevel) !== 0) {
                 var AxisClass,
                     dataCellsOfTypeByIndex = dataCellsByAxisTypeThenIndex[type];
+
                 if(dataCellsOfTypeByIndex) {
 
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
+
                     dataCellsOfTypeByIndex.forEach(function(dataCells) {
-                        // Pass the stored state in axis construction
+
                         var axisIndex = dataCells[0].axisIndex;
+
+                        // Pass the stored state in axis construction.
+
                         new AxisClass(this, type, axisIndex, {state: getAxisState(type, axisIndex)});
+
                     }, this);
 
                 } else if(this._axisCreateIfUnbound[type]) {
+
                     AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
-                    if(AxisClass) new AxisClass(this, type, 0);
+                    if(AxisClass) {
+                        new AxisClass(this, type, 0);
+                    }
                 }
             }
         }, this);
@@ -167,7 +178,9 @@ pvc.BaseChart
         // Copy axes that exist in root and not here
         if(this.parent)
             this.root.axesList.forEach(function(axis) {
-                if(!def.hasOwn(this.axes, axis.id)) this._addAxis(axis);
+                if(!def.hasOwn(this.axes, axis.id)) {
+                    this._addAxis(axis);
+                }
             }, this);
 
         // Bind
@@ -186,11 +199,13 @@ pvc.BaseChart
                 }
             },
             this);
-
     },
 
     /** @virtual */
     _initAxesEnd: function() {
+        // Can only be done after axes creation
+        if(this.slidingWindow)
+            this.slidingWindow.setAxesDefaults(this);
     },
 
     /**
@@ -240,14 +255,14 @@ pvc.BaseChart
      * @param {number} chartLevel The chart level.
      */
     _setAxisScale: function(axis, chartLevel) {
-        this._setAxisScaleByScaleType(axis, chartLevel);
+        this._setAxisScaleByScaleType(axis);
     },
 
-    _setAxisScaleByScaleType: function(axis, chartLevel) {
+    _setAxisScaleByScaleType: function(axis) {
         switch(axis.scaleType) {
-            case 'discrete':   this._setDiscreteAxisScale  (axis, chartLevel); break;
-            case 'numeric':    this._setNumericAxisScale   (axis, chartLevel); break;
-            case 'timeSeries': this._setTimeSeriesAxisScale(axis, chartLevel); break;
+            case 'discrete':   this._setDiscreteAxisScale  (axis); break;
+            case 'numeric':    this._setNumericAxisScale   (axis); break;
+            case 'timeSeries': this._setTimeSeriesAxisScale(axis); break;
             default: throw def.error("Unknown axis scale type.");
         }
     },
