@@ -680,7 +680,7 @@ define([
                             binder.init();
 
                             expect(context('A').isPreBound()).toBe(true);
-                            expect(context('A').preBoundGrouping().isNull()).toBe(true);
+                            expect(context('A').preBoundGrouping().isNull).toBe(true);
                         });
                     });
                 });
@@ -707,7 +707,7 @@ define([
                             binder.init();
 
                             expect(context('A').isPreBound()).toBe(true);
-                            expect(context('A').preBoundGrouping().isNull()).toBe(true);
+                            expect(context('A').preBoundGrouping().isNull).toBe(true);
                         });
                     });
                 });

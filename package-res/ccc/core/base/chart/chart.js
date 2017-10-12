@@ -251,6 +251,13 @@ def
     },
 
     _createPhase1: function(keyArgs) {
+
+        // TODO: Most of the following code only executes when isMultiChartOverflowRetry is false.
+        // This probably reveals that most of the tasks here performed should be performed first,
+        // independently of relayouting issues. It's harder than it looks to do this refactoring,
+        // cause some of these tasks apply to both root and small charts, and so this could mess with
+        // the when and how the small charts are created.
+
         // Increment create version to allow for cache invalidation
         this._createVersion++;
 
@@ -306,7 +313,7 @@ def
             }
 
             // TODO: the following initAxes* methods mix root/non-root code
-            // which makes this code more confusing.
+            // which just makes this code harder to reason about and maintain.
 
             // Initialize axes and data.
 

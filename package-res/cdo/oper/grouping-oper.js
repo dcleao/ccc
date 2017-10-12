@@ -73,24 +73,23 @@ def.type('cdo.GroupingOper', cdo.DataOper)
         }
     }
 
-    // grouping spec ids are semantic keys, although the name is not 'key'
-    var ids = [];
+    var keys = [];
     this._groupSpecs = def.array.as(groupingSpecs).map(function(groupSpec) {
         if(groupSpec instanceof cdo.GroupingSpec) {
-            if(groupSpec.type !== linkParent.type)
+            if(groupSpec.complexType !== linkParent.type)
                 throw def.error.argumentInvalid('groupingSpecText', "Invalid associated complex type.");
         } else {
             // Must be a non-empty string, or throws
             groupSpec = cdo.GroupingSpec.parse(groupSpec, linkParent.type);
         }
 
-        ids.push(groupSpec.id);
+        keys.push(groupSpec.key);
 
         return groupSpec;
     });
 
     /* Operation key */
-    if(hasKey) this.key = ids.join('!!') + "$" + [this._visible, this._isNull, whereKey].join('||'); // this._selected
+    if(hasKey) this.key = keys.join('!!') + "$" + [this._visible, this._isNull, whereKey].join('||'); // this._selected
 }).
 add(/** @lends cdo.GroupingOper */{
 
@@ -170,7 +169,7 @@ add(/** @lends cdo.GroupingOper */{
         var levels      = group.levels,
             L           = levels.length,
             isLastGroup = (groupIndex === this._groupSpecs.length - 1);
-        
+
         if(groupParentNode.isRoot) groupParentNode.label = group.rootLabel;
 
         groupLevelRecursive.call(this, groupParentNode, groupDatums, 0);
@@ -186,7 +185,7 @@ add(/** @lends cdo.GroupingOper */{
 
             // ---------------
 
-            var childNodes = 
+            var childNodes =
                 levelParentNode.children =
                 // Child nodes will not yet have been added to levelParentNode.
                 this._groupLevelDatums(level, levelParentNode, levelDatums, /*doFlatten*/false);
@@ -195,7 +194,7 @@ add(/** @lends cdo.GroupingOper */{
                 var childNode = childNodes[i];
 
                 // `levelParentNode.datums` are set to the datums of its children, in post order.
-                // This way, datums order of non-leaf levels will 
+                // This way, datums order of non-leaf levels will
                 //  reflect the grouping "pattern".
                 // NOTE: levelParentNode.datums is initially empty
 
@@ -208,7 +207,7 @@ add(/** @lends cdo.GroupingOper */{
                     // Reset datums.
                     childNode.datums = [];
 
-                    // By the end of the following recursive call, 
+                    // By the end of the following recursive call,
                     // childNode.datums will have been filled again, in post-order.
                     if(!isLastLevel)
                         // NEXT LEVEL
@@ -266,7 +265,7 @@ add(/** @lends cdo.GroupingOper */{
                 isLastLevelOfLastGroupSpec = isLastGroup && isLastLevel,
 
                 childNodes = this._groupLevelDatums(level, levelParentNode, levelDatums, /*doFlatten*/true),
-            
+
                 // Add children's datums to levelParentNode, in post order.
                 // This way, datums are reordered to follow the grouping "pattern".
                 //
@@ -303,8 +302,8 @@ add(/** @lends cdo.GroupingOper */{
                 }
 
                 if(!isLastLevelOfLastGroupSpec) {
-                    childNode.datums = []; 
-                
+                    childNode.datums = [];
+
                     if(!isLastLevel)
                         groupLevelRecursive.call(this, childNode, childDatums, levelIndex + 1);
                     else /*if(!isLastGroup)*/
@@ -361,25 +360,29 @@ add(/** @lends cdo.GroupingOper */{
     },
 
     _groupLevelDatums: function(level, levelParentNode, levelDatums, doFlatten) {
-        // The first child is inserted here
-        // at the same index as that of
-        // the first datum in firstDatums.
-        var childNodeList = [],
-            childNodeMap  = {},
-            postFilter = this._postFilter,
-            keySep, // for flattened nodes
-            datumComparer = level.comparer,
-            nodeComparer = function(na, nb) { return datumComparer(na.firstDatum, nb.firstDatum); };
+        // The first child is inserted here at the same index as that of
+        // the first datum in levelDatums; uses nodeComparer to insertSort.
+        var childNodeList = [];
+        var childNodeMap  = {};
 
-        // Group levelDatums By the level#key(.)
+        var mainDatumComparer = level.mainDatumComparer;
+        var nodeComparer = function(na, nb) { return mainDatumComparer(na.firstDatum, nb.firstDatum); };
+
+        var postFilter = this._postFilter;
+        var keySep; // for flattened nodes
+
+        // Group levelDatums By the level#buildDatumKey(.)
         for(var i = 0, L = levelDatums.length ; i < L ; i++) {
-            var datum = levelDatums[i],
-                key = level.key(datum),
-                childNode = def.hasOwnProp.call(childNodeMap, key) && childNodeMap[key];
+
+            var datum = levelDatums[i];
+            var key = level.buildDatumKey(datum);
+            var childNode = def.hasOwnProp.call(childNodeMap, key) && childNodeMap[key];
 
             if(childNode) {
                 // Add datum to existing childNode of same key
-                if(!postFilter || postFilter(datum)) childNode.datums.push(datum);
+                if(!postFilter || postFilter(datum)) {
+                    childNode.datums.push(datum);
+                }
             } else {
                 // First datum with key -> new child
                 /*  childNode = { atoms: {}, dimNames: [] } */
@@ -387,6 +390,7 @@ add(/** @lends cdo.GroupingOper */{
                 childNode.key = key;
                 childNode.firstDatum = datum;
                 childNode.datums = !postFilter || postFilter(datum) ? [datum] : [];
+
                 if(doFlatten) {
                     if(!keySep) keySep = datum.owner.keySep;
                     this._onNewChildNodeFlattened(key, keySep, childNode, level, levelParentNode);
@@ -396,7 +400,7 @@ add(/** @lends cdo.GroupingOper */{
                 childNodeMap[key] = childNode;
             }
         }
-        
+
         if(postFilter) {
             // remove nodes that ended up with no datums passing the filter
             i = childNodeList.length;
@@ -461,9 +465,9 @@ add(/** @lends cdo.GroupingOper */{
                 // node.datums[0] is representative of the new Data's position
                 if(rootData && (siblings = parentData.childNodes))
                     index = ~def.array.binarySearch(
-                        siblings, 
-                        node.datums[0], 
-                        parentNode.groupLevelSpec.comparer);
+                        siblings,
+                        node.datums[0],
+                        parentNode.groupLevelSpec.mainDatumComparer);
 
                 data = new cdo.Data({
                     parent:   parentData,

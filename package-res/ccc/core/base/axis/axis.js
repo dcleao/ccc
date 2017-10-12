@@ -288,9 +288,12 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
                     // Discover possible traversal modes shared by all visual roles in the axis
                     possibleTraversalModes = this.role.traversalModes;
+
                     // Choose the first non-empty root label.
                     rootLabel = this.role.rootLabel;
+
                     dimNamesKey = String(this.role.grouping.dimensionNames());
+
                     for(i = 1; i < L && possibleTraversalModes; i++) {
                         otherRole = this.dataCells[i].role;
                         possibleTraversalModes &= otherRole.traversalModes;
@@ -305,7 +308,7 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
                                 ]);
                     }
 
-                    // No common traversal modes possible for every visual role
+                    // No common traversal modes possible for every visual role.
                     if(!possibleTraversalModes)
                         throw createError("The visual roles on axis '{0}', assumed discrete, do not share a possible traversal mode.", [this.id]);
 

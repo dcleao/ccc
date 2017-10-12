@@ -109,49 +109,46 @@ def.type('cdo.AggregatedAtom', cdo.AbstractAtom)
     __agg: function() {
         // eq to this.sum...
         return this.__read(this.dimension.value(cdo_AggAtom_keyArgs));
-    }
-});
+    },
 
-Object.defineProperties(cdo.AggregatedAtom.prototype, {
     // Direct atom properties, expose the atom corresponding to the dimension's "default aggregation":
-    "id": {
-        get: function() { return this.__agg().id; } // NOT DEFINED!!!
+    get id() {
+        return this.__agg().id; // NOT DEFINED!!!
     },
-    "key": {
-        get: function() { return this.__agg().key; }
+    get key() {
+        return this.__agg().key;
     },
-    "value": {
-        get: function() { return this.__agg().value; }
+    get value() {
+        return this.__agg().value;
     },
-    "rawValue": {
-        get: function() { return this.__agg().rawValue; }
+    get rawValue() {
+        return this.__agg().rawValue;
     },
-    "label": {
-        get: function() { return this.__agg().label; }
+    get label() {
+        return this.__agg().label;
     },
 
     // Atoms of derived sub-dimensions (statistical, metadata).
 
     // For numeric dimensions
-    "sum": {
-        get: function() { return this.__read(this.dimension.sum(cdo_AggAtom_keyArgs)); }
+    get sum() {
+        return this.__read(this.dimension.sum(cdo_AggAtom_keyArgs));
     },
-    "sumAbs": {
-        get: function() { return this.__read(this.dimension.sumAbs(cdo_AggAtom_keyArgs)); }
+    get sumAbs() {
+        return this.__read(this.dimension.sumAbs(cdo_AggAtom_keyArgs));
     },
-    "percent": {
-        get: function() { return this.__read(this.dimension.valuePercent(cdo_AggAtom_keyArgs)); }
+    get percent() {
+        return this.__read(this.dimension.valuePercent(cdo_AggAtom_keyArgs));
     },
     // TODO: average, ...
 
     // For ordinal dimensions
-    "minimum": {
-        get: function() { return this.__read(this.dimension.min(cdo_AggAtom_keyArgs)); }
+    get minimum() {
+        return this.__read(this.dimension.min(cdo_AggAtom_keyArgs));
     },
-    "maximum": {
-        get: function() { return this.__read(this.dimension.max(cdo_AggAtom_keyArgs)); }
+    get maximum() {
+        return this.__read(this.dimension.max(cdo_AggAtom_keyArgs));
     }
-
 
     // TODO: dimensions
 });

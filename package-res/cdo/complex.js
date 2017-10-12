@@ -273,11 +273,20 @@ cdo.Complex.values = function(complex, dimNames) {
     return dimNames.map(function(dimName) { return atoms[dimName].value; });
 };
 
+// This builds a key compatible with that of cdo.Complex#key
 cdo.Complex.compositeKey = function(complex, dimNames) {
-    var atoms = complex.atoms;
-    return dimNames
-        .map(function(dimName) { return atoms[dimName].key; })
-        .join(complex.owner.keySep);
+    var key    = '';
+    var D      = dimNames.length;
+    var keySep = complex.owner.keySep;
+    var datoms = complex.atoms;
+
+    for(var i = 0 ; i < D ; i++) {
+        var k = datoms[dimNames[i]].key;
+        if(!i) key = k;
+        else   key += (keySep + k);
+    }
+
+    return key;
 };
 
 cdo.Complex.labels = function(complex, dimNames) {

@@ -403,8 +403,18 @@ pvc.BaseChart
             init = function(datum) {
                 // LAZY init
                 if(serRole.isBound()) {
+
+                    // NOTE: that `plot2Series` only works when the series visual role does
+                    // *not* contain a measure discriminator dimension.
+                    //
+                    // Passing plot2Series = ["Cars~Quantity", "Places~Quantity"]
+                    // with seriesRole = ["ProductLine", "valueRole.dimension"]
+                    //
+                    // will not work because discriminator dimensions are not part of datums themselves
+                    // and are only defined in the data groups that are the result of groupings of plot visual roles...
+
                     seriesDimNames = serRole.grouping.dimensionNames();
-                    dataPartDim    = datum.owner.dimensions(dataPartDimName);
+                    dataPartDim = datum.owner.dimensions(dataPartDimName);
                     if(seriesDimNames.length > 1) {
                         buildSeriesKey = cdo.Complex.compositeKey;
                     } else {
@@ -630,7 +640,7 @@ pvc.BaseChart
              .distinct(function(dataCell) {
                  return [
                      dataCell.nullInterpolationMode,
-                     dataCell.role.grouping.id,
+                     dataCell.role.grouping.key,
                      dataCell.dataPartValue || ''
                  ].join();
              })

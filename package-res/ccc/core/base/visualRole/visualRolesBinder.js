@@ -33,6 +33,8 @@
  */
 
 pvc.visual.rolesBinder = function() {
+    // NOTE: this description is not complete or totally accurate...
+    //
     // 1. explicit final binding of role to a source role (`from` attribute)
     //
     // 2. explicit final binding of role to one or more dimensions (`dimensions` attribute)
@@ -46,7 +48,6 @@ pvc.visual.rolesBinder = function() {
     //
     // 6. implicit binding of role to one or more dimension(s) from the same
     //        dimension group of the role (defaultDimensionName).
-    //
 
     var NOT_STARTED = 0;
     var INIT_DURING = 1;
@@ -218,7 +219,7 @@ pvc.visual.rolesBinder = function() {
     }
 
     /**
-     * Configures a visual role,
+     * Configures a visual role
      * on its `isReversed` property,
      * on being sourced by another visual role,
      * or on being bound to dimensions.
@@ -226,26 +227,30 @@ pvc.visual.rolesBinder = function() {
      * @param {pvc.visual.Role} role The visual role.
      * @param {object} opts The visual role options.
      *
-     * @return {number} `1`, if visual role is explicitly sourced or bound; `0`, otherwise.
+     * @return {number} `true`, if visual role is explicitly sourced or bound; `false`, otherwise.
      *
      * @see pvc.visual.Role.readConfig
      */
     function configureRole(role, opts) {
-        var parsed = pvc.visual.Role.readConfig(opts, role.name, context),
-            grouping;
+        var parsed = pvc.visual.Role.readConfig(opts, role.name, context);
 
         if(parsed.isReversed) role.setIsReversed(true);
         if(parsed.legend != null) role.legend(parsed.legend);
 
         if(parsed.source) {
             role.setSourceRole(parsed.source);
-            return addUnboundSourcedRole(role), 1;
+            addUnboundSourcedRole(role);
+            return true;
         }
 
-        if((grouping = parsed.grouping))
-            return preBindRoleToGrouping(role, grouping), 1;
+        // Note this is an unbound grouping.
+        var grouping = parsed.grouping;
+        if(grouping) {
+            preBindRoleToGrouping(role, grouping);
+            return true;
+        }
 
-        return 0;
+        return false;
     }
 
     /**
@@ -275,11 +280,11 @@ pvc.visual.rolesBinder = function() {
     }
 
     function preBindRoleToGrouping(role, grouping) {
-        // assert !end-phase || !grouping.isNull()
+        // assert !end-phase || !grouping.isNull
 
         role.preBind(grouping);
 
-        if(grouping.isNull()) {
+        if(grouping.isNull) {
             visRoleBinder_assertUnboundRoleIsOptional(role); // throws if required
         } else {
             //role.setSourceRole(null); // if any
@@ -295,7 +300,7 @@ pvc.visual.rolesBinder = function() {
 
             dimToSingleRoleMap[dimName] = role;
 
-            // Defines the dimension in the complex type.
+            // Defines the dimension in the complex type project.
             complexTypeProj.setDim(dimName);
         } else {
             // Two or more roles exist.

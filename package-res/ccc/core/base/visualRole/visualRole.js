@@ -450,7 +450,7 @@ def
 
     _validateBind: function(groupingSpec) {
         if(groupingSpec) {
-            if(groupingSpec.isNull()) {
+            if(groupingSpec.isNull) {
                 groupingSpec = null;
             } else {
                 /* Validate grouping spec according to role */
@@ -463,7 +463,7 @@ def
                 var valueType = this.valueType,
                     requireIsDiscrete = this.requireIsDiscrete;
                 groupingSpec.dimensions().each(function(dimSpec) {
-                    var dimType = dimSpec.type;
+                    var dimType = dimSpec.dimensionType;
                     if(valueType && dimType.valueType !== valueType)
                         throw def.error.operationInvalid(
                                 "Role '{0}' cannot be bound to dimension '{1}'. \nIt only accepts dimensions of type '{2}' and not of type '{3}'.",

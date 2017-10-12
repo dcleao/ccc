@@ -675,12 +675,12 @@ pvc.BaseChart
     _getRoleColorScale: function(grouping) {
         return def.lazy(
             def.lazy(this, '_rolesColorScale'),
-            grouping.id,
+            grouping.key,
             this._createRoleColorScale,
             this);
     },
 
-    _createRoleColorScale: function(groupingId) {
+    _createRoleColorScale: function(groupingKey) {
         var firstScale, scale, valueToColorMap = {};
 
         this.axesByType.color.forEach(function(axis) {
@@ -688,7 +688,7 @@ pvc.BaseChart
             if(axisRole && // bound
                axis.scale &&
                axis.scaleType === 'discrete' &&
-               axisRole.grouping.id === groupingId && // same grouping
+               axisRole.grouping.key === groupingKey && // same grouping
 
                // Only use color axes with "specified Colors"
                axis.index === 0 ||

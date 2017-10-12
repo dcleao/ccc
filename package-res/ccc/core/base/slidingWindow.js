@@ -77,8 +77,7 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
                 var role = axis.role;
                 if(role) {
                     // Is a sliding window axis?
-                    if(role.grouping.dimensionNames().length === 1 &&
-                       role.grouping.firstDimensionName() === this.dimension)
+                    if(role.grouping.isSingleDimension && role.grouping.firstDimensionName() === this.dimension)
                         this._setAxisFixedRatio(axis);
 
                     if(axis.type === "color")
