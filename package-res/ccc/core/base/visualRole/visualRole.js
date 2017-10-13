@@ -361,6 +361,8 @@ def
      * ...
      *
      * @type cdo.Data
+     *
+     * @see pvc.visual.Axis#domainGroupOperator
      */
     flatten: function(data, keyArgs) {
         var grouping = this.flattenedGrouping(keyArgs) || def.fail.operationInvalid("Role is unbound.");
@@ -399,6 +401,7 @@ def
         return Flat.None;
     },
 
+    // @see pvc.visual.Axis#domainGroupOperator
     select: function(data, keyArgs) {
         var grouping = this.grouping;
         if(grouping) {
