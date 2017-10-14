@@ -26,27 +26,13 @@
  * @param {boolean} [keyArgs.selected=null]
  *      Only considers datums that have the specified selected state.
  * @param {function} [keyArgs.where] A datum predicate.
- * @param {string} [keyArgs.whereKey] A key for the specified datum predicate,
- * previously returned by this function.
- * <p>
- * If this argument is specified, and it is not the value <c>null</c>,
- * it can be used to cache results.
- * If this argument is specified, and it is the value <c>null</c>,
- * the results are not cached.
- * If it is not specified, and <tt>keyArgs</tt> is specified,
- * one is returned.
- * If it is not specified and <tt>keyArgs</tt> is not specified,
- * then the instance will have a null {@link #key} property value.
- * </p>
- * <p>
- * If a key not previously returned by this operation is specified,
- * then it should be prefixed with a "_" character,
- * in order to not collide with keys generated internally.
- * </p>
+ * @param {string} [keyArgs.whereKey] A key for the specified datum predicate.
+ * If <tt>keyArgs.where</tt> is specified and this argument is not, the results will not be cached,
+ * in which case the new grouping operation will have a null {@link #key} property value.
  */
 def.type('cdo.GroupingOper', cdo.DataOper)
 .init(function(linkParent, groupingSpecs, keyArgs) {
-    /*jshint expr:true */
+
     groupingSpecs || def.fail.argumentRequired('groupingSpecs');
 
     this.base(linkParent, keyArgs);
@@ -54,22 +40,18 @@ def.type('cdo.GroupingOper', cdo.DataOper)
     this._where    = def.get(keyArgs, 'where');
     this._visible  = def.get(keyArgs, 'visible',  null);
     this._selected = def.get(keyArgs, 'selected', null);
+
     var isNull = this._isNull = def.get(keyArgs, 'isNull', null);
+
     this._postFilter = isNull != null ? function(d) { return d.isNull === isNull; } : null;
 
     /* 'Where' predicate and its key */
-    var hasKey = this._selected == null, // TODO: Selected state changes do not yet invalidate cache...
-        whereKey = '';
+    var hasKey = this._selected == null; // TODO: Selected state changes do not yet invalidate cache...
+    var whereKey = '';
     if(this._where) {
         whereKey = def.get(keyArgs, 'whereKey');
         if(!whereKey) {
-            if(!keyArgs || whereKey === null) {
-                // Force no key
-                hasKey = false;
-            } else {
-                whereKey = '' + def.nextId('dataOperWhereKey');
-                keyArgs.whereKey = whereKey;
-            }
+            hasKey = false;
         }
     }
 
@@ -89,7 +71,12 @@ def.type('cdo.GroupingOper', cdo.DataOper)
     });
 
     /* Operation key */
-    if(hasKey) this.key = keys.join('!!') + "$" + [this._visible, this._isNull, whereKey].join('||'); // this._selected
+    if(hasKey) {
+        this.key =
+            keys.join('!!') +
+            "$" +
+            [this._visible, this._isNull, whereKey].join('||'); // this._selected
+    }
 }).
 add(/** @lends cdo.GroupingOper */{
 
@@ -99,9 +86,9 @@ add(/** @lends cdo.GroupingOper */{
      * @returns {cdo.Data} The resulting root data.
      */
     execute: function() {
-        /* Setup a priori datum filters */
+        // Setup a priori datum filters
 
-        /*global data_whereState: true */
+        /* globals data_whereState */
         var datumsQuery = data_whereState(def.query(this._linkParent._datums), {
                     visible:  this._visible,
                     selected: this._selected,

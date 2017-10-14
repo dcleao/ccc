@@ -500,14 +500,14 @@ pvc.BaseChart
     },
 
     _createPartData: function(baseData, partRole, dataPartValues) {
-        // NOTE: It is not possible to use a normal whereSpec query.
+        // NOTE: It is not possible to use a normal querySpec query.
         // Under the hood it uses groupBy to filter the results,
         //  and that ends changing the order of datums, to follow
         //  the group operation.
         // Changing order at this level is not acceptable.
         var dataPartDimName = partRole.lastDimensionName(),
             dataPartAtoms   = baseData.dimensions(dataPartDimName).getDistinctAtoms(def.array.to(dataPartValues)),
-            where = cdo.whereSpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
+            where = cdo.querySpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
 
         return baseData.where(null, {where: where});
     },

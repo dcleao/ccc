@@ -365,6 +365,7 @@ def
      * @see pvc.visual.Axis#domainGroupOperator
      */
     flatten: function(data, keyArgs) {
+
         var grouping = this.flattenedGrouping(keyArgs) || def.fail.operationInvalid("Role is unbound.");
 
         return data.groupBy(grouping, keyArgs);
@@ -376,28 +377,38 @@ def
             keyArgs = keyArgs ? Object.create(keyArgs) : {};
 
             var flatMode = keyArgs.flatteningMode;
-            if(flatMode == null) flatMode = keyArgs.flatteningMode = this._flatteningMode();
+            if(flatMode == null) {
+                keyArgs.flatteningMode = flatMode = this._flatteningMode();
+            }
 
-            if(keyArgs.isSingleLevel == null && !flatMode) keyArgs.isSingleLevel = true;
+            if((flatMode === cdo.FlatteningMode.None) && keyArgs.isSingleLevel == null) {
+                keyArgs.isSingleLevel = true;
+            }
 
             return grouping.ensure(keyArgs);
         }
     },
 
     _flatteningMode: function() {
-        var Trav = pvc.visual.TraversalMode, Flat = cdo.FlatteningMode;
+        var Trav = pvc.visual.TraversalMode;
+        var Flat = cdo.FlatteningMode;
 
-        // This seems to be the only practical use of this.traversalMode
-        // and its possible value Tree is never distinguished from single level...
-        // It even looks like that in #flattenedGrouping(),
-        // when here Flat.None is returned the default value for isSingleLevel is true,
-        // not taking into account the distinction between Tree and FlattenLeafs (single level)...
-        // In practice, ignoring the value Tree and taking it always to mean FlattenLeafs.
+        // This seems to be the only practical use of the this.traversalMode property.
 
         switch(this.traversalMode) {
             case Trav.FlattenDfsPre:  return Flat.DfsPre;
             case Trav.FlattenDfsPost: return Flat.DfsPost;
         }
+
+        // case Trav.FlattenLeafs:
+        // case Trav.Tree:
+
+        // The possible value Tree of this.traversalMode  is never distinguished from single level...
+        // It even looks like that in #flattenedGrouping(),
+        // when here Flat.None is returned, the default value for isSingleLevel is true,
+        // ignoring the distinction between Tree and FlattenLeafs (single level)...
+        // In practice, ignoring the value Tree and taking it always to mean FlattenLeafs.
+
         return Flat.None;
     },
 

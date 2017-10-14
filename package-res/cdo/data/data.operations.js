@@ -181,54 +181,61 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * See {@link #datums} for more information on the filtering operation.
      * </p>
      *
-     * @param {object} [whereSpec] A "where" specification.
+     * <p>
+     * Any datums that are later added to `this` will be also added to
+     * the returned data set, in case these match the specified filters.
+     * </p>
+     *
+     * @param {object} [querySpec] A query specification.
      * @param {object} [keyArgs] Keyword arguments object.
      * See {@link #datums} for information on available keyword arguments.
      *
      * @returns {!cdo.Data} A linked data containing the filtered datums.
      */
-    where: function(whereSpec, keyArgs) {
-        // When !whereSpec and any keyArgs, results are not cached.
-        // Also, the linked data will not filter incoming new datums as expected.
-        // In the other situations,
-        //  because the filtering operation is based on a grouping operation,
-        //  the results are partially cached at the grouping layer (the indexes),
-        //  and the cached indexes will update, but not the new data tha is built in here.
-        // The conclusion is that the whereSpec and keyArgs arguments must be
-        //  compiled into a single where predicate
-        //  so that it can later be applied to incoming new datums.
-        //var datums = this.datums(whereSpec, keyArgs);
-        var datums;
-        if(!whereSpec) {
-            if(!this._datums) {
-                datums = [];
-            } else if(!keyArgs) {
-                datums = this._datums;
-            } else {
-                datums = data_whereState(def.query(this._datums), keyArgs);
-            }
-        } else {
-            whereSpec = data_processWhereSpec.call(this, whereSpec, keyArgs);
-            datums = data_where.call(this, whereSpec, keyArgs);
+    where: function(querySpec, keyArgs) {
+        // This code is adapted from #datums to build a data set, in the end, including the where predicate.
+        //
+        // var datums = this.datums(querySpec, keyArgs);
+
+        // Normalize the query spec.
+        var normalizedQuerySpec = querySpec && data_normalizeQuerySpec.call(this, querySpec);
+
+        var datums = this._datums;
+        if(!datums) {
+            datums = [];
+        } else if(normalizedQuerySpec) {
+            // Filter by the query spec, possibly using the specified keyArgs.orderBy.
+            // Also filters by any state attributes (visible, selected, isNull, where).
+            // Internal group by operation is cached.
+            datums = data_where.call(this, normalizedQuerySpec, keyArgs);
+        } else if(keyArgs) {
+            // Filter datums by their "state" attributes.
+            // Search not cached.
+            datums = data_whereState(def.query(datums), keyArgs);
         }
 
-        var where = data_wherePredicate(whereSpec, keyArgs);
+        if(querySpec) {
+            // Normalize the query spec.
+            normalizedQuerySpec = data_normalizeQuerySpec.call(this, querySpec);
+        }
+
+        // `normalizedQuerySpec` and `keyArgs` arguments must be compiled into a single where predicate
+        // so that, later, any added datums flow through to the returned data set.
+        // null if nothing to filter on.
+        var where = (normalizedQuerySpec || keyArgs) && data_wherePredicate(normalizedQuerySpec, keyArgs);
 
         return new cdo.Data({linkParent: this, datums: datums, where: where});
     },
 
     /**
-     * Obtains the datums of this data,
-     * possibly filtered according
-     * to a specified "where" specification,
-     * datum selected state and
-     * filtered atom visible state.
+     * Gets an enumerable for the datums of this data,
+     * possibly filtered according to a given query specification and datum states.
      *
-     * @param {object} [whereSpec] A "where" specification.
+     * @param {object} [querySpec] A query specification.
      * A structure with the following form:
      * <pre>
      * // OR of datum filters
-     * whereSpec = [datumFilter1, datumFilter2, ...] | datumFilter;
+     * querySpec = [datumFilter1, datumFilter2, ...] | datumFilter;
      *
      * // AND of dimension filters
      * datumFilter = {
@@ -240,10 +247,10 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * </pre>
      * <p>Values of a datum filter can also directly be atoms.</p>
      * <p>
-     *    An example of a "where" specification:
+     *    An example of a query specification:
      * </p>
      * <pre>
-     * whereSpec = [
+     * querySpec = [
      *     // Datums whose series is 'Europe' or 'Australia',
      *     // and whose category is 2001 or 2002
      *     {series: ['Europe', 'Australia'], category: [2001, 2002]},
@@ -266,10 +273,13 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * @param {boolean} [keyArgs.selected=null]
      *      Only considers datums that have the specified selected state.
      *
-     * @param {function} [keyArgs.where] A arbitrary datum predicate.
+     * @param {function} [keyArgs.where] An arbitrary datum predicate.
      *
-     * @param {string[]} [keyArgs.orderBySpec] An array of "order by" strings to be applied to each
-     * datum filter of <i>whereSpec</i>.
+     * @param {string} [keyArgs.whereKey] A key for the specified datum predicate.
+     * If <tt>keyArgs.where</tt> is specified and this argument is not, the results will not be cached.
+     *
+     * @param {string[]} [keyArgs.orderBy] An array of "order by" strings to be applied to each
+     * datum filter of <i>querySpec</i>.
      * <p>
      * An "order by" string is the same as a grouping specification string,
      * although it is used here with a slightly different meaning.
@@ -281,7 +291,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
      *
      * <p>
      * When not specified, altogether or individually,
-     * these are determined to match the corresponding datum filter of <i>whereSpec</i>.
+     * these are determined to match the corresponding datum filter of <i>querySpec</i>.
      * </p>
      *
      * <p>
@@ -289,49 +299,54 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * to the first datum filter.
      * </p>
      *
-     * @returns {def.Query} A query object that enumerates the desired {@link cdo.Datum}.
+     * @return {def.Query} A query object that enumerates the matching {@link cdo.Datum} objects.
+     *
+     * @see #where
      */
-    datums: function(whereSpec, keyArgs) {
-        if(!whereSpec) {
-            if(!keyArgs) return def.query(this._datums);
+    datums: function(querySpec, keyArgs) {
 
+        if(!this._datums) {
+            return def.query();
+        }
+
+        if(!querySpec) {
+            if(!keyArgs) {
+                return def.query(this._datums);
+            }
+
+            // Filter datums by their "state" attributes (visible, selected, isNull, where).
+            // Not cached.
             return data_whereState(def.query(this._datums), keyArgs);
         }
 
-        whereSpec = data_processWhereSpec.call(this, whereSpec, keyArgs);
+        // Normalize the query spec.
+        var normalizedQuerySpec = data_normalizeQuerySpec.call(this, querySpec);
 
-        return data_where.call(this, whereSpec, keyArgs);
+        // Filter by the query spec, possibly using the specified keyArgs.orderBy.
+        // Also filters by any state attributes (visible, selected, isNull, where).
+        // Internal group by operation is cached.
+        return data_where.call(this, normalizedQuerySpec, keyArgs);
     },
 
     /**
-     * Obtains the first datum that satisfies a specified "where" specification.
+     * Obtains the first datum that satisfies a given query specification.
      * <p>
      * If no datum satisfies the filter, null is returned.
      * </p>
      *
-     * @param {object} whereSpec A "where" specification.
-     * See {@link #datums} to know about this structure.
+     * @param {object} [querySpec] A query specification.
+     * See {@link #datums} for information on this structure.
      *
      * @param {object} [keyArgs] Keyword arguments object.
      * See {@link #datums} for additional available keyword arguments.
      *
-     * @returns {cdo.Datum} The first datum that satisfies the specified filter or <i>null</i>.
+     * @return {cdo.Datum} The first datum that satisfies the specified filter or <i>null</i>.
      *
      * @see cdo.Data#datums
      */
-    datum: function(whereSpec, keyArgs) {
-        /*jshint expr:true */
-        whereSpec || def.fail.argumentRequired('whereSpec');
-
-        whereSpec = data_processWhereSpec.call(this, whereSpec, keyArgs);
-
-        return data_where.call(this, whereSpec, keyArgs).first() || null;
+    datum: function(querySpec, keyArgs) {
+        return this.datums(querySpec, keyArgs).first() || null;
     },
-
-
-    // TODO: find a proper name for this!
-    //  sumDimensionValueAbs??
-    // Would it be confused with the value of the local dimension?
 
     /**
      * Sums the absolute value of a specified dimension on each child data.
@@ -343,7 +358,9 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * @type number
      */
     dimensionsSumAbs: function(dimName, keyArgs) {
+
         /*global dim_buildDatumsFilterKey:true */
+
         var key = dimName + ":" + dim_buildDatumsFilterKey(keyArgs),
             sum = def.getOwn(this._sumAbsCache, key);
 
@@ -674,7 +691,6 @@ function data_processDatumAtoms(datum, intern, markVisited) {
     }
 }
 
-
 function cdo_addDatumsSimple(newDatums) {
     // But may be an empty list
     /*jshint expr:true */
@@ -751,7 +767,7 @@ function cdo_removeDatumLocal(datum) {
 }
 
 /**
- * Processes a given "where" specification.
+ * Normalizes a given query specification.
  * <p>
  * Normalizes and validates the specification syntax,
  * validates dimension names,
@@ -764,13 +780,13 @@ function cdo_removeDatumLocal(datum) {
  * and atoms, instead of their values.
  * </p>
  *
- * @name cdo.Data#_processWhereSpec
+ * @name cdo.Data#_normalizeQuerySpec
  * @function
  *
- * @param {object} whereSpec A "where" specification to be normalized.
+ * @param {object} querySpec A query specification to be normalized.
  * TODO: A structure with the following form: ...
  *
- * @return Array A <i>processed</i> "where" of the specification.
+ * @return Array A <i>normalized</i> query of the specification.
  * A structure with the following form:
  * <pre>
  * // OR of processed datum filters
@@ -787,11 +803,11 @@ function cdo_removeDatumLocal(datum) {
  *
  * @private
  */
-function data_processWhereSpec(whereSpec) {
+function data_normalizeQuerySpec(querySpec) {
     var whereProcSpec = [];
 
-    whereSpec = def.array.as(whereSpec);
-    if(whereSpec) whereSpec.forEach(processDatumFilter, this);
+    querySpec = def.array.as(querySpec);
+    if(querySpec) querySpec.forEach(processDatumFilter, this);
 
     return whereProcSpec;
 
@@ -848,7 +864,7 @@ function data_whereState(q, keyArgs) {
     return q;
 }
 
-function data_wherePredicate(whereSpec, keyArgs) {
+function data_wherePredicate(querySpec, keyArgs) {
     var visible  = def.get(keyArgs, 'visible' ),
         isNull   = def.get(keyArgs, 'isNull'  ),
         selected = def.get(keyArgs, 'selected'),
@@ -859,7 +875,7 @@ function data_wherePredicate(whereSpec, keyArgs) {
     if(isNull   != null) ps.unshift(isNull   ? datum_isNullT     : datum_isNullF    );
     if(selected != null) ps.unshift(selected ? datum_isSelectedT : datum_isSelectedF);
     if(where           ) ps.unshift(where);
-    if(whereSpec       ) ps.unshift(cdo_whereSpecPredicate(whereSpec));
+    if(querySpec       ) ps.unshift(cdo_querySpecPredicate(querySpec));
 
     var P = ps.length;
     if(P) {
@@ -876,28 +892,28 @@ function data_wherePredicate(whereSpec, keyArgs) {
     }
 }
 
-cdo.whereSpecPredicate = cdo_whereSpecPredicate;
+cdo.querySpecPredicate = cdo_querySpecPredicate;
 
 /**
- * Creates a datum predicate for a "where" specification.
+ * Creates a datum predicate for a query specification.
  *
- * @name cdo.whereSpecPredicate
+ * @name cdo.querySpecPredicate
  * @function
  *
- * @param {Array} whereSpec A "where" specification object.
+ * @param {Array} querySpec A query specification object.
  *
  * @returns {function} A datum predicate function.
  * @static
  */
-function cdo_whereSpecPredicate(whereSpec) {
-    var L = whereSpec.length;
+function cdo_querySpecPredicate(querySpec) {
+    var L = querySpec.length;
 
-    return datumWhereSpecPredicate;
+    return datumQuerySpecPredicate;
 
-    function datumWhereSpecPredicate(d) {
+    function datumQuerySpecPredicate(d) {
         // OR
         var datoms = d.atoms;
-        for(var i = 0 ; i < L ; i++) if(datumFilterPredicate(datoms, whereSpec[i])) return true;
+        for(var i = 0 ; i < L ; i++) if(datumFilterPredicate(datoms, querySpec[i])) return true;
         return false;
     }
 
@@ -913,41 +929,63 @@ function cdo_whereSpecPredicate(whereSpec) {
 
 // All the "Filter" and "Spec" words below should be read as if they were prepended by "Proc"
 /**
- * Obtains the datums of this data filtered according to
- * a specified "where" specification,
- * and optionally,
- * datum selected state and filtered atom visible state.
+ * Obtains the datums of this data filtered according to a given query specification,
+ * and optionally, datum selected and visible state.
  *
- * @name cdo.Data#_where
- * @function
+ * @alias cdo.Data#_where
  *
- * @param {object} [whereSpec] A <i>processed</i> "where" specification.
+ * @param {object} [normalizedQuerySpec] A <i>normalized</i> query specification.
  * @param {object} [keyArgs] Keyword arguments object.
  * See {@link #groupBy} for additional available keyword arguments.
  *
- * @param {string[]} [keyArgs.orderBySpec] An array of "order by" strings to be applied to each
- * datum filter of <i>whereSpec</i>.
+ * @param {string[]} [keyArgs.orderBy] An array of "order by" strings to be applied to each
+ * datum filter of <i>normalizedQuerySpec</i>.
  *
- * @returns {def.Query} A query object that enumerates the desired {@link cdo.Datum}.
+ * @return {def.Query} A query object that enumerates the desired {@link cdo.Datum}.
  * @private
  */
-function data_where(whereSpec, keyArgs) {
+function data_where(normalizedQuerySpec, keyArgs) {
+    /*
+     * e.g.
+     *
+     * normalizedQuerySpec = [
+     *   {country: [atom1], product: [atom2,atom3]}, // <-- datumFilter
+     *   {country: [atom4], product: [atom5,atom3]}
+     * ]
+     *
+     * orderBy: [
+     *   'country, product',
+     *   'country, product'
+     * ]
+     *
+     * Each datum filter can filter on a different set of dimensions.
+     *
+     * `orderBy` must be contain the same dimensions as those referenced in normalizedQuerySpec.
+     */
 
-    var orderBys = def.array.as(def.get(keyArgs, 'orderBy')),
-        datumKeyArgs = def.create(keyArgs || {}, {orderBy: null}),
-        query = def.query(whereSpec)
-                   .selectMany(function(datumFilter, index) {
-                      if(orderBys) datumKeyArgs.orderBy = orderBys[index];
+    var orderBys = def.array.as(def.get(keyArgs, 'orderBy'));
 
-                      return data_whereDatumFilter.call(this, datumFilter, datumKeyArgs);
-                   }, this);
+    var datumKeyArgs = def.create(keyArgs || {}, {orderBy: null});
 
-    return query.distinct(def.propGet('id'));
+    // The result is the union of the results of filtering by individual datum filters.
+
+    var datumResultsQuery = def.query(normalizedQuerySpec)
+           .selectMany(function(normalizedDatumFilter, index) {
+
+               if(orderBys) {
+                  datumKeyArgs.orderBy = orderBys[index];
+              }
+
+              // Filter using one datum filter.
+              return data_queryDatumFilter.call(this, normalizedDatumFilter, datumKeyArgs);
+           }, this);
+
+    return datumResultsQuery.distinct(def.propGet('id'));
 
     /*
     // NOTE: this is the brute force / unguided algorithm - no indexes are used
-    function whereDatumFilter(datumFilter, index) {
-        // datumFilter = {dimName1: [atom1, OR atom2, OR ...], AND ...}
+    function whereDatumFilter(normalizedDatumFilter, index) {
+        // normalizedDatumFilter = {dimName1: [atom1, OR atom2, OR ...], AND ...}
 
         return def.query(this._datums).where(datumPredicate, this);
 
@@ -955,7 +993,7 @@ function data_where(whereSpec, keyArgs) {
             if((selected === null || datum.isSelected === selected) &&
                (visible  === null || datum.isVisible  === visible)) {
                 var atoms = datum.atoms;
-                for(var dimName in datumFilter) {
+                for(var dimName in normalizedDatumFilter) {
                     if(datumFilter[dimName].indexOf(atoms[dimName]) >= 0) {
                         return true;
                     }
@@ -967,13 +1005,14 @@ function data_where(whereSpec, keyArgs) {
 }
 
 /**
- * Obtains an enumerable of the datums satisfying <i>datumFilter</i>,
+ * Obtains an enumerable of the datums satisfying <i>normalizedDatumFilter</i>,
  * by constructing and traversing indexes.
  *
- * @name cdo.Data#_whereDatumFilter
- * @function
+ * Uses groupBy, and its cache, to answer the query.
  *
- * @param {string} datumFilter A <i>processed</i> datum filter.
+ * @alias cdo.Data#_whereDatumFilter
+ *
+ * @param {string} normalizedDatumFilter A <i>normalized</i> datum filter.
  *
  * @param {Object} keyArgs Keyword arguments object.
  * See {@link #groupBy} for additional available keyword arguments.
@@ -982,49 +1021,80 @@ function data_where(whereSpec, keyArgs) {
  * When not specified, one is determined to match the specified datum filter.
  * The "order by" string cannot contain multi-dimension levels (dimension names separated with "|").
  *
- * @returns {def.Query} A query object that enumerates the desired {@link cdo.Datum}.
+ * @return {def.Query} A query object that enumerates the matching {@link cdo.Datum} objects.
  *
  * @private
  */
-function data_whereDatumFilter(datumFilter, keyArgs) {
-     var groupingSpecText = keyArgs.orderBy; // keyArgs is required
-     if(!groupingSpecText) {
-         // Choose the most convenient one.
-         // A sort on dimension names can yield good cache reuse.
-         groupingSpecText = Object.keys(datumFilter).sort().join(',');
-     } else {
-         if(groupingSpecText.indexOf("|") >= 0)
-             throw def.error.argumentInvalid('keyArgs.orderBy', "Multi-dimension order by is not supported.");
+function data_queryDatumFilter(normalizedDatumFilter, keyArgs) {
 
-         // TODO: not validating that groupingSpecText actually contains the same dimensions referred in datumFilter...
-     }
+    /*
+     * e.g.:
+     *
+     * normalizedDatumFilter = {
+     *   country: [atom3, atom4],
+     *   product: [atom1, atom2]
+     * }
+     *
+     * orderBy = 'country,product'
+     */
 
-     /*
+    var orderBySpecText = keyArgs.orderBy; // keyArgs is required
+    if(!orderBySpecText) {
+        // Choose the most convenient one orderBy.
+        // The sort on dimension names can yield good cache reuse...
+
+        orderBySpecText = Object.keys(normalizedDatumFilter).sort().join(',');
+    } else {
+        if(orderBySpecText.indexOf("|") >= 0)
+            throw def.error.argumentInvalid('keyArgs.orderBy', "Multi-dimension order by is not supported.");
+
+        // TODO: not validating that orderBySpecText actually contains the same dimensions referred in normalizedDatumFilter...
+    }
+
+    /*
+     * rootData is a data set tree with one level per filtered by dimension 'country' and then 'product'.
+     *
+     * Each first level children will be one existing value of country, in this data.
+     *
+     * `normalizedDatumFilter` matches every path where it successively contains the atom of that level's data.
+     */
+
+    var rootData = this.groupBy(orderBySpecText, keyArgs);
+    var H = rootData.treeHeight;
+
+    /*
         // NOTE:
-        // All the code below is just a stack/state-based translation of
-        // the following recursive code (so that it can be used lazily with a def.query):
+        // All of the code below is just a stack/state-based translation of
+        // the following recursive code (so that it can be used lazily with a def.query),
+        // where eachCallback would be called with each resulting datum:
 
         recursive(rootData, 0);
 
         function recursive(parentData, h) {
             if(h >= H) {
                 // Leaf
-                parentData._datums.forEach(fun, ctx);
+
+                // Yay! Matched all of the dimensions of the normalizedDatumFilter.
+                // Every datum in this data is a match.
+
+                parentData._datums.forEach(eachCallback, ctx);
                 return;
             }
 
+            // Because only single-dimension per-level is allowed on orderBy,
+            // it's always the first dimension that needs to be matched.
+
             var dimName = parentData._groupLevelSpec.dimensions[0].name;
-            datumFilter[dimName].forEach(function(atom) {
-                var childData = parentData.child(atom.globalKey);
+
+            normalizedDatumFilter[dimName].forEach(function(orAtom) {
+                var childData = parentData.child(orAtom.globalKey);
                 if(childData) {
+                    // Yay! There is a set of datums containing orAtom.
                     recursive(childData, h + 1);
                 }
             }, this);
         }
      */
-
-     var rootData = this.groupBy(groupingSpecText, keyArgs),
-     H = rootData.treeHeight;
 
      var stateStack = [];
 
@@ -1036,7 +1106,7 @@ function data_whereDatumFilter(datumFilter, keyArgs) {
          // No current data means starting
          if(!this._data) {
              this._data = rootData;
-             this._dimAtomsOrQuery = def.query(datumFilter[rootData._groupLevelSpec.dimensions[0].name]);
+             this._dimAtomsOrQuery = def.query(normalizedDatumFilter[rootData._groupLevelSpec.dimensions[0].name]);
 
          // Are there still any datums of the current data to enumerate?
          } else if(this._datumsQuery) {
@@ -1087,7 +1157,8 @@ function data_whereDatumFilter(datumFilter, keyArgs) {
 
                      if(depth < H - 1) {
                          // Keep going up, until a leaf datum is found. Then we stop.
-                         this._dimAtomsOrQuery = def.query(datumFilter[childData._groupLevelSpec.dimensions[0].name]);
+                         this._dimAtomsOrQuery =
+                             def.query(normalizedDatumFilter[childData._groupLevelSpec.dimensions[0].name]);
                          depth++;
                      } else {
                          // Leaf data!
