@@ -113,77 +113,94 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
                 var otherRole,
                     otherGrouping,
-                    possibleTraversalModes,
-                    traversalMode,
-                    otherTravMode,
+                    possibleFlatteningModes,
+                    flatteningMode,
+                    otherFlatteningMode,
                     rootLabel,
                     dimNamesKey,
                     i;
 
                 if(this.scaleType === 'discrete') {
                     // Same sequence of dimension names +
-                    // same traversal mode (conciliate-able) +
+                    // same flattening mode (conciliate-able) +
                     // same rootLabel (conciliate-able)
 
-                    // Discover possible traversal modes shared by all visual roles in the axis
-                    possibleTraversalModes = this.role.traversalModes;
+                    // Discover possible flattening modes shared by all visual roles in the axis
+                    possibleFlatteningModes = this.role.flatteningModes;
 
                     // Choose the first non-empty root label.
                     rootLabel = this.role.rootLabel;
 
                     dimNamesKey = String(this.role.grouping.dimensionNames());
 
-                    for(i = 1; i < L && possibleTraversalModes; i++) {
+                    for(i = 1; (i < L) && possibleFlatteningModes; i++) {
+
                         otherRole = this.dataCells[i].role;
-                        possibleTraversalModes &= otherRole.traversalModes;
-                        if(!rootLabel) rootLabel = otherRole.rootLabel;
+
+                        possibleFlatteningModes &= otherRole.flatteningModes;
+
+                        if(!rootLabel) {
+                            rootLabel = otherRole.rootLabel;
+                        }
 
                         otherGrouping = this._getBoundRoleGrouping(otherRole);
-                        if(dimNamesKey !== String(otherGrouping.dimensionNames()))
+
+                        if(dimNamesKey !== String(otherGrouping.dimensionNames())) {
                             throw createError(
                                 "The visual roles '{0}', on axis '{1}', assumed discrete, should be bound to the same dimension list.", [
                                     [this.role.prettyId(), otherRole.prettyId()].join("', '"),
                                     this.id
                                 ]);
+                        }
                     }
 
-                    // No common traversal modes possible for every visual role.
-                    if(!possibleTraversalModes)
-                        throw createError("The visual roles on axis '{0}', assumed discrete, do not share a possible traversal mode.", [this.id]);
-
-                    // Find the traversal mode to use for all.
-                    traversalMode = 0;
-                    for(i = 0; i < L ; i++) {
-                        otherRole = this.dataCells[i].role;
-                        otherTravMode = otherRole.traversalMode;
-                        // `>` practical way of making FlattenDfsPre/Post being chosen over Tree,FlattenLeafs
-                        if((otherTravMode & possibleTraversalModes) && otherTravMode > traversalMode)
-                            traversalMode = otherTravMode;
+                    // No common flattening modes possible for every visual role.
+                    if(possibleFlatteningModes === cdo.FlatteningMode.None) {
+                        throw createError("The visual roles on axis '{0}', assumed discrete, do not share a possible flattening mode.", [this.id]);
                     }
 
-                    // Default to the traversal mode that corresponds to the
-                    // first (least-significant) set bit in possibleTraversalModes.
-                    if(!traversalMode) traversalMode = possibleTraversalModes & (-possibleTraversalModes);
-
+                    // Find the flattening mode to use for all.
+                    flatteningMode = 0;
                     for(i = 0; i < L ; i++) {
                         otherRole = this.dataCells[i].role;
-                        otherRole.setRootLabel(rootLabel);
-                        otherRole.setTraversalMode(traversalMode);
-                        // This prevents any other traversal mode being chosen by other axis that the role may be in.
-                        otherRole.setTraversalModes(traversalMode);
+                        otherFlatteningMode = otherRole.flatteningMode;
+
+                        // `>` practical way of making DfsPre/Post being chosen over SingleLevel (and None)
+                        if((otherFlatteningMode & possibleFlatteningModes) && (otherFlatteningMode > flatteningMode)) {
+                            flatteningMode = otherFlatteningMode;
+                        }
+                    }
+
+                    // Default to the flattening mode that corresponds to the
+                    // first (least-significant) set bit in possibleFlatteningModes.
+                    if(!flatteningMode) {
+                        flatteningMode = possibleFlatteningModes & (-possibleFlatteningModes);
+                    }
+
+                    // Update flattening mode and root label of all roles.
+                    for(i = 0; i < L ; i++) {
+                        otherRole = this.dataCells[i].role;
+                        otherRole.rootLabel = rootLabel;
+                        otherRole.flatteningMode = flatteningMode;
+
+                        // This prevents any other flattening mode being chosen by other axis that the role may be in.
+                        otherRole.flatteningModes = flatteningMode;
                     }
                 } else {
-                    if(!grouping.lastDimensionType().isComparable)
+                    if(!grouping.lastDimensionType().isComparable) {
                         throw createError("The visual roles on axis '{0}', assumed continuous, should have 'comparable' groupings.", [this.id]);
+                    }
 
                     for(i = 1; i < L ; i++) {
                         otherRole = this.dataCells[i].role;
                         otherGrouping = this._getBoundRoleGrouping(otherRole);
-                        if(this.scaleType !== axis_groupingScaleType(otherGrouping))
+                        if(this.scaleType !== axis_groupingScaleType(otherGrouping)) {
                             throw createError("The visual roles on axis '{0}', assumed continuous, should have scales of the same type.", [this.id]);
+                        }
 
-                        if(this.role.isNormalized !== otherRole.isNormalized)
+                        if(this.role.isNormalized !== otherRole.isNormalized) {
                             throw createError("The visual roles on axis '{0}', assumed normalized, should be of the same type.", [this.id]);
+                        }
                     }
                 }
             }
@@ -191,7 +208,10 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
         _getBoundRoleGrouping: function(role) {
             var grouping = role.grouping;
-            if(!grouping) throw def.error.operationInvalid("Axis' role '{0}' is unbound.", [role.name]);
+            if(!grouping) {
+                throw def.error.operationInvalid("Axis' role '{0}' is unbound.", [role.name]);
+            }
+
             return grouping;
         },
         // endregion
@@ -210,8 +230,9 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
         // region dataCellScaleInfo
         setDataCellScaleInfo: function(dataCell, scaleInfo) {
-            if(this._dataCellsByKey[dataCell.key] !== dataCell)
+            if(this._dataCellsByKey[dataCell.key] !== dataCell) {
                 throw def.error.argumentInvalid("dataCell", "Not present in this axis.");
+            }
 
             def.lazy(this, '_dataCellsScaleInfoByKey')[dataCell.key] = scaleInfo;
         },
@@ -319,8 +340,8 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
                 return this.domainData();
             }
 
-            var dataCell = dataCells[cellIndex],
-                partData = this.chart.partData(dataCell.dataPartValue);
+            var dataCell = dataCells[cellIndex];
+            var partData = this.chart.partData(dataCell.dataPartValue);
 
             return this._createDomainData(partData);
         },
@@ -344,7 +365,6 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
         },
 
         domainValues: function() {
-            // For discrete axes
             var domainValues = this._domainValues;
             if(!domainValues) domainValues = (this._calcDomainItems(), this._domainValues);
             return domainValues;

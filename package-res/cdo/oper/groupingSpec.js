@@ -7,16 +7,27 @@
 // received levelSpecs/dimSpecs are consistent with the given complexType and extensionComplexTypesMap.
 // The reason for this being like this might have to do it #ensure. Even so, there might be a way around it.
 
-def
-.space('cdo')
-.FlatteningMode =
-    def.set(
-        def.makeEnum([
-            'DfsPre', // Same grouping levels and dimensions, but all nodes are output at level 1
-            'DfsPost' // Idem, but in Dfs-Post order
-        ]),
-        // Add None with value 0
-        'None', 0);
+def.space('cdo').FlatteningMode =
+    def.makeEnum([
+        'SingleLevel', // A grouping spec flattened into a single level is obtained and only then the grouping operation is performed.
+        'DfsPre',      // The grouping spec is not changed.
+                       // All resulting nodes are flattened into a single level, in Depth-First-Search pre-order
+        'DfsPost'      // The grouping spec is not changed.
+                       // All resulting nodes are flattened into a single level, in Depth-First-Search post-order
+    ], {
+        // No flattening is performed before or after the grouping operation.
+        // The result of the grouping operation is a tree of data sets whose
+        // structure mirrors that of the grouping specification.
+        zero: 'None',
+        all:  'AllMask'
+    });
+
+/**
+ * The mask which includes both DFS flattening modes - those performed during the grouping operation.
+ * For internal use.
+ * @private
+ */
+cdo.FlatteningMode.Dfs = cdo.FlatteningMode.DfsPre | cdo.FlatteningMode.DfsPost;
 
 /**
  * Initializes a grouping specification.
@@ -129,9 +140,7 @@ def.type('cdo.GroupingSpec')
 
     _calcCacheKey: function(ka) {
         return [def.get(ka, 'flatteningMode') || this.flatteningMode,
-                def.get(ka, 'reverse'       ) || 'false',
-                def.get(ka, 'isSingleLevel' ) || this.isSingleLevel,
-                def.get(ka, 'rootLabel'     ) || this.rootLabel]
+                def.get(ka, 'rootLabel') || this.rootLabel]
                .join('#');
     },
 
@@ -171,28 +180,6 @@ def.type('cdo.GroupingSpec')
         }
     },
 
-    /**
-     * Obtains an enumerable of the contained dimension specifications.
-     *
-     * @type def.Query
-     */
-    dimensions: function() {
-        return def.query(this.levels).prop('dimensions').selectMany();
-    },
-
-    get allDimensions() {
-        return def.query(this.levels).prop('allDimensions').selectMany();
-    },
-
-    /**
-     * The names of the main dimensions of this grouping.
-     *
-     * @type {!string[]}
-     */
-    dimensionNames: function() {
-        return this._dimNames;
-    },
-
     get isNull() {
         return this.depth === 0;
     },
@@ -221,6 +208,29 @@ def.type('cdo.GroupingSpec')
         var d;
         return !this.isSingleDimension ||
                (!!(d = this.lastDimension) && d.dimensionType.isDiscrete);
+    },
+
+    // region Dimensions
+    /**
+     * Obtains an enumerable of the contained dimension specifications.
+     *
+     * @type def.Query
+     */
+    dimensions: function() {
+        return def.query(this.levels).prop('dimensions').selectMany();
+    },
+
+    allDimensions: function() {
+        return def.query(this.levels).prop('allDimensions').selectMany();
+    },
+
+    /**
+     * The names of the main dimensions of this grouping.
+     *
+     * @type {!string[]}
+     */
+    dimensionNames: function() {
+        return this._dimNames;
     },
 
     /**
@@ -276,6 +286,7 @@ def.type('cdo.GroupingSpec')
         var dt = this.lastDimensionType();
         return dt && dt.valueType;
     },
+    // endregion
 
     // region Ensure
     /**
@@ -286,7 +297,6 @@ def.type('cdo.GroupingSpec')
      * @param {boolean} [ka.isSingleLevel=false] Indicates that the grouping should have only a single level.
      * If that is not the case, all grouping levels are collapsed into a single level containing all dimensions.
      *
-     * @param {boolean} [ka.reverse=false] Indicates that each dimension's order should be reversed.
      * @param {string}  [ka.rootLabel] The label of the resulting root node.
      *
      * @type cdo.GroupingSpec
@@ -306,72 +316,59 @@ def.type('cdo.GroupingSpec')
     },
 
     _ensure: function(ka) {
-        var me = this;
-
-        if(def.get(ka, 'isSingleLevel') && !me.isSingleLevel) return me._singleLevelGrouping(ka);
-        if(def.get(ka, 'reverse')) return me._reverse(ka);
-
-        var flatteningMode = def.get(ka, 'flatteningMode') || me.flatteningMode,
-            rootLabel      = def.get(ka, 'rootLabel') || me.rootLabel;
-
-        if(flatteningMode !== me.flatteningMode || rootLabel !== me.rootLabel)
-            return new cdo.GroupingSpec(
-                me.levels, // Share Levels
-                me.complexType,
-                me.extensionComplexTypesMap,
-                {
-                    flatteningMode: flatteningMode,
-                    rootLabel:      rootLabel
-                });
-
-        return me;
+        return new cdo.GroupingSpec(
+            this.levels, // Share Levels
+            this.complexType,
+            this.extensionComplexTypesMap,
+            {
+                flatteningMode: def.get(ka, 'flatteningMode') || this.flatteningMode,
+                rootLabel:      def.get(ka, 'rootLabel')      || this.rootLabel
+            });
     },
 
     /**
      * Obtains a single-level version of this grouping specification.
      *
-     * @param {object} [ka] Keyword arguments
-     * @param {boolean} [ka.reverse=false] Indicates that each dimension's order should be reversed.
-     * @param {string} [ka.rootLabel] The label of the resulting root node.
-     * @type cdo.GroupingSpec
+     * @return {!cdo.GroupingSpec} A single-level grouping specification.
      */
-    _singleLevelGrouping: function(ka) {
-        var reverse = !!def.get(ka, 'reverse'),
-            dimSpecs = this .dimensions()
-                .select(function(dimSpec) {
-                    return reverse
-                        ? new cdo.GroupingDimensionSpec(dimSpec.name, !dimSpec.reverse, dimSpec.dimensionType)
-                        : dimSpec;
-                }),
-            levelSpec = new cdo.GroupingLevelSpec(dimSpecs, this.complexType, this.extensionComplexTypesMap);
+    toSingleLevel: function() {
 
-        return new cdo.GroupingSpec([levelSpec], this.complexType, this.extensionComplexTypesMap, {
-            flatteningMode: null, // turns into singleLevel
-            rootLabel:      def.get(ka, 'rootLabel') || this.rootLabel
-        });
+        if(this.isSingleLevel) {
+            return this;
+        }
+
+        var allDimSpecs = this.allDimensions().array();
+
+        var singleLevelSpec = new cdo.GroupingLevelSpec(allDimSpecs, this.complexType, this.extensionComplexTypesMap);
+
+        return new cdo.GroupingSpec(
+            [singleLevelSpec],
+            this.complexType,
+            this.extensionComplexTypesMap,
+            {
+                flatteningMode: cdo.FlatteningMode.SingleLevel,
+                rootLabel:      this.rootLabel
+            });
     },
 
     /**
-     * Obtains a reversed version of this grouping specification.
-     * @param {object} [ka] Keyword arguments
-     * @param {string} [ka.rootLabel] The label of the resulting root node.
-     * @type cdo.GroupingSpec
+     * Obtains a reversed version of this grouping specification,
+     * where every contained dimension has a negated `isReversed` property value.
+     *
+     * @return {!cdo.GroupingSpec} The reversed grouping specification.
      */
-    _reverse: function(ka) {
-        var levelSpecs = def.query(this.levels)
-            .select(function(levelSpec) {
-                var dimSpecs = def.query(levelSpec.dimensions)
-                        .select(function(dimSpec) {
-                            return new cdo.GroupingDimensionSpec(dimSpec.name, !dimSpec.reverse, dimSpec.dimensionType);
-                        });
+    reverse: function() {
 
-                return new cdo.GroupingLevelSpec(dimSpecs, this.complexType, this.extensionComplexTypesMap);
-            }, this);
+        var reversedLevelSpecs = this.levels.map(function(levelSpec) { return levelSpec.reverse(); });
 
-        return new cdo.GroupingSpec(levelSpecs, this.complexType, this.extensionComplexTypesMap, {
-            flatteningMode: def.get(ka, 'flatteningMode') || this.flatteningMode,
-            rootLabel:      def.get(ka, 'rootLabel'     ) || this.rootLabel
-        });
+        return new cdo.GroupingSpec(
+            reversedLevelSpecs,
+            this.complexType,
+            this.extensionComplexTypesMap,
+            {
+                flatteningMode: this.flatteningMode,
+                rootLabel:      this.rootLabel
+            });
     },
     // endregion
 
@@ -486,6 +483,18 @@ def.type('cdo.GroupingLevelSpec')
         return {atoms: atoms, dimNames: dimNames};
     },
 
+    /**
+     * Obtains a reversed version of this grouping level specification,
+     * where every contained dimension has a negated `isReversed` property value.
+     *
+     * @return {!cdo.GroupingLevelSpec} The reversed grouping level specification.
+     */
+    reverse: function() {
+        var reversedDimSpecs = this.allDimensions.map(function(dimSpec) { return dimSpec.reverse(); });
+
+        return new cdo.GroupingLevelSpec(reversedDimSpecs, this.complexType, this.extensionComplexTypesMap);
+    },
+
     toString: function() {
         return def.query(this.allDimensions).select(String).array().join('|');
     }
@@ -496,7 +505,7 @@ def.type('cdo.GroupingLevelSpec')
  * @class
  */
 def.type('cdo.GroupingDimensionSpec')
-.init(function(fullName, reverse, dimensionType) {
+.init(function(fullName, isReversed, dimensionType) {
 
     // e.g. "valueRole.dim"
     this.fullName = fullName;
@@ -508,9 +517,9 @@ def.type('cdo.GroupingDimensionSpec')
     this.dataSetName = (m && m[1]) || null; // e.g. "valueRole"
     this.name = m ? m[2] : fullName;        // e.g. "dim"
 
-    this.reverse = !!reverse;
+    this.isReversed = !!isReversed;
 
-    this.key = fullName + ":" + (reverse ? '0' : '1');
+    this.key = fullName + ":" + (isReversed ? '0' : '1');
 
     this.dimensionType = null;
     this.mainAtomComparer = null;
@@ -558,7 +567,7 @@ def.type('cdo.GroupingDimensionSpec')
      */
     bind: function(dimensionType) {
         this.dimensionType = dimensionType || def.fail.argumentRequired('dimensionType');
-        this.mainAtomComparer = dimensionType.atomComparer(this.reverse);
+        this.mainAtomComparer = dimensionType.atomComparer(this.isReversed);
 
         return this;
     },
@@ -571,13 +580,23 @@ def.type('cdo.GroupingDimensionSpec')
         }
 
         // Use datum source order
-        return this.reverse ? (datumB.id - datumA.id) : (datumA.id - datumB.id);
+        return this.isReversed ? (datumB.id - datumA.id) : (datumA.id - datumB.id);
+    },
+
+    /**
+     * Obtains a reversed version of this grouping dimensions specification,
+     * where its `isReversed` property value has been negated.
+     *
+     * @return {!cdo.GroupingDimensionSpec} The reversed grouping dimension specification.
+     */
+    reverse: function() {
+        return new cdo.GroupingDimensionSpec(this.name, !this.isReversed, this.dimensionType);
     },
 
     toString: function() {
         return this.fullName +
             (this.dimensionType ? (' ("' + this.dimensionType.label + '")') : '') +
-            (this.reverse       ? ' desc'                                   : '');
+            (this.isReversed    ? ' desc'                                   : '');
     }
 });
 
@@ -646,9 +665,9 @@ function groupSpec_parseGroupingLevel(groupLevelText, complexType, extensionComp
                                 [dimSpecText]);
             var name = match[1];
             var order = (match[2] || '').toLowerCase();
-            var reverse = order === 'desc';
+            var isReversed = order === 'desc';
 
-            var dimSpec = new cdo.GroupingDimensionSpec(name, reverse);
+            var dimSpec = new cdo.GroupingDimensionSpec(name, isReversed);
             if(complexType) {
                 dimSpec.bindComplexType(complexType, extensionComplexTypesMap);
             }

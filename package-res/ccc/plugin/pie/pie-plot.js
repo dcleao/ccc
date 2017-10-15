@@ -56,7 +56,7 @@ def('pvc.visual.PiePlot', pvc.visual.Plot.extend({
         },
 
         /** @override */
-        createVisibleData: function(baseData, ka) {
+        createData: function(baseData, ka) {
             return this.visualRoles.category.flatten(baseData, ka);
         },
 

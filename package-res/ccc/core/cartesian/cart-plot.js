@@ -23,8 +23,13 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
 
             this.base();
 
-            var roleSpec = this._getSeriesRoleSpec();
-            if(roleSpec) this._addVisualRole('series', roleSpec);
+            // This role is always defined and bound (isRequired, autoCreateDimension).
+            this._addVisualRole('series', {
+                isRequired: true,
+                defaultDimension: 'series*',
+                autoCreateDimension: true,
+                requireIsDiscrete: true
+            });
         },
 
         /** @override */
@@ -32,17 +37,13 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
             return {isRequired: true, defaultDimension: 'color*', defaultSourceRole: 'series', requireIsDiscrete: true};
         },
 
-        _getSeriesRoleSpec: function() {
-            return {isRequired: true, defaultDimension: 'series*', autoCreateDimension: true, requireIsDiscrete: true};
-        },
-
         /** @override */
         _initDataCells: function() {
 
             this.base();
 
-            var baseRole   = this._getBaseRole(),
-                orthoRoles = this._getOrthoRoles();
+            var baseRole   = this._getBaseRole();
+            var orthoRoles = this._getOrthoRoles();
 
             if(baseRole)
                 this._addDataCell(new pvc.visual.DataCell(
@@ -58,7 +59,7 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
                     nullInterpolationMode = this.option('NullInterpolationMode'),
                     trend = this.option('Trend');
 
-                orthoRoles.forEach(function (orthoRole) {
+                orthoRoles.forEach(function(orthoRole) {
                     this._addDataCell(new pvc.visual.CartesianOrthoDataCell(
                         this,
                         /*axisType*/'ortho',
@@ -71,9 +72,13 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
             }
         },
 
+        _getBaseRole: function() {},
+
         _getOrthoRoles: function() {},
 
-        _getBaseRole: function() {}
+        createData: function(baseData, ka) {
+            return this.visualRoles.series.flatten(baseData, ka);
+        },
     },
 
     options: {

@@ -2,15 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-def
-.space('pvc.visual')
-.TraversalMode = def.makeEnum([
-    'Tree',           // No flattening.
-    'FlattenLeafs',   // Flattened. Transformed to a new grouping with all dimensions in a single grouping level.
-    'FlattenDfsPre',  // Flattened. Transformed to a grouping having the same grouping levels and dimensions,
-                      //   but where all nodes are output, in Dfs-pre order, at level 1.
-    'FlattenDfsPost'  // Flattened. Idem, but in Dfs-Post order.
-], {all: 'AllMask'});
+var visualRole_flatten_select_keyArgs = ['reverse', 'visible', 'selected', 'isNull', 'where', 'whereKey'];
 
 /**
  * Initializes a visual role.
@@ -74,8 +66,8 @@ def
  * Indicates if a dimension with the default name (the first level of, when a group name),
  * should be created when the role is required and it has not been read by a translator.
  *
- * @param {pvc.visual.TraversalMode} [keyArgs.traversalMode=pvc.visual.TraversalMode.FlattenLeafs]
- * Indicates the type of data nodes traversal that the role performs.
+ * @param {cdo.FlatteningMode} [keyArgs.flatteningMode=cdo.FlatteningMode.SingleLevel]
+ * Indicates the type of data set flattening that the role performs.
  */
 def
 .type('pvc.visual.Role')
@@ -93,8 +85,10 @@ def
     this._legend = {visible: true};
     this.dimensionDefaults = def.get(keyArgs, 'dimensionDefaults') || {};
 
-    if(def.get(keyArgs, 'isRequired', false)) this.isRequired = true;
-    if(def.get(keyArgs, 'autoCreateDimension', false)) this.autoCreateDimension = true;
+    this._isReversed = false;
+
+    this.isRequired = !!def.get(keyArgs, 'isRequired', false);
+    this.autoCreateDimension = !!def.get(keyArgs, 'autoCreateDimension', false);
 
     var defaultSourceRoleName = def.get(keyArgs, 'defaultSourceRole');
     if(defaultSourceRoleName) {
@@ -106,21 +100,20 @@ def
     var defaultDimensionName = def.get(keyArgs, 'defaultDimension');
     if(defaultDimensionName) {
         this.defaultDimensionName = defaultDimensionName;
+
         var match = defaultDimensionName.match(/^(.*?)(\*)?$/);
         this.defaultDimensionGroup  =   match[1];
         this.defaultDimensionGreedy = !!match[2];
     }
 
-    var rootLabel = def.get(keyArgs, 'rootLabel');
-    if(rootLabel != null) this.rootLabel = rootLabel;
+    this.rootLabel = def.get(keyArgs, 'rootLabel');
 
-    var traversalModes = def.get(keyArgs, 'traversalModes');
-    if(traversalModes) this.setTraversalModes(traversalModes);
+    this.flatteningModes = def.get(keyArgs, 'flatteningModes');
+    this.flatteningMode = def.get(keyArgs, 'flatteningMode');
 
-    var traversalMode = def.get(keyArgs, 'traversalMode');
-    if(traversalMode) this.setTraversalMode(traversalMode);
-
-    if(!defaultDimensionName && this.autoCreateDimension) throw def.error.argumentRequired('defaultDimension');
+    if(!defaultDimensionName && this.autoCreateDimension) {
+        throw def.error.argumentRequired('defaultDimension');
+    }
 
     var requireSingleDimension = def.get(keyArgs, 'requireSingleDimension'),
         requireIsDiscrete      = def.get(keyArgs, 'requireIsDiscrete'), // isSingleDiscrete
@@ -129,7 +122,9 @@ def
     // If only continuous dimensions are accepted,
     // then *default* requireSingleDimension to true.
     // Otherwise, default to false.
-    if(requireSingleDimension == null) requireSingleDimension = requireContinuous;
+    if(requireSingleDimension == null) {
+        requireSingleDimension = requireContinuous;
+    }
 
     if(!requireIsDiscrete) {
         if(def.get(keyArgs, 'isMeasure')) {
@@ -157,9 +152,11 @@ def
         this.requireIsDiscrete =
         this.dimensionDefaults.isDiscrete = !!requireIsDiscrete;
     }
+
+    this._sourceRole = null;
+    this.grouping = null;
 })
 .add(/** @lends pvc.visual.Role# */{
-    isRequired: false,
     requireSingleDimension: false,
     valueType: null,
     requireIsDiscrete: null,
@@ -170,14 +167,7 @@ def
     defaultDimensionName:  null,
     defaultDimensionGroup: null,
     defaultDimensionGreedy: null,
-    grouping: null,
-    traversalMode:  pvc.visual.TraversalMode.FlattenLeafs,
-    traversalModes: pvc.visual.TraversalMode.AllMask, // possible values
-    rootLabel: '',
-    autoCreateDimension: false,
-    isReversed: false,
     label: null,
-    sourceRole: null,
     _rootSourceRole: undefined,
     _legend: null,
 
@@ -217,6 +207,7 @@ def
         return this._legend;
     },
 
+    // region Dimensions Information
     /**
      * Obtains the first dimension type that is bound to the role.
      * @type cdo.DimensionType
@@ -270,6 +261,7 @@ def
         var g = this.grouping;
         return g && g.lastDimensionValueType();
     },
+    // endregion
 
     get isMeasureEffective() {
         if(!this.isMeasure) return false;
@@ -282,19 +274,25 @@ def
     },
 
     /**
-     * Sets the visual role that is the source of this one.
-     * @param {pvc.visual.Role} sourceRole The source visual role.
+     * Gets or sets the visual role that is the source of this one.
+     *
+     * @type {pvc.visual.Role}
      */
-    setSourceRole: function(sourceRole) {
-        this.sourceRole = sourceRole;
+    get sourceRole() {
+        return this._sourceRole;
+    },
+
+    set sourceRole(value) {
+        this._sourceRole = value;
         this._rootSourceRole = undefined;
     },
 
     /**
-     * Gets the visual role that is the root source of this one.
-     * @return {pvc.visual.Role} The root source visual role or <code>null</code>.
+     * Gets the visual role that is the root source of this one, if any, or <code>null</code>, if none.
+     *
+     * @type {pvc.visual.Role}
      */
-    getRootSourceRole: function() {
+    get rootSourceRole() {
         var r = this._rootSourceRole, r2;
         if(r === undefined) {
             r = this.sourceRole || null;
@@ -304,46 +302,75 @@ def
         return r;
     },
 
-    setIsReversed: function(isReversed) {
-        if(!isReversed) delete this.isReversed;
-        else            this.isReversed = true;
+    get isReversed() {
+        return this._isReversed;
     },
 
-    setTraversalMode: function(travMode) {
-        var T = pvc.visual.TraversalMode;
-
-        travMode = def.nullyTo(travMode, T.FlattenLeafs);
-
-        if(travMode !== this.traversalMode) {
-            if(!(travMode & this.traversalModes))
-                throw def.error.argumentInvalid("traversalMode", "Value is not currently valid.");
-
-            if(travMode === T.FlattenLeafs) // default value
-                delete this.traversalMode;
-            else
-                this.traversalMode = travMode;
-        }
+    set isReserved(value) {
+        this._isReversed = !!value;
     },
 
-    setTraversalModes: function(travModes) {
+    _flatteningModes: cdo.FlatteningMode.AllMask,
+
+    get flatteningModes() {
+        return this._flatteningModes;
+    },
+
+    set flatteningModes(value) {
+
+        value = def.nullyTo(value, cdo.FlatteningMode.AllMask);
+
         // Ensure we go into a subset of the previous value.
-        travModes = (this.traversalModes &= travModes);
+        if(this._flatteningModes !== value) {
 
-        if(!travModes) throw def.error.argumentInvalid("traversalModes", "Cannot become empty.");
+            value = this._flatteningModes & value;
+            if(!value) {
+                throw def.error.argumentInvalid("flatteningModes", "Cannot become empty.");
+            }
 
-        // If the current traversal mode is not valid,
-        // choose the first one (least-significant bit one).
-        var travMode = this.traversalMode & travModes;
-        if(!travMode) {
-            travMode = travModes & (-travModes);
-            this.setTraversalMode(travMode);
+            this._flatteningModes = value;
+
+            // If the current flattening mode is not valid,
+            // choose the first one (least-significant bit one).
+            var flatMode = this.flatteningMode & value;
+            if(!flatMode) {
+                flatMode = value & (-value);
+                this.flatteningMode = flatMode;
+            }
         }
     },
 
-    setRootLabel: function(rootLabel) {
-        if(rootLabel !== this.rootLabel) {
-            if(!rootLabel) delete this.rootLabel; // default value shows through
-            else           this.rootLabel = rootLabel;
+    _flatteningMode: cdo.FlatteningMode.SingleLevel,
+
+    get flatteningMode() {
+        return this._flatteningMode;
+    },
+
+    set flatteningMode(value) {
+
+        if(value != null && value !== this._flatteningMode) {
+
+            if(!(value & this.flatteningModes)) {
+                throw def.error.argumentInvalid("flatteningMode", "Value is not currently valid.");
+            }
+
+            this._flatteningMode = value;
+        }
+    },
+
+    get rootLabel() {
+        return this._rootLabel;
+    },
+
+    set rootLabel(value) {
+
+        if(!value) {
+            value = "";
+        }
+
+        if(value !== this._rootLabel) {
+
+            this._rootLabel = value;
 
             if(this.grouping) {
                 this._setGrouping(this.grouping);
@@ -353,72 +380,78 @@ def
 
     // region Operations
     /**
-     * Applies this role's grouping to the specified data
-     * after ensuring the grouping is of a certain type.
+     * Gets a data set that is the result of grouping the
+     * given data set according to this visual role's flattened grouping specification.
      *
-     * @param {cdo.Data} data The data on which to apply the operation.
-     * @param {object} [keyArgs] Keyword arguments.
-     * ...
+     * @param {!cdo.Data} data - The data on which to apply the operation.
      *
-     * @type cdo.Data
+     * @param {object} [keyArgs] - Keyword arguments.
+     * @param {boolean} [keyArgs.reverse = false] Reverses the sorting order of the groupings' dimensions.
+     * @param {boolean} [keyArgs.isNull = null] - Only considers datums with the specified isNull attribute.
+     * @param {boolean} [keyArgs.visible = null] - Only considers datums that have the specified visible state.
+     * @param {boolean} [keyArgs.selected = null] - Only considers datums that have the specified selected state.
+     * @param {function} [keyArgs.where] - A datum predicate.
+     * @param {string} [keyArgs.whereKey] - A key for the specified datum predicate.
+     * If <tt>keyArgs.where</tt> is specified and this argument is not, the results will not be cached.
      *
+     * @return {cdo.Data} A linked data.
+     *
+     * @see pvc.visual.Role#flattenedGrouping
+     * @see cdo.Data#groupBy
      * @see pvc.visual.Axis#domainGroupOperator
      */
     flatten: function(data, keyArgs) {
 
-        var grouping = this.flattenedGrouping(keyArgs) || def.fail.operationInvalid("Role is unbound.");
+        keyArgs = def.whiteList(keyArgs, visualRole_flatten_select_keyArgs);
+
+        return data.groupBy(this.flattenedGrouping(keyArgs), keyArgs);
+    },
+
+    /**
+     * Gets a flattened version of this visual role's grouping specification.
+     *
+     * @return {!cdo.GroupingSpec} A grouping specification.
+     */
+    flattenedGrouping: function() {
+
+        var grouping = this.grouping || def.fail.operationInvalid("Role is unbound.");
+
+        grouping = grouping.ensure({flatteningMode: this.flatteningMode});
+
+        return grouping;
+    },
+
+    /**
+     * Gets a data set that is the result of grouping the
+     * given data set according to this visual role's grouping specification.
+     *
+     * Note that the visual role's {@link #flatteningMode} is not considered.
+     * It is only applied when calling {@link #flatten}.
+     *
+     * @param {!cdo.Data} data - The data on which to apply the operation.
+     *
+     * @param {object} [keyArgs] - Keyword arguments.
+     * @param {boolean} [keyArgs.reverse = false] Reverses the sorting order of the groupings' dimensions.
+     * @param {boolean} [keyArgs.isNull = null] - Only considers datums with the specified isNull attribute.
+     * @param {boolean} [keyArgs.visible = null] - Only considers datums that have the specified visible state.
+     * @param {boolean} [keyArgs.selected = null] - Only considers datums that have the specified selected state.
+     * @param {function} [keyArgs.where] - A datum predicate.
+     * @param {string} [keyArgs.whereKey] - A key for the specified datum predicate.
+     * If <tt>keyArgs.where</tt> is specified and this argument is not, the results will not be cached.
+     *
+     * @return {cdo.Data} A linked data.
+     *
+     * @see cdo.Data#groupBy
+     * @see pvc.visual.Axis#domainGroupOperator
+     * @see pvc.visual.Role#flatten
+     */
+    select: function(data, keyArgs) {
+
+        var grouping = this.grouping || def.fail.operationInvalid("Role is unbound.");
+
+        keyArgs = def.whiteList(keyArgs, visualRole_flatten_select_keyArgs);
 
         return data.groupBy(grouping, keyArgs);
-    },
-
-    flattenedGrouping: function(keyArgs) {
-        var grouping = this.grouping;
-        if(grouping) {
-            keyArgs = keyArgs ? Object.create(keyArgs) : {};
-
-            var flatMode = keyArgs.flatteningMode;
-            if(flatMode == null) {
-                keyArgs.flatteningMode = flatMode = this._flatteningMode();
-            }
-
-            if((flatMode === cdo.FlatteningMode.None) && keyArgs.isSingleLevel == null) {
-                keyArgs.isSingleLevel = true;
-            }
-
-            return grouping.ensure(keyArgs);
-        }
-    },
-
-    _flatteningMode: function() {
-        var Trav = pvc.visual.TraversalMode;
-        var Flat = cdo.FlatteningMode;
-
-        // This seems to be the only practical use of the this.traversalMode property.
-
-        switch(this.traversalMode) {
-            case Trav.FlattenDfsPre:  return Flat.DfsPre;
-            case Trav.FlattenDfsPost: return Flat.DfsPost;
-        }
-
-        // case Trav.FlattenLeafs:
-        // case Trav.Tree:
-
-        // The possible value Tree of this.traversalMode  is never distinguished from single level...
-        // It even looks like that in #flattenedGrouping(),
-        // when here Flat.None is returned, the default value for isSingleLevel is true,
-        // ignoring the distinction between Tree and FlattenLeafs (single level)...
-        // In practice, ignoring the value Tree and taking it always to mean FlattenLeafs.
-
-        return Flat.None;
-    },
-
-    // @see pvc.visual.Axis#domainGroupOperator
-    select: function(data, keyArgs) {
-        var grouping = this.grouping;
-        if(grouping) {
-            def.setUDefaults(keyArgs, 'flatteningMode', cdo.FlatteningMode.None);
-            return data.groupBy(grouping.ensure(keyArgs), keyArgs);
-        }
     },
 
     view: function(complex) {
@@ -454,7 +487,7 @@ def
     /**
      * Gets the data set of bound dimensions of a measure visual role.
      *
-     * This data set contains one datum per dimension that bound to this visual role.
+     * This data set contains one datum per dimension that is bound to this visual role.
      *
      * While the visual role is not bound, the returned data-set will not contain any datums.
      *
@@ -606,10 +639,15 @@ def
     // Called when groupingSpec is set or when rootLabel is changed.
     _setGrouping: function(groupingSpec) {
 
-        this.grouping = groupingSpec.ensure({
-            reverse:   this.isReversed,
-            rootLabel: this.rootLabel
-        });
+        // flatteningMode is only reflected on a derived grouping when calling flatten,
+        // but not when calling select.
+        groupingSpec = groupingSpec.ensure({rootLabel: this.rootLabel});
+
+        if(this.isReversed) {
+            groupingSpec = groupingSpec.reverse();
+        }
+
+        this.grouping = groupingSpec;
     }
     // endregion
 })

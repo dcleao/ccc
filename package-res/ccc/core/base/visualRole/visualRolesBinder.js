@@ -240,11 +240,11 @@ pvc.visual.rolesBinder = function() {
     function configureRole(role, opts) {
         var parsed = pvc.visual.Role.readConfig(opts, role.name, context);
 
-        if(parsed.isReversed) role.setIsReversed(true);
+        if(parsed.isReversed) role.isReserved = true;
         if(parsed.legend != null) role.legend(parsed.legend);
 
         if(parsed.source) {
-            role.setSourceRole(parsed.source);
+            role.sourceRole = parsed.source;
             addUnboundSourcedRole(role);
             return true;
         }
@@ -275,7 +275,7 @@ pvc.visual.rolesBinder = function() {
         var isSecondaryRole = mainRole !== role;
 
         if(isSecondaryRole && role.canHaveSource(mainRole)) {
-            role.setSourceRole(mainRole);
+            role.sourceRole = mainRole;
             addUnboundSourcedRole(role);
         }
     }
@@ -296,7 +296,7 @@ pvc.visual.rolesBinder = function() {
             visRoleBinder_assertUnboundRoleIsOptional(role); // throws if required
         } else {
 
-            // role.setSourceRole(null); // if any
+            // role.sourceRole = null; // if any
 
             // NOTE: the existence of extension dimensions is validated in the bind phase.
             grouping.dimensionNames().forEach(function(mainDimName) {
@@ -370,9 +370,9 @@ pvc.visual.rolesBinder = function() {
         if(source) {
             var sourcePreGrouping = tryPreBindSourcedRoleRecursive(source, visited);
             if(sourcePreGrouping) {
-                // toggle sourced role isReversed.
                 if(source.isReversed) {
-                    role.setIsReversed(!role.isReversed);
+                    // toggle sourced role isReversed.
+                    role.isReserved = !role.isReversed;
                 }
 
                 role.preBind(sourcePreGrouping);
@@ -501,7 +501,7 @@ pvc.visual.rolesBinder = function() {
         if(role.defaultSourceRoleName) {
             var source = context(role.defaultSourceRoleName);
             if(source) {
-                role.setSourceRole(source);
+                role.sourceRole = source;
                 return addUnboundSourcedRole(role);
             }
         }
@@ -522,7 +522,7 @@ pvc.visual.rolesBinder = function() {
         // Throws if role is required
         visRoleBinder_assertUnboundRoleIsOptional(role); // throws if required
 
-        role.setSourceRole(null); // if any
+        role.sourceRole = null; // if any
     }
     // endregion
 

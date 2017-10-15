@@ -514,60 +514,65 @@ pvc.BaseChart
 
     // --------------------
 
-    /*
-     * Obtains the chart's visible data
-     * grouped according to the charts "main grouping".
+    /**
+     * Gets the visible data set of the chart.
      *
-     * The chart's main grouping is that of its main plot.
+     * The chart's data set is that of its main plot.
      *
-     * @param {object} [ka=null] Optional keyword arguments object.
-     * @param {boolean} [ka.ignoreNulls=true] Indicates that null datums should be ignored.
-     * Only takes effect if the global option {@link pvc.options.charts.Chart#ignoreNulls} is false.
-     * @param {boolean} [ka.inverted=false] Indicates that the inverted data grouping is desired.
-     * @param {cdo.Data} [ka.baseData] The base data to use. By default the chart's {@link #data} is used.
+     * @param {Object} [ka] - Optional keyword arguments object.
+     * @param {boolean} [ka.ignoreNulls = true] - Indicates that null datums should be ignored.
+     *   Only takes effect if the global option {@link pvc.options.charts.Chart#ignoreNulls} is false.
+     * @param {boolean} [ka.inverted = false] - Indicates that an inverted data grouping should be used.
+     * @param {cdo.Data} [ka.baseData] - The base data to use. By default the chart's {@link #data} is used.
      *
-     * @return {cdo.Data}
+     * @return {!cdo.Data} The visible data set.
      */
     visibleData: function(ka) {
+
         var mainPlot = this.plots.main || def.fail.operationInvalid("There is no main plot defined.");
 
         return this.visiblePlotData(mainPlot, ka);
     },
 
     /**
-     * Gets the visible data for a given plot having this chart's `data` as base data.
+     * Gets the visible data set for a given plot, having this chart's `data` as base data.
      *
      * @param {!pvc.visual.Plot} plot - The plot whose visible data is requested.
      *
-     * @param {Object} [ka=null] Optional keyword arguments object.
-     * @param {boolean} [ka.ignoreNulls=true] Indicates that null datums should be ignored.
-     * Only takes effect if the global option {@link pvc.options.charts.Chart#ignoreNulls} is false.
-     * @param {boolean} [ka.inverted=false] Indicates that the inverted data grouping is desired.
-     * @param {cdo.Data} [ka.baseData] The base data to use. By default the chart's {@link #data} is used.
+     * @param {Object} [ka] - Optional keyword arguments object.
+     * @param {boolean} [ka.ignoreNulls=true] - Indicates that null datums should be ignored.
+     *   Only takes effect if the global option {@link pvc.options.charts.Chart#ignoreNulls} is false.
+     * @param {boolean} [ka.inverted=false] - Indicates that an inverted data grouping should be used.
+     * @param {cdo.Data} [ka.baseData] - The base data to use. By default the chart's {@link #data} is used.
      *
-     * @return {!cdo.Data} The visible data.
+     * @return {!cdo.Data} The visible data set.
      */
     visiblePlotData: function(plot, ka) {
 
-        var baseData = def.get(ka, 'baseData') || this.data;
         var rootChart = this.root;
 
-        // Normalize values for the cache key.
-        var inverted    = !!def.get(ka, 'inverted', false),
-            ignoreNulls = !!(rootChart.options.ignoreNulls || def.get(ka, 'ignoreNulls', true)),
+        var baseData = def.get(ka, 'baseData') || this.data;
 
-            key = [plot.id, baseData.id, inverted, ignoreNulls].join("|"),
-            cache = def.lazy(rootChart, '_visibleDataCache'),
-            data  = cache[key];
+        // Read and normalize values (for the cache key).
+        var inverted = !!def.get(ka, 'inverted', false);
+        var ignoreNulls = !!(rootChart.options.ignoreNulls || def.get(ka, 'ignoreNulls', true));
 
+        var cacheKey = [plot.id, baseData.id, inverted, ignoreNulls].join("|");
+        var cache = def.lazy(rootChart, '_visibleDataCache');
+
+        var data = cache[cacheKey];
         if(!data) {
             var partData = rootChart.partData(plot.dataPartValue, baseData);
 
-            ka = ka ? Object.create(ka) : {};
-            ka.visible = true;
-            ka.isNull  = ignoreNulls ? false : null;
-            data = cache[key] = plot.createVisibleData(partData, ka);
+            var ka2 = {
+                visible: true,
+                inverted: inverted,
+                isNull: ignoreNulls ? false : null
+            };
+
+            data = cache[cacheKey] = plot.createData(partData, ka2);
         }
+
         return data;
     },
 

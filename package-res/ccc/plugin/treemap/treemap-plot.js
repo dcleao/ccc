@@ -61,7 +61,7 @@ def('pvc.visual.TreemapPlot', pvc.visual.Plot.extend({
         },
 
         /** @override */
-        createVisibleData: function(baseData, ka) {
+        createData: function(baseData, ka) {
             return this.visualRoles.category.select(baseData, ka);
         },
 

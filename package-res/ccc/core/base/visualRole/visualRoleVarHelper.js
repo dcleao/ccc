@@ -15,7 +15,7 @@ def
     if(g) {
         this.role = role;
 
-        var rootSourceRole = role.getRootSourceRole();
+        var rootSourceRole = role.rootSourceRole;
         this.sourceRoleName = rootSourceRole && rootSourceRole.name;
         if(this.sourceRoleName === role.name) this.sourceRoleName = null;
 

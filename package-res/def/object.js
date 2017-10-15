@@ -355,6 +355,23 @@ def.copyOwn(def, /** @lends def */{
 
     isPropPrivate: function(p) {
         return !!p && p.charAt(0) === '_';
+    },
+
+    whiteList: function(o, ps) {
+        var o2 = null;
+        if(o) {
+            var L = ps.length;
+            var i = -1;
+            while(++i < L) {
+                var p = ps[i];
+                if(p in o) {
+                    if(o2 == null) o2 = {};
+                    o2[p] = o[p];
+                }
+            }
+        }
+
+        return o2;
     }
 });
 

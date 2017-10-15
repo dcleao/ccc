@@ -21,7 +21,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * of {@link cdo.TranslationOper#execute}.
      * </p>
      *
-     * @param {def.Query} atomz An enumerable of {@link map(string union(any || cdo.Atom))}.
+     * @param {!def.Query} atomz An enumerable of {@link map(string union(any || cdo.Atom))}.
      * @param {object} [keyArgs] Keyword arguments.
      * @param {function} [keyArgs.isNull] Predicate that indicates if a datum is considered null.
      * @param {function} [keyArgs.where] Filter function that approves or excludes each newly read datum.
@@ -30,9 +30,9 @@ cdo.Data.add(/** @lends cdo.Data# */{
         /*global cdo_assertIsOwner:true */
         cdo_assertIsOwner.call(this);
 
-        var whereFun  = def.get(keyArgs, 'where'),
+        var whereFun = def.get(keyArgs, 'where'),
             isNullFun = def.get(keyArgs, 'isNull'),
-            isAdditive     = def.get(keyArgs, 'isAdditive', false),
+            isAdditive = def.get(keyArgs, 'isAdditive', false),
             datums = def.query(atomz)
                 .select(function(atoms) {
                     var datum = new cdo.Datum(this, atoms);
@@ -128,6 +128,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * This logic extends to all following grouping levels.
      * </p>
      *
+     * TODO: is this correct? Null "categories" are excluded?
      * <p>
      * Datums with null atoms on a grouping level dimension are excluded.
      * </p>
@@ -138,7 +139,13 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * </pre>
      *
      * @param {Object} [keyArgs] Keyword arguments object.
-     * See additional keyword arguments in {@link cdo.GroupingOper}
+     * @param {boolean} [keyArgs.inverted = false] - Inverts the given grouping specification array.
+     * @param {boolean} [keyArgs.isNull = null] - Only considers datums with the specified isNull attribute.
+     * @param {boolean} [keyArgs.visible = null] - Only considers datums that have the specified visible state.
+     * @param {boolean} [keyArgs.selected = null] - Only considers datums that have the specified selected state.
+     * @param {function} [keyArgs.where] - A datum predicate.
+     * @param {string} [keyArgs.whereKey] - A key for the specified datum predicate.
+     * If <tt>keyArgs.where</tt> is specified and this argument is not, the results will not be cached.
      *
      * @see #where
      * @see cdo.GroupingLevelSpec
@@ -890,6 +897,8 @@ function data_wherePredicate(querySpec, keyArgs) {
 
         return wherePredicate;
     }
+
+    return null;
 }
 
 cdo.querySpecPredicate = cdo_querySpecPredicate;

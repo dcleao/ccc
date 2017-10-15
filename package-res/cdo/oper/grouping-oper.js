@@ -18,13 +18,11 @@
  *
  * @param {object} [keyArgs] Keyword arguments.
  * See {@link cdo.DataOper} for any additional arguments.
- *
- * @param {boolean} [keyArgs.isNull=null]
- *      Only considers datums with the specified isNull attribute.
- * @param {boolean} [keyArgs.visible=null]
- *      Only considers datums that have the specified visible state.
- * @param {boolean} [keyArgs.selected=null]
- *      Only considers datums that have the specified selected state.
+ * @param {boolean} [keyArgs.reverse=false] Reverts the sorting order of the dimensions of the given grouping specifications.
+ * @param {boolean} [keyArgs.inverted=false] Inverts the given grouping specification array.
+ * @param {boolean} [keyArgs.isNull=null] Only considers datums with the specified isNull attribute.
+ * @param {boolean} [keyArgs.visible=null] Only considers datums that have the specified visible state.
+ * @param {boolean} [keyArgs.selected=null] Only considers datums that have the specified selected state.
  * @param {function} [keyArgs.where] A datum predicate.
  * @param {string} [keyArgs.whereKey] A key for the specified datum predicate.
  * If <tt>keyArgs.where</tt> is specified and this argument is not, the results will not be cached,
@@ -37,26 +35,37 @@ def.type('cdo.GroupingOper', cdo.DataOper)
 
     this.base(linkParent, keyArgs);
 
-    this._where    = def.get(keyArgs, 'where');
-    this._visible  = def.get(keyArgs, 'visible',  null);
-    this._selected = def.get(keyArgs, 'selected', null);
+    // Pre-filters
+    var where = def.get(keyArgs, 'where');
+    var whereKey = (where && def.get(keyArgs, 'whereKey')) || '';
+    var isVisible  = def.get(keyArgs, 'visible',  null);
+    var isSelected = def.get(keyArgs, 'selected', null);
 
-    var isNull = this._isNull = def.get(keyArgs, 'isNull', null);
+    this._preFilter = data_wherePredicate(null, {visible: isVisible, selected: isSelected, where: where});
 
-    this._postFilter = isNull != null ? function(d) { return d.isNull === isNull; } : null;
+    // Post-filters
+    // Must be performed last so that the order of results is not changed.
+    // TODO: explain why.
+    var isNull = def.get(keyArgs, 'isNull', null);
 
-    /* 'Where' predicate and its key */
-    var hasKey = this._selected == null; // TODO: Selected state changes do not yet invalidate cache...
-    var whereKey = '';
-    if(this._where) {
-        whereKey = def.get(keyArgs, 'whereKey');
-        if(!whereKey) {
-            hasKey = false;
-        }
+    this._postFilter = data_wherePredicate(null, {isNull: isNull});
+
+    // GroupingOper key
+    // When a grouping operation has no key, its results are not cached.
+    // TODO: Selected state changes do not yet invalidate cache...
+    var hasKey = isSelected == null && !(where && !whereKey);
+
+    var groupSpecKeys = hasKey ? [] : null;
+
+    groupingSpecs = def.array.as(groupingSpecs);
+    if(def.get(keyArgs, 'inverted', false)) {
+        groupingSpecs = groupingSpecs.slice().reverse();
     }
 
-    var keys = [];
-    this._groupSpecs = def.array.as(groupingSpecs).map(function(groupSpec) {
+    var reverse = def.get(keyArgs, 'reverse', false);
+
+    this._groupSpecs = groupingSpecs.map(function(groupSpec) {
+
         if(groupSpec instanceof cdo.GroupingSpec) {
             if(groupSpec.complexType !== linkParent.type)
                 throw def.error.argumentInvalid('groupingSpecText', "Invalid associated complex type.");
@@ -65,57 +74,57 @@ def.type('cdo.GroupingOper', cdo.DataOper)
             groupSpec = cdo.GroupingSpec.parse(groupSpec, linkParent.type);
         }
 
-        keys.push(groupSpec.key);
+        if(groupSpec.flatteningMode === cdo.FlatteningMode.SingleLevel) {
+            groupSpec = groupSpec.toSingleLevel();
+        }
+
+        if(reverse) {
+            groupSpec = groupSpec.reverse();
+        }
+
+        if(hasKey) {
+            groupSpecKeys.push(groupSpec.key);
+        }
 
         return groupSpec;
     });
 
-    /* Operation key */
     if(hasKey) {
-        this.key =
-            keys.join('!!') +
-            "$" +
-            [this._visible, this._isNull, whereKey].join('||'); // this._selected
+        this.key = groupSpecKeys.join('!!') + "$" + [isVisible, isNull, whereKey].join('||');
     }
 }).
-add(/** @lends cdo.GroupingOper */{
+add(/** @lends cdo.GroupingOper# */{
 
     /**
      * Performs the grouping operation.
      *
-     * @returns {cdo.Data} The resulting root data.
+     * @return {cdo.Data} The resulting root data.
      */
     execute: function() {
         // Setup a priori datum filters
 
-        /* globals data_whereState */
-        var datumsQuery = data_whereState(def.query(this._linkParent._datums), {
-                    visible:  this._visible,
-                    selected: this._selected,
-                    where:    this._where
-                }),
-            // Group datums
-            rootNode = this._group(datumsQuery);
+        var datums = this._linkParent._datums || [];
 
-        // Render node into a data
+        var datumsQuery = def.query(datums).where(this._preFilter);
+
+        // Group datums.
+        var rootNode = this._group(datumsQuery);
+
+        // Render resulting node into a new linked child data set.
         return this._generateData(rootNode, null, this._linkParent);
     },
 
-    executeAdd: function(rootData, datums) {
+    executeAdd: function(rootData, newDatums) {
 
-        /*global data_whereState: true */
-        var datumsQuery = data_whereState(def.query(datums), {
-                    visible:  this._visible,
-                    selected: this._selected,
-                    where:    this._where
-                }),
-            // Group new datums
-            rootNode = this._group(datumsQuery);
+        var newDatumsQuery = def.query(newDatums).where(this._preFilter);
 
-        // Render node into specified root data
-        this._generateData(rootNode, null, this._linkParent, rootData);
+        // Group new datums
+        var newRootNode = this._group(newDatumsQuery);
 
-        return rootNode.datums;
+        // Render resulting node into specified root data.
+        this._generateData(newRootNode, null, this._linkParent, rootData);
+
+        return newRootNode.datums;
     },
 
     _group: function(datumsQuery) {
@@ -128,7 +137,7 @@ add(/** @lends cdo.GroupingOper */{
                 .select(function(spec) {
                     var levelCount = spec.levels.length;
                     if(!levelCount) { return 0; }
-                    return spec.flatteningMode ? 1 : levelCount;
+                    return (spec.flatteningMode & cdo.FlatteningMode.Dfs) ? 1 : levelCount;
                 })
                 .reduce(def.add, 0),
 
@@ -146,7 +155,7 @@ add(/** @lends cdo.GroupingOper */{
 
     _groupSpecRecursive: function(groupParentNode, groupDatums, groupIndex) {
         var group = this._groupSpecs[groupIndex];
-        if(group.flatteningMode)
+        if(group.flatteningMode & cdo.FlatteningMode.Dfs)
             this._groupSpecRecursiveFlattened(groupParentNode, groupDatums, group, groupIndex);
         else
             this._groupSpecRecursiveNormal(groupParentNode, groupDatums, group, groupIndex);

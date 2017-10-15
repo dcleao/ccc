@@ -11,19 +11,14 @@
  */
 def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
     methods: /** @lends pvc.visual.CategoricalPlot# */{
-        /** @override */
-        createVisibleData: function(baseData, ka) {
-            var serRole = this.visualRoles.series,
-                serGrouping = serRole && serRole.flattenedGrouping(),
-                catGrouping = this.visualRole('category').flattenedGrouping();
 
-            return serGrouping
-                // <=> One multi-dimensional, two-levels data grouping
-                ? baseData.groupBy(def.get(ka, 'inverted', false)
-                        ? [serGrouping, catGrouping]
-                        : [catGrouping, serGrouping],
-                        ka)
-                : baseData.groupBy(catGrouping, ka);
+        /** @override */
+        createData: function(baseData, ka) {
+
+            return baseData.groupBy([
+                this.visualRoles.category.flattenedGrouping(),
+                this.visualRoles.series.flattenedGrouping()
+            ], ka);
         },
 
         /** @override */
@@ -39,7 +34,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
             this._addVisualRole('category', this._getCategoryRoleSpec());
         },
 
-        /** @virtual */
+        /** @overridable */
         _getCategoryRoleSpec: function() {
             return {
                 isRequired: true,
@@ -140,7 +135,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
          * summing negative and positive values.
          * Supports {@link #_getContinuousVisibleExtent}.
          *
-         * @virtual
+         * @overridable
          */
         _getStackedCategoryValueExtent: function(catGroup, valueDimName, useAbs) {
             var posSum = null, negSum = null;
@@ -172,7 +167,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
          * The default implementation performs a range "union" operation.
          *
          * Supports {@link #_getContinuousVisibleExtent}.
-         * @virtual
+         * @overridable
          */
         _reduceStackedCategoryValueExtent: function(chart, result, catRange, catGroup, valueAxis, valueDataCell) {
             return pvc.unionExtents(result, catRange);
