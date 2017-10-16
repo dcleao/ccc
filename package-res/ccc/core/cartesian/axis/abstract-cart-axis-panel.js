@@ -940,7 +940,8 @@ def
                 ka = {
                     visible: this.axis.domainVisibleOnly() ? true  : null,
                     isNull:  this.chart.options.ignoreNulls || this.axis.domainIgnoreNulls() ? false : null,
-                    reverse: orient == 'bottom' || orient == 'left'
+                    reverse: orient == 'bottom' || orient == 'left',
+                    extensionDataSetsMap: this.axis.boundDimensionsDataSetsMap
                 };
 
             data = this.axis.role.select(this.data, ka);

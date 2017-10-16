@@ -58,11 +58,16 @@ def
             // Column (Categories) and Row (series) datas
             // One multi-dimension single-level data grouping
             // There's no series axis...so something like what an axis would select must be repeated here.
+            // See Axis#boundDimensionsDataSetsMap.
             // Maintaining order requires basing the operation on a data with nulls still in it.
             // `data` may not have nulls anymore.
             axisSeriesDatas = me.visualRoles.series.flatten(
                 me.partData(),
-                {visible: true, isNull: me.chart.options.ignoreNulls ? false : null}).childNodes,
+                {
+                    visible: true,
+                    isNull: me.chart.options.ignoreNulls ? false : null,
+                    extensionDataSetsMap: this.chart.extensionDataSetsMap
+                }).childNodes,
 
             data = me.visibleData({ignoreNulls: false}),
 

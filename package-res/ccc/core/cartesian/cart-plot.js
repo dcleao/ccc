@@ -78,7 +78,7 @@ def('pvc.visual.CartesianPlot', pvc.visual.Plot.extend({
 
         createData: function(baseData, ka) {
             return this.visualRoles.series.flatten(baseData, ka);
-        },
+        }
     },
 
     options: {

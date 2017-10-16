@@ -505,7 +505,7 @@ def('pvc.visual.CartesianFocusWindowAxis', pvc.visual.OptionsBase.extend({
                 partData   = chart.partData(dataCell.dataPartValue),
                 domainData;
             if(isDiscrete) {
-                domainData = role.flatten(partData);
+                domainData = role.flatten(partData, {extensionDataSetsMap: axis.boundDimensionsDataSetsMap});
 
                 var dataBegin = domainData.child(me.begin),
                     dataEnd   = domainData.child(me.end  );

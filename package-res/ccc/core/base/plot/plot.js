@@ -179,17 +179,21 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
          */
         get boundDimensionsDataSetsMap() {
 
-            var dataSetsMap = null;
+            var dataSetsMap = this._boundDimensionsDataSetsMap;
+            if(!dataSetsMap) {
 
-            def.eachOwn(this.visualRoles, function(role) {
+                def.eachOwn(this.visualRoles, function(role) {
 
-                if(role.isBound() && role.isMeasureEffective) {
+                    if(role.isBound() && role.isMeasureEffective) {
 
-                    if(!dataSetsMap) dataSetsMap = {};
+                        if(!dataSetsMap) dataSetsMap = Object.create(null);
 
-                    dataSetsMap[role.boundDimensionsDataSetName] = role.boundDimensionsDataSet;
-                }
-            }, this);
+                        dataSetsMap[role.boundDimensionsDataSetName] = role.boundDimensionsDataSet;
+                    }
+                }, this);
+
+                this._boundDimensionsDataSetsMap = dataSetsMap;
+            }
 
             return dataSetsMap;
         },

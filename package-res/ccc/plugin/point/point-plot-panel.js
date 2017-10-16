@@ -132,13 +132,16 @@ def
             data = this.visibleData({ignoreNulls: false}), // shared "categ then series" grouped data
 
             // TODO: There's no series axis...so something like what an axis would select must be repeated here.
+            // See Axis#boundDimensionsDataSetsMap.
             // Maintaining order requires basing the operation on a data with nulls still in it.
             // `data` may not have nulls anymore.
-            axisSeriesDatas = this.visualRoles.series.isBound()
-                ? this.visualRoles.series
-                    .flatten(this.partData(), {visible: true, isNull: chart.options.ignoreNulls ? false : null})
-                    .childNodes
-                : [null], // null series
+            axisSeriesDatas = this.visualRoles.series
+                .flatten(this.partData(), {
+                    visible: true,
+                    isNull: chart.options.ignoreNulls ? false : null,
+                    extensionDataSetsMap: chart.extensionDataSetsMap
+                })
+                .childNodes,
 
             rootScene = this._buildScene(data, axisSeriesDatas, axisCategDatas),
             wrapper;

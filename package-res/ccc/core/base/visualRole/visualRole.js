@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var visualRole_flatten_select_keyArgs = ['reverse', 'visible', 'selected', 'isNull', 'where', 'whereKey'];
+var visualRole_flatten_select_keyArgs = [
+    'extensionDataSetsMap', 'reverse', 'visible', 'selected', 'isNull', 'where', 'whereKey'
+];
 
 /**
  * Initializes a visual role.
@@ -386,6 +388,11 @@ def
      * @param {!cdo.Data} data - The data on which to apply the operation.
      *
      * @param {object} [keyArgs] - Keyword arguments.
+     *
+     * @param {Object.<string, !cdo.Data>} [keyArgs.extensionDataSetsMap] - A data sets map containing a data set for
+     * each of the visual role's grouping specification's required extension complex types:
+     * {@link cdo.GroupingSpec#extensionComplexTypeNames}.
+     *
      * @param {boolean} [keyArgs.reverse = false] Reverses the sorting order of the groupings' dimensions.
      * @param {boolean} [keyArgs.isNull = null] - Only considers datums with the specified isNull attribute.
      * @param {boolean} [keyArgs.visible = null] - Only considers datums that have the specified visible state.
@@ -402,7 +409,11 @@ def
      */
     flatten: function(data, keyArgs) {
 
-        keyArgs = def.whiteList(keyArgs, visualRole_flatten_select_keyArgs);
+        keyArgs = def.whiteList(keyArgs, visualRole_flatten_select_keyArgs) || {};
+
+        if(!keyArgs.extensionDataSetsMap) {
+            keyArgs.extensionDataSetsMap = (this.plot || this.chart).boundDimensionsDataSetsMap;
+        }
 
         return data.groupBy(this.flattenedGrouping(keyArgs), keyArgs);
     },
@@ -431,6 +442,11 @@ def
      * @param {!cdo.Data} data - The data on which to apply the operation.
      *
      * @param {object} [keyArgs] - Keyword arguments.
+     *
+     * @param {Object.<string, !cdo.Data>} [keyArgs.extensionDataSetsMap] - A data sets map containing a data set for
+     * each of the visual role's grouping specification's required extension complex types:
+     * {@link cdo.GroupingSpec#extensionComplexTypeNames}.
+     *
      * @param {boolean} [keyArgs.reverse = false] Reverses the sorting order of the groupings' dimensions.
      * @param {boolean} [keyArgs.isNull = null] - Only considers datums with the specified isNull attribute.
      * @param {boolean} [keyArgs.visible = null] - Only considers datums that have the specified visible state.

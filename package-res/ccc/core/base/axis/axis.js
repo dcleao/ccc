@@ -145,6 +145,11 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
                         otherGrouping = this._getBoundRoleGrouping(otherRole);
 
+                        // NOTE: this notion of compatibility ignores how dimensions are organized into levels.
+                        // Is it because only the dimensions of leaf nodes matter?
+                        // When creating data items, only the grouping of the first role is used,
+                        // so that if the groupings of the other roles have a different structure, it is ignored...
+                        // Should we assert that these need to have the same levels/dimensions structure?
                         if(dimNamesKey !== String(otherGrouping.dimensionNames())) {
                             throw createError(
                                 "The visual roles '{0}', on axis '{1}', assumed discrete, should be bound to the same dimension list.", [
@@ -385,6 +390,58 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
         },
 
         /**
+         * Gets the map of bound dimensions data sets, indexed by data set name,
+         * or `null`, if none.
+         *
+         * This data sets map should be used in group by operations using this axis's role's grouping.
+         *
+         * @type {Object.<string,cdo.Data>}
+         * @readOnly
+         */
+        get boundDimensionsDataSetsMap() {
+
+            var dataSetsMap = null;
+
+            // If the axis has multiple data cells, their roles must, nonetheless, be compatible -
+            // have the same dimensions and flattening mode.
+            //
+            // If this axis is discrete, and one of these dimensions is a "measure discriminator dimension",
+            // then it must be the case that all plots with data cells on this axis share a measure visual role
+            // with the same name (for example, a visual role named "value", whose discriminator dimension is
+            // called "valueRole.dim").
+            //
+            // If
+            // "plotA.value" visual role is bound to "Sales" and "Qty" and
+            // "plotB.value" is bound to "UnitPrice",
+            // then the axis should provide a "valueRole" bound dimensions data set containing exactly:
+            // "Sales", "Qty", "UnitPrice".
+            //
+            // Because we know that the only shared discrete visual role that has an axis is "category",
+            // and that axis sharing, in this case, only happens when using overlapped plots,
+            // and that all overlapped plots share the same category axis,
+            // then we know that this set of dimensions is the set of all dimensions.
+            // Thus, the chart-level data set of bound dimensions is suitable.
+            //
+            // If this stops being the case, we'll need to create a filtered, linked data set,
+            // like those of visual roles.
+
+            if(this.isBound() && this.isDiscrete()) {
+                var dataSetNames = this.role.grouping.extensionComplexTypeNames;
+                if(dataSetNames) {
+                    var chartLevelBoundDimensionsDataSetsMap = this.chart.boundDimensionsDataSetsMap;
+
+                    dataSetsMap = Object.create(null);
+
+                    dataSetNames.forEach(function(dataSetName) {
+                        dataSetsMap[dataSetName] = chartLevelBoundDimensionsDataSetsMap[dataSetName];
+                    });
+                }
+            }
+
+            return dataSetsMap;
+        },
+
+        /**
          * Creates the data set from which domain data items are selected,
          * the values of which constitute the scale's domain.
          *
@@ -404,7 +461,8 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
             var keyArgs = {
                 visible: this.domainVisibleOnly() ? true : null,
                 isNull:  this.chart.options.ignoreNulls || this.domainIgnoreNulls() ? false : null,
-                reverse: this.domainReverse()
+                reverse: this.domainReverse(),
+                extensionDataSetsMap: this.boundDimensionsDataSetsMap
             };
 
             return this.role[this.domainGroupOperator()](baseData, keyArgs);

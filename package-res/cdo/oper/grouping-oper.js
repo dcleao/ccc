@@ -18,6 +18,12 @@
  *
  * @param {object} [keyArgs] Keyword arguments.
  * See {@link cdo.DataOper} for any additional arguments.
+ *
+ * @param {Object.<string, !cdo.Data>|Array.<Object.<string, !cdo.Data>>} [keyArgs.extensionDataSetsMap] -
+ * A data sets map, or an array of, one per provided grouping specification.
+ * Each map should contain a data set for each of its grouping specification's required extension complex types:
+ * {@link cdo.GroupingSpec#extensionComplexTypeNames}.
+ *
  * @param {boolean} [keyArgs.reverse=false] Reverts the sorting order of the dimensions of the given grouping specifications.
  * @param {boolean} [keyArgs.inverted=false] Inverts the given grouping specification array.
  * @param {boolean} [keyArgs.isNull=null] Only considers datums with the specified isNull attribute.
@@ -61,6 +67,8 @@ def.type('cdo.GroupingOper', cdo.DataOper)
     if(def.get(keyArgs, 'inverted', false)) {
         groupingSpecs = groupingSpecs.slice().reverse();
     }
+
+    this._extensionDataSetsMaps = def.array.as(def.get(keyArgs, 'extensionDataSetsMap') || []);
 
     var reverse = def.get(keyArgs, 'reverse', false);
 
@@ -154,37 +162,38 @@ add(/** @lends cdo.GroupingOper# */{
 
 
     _groupSpecRecursive: function(groupParentNode, groupDatums, groupIndex) {
-        var group = this._groupSpecs[groupIndex];
-        if(group.flatteningMode & cdo.FlatteningMode.Dfs)
-            this._groupSpecRecursiveFlattened(groupParentNode, groupDatums, group, groupIndex);
+
+        var groupSpec = this._groupSpecs[groupIndex];
+        if(groupSpec.flatteningMode & cdo.FlatteningMode.Dfs)
+            this._groupSpecRecursiveFlattened(groupParentNode, groupDatums, groupSpec, groupIndex);
         else
-            this._groupSpecRecursiveNormal(groupParentNode, groupDatums, group, groupIndex);
+            this._groupSpecRecursiveNormal(groupParentNode, groupDatums, groupSpec, groupIndex);
     },
 
-    _groupSpecRecursiveNormal: function(groupParentNode, groupDatums, group, groupIndex) {
-        var levels      = group.levels,
-            L           = levels.length,
+    _groupSpecRecursiveNormal: function(groupParentNode, groupDatums, groupSpec, groupIndex) {
+        var levelSpecs  = groupSpec.levels,
+            L           = levelSpecs.length,
             isLastGroup = (groupIndex === this._groupSpecs.length - 1);
 
-        if(groupParentNode.isRoot) groupParentNode.label = group.rootLabel;
+        if(groupParentNode.isRoot) groupParentNode.label = groupSpec.rootLabel;
 
         groupLevelRecursive.call(this, groupParentNode, groupDatums, 0);
 
         function groupLevelRecursive(levelParentNode, levelDatums, levelIndex) {
 
-            var level = levels[levelIndex],
+            var levelSpec = levelSpecs[levelIndex],
                 isLastLevel = (levelIndex === L - 1),
                 isLastLevelOfLastGroupSpec = isLastGroup && isLastLevel;
 
-            levelParentNode.groupSpec      = group;
-            levelParentNode.groupLevelSpec = level;
+            levelParentNode.groupSpec = groupSpec;
+            levelParentNode.groupLevelSpec = levelSpec;
 
             // ---------------
 
             var childNodes =
                 levelParentNode.children =
                 // Child nodes will not yet have been added to levelParentNode.
-                this._groupLevelDatums(level, levelParentNode, levelDatums, /*doFlatten*/false);
+                this._groupLevelDatums(levelSpec, levelParentNode, levelDatums, /*doFlatten*/false);
 
             for(var i = 0, C = childNodes.length ; i < C ; i++) {
                 var childNode = childNodes[i];

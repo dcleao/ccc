@@ -139,6 +139,12 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * </pre>
      *
      * @param {Object} [keyArgs] Keyword arguments object.
+     *
+     * @param {Object.<string, !cdo.Data>|Array.<Object.<string, !cdo.Data>>} [keyArgs.extensionDataSetsMap] -
+     * A data sets map, or an array of, one per provided grouping specification.
+     * Each map should contain a data set for each of its grouping specification's required extension complex types:
+     * {@link cdo.GroupingSpec#extensionComplexTypeNames}.
+     *
      * @param {boolean} [keyArgs.inverted = false] - Inverts the given grouping specification array.
      * @param {boolean} [keyArgs.isNull = null] - Only considers datums with the specified isNull attribute.
      * @param {boolean} [keyArgs.visible = null] - Only considers datums that have the specified visible state.

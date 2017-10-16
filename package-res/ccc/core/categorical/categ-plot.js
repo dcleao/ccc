@@ -15,10 +15,15 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
         /** @override */
         createData: function(baseData, ka) {
 
+            var boundDimensionsDataSetsMap = this.boundDimensionsDataSetsMap;
+
+            var ka2 = Object.create(ka);
+            ka2.extensionDataSetsMap = [boundDimensionsDataSetsMap, boundDimensionsDataSetsMap];
+
             return baseData.groupBy([
                 this.visualRoles.category.flattenedGrouping(),
                 this.visualRoles.series.flattenedGrouping()
-            ], ka);
+            ], ka2);
         },
 
         /** @override */
@@ -240,9 +245,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
                 // TODO: It is usually the case, but not certain, that the base axis'
                 // dataCell(s) span "all" data parts.
                 allCatDatas = xRole.flatten(baseData, {visible: true}).childNodes,
-                qVisibleSeries = serRole && serRole.isBound()
-                    ? serRole.flatten(partData, {visible: true}).children()
-                    : def.query([null]); // null series
+                qVisibleSeries = serRole.flatten(partData, {visible: true}).children();
 
             qVisibleSeries.each(genSeriesTrend);
 
