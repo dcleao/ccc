@@ -38,6 +38,7 @@ function(data, atomsByName) {
         /*atomsBase*/ null,
         /*wantLabel*/ false,
         /*calculate*/ true);
+
     if(!this.key) {
         this.key = this.id;
     }

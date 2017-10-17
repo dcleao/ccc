@@ -71,6 +71,7 @@
         'ccc/core/base/visualRole/visualRole',
         'ccc/core/base/visualRole/visualRolesBinder',
         'ccc/core/base/visualRole/visualRoleVarHelper',
+        'ccc/core/base/visualRole/visualRoleMeasureAtomHelper',
         'ccc/core/base/dataCell/dataCell',
         'ccc/core/base/dataCell/color-dataCell',
         'ccc/core/base/axis/axis',

@@ -449,6 +449,15 @@ def.type('cdo.Data', cdo.Complex)
     },
 
     /**
+     * Gets the datum with the given key, if any, or `null`, if none.
+     *
+     * @return {cdo.Datum} The datum with the given key or `null`.
+     */
+    datumByKey: function(key) {
+        return def.getOwn(this._datumsByKey, key, null);
+    },
+
+    /**
      * Obtains an enumerable of the leaf data instances of this data.
      *
      * @type def.Query

@@ -285,38 +285,43 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
          */
         getContinuousVisibleCellExtent: function(chart, valueAxis, valueDataCell) {
 
-            if(valueDataCell.plot !== this)
+            if(valueDataCell.plot !== this) {
                 throw def.error.operationInvalid("Datacell not of this plot.");
+            }
 
             // if(valueDataCell.axisType !== valueAxis.type || valueDataCell.axisIndex !== valueAxis.index)
             //   throw def.error.operationInvalid("valueAxis and valueDataCell do not match.");
 
             var valueRole = valueDataCell.role;
 
-            chart._warnSingleContinuousValueRole(valueRole);
-
             // not supported/implemented?
-            if(valueRole.name === 'series') throw def.error.notImplemented();
-
-            var data = chart.visiblePlotData(this), // [ignoreNulls=true]
-                dimName = valueRole.lastDimensionName();
-
-            if(valueAxis.scaleSumNormalized()) {
-                var sum = data.dimensionsSumAbs(dimName);
-                if(sum) return {min: 0, max: sum};
-            } else {
-                var useAbs = valueAxis.scaleUsesAbs(),
-                    extent = data.dimensions(dimName).extent({abs: useAbs});
-                if(extent) {
-                    // TODO: aren't these Math.abs repeating work??
-                    var minValue = extent.min.value,
-                        maxValue = extent.max.value;
-                    return {
-                        min: (useAbs ? Math.abs(minValue) : minValue),
-                        max: (useAbs ? Math.abs(maxValue) : maxValue)
-                    };
-                }
+            if(valueRole.name === 'series') {
+                throw def.error.notImplemented();
             }
+
+            var data = chart.visiblePlotData(this); // [ignoreNulls=true]
+
+            return def.query(valueRole.grouping.dimensionNames())
+                .select(function(valueDimName) {
+
+                    if(valueAxis.scaleSumNormalized()) {
+                        var sum = data.dimensionsSumAbs(valueDimName);
+                        return {min: 0, max: sum};
+                    } else {
+                        var useAbs = valueAxis.scaleUsesAbs();
+                        var extent = data.dimensions(valueDimName).extent({abs: useAbs});
+                        if(extent !== undefined) {
+                            // TODO: aren't these Math.abs repeating work??
+                            var minValue = extent.min.value;
+                            var maxValue = extent.max.value;
+                            return {
+                                min: (useAbs ? Math.abs(minValue) : minValue),
+                                max: (useAbs ? Math.abs(maxValue) : maxValue)
+                            };
+                        }
+                    }
+                })
+                .reduce(pvc.unionExtents, null);
         },
 
         _getColorDataCell: function() {

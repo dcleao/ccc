@@ -23,6 +23,7 @@ def
         this.panel = panel;
 
         if(!g.isDiscrete()) {
+
             this.rootContDim = panel.data.owner.dimensions(g.lastDimensionName());
             if(hasPercentSubVar) this.percentFormatter = panel.chart.options.percentValueFormat;
         }

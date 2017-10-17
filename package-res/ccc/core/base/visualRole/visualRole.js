@@ -139,7 +139,8 @@ def
     }
 
     // e.g. `valueRole`
-    this.boundDimensionsDataSetName = this.isMeasure ? (name + "Role") : null;
+    this.boundDimensionsDataSetName = this.isMeasure ? (name + 'Role') : null;
+    this.discriminatorDimensionFullName = this.isMeasure ? (this.boundDimensionsDataSetName + '.dim') : null;
 
     var valueType = def.get(keyArgs, 'valueType', null);
     if(valueType !== this.valueType) {
