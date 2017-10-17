@@ -70,8 +70,9 @@ cdo.FlatteningMode.Dfs = cdo.FlatteningMode.DfsPre | cdo.FlatteningMode.DfsPost;
 def.type('cdo.GroupingSpec')
 .init(function(levelSpecs, complexType, extensionComplexTypesMap, ka) {
 
-    // Bound at construction time?
+    // Bound at construction time or lazily, through bind.
     this.complexType = complexType || null;
+    complexType = this.complexType;
 
     var referencedExtensionComplexTypeNamesMap = null;
 
@@ -79,6 +80,10 @@ def.type('cdo.GroupingSpec')
 
     // Accumulated main dimension names, from first level to last.
     var accMainDimNames = [];
+
+    var allDimCount = 0;
+
+    var isDiscrete = false;
 
     this.levels = def.query(levelSpecs || undefined) // -> null query
         // Filter out empty levels....
@@ -88,6 +93,8 @@ def.type('cdo.GroupingSpec')
         .select(function(levelSpec) {
 
             levelKeys.push(levelSpec.key);
+
+            allDimCount += levelSpec.allDimensions.length;
 
             levelSpec.allDimensions.forEach(function(dimSpec) {
 
@@ -102,6 +109,10 @@ def.type('cdo.GroupingSpec')
                     // Accumulate main dimension names.
                     accMainDimNames.push(dimSpec.name);
                 }
+
+                if(complexType !== null) {
+                    isDiscrete |= dimSpec.dimensionType.isDiscrete;
+                }
             });
 
             // Provide the level with the accumulated main dimensions names.
@@ -111,24 +122,34 @@ def.type('cdo.GroupingSpec')
         })
         .array();
 
+    // ---
+
     this.extensionComplexTypesMap = null;
     this.extensionComplexTypeNames =
         referencedExtensionComplexTypeNamesMap && Object.keys(referencedExtensionComplexTypeNamesMap);
 
-    if(referencedExtensionComplexTypeNamesMap) {
+    if(complexType !== null && referencedExtensionComplexTypeNamesMap) {
         this._setExtensionComplexTypesMap(extensionComplexTypesMap);
     }
+
+    // ---
 
     // TODO: should this contain only distinct dimension names?
     this._dimNames = accMainDimNames;
 
     this.depth = this.levels.length;
 
+    this._isDiscrete = complexType !== null ? isDiscrete : undefined;
+
+    this.isSingleDimension = allDimCount === 1;
+
     this.firstDimension = this.depth > 0 ? this.levels[0].dimensions[0] : null;
     this.lastDimension  = this.depth > 0 ? this.levels[this.depth - 1].lastDimension() : null;
 
     this.rootLabel = def.get(ka, 'rootLabel') || "";
     this.flatteningMode = def.get(ka, 'flatteningMode') || cdo.FlatteningMode.None;
+
+    // ---
 
     // @see #ensure
     this._cacheKey = this._calcCacheKey();
@@ -144,6 +165,7 @@ def.type('cdo.GroupingSpec')
                .join('#');
     },
 
+    // region bind
     /**
      * Late binds a grouping specification to a complex type and, optionally, to a set of extension complex types.
      *
@@ -158,9 +180,17 @@ def.type('cdo.GroupingSpec')
 
         extensionComplexTypesMap = this.extensionComplexTypesMap;
 
+        var isDiscrete = false;
+
         this.levels.forEach(function(levelSpec) {
             levelSpec.bind(complexType, extensionComplexTypesMap);
+
+            levelSpec.allDimensions.forEach(function(dimSpec) {
+                isDiscrete |= dimSpec.dimensionType.isDiscrete;
+            });
         });
+
+        this._isDiscrete = isDiscrete;
     },
 
     get isBound() {
@@ -179,7 +209,9 @@ def.type('cdo.GroupingSpec')
             this.extensionComplexTypesMap = null;
         }
     },
+    // endregion
 
+    // region Structure information
     get isNull() {
         return this.depth === 0;
     },
@@ -188,29 +220,19 @@ def.type('cdo.GroupingSpec')
         return this.depth === 1;
     },
 
-    get isSingleDimension() {
-        return this._dimNames.length === 1;
-    },
-
     get hasExtensionComplexTypes() {
         return !!this.extensionComplexTypeNames;
     },
 
-    view: function(complex) {
-        return complex.view(this.dimensionNames());
-    },
-
     /**
-     * Indicates if the data resulting from the grouping is discrete or continuous.
-     * @type boolean
+     * Indicates if the grouping contains at least one discrete dimension.
+     *
+     * @return {boolean}
      */
     isDiscrete: function() {
-        var d;
-        return !this.isSingleDimension ||
-               (!!(d = this.lastDimension) && d.dimensionType.isDiscrete);
+        return this._isDiscrete;
     },
 
-    // region Dimensions
     /**
      * Obtains an enumerable of the contained dimension specifications.
      *
@@ -372,6 +394,10 @@ def.type('cdo.GroupingSpec')
     },
     // endregion
 
+    view: function(complex) {
+        return complex.view(this.dimensionNames());
+    },
+
     toString: function() {
         return this.levels.map(String).join(', ');
     }
@@ -392,10 +418,12 @@ def.type('cdo.GroupingSpec')
 def.type('cdo.GroupingLevelSpec')
 .init(function(allDimSpecs) {
 
-    // Collect keys and names.
+    // Collect keys, names and dimensions.
     var allDimKeys = [];
+    var allDimNames = [];
     var dimNames = [];
     var dimensions = [];
+    var extDimensions = null;
 
     this.dimensions = dimensions;
 
@@ -405,27 +433,33 @@ def.type('cdo.GroupingLevelSpec')
            allDimKeys.push(dimSpec.key);
 
            if(!dimSpec.dataSetName) {
+               allDimNames.push(dimSpec.name);
                dimNames.push(dimSpec.name);
                dimensions.push(dimSpec);
+           } else {
+               allDimNames.push(dimSpec.fullName);
+
+               if(extDimensions === null) extDimensions = [];
+
+               extDimensions.push(dimSpec);
            }
 
            return dimSpec;
        })
        .array();
 
-    this.depth = this.dimensions.length;
+    this.extensionDimensions = extDimensions;
 
     // Can contain duplicate names.
     this._dimNames = dimNames;
+    this._allDimNames = allDimNames;
 
     // Set by #_setAccDimNames.
     this._accDimNames = null;
 
+    this.depth = this.allDimensions.length;
+
     this.key = allDimKeys.join(',');
-
-    this.mainDatumComparer = this.compareMainDatums.bind(this);
-
-    this.hasExtensionDimensions = this.depth !== dimensions.length;
 })
 .add( /** @lends cdo.GroupingLevelSpec# */{
 
@@ -442,6 +476,20 @@ def.type('cdo.GroupingLevelSpec')
         return this._dimNames;
     },
 
+    /**
+     * Gets an array of the names of all dimensions, including extension dimensions.
+     *
+     * For main dimensions, the included name is the local {@link cdo.DimensionSpec#name},
+     * while for extension dimensions, it is the full name {@link cdo.DimensionSpec#fullName}.
+     * This is consistent with the naming used in {@link cdo.Data#atoms}.
+     *
+     * @type {string[]}
+     * @readOnly
+     */
+    get allDimensionNames() {
+        return this._allDimNames;
+    },
+
     lastDimension: function() {
         return this.allDimensions[this.depth - 1];
     },
@@ -453,34 +501,104 @@ def.type('cdo.GroupingLevelSpec')
         });
     },
 
-    compareMainDatums: function(datumA, datumB) {
+    compareNodesMain: function(nodeA, nodeB) {
         var dims = this.dimensions;
         var D = dims.length;
+        var i = -1;
         var result;
 
-        for(var i = 0 ; i < D ; i++)
-            if((result = dims[i].compareMainDatums(datumA, datumB)) !== 0)
+        while(++i < D)
+            if((result = dims[i].compareDatums(nodeA.firstDatum, nodeB.firstDatum)) !== 0)
                 return result;
         return 0;
     },
 
-    buildDatumKey: function(datum) {
+    compareNodesWithExtension: function(nodeA, nodeB) {
+        var allDimensions = this.allDimensions;
+        var D = allDimensions.length;
+        var i = -1;
+        var result;
+        var dimSpec;
+        var dataSetName;
+        var datumA;
+        var datumB;
+
+        while(++i < D) {
+            if((dataSetName = (dimSpec = allDimensions[i]).dataSetName) !== null) {
+                datumA = nodeA.extensionDatumsMap[dataSetName][0];
+                datumB = nodeB.extensionDatumsMap[dataSetName][0];
+            } else {
+                datumA = nodeA.firstDatum;
+                datumB = nodeB.firstDatum;
+            }
+
+            if((result = dimSpec.compareDatums(datumA, datumB)) !== 0) {
+                return result;
+            }
+        }
+        return 0;
+    },
+
+    buildKeyMain: function(datum) {
         return cdo.Complex.compositeKey(datum, this._dimNames);
     },
 
-    atomsInfo: function(datum) {
-        var atoms    = {},
-            dimNames = this._dimNames,
-            D        = this.depth,
-            datoms   = datum.atoms;
+    buildKeyWithExtension: function(datum, extensionDatumsMap) {
+        var key = '';
 
-        // See also cdo.Complex.compositeKey
-        for(var i = 0 ; i < D ; i++) {
-            var dimName = dimNames[i];
-            atoms[dimName] = datoms[dimName];
+        var allDimensions = this.allDimensions;
+        var D = allDimensions.length;
+        var i = -1;
+
+        var keySep = datum.owner.keySep;
+        var datoms = datum.atoms;
+        var dimSpec;
+
+        while(++i < D) {
+            var atomKey = (dimSpec = allDimensions[i]).dataSetName !== null
+                ? extensionDatumsMap[dimSpec.dataSetName][0].atoms[dimSpec.name].key
+                : datoms[dimSpec.name].key;
+
+            if(!i) {
+                key = atomKey;
+            } else {
+                key += (keySep + atomKey);
+            }
         }
 
-        return {atoms: atoms, dimNames: dimNames};
+        return key;
+    },
+
+    buildGroupNodeMain: function(datum) {
+
+        var dimNames = this._dimNames;
+
+        return {
+            atoms: def.copyProps(datum.atoms, dimNames),
+            dimNames: dimNames
+        };
+    },
+
+    buildGroupNodeWithExtension: function(datum, extensionDatumsMap) {
+        var atoms = {};
+        var allDimensions = this.allDimensions;
+        var D = allDimensions.length;
+        var datoms = datum.atoms;
+        var i = -1;
+        var dimSpec;
+
+        while(++i < D) {
+            if((dimSpec = allDimensions[i]).dataSetName !== null) {
+                atoms[dimSpec.fullName] = extensionDatumsMap[dimSpec.dataSetName][0].atoms[dimSpec.name];
+            } else {
+                atoms[dimSpec.name] = datoms[dimSpec.name];
+            }
+        }
+
+        return {
+            atoms: atoms,
+            dimNames: this._allDimNames
+        };
     },
 
     /**
@@ -522,7 +640,6 @@ def.type('cdo.GroupingDimensionSpec')
     this.key = fullName + ":" + (isReversed ? '0' : '1');
 
     this.dimensionType = null;
-    this.mainAtomComparer = null;
 
     if(dimensionType) this.bind(dimensionType);
 })
@@ -566,21 +683,34 @@ def.type('cdo.GroupingDimensionSpec')
      * @return {!cdo.GroupingDimensionSpec} `this` instance.
      */
     bind: function(dimensionType) {
+
         this.dimensionType = dimensionType || def.fail.argumentRequired('dimensionType');
-        this.mainAtomComparer = dimensionType.atomComparer(this.isReversed);
+
+        if(dimensionType.isComparable) {
+
+            var mainAtomComparer = dimensionType.atomComparer(this.isReversed);
+            var dimName = this.name;
+
+            this.compareDatums = function(datumA, datumB) {
+                return mainAtomComparer(datumA.atoms[dimName], datumB.atoms[dimName]);
+            };
+        } else if(this.isReversed) {
+
+            this.compareDatums = function(datumA, datumB) {
+                return datumB.id - datumA.id;
+            };
+        } else {
+
+            this.compareDatums = function(datumA, datumB) {
+                return datumA.id - datumB.id;
+            };
+        }
 
         return this;
     },
 
-    // TODO: Define this method to suite the specific case, which is known since bind...
-    compareMainDatums: function(datumA, datumB) {
-        if(this.dimensionType.isComparable) {
-            var name = this.name;
-            return this.mainAtomComparer(datumA.atoms[name], datumB.atoms[name]);
-        }
-
-        // Use datum source order
-        return this.isReversed ? (datumB.id - datumA.id) : (datumA.id - datumB.id);
+    compareDatums: function(datumA, datumB) {
+        throw def.error.operationInvalid("Not Bound.");
     },
 
     /**

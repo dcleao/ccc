@@ -56,12 +56,8 @@ function(data, atomsByName) {
     isInterpolated: false,
     interpolation: null, // type of interpolation
 
-    generateKey: function(atom, keySep, index) {
-        if(atom.dimension.isKey) {
-            return index ? (keySep + atom.key) : atom.key;
-        }
-
-        return null;
+    _getAtomKey: function(atom) {
+        return atom.dimension.isKey ? atom.key : null;
     },
 
     /**

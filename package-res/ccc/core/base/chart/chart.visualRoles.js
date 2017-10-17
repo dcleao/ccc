@@ -230,7 +230,7 @@ pvc.BaseChart
 
         if(!visualRole.isMeasure) throw new Error("Visual role is not isMeasure.");
 
-        var boundDimsDataSetMap = def.lazy(this, "_boundDimsDataSetsMap");
+        var boundDimsDataSetMap = def.lazy(this.root, "_boundDimsDataSetsMap");
 
         var data = boundDimsDataSetMap[visualRole.boundDimensionsDataSetName];
         if(!data) {
@@ -286,7 +286,7 @@ pvc.BaseChart
      * @readOnly
      */
     get boundDimensionsDataSetsMap() {
-        return this._boundDimsDataSetsMap || null;
+        return this.root._boundDimsDataSetsMap || null;
     },
 
     /**

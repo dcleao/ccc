@@ -542,20 +542,22 @@ def
     _loadDimensionsDataSet: function() {
 
         var data = this.boundDimensionsDataSet;
+
+        var owner = data.owner;
         var mainComplexType = this.grouping.complexType;
 
         var datums = this.grouping.dimensionNames().map(function(mainDimName) {
 
             var mainDimType = mainComplexType.dimensions(mainDimName);
 
-            return new cdo.Datum(data, {
+            return new cdo.Datum(owner, {
                 "dim": {v: mainDimName, f: mainDimType.label}
             });
         });
 
         // Add datums to the *owner* data set, which then are added to linked children through filtering,
         // as assumed to have been setup in `data` (see `boundDimensionsDataSet`).
-        data.owner.add(datums);
+        owner.add(datums);
     },
     // endregion
 
@@ -605,7 +607,7 @@ def
 
         this._setGrouping(groupingSpec);
 
-        if(this.isMeasure) {
+        if(this.isMeasureEffective) {
             this._loadDimensionsDataSet();
         }
 

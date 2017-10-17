@@ -12,16 +12,15 @@
  *
  * @constructor
  *
- * @param {cdo.Data} linkParent The link parent data.
+ * @param {!cdo.Data} linkParent The link parent data set.
  *
  * @param {string|string[]|cdo.GroupingSpec|cdo.GroupingSpec[]} groupingSpecs A grouping specification as a string, an object or array of either.
  *
  * @param {object} [keyArgs] Keyword arguments.
  * See {@link cdo.DataOper} for any additional arguments.
  *
- * @param {Object.<string, !cdo.Data>|Array.<Object.<string, !cdo.Data>>} [keyArgs.extensionDataSetsMap] -
- * A data sets map, or an array of, one per provided grouping specification.
- * Each map should contain a data set for each of its grouping specification's required extension complex types:
+ * @param {Object.<string, !cdo.Data>} [keyArgs.extensionDataSetsMap] -
+ * A data sets map with a dataset for each of the grouping specifications' required extension complex types:
  * {@link cdo.GroupingSpec#extensionComplexTypeNames}.
  *
  * @param {boolean} [keyArgs.reverse=false] Reverts the sorting order of the dimensions of the given grouping specifications.
@@ -51,7 +50,7 @@ def.type('cdo.GroupingOper', cdo.DataOper)
 
     // Post-filters
     // Must be performed last so that the order of results is not changed.
-    // TODO: explain why.
+    // See `_groupLevelDatums` for information on the reason why.
     var isNull = def.get(keyArgs, 'isNull', null);
 
     this._postFilter = data_wherePredicate(null, {isNull: isNull});
@@ -68,7 +67,7 @@ def.type('cdo.GroupingOper', cdo.DataOper)
         groupingSpecs = groupingSpecs.slice().reverse();
     }
 
-    this._extensionDataSetsMaps = def.array.as(def.get(keyArgs, 'extensionDataSetsMap') || []);
+    this._extensionDataSetsMap = def.get(keyArgs, 'extensionDataSetsMap');
 
     var reverse = def.get(keyArgs, 'reverse', false);
 
@@ -104,6 +103,25 @@ def.type('cdo.GroupingOper', cdo.DataOper)
 add(/** @lends cdo.GroupingOper# */{
 
     /**
+     * Gets a map of datum arrays, indexed by extension data set name.
+     *
+     * @return {Object.<string, !cdo.Datum[]>} The extension datums map.
+     */
+    _getExtensionDatumsMap: function() {
+        var extensionDatumsMap = null;
+        var extensionDataSetsMap = this._extensionDataSetsMap;
+        if(extensionDataSetsMap) {
+            extensionDatumsMap = Object.create(null);
+
+            def.eachOwn(extensionDataSetsMap, function(dataSet, dataSetName) {
+                extensionDatumsMap[dataSetName] = dataSet._datums || [];
+            });
+        }
+
+        return extensionDatumsMap;
+    },
+
+    /**
      * Performs the grouping operation.
      *
      * @return {cdo.Data} The resulting root data.
@@ -119,7 +137,7 @@ add(/** @lends cdo.GroupingOper# */{
         var rootNode = this._group(datumsQuery);
 
         // Render resulting node into a new linked child data set.
-        return this._generateData(rootNode, null, this._linkParent);
+        return this._generateData(rootNode, null, this._linkParent, null);
     },
 
     executeAdd: function(rootData, newDatums) {
@@ -155,71 +173,89 @@ add(/** @lends cdo.GroupingOper# */{
             // isFlattenGroup // on parents of a flattened group spec
         };
 
-        if(rootNode.treeHeight > 0) this._groupSpecRecursive(rootNode, def.query(datumsQuery).array(), 0);
+        if(rootNode.treeHeight > 0) {
+
+            var extensionDatumsMap = this._getExtensionDatumsMap();
+
+            this._groupSpecRecursive(rootNode, def.query(datumsQuery).array(), extensionDatumsMap, 0);
+        }
 
         return rootNode;
     },
 
+    /**
+     * Executes the grouping operation recursively,
+     * processing the next of the operations' grouping specifications in each recursive call.
+     *
+     * @param {object} groupParentNode - The parent node.
+     * @param {!cdo.Datum[]} groupDatums - An array of datums to group.
+     * @param {Object.<string, !cdo.Datum[]>} groupExtensionDatumsMap - The group's extension datums map.
+     * @param {number} groupSpecIndex - The index of the grouping specification to group on.
+     *
+     * @private
+     */
+    _groupSpecRecursive: function(groupParentNode, groupDatums, groupExtensionDatumsMap, groupSpecIndex) {
 
-    _groupSpecRecursive: function(groupParentNode, groupDatums, groupIndex) {
+        var groupSpec = this._groupSpecs[groupSpecIndex];
 
-        var groupSpec = this._groupSpecs[groupIndex];
-        if(groupSpec.flatteningMode & cdo.FlatteningMode.Dfs)
-            this._groupSpecRecursiveFlattened(groupParentNode, groupDatums, groupSpec, groupIndex);
+        if((groupSpec.flatteningMode & cdo.FlatteningMode.Dfs) !== 0)
+            this._groupSpecRecursiveFlattened(groupParentNode, groupDatums, groupExtensionDatumsMap, groupSpec, groupSpecIndex);
         else
-            this._groupSpecRecursiveNormal(groupParentNode, groupDatums, groupSpec, groupIndex);
+            this._groupSpecRecursiveNormal(groupParentNode, groupDatums, groupExtensionDatumsMap, groupSpec, groupSpecIndex);
     },
 
-    _groupSpecRecursiveNormal: function(groupParentNode, groupDatums, groupSpec, groupIndex) {
-        var levelSpecs  = groupSpec.levels,
-            L           = levelSpecs.length,
-            isLastGroup = (groupIndex === this._groupSpecs.length - 1);
+    _groupSpecRecursiveNormal: function(groupParentNode, groupDatums, groupExtensionDatumsMap, groupSpec, groupSpecIndex) {
+        var levelSpecs = groupSpec.levels;
+        var L = levelSpecs.length;
+        var isLastGroupSpec = (groupSpecIndex === this._groupSpecs.length - 1);
 
-        if(groupParentNode.isRoot) groupParentNode.label = groupSpec.rootLabel;
+        if(groupParentNode.isRoot) {
+            groupParentNode.label = groupSpec.rootLabel;
+        }
 
-        groupLevelRecursive.call(this, groupParentNode, groupDatums, 0);
+        groupLevelRecursive.call(this, groupParentNode, groupDatums, groupExtensionDatumsMap, 0);
 
-        function groupLevelRecursive(levelParentNode, levelDatums, levelIndex) {
+        function groupLevelRecursive(levelParentNode, levelDatums, levelExtensionDatumsMap, levelIndex) {
 
-            var levelSpec = levelSpecs[levelIndex],
-                isLastLevel = (levelIndex === L - 1),
-                isLastLevelOfLastGroupSpec = isLastGroup && isLastLevel;
+            var levelSpec = levelSpecs[levelIndex];
+            var isLastLevel = (levelIndex === L - 1);
+            var isLastLevelOfLastGroupSpec = isLastGroupSpec && isLastLevel;
 
             levelParentNode.groupSpec = groupSpec;
             levelParentNode.groupLevelSpec = levelSpec;
 
             // ---------------
 
-            var childNodes =
-                levelParentNode.children =
-                // Child nodes will not yet have been added to levelParentNode.
-                this._groupLevelDatums(levelSpec, levelParentNode, levelDatums, /*doFlatten*/false);
+            // Need to add child nodes explicitly to levelParentNode (cause when flattening these are not added).
+            var childNodes = levelParentNode.children =
+                this._groupLevelDatums(levelSpec, levelParentNode, levelDatums, levelExtensionDatumsMap, /* doFlatten: */false);
 
             for(var i = 0, C = childNodes.length ; i < C ; i++) {
+
                 var childNode = childNodes[i];
 
-                // `levelParentNode.datums` are set to the datums of its children, in post order.
-                // This way, datums order of non-leaf levels will
-                //  reflect the grouping "pattern".
+                // `levelParentNode.datums` is set to the datums of its children, in post order.
+                //
+                // This way, datums order of non-leaf levels will reflect the grouping "pattern".
                 // NOTE: levelParentNode.datums is initially empty
 
                 // Any more levels or grouping specs?
                 if(!isLastLevelOfLastGroupSpec) {
 
-                    // Backup child datums, as just grouped.
+                    // Backup the just grouped child datums and reset them in childNode.
                     var childDatums = childNode.datums;
-
-                    // Reset datums.
                     childNode.datums = [];
+
+                    // Now send childDatums down to be further grouped (and re-ordered).
 
                     // By the end of the following recursive call,
                     // childNode.datums will have been filled again, in post-order.
                     if(!isLastLevel)
                         // NEXT LEVEL
-                        groupLevelRecursive.call(this, childNode, childDatums, levelIndex + 1);
-                    else /*if(!isLastGroup) */
+                        groupLevelRecursive.call(this, childNode, childDatums, childNode.extensionDatumsMap, levelIndex + 1);
+                    else /* if(!isLastGroupSpec) */
                         // NEXT GROUPING SPEC
-                        this._groupSpecRecursive(childNode, childDatums, groupIndex + 1);
+                        this._groupSpecRecursive(childNode, childDatums, childNode.extensionDatumsMap, groupSpecIndex + 1);
                 }
 
                 // Datums were already added to _childNode_.
@@ -228,60 +264,64 @@ add(/** @lends cdo.GroupingOper# */{
         }
     },
 
-    _groupSpecRecursiveFlattened: function(realGroupParentNode, groupDatums, group, groupIndex) {
-        var isPostOrder = group.flatteningMode === cdo.FlatteningMode.DfsPost,
-            levels = group.levels,
-            L      = levels.length,
-            isLastGroup = (groupIndex === this._groupSpecs.length - 1),
-            flatChildren      = [],
-            flatChildrenByKey = {}, // Don't create children with equal keys
+    _groupSpecRecursiveFlattened: function(realGroupParentNode, groupDatums, groupExtensionDatumsMap, groupSpec, groupIndex) {
+        var isPostOrder = groupSpec.flatteningMode === cdo.FlatteningMode.DfsPost;
+        var levelSpecs = groupSpec.levels;
+        var L = levelSpecs.length;
+        var isLastGroup = (groupIndex === this._groupSpecs.length - 1);
+        var flatChildren = [];
+        var flatChildrenByKey = {}; // Don't create children with equal keys
 
-            // Must create a rootNode for the grouping operation
-            // Cannot be realGroupParentNode. TODO: Why???
-            groupParentNode = {
-                key:      '', // Key is local to group
-                absKey:   '',
-                atoms:    {},
-                datums:   [],
-                label:    group.rootLabel,
-                dimNames: []
-            },
+        // Must create a rootNode for the grouping operation
+        // Cannot be realGroupParentNode. TODO: Why???
+        var groupParentNode = {
+            key:      '', // Key is local to group
+            absKey:   '',
+            atoms:    {},
+            datums:   [],
+            label:    groupSpec.rootLabel,
+            dimNames: []
+        };
 
-            addFlatChild = function(child) {
-                flatChildren.push(child);
-                flatChildrenByKey[child.key] = child;
-            };
+        var addFlatChildNode = function(childNode) {
+            flatChildren.push(childNode);
+            flatChildrenByKey[childNode.key] = childNode;
+        };
 
         realGroupParentNode.children = flatChildren;
         realGroupParentNode.childrenByKey = flatChildrenByKey;
 
-        if(!isPostOrder) addFlatChild(groupParentNode);
+        if(!isPostOrder) {
+            addFlatChildNode(groupParentNode);
+        }
 
         // Group datums
-        groupLevelRecursive.call(this, groupParentNode, groupDatums, 0);
+        groupLevelRecursive.call(this, groupParentNode, groupDatums, groupExtensionDatumsMap, 0);
 
-        if(isPostOrder) addFlatChild(groupParentNode);
+        if(isPostOrder) {
+            addFlatChildNode(groupParentNode);
+        }
 
         realGroupParentNode.datums = groupParentNode.datums;
 
-        function groupLevelRecursive(levelParentNode, levelDatums, levelIndex) {
-            var level = levels[levelIndex],
-                isLastLevel = (levelIndex === L - 1),
-                isLastLevelOfLastGroupSpec = isLastGroup && isLastLevel,
+        function groupLevelRecursive(levelParentNode, levelDatums, levelExtensionDatumsMap, levelIndex) {
+            var levelSpec = levelSpecs[levelIndex];
+            var isLastLevel = (levelIndex === L - 1);
+            var isLastLevelOfLastGroupSpec = isLastGroup && isLastLevel;
 
-                childNodes = this._groupLevelDatums(level, levelParentNode, levelDatums, /*doFlatten*/true),
+            var childNodes = this._groupLevelDatums(levelSpec, levelParentNode, levelDatums, levelExtensionDatumsMap, /*doFlatten*/true);
 
-                // Add children's datums to levelParentNode, in post order.
-                // This way, datums are reordered to follow the grouping "pattern".
-                //
-                // NOTE: levelParentNode.datums is initially empty
-                levelParentNodeDatums = !isLastGroup ? [] : levelParentNode.datums;
+            // Add children's datums to levelParentNode, in post order.
+            // This way, datums are reordered to follow the grouping "pattern".
+            //
+            // NOTE: levelParentNode.datums is initially empty
+            var levelParentNodeDatums = !isLastGroup ? [] : levelParentNode.datums;
 
             for(var i = 0, C = childNodes.length ; i < C ; i++) {
                 var childNode = childNodes[i],
 
                     // `levelParentNode.datums` are set to the datums of its children, in post order.
-                    // This way, datums order of non-leaf levels will
+                    // This way, datums order of non-leaf levelSpecs will
                     //  reflect the grouping "pattern".
                     // NOTE: levelParentNode.datums is initially empty
                     childDatums = childNode.datums; // backup original datums
@@ -302,7 +342,7 @@ add(/** @lends cdo.GroupingOper# */{
 
                 var specParentChildIndex = flatChildren.length;
                 if(!isPostOrder) {
-                    addFlatChild(childNode);
+                    addFlatChildNode(childNode);
                     levelParentNode.isFlattenGroup = true;
                 }
 
@@ -310,9 +350,9 @@ add(/** @lends cdo.GroupingOper# */{
                     childNode.datums = [];
 
                     if(!isLastLevel)
-                        groupLevelRecursive.call(this, childNode, childDatums, levelIndex + 1);
+                        groupLevelRecursive.call(this, childNode, childDatums, levelExtensionDatumsMap, levelIndex + 1);
                     else /*if(!isLastGroup)*/
-                        this._groupSpecRecursive(childNode, childDatums, groupIndex + 1);
+                        this._groupSpecRecursive(childNode, childDatums, levelExtensionDatumsMap, groupIndex + 1);
                 }
 
                 // Datums are now already added to 'childNode'.
@@ -323,8 +363,8 @@ add(/** @lends cdo.GroupingOper# */{
                         /*jshint expr:true*/
                         childNode.isFlattenGroup || def.assert("Must be a parent for duplicate keys to exist.");
 
-                        // TODO: how I whish I could understand any of this now...
-                        //  explain this better, when possible.
+                        // TODO: how I wish I could understand any of this now...
+                        // Explain this better, when possible.
 
                         // A child of childNode
                         // was registered with the same key,
@@ -354,51 +394,121 @@ add(/** @lends cdo.GroupingOper# */{
                         // Below, we overwrite anyway, with no harmful effect
                     }
 
-                    addFlatChild(childNode);
+                    addFlatChildNode(childNode);
                     levelParentNode.isFlattenGroup = true;
                 }
             }
 
             // datums can no longer change
-            if(!isLastGroup) this._groupSpecRecursive(levelParentNode, levelParentNodeDatums, groupIndex + 1);
+            if(!isLastGroup) {
+                this._groupSpecRecursive(levelParentNode, levelParentNodeDatums, levelExtensionDatumsMap, groupIndex + 1);
+            }
         }
     },
 
-    _groupLevelDatums: function(level, levelParentNode, levelDatums, doFlatten) {
-        // The first child is inserted here at the same index as that of
-        // the first datum in levelDatums; uses nodeComparer to insertSort.
+    /**
+     * Groups the given datums into groups having distinct values in the level's dimensions.
+     *
+     * Returns an array of child group nodes of `levelParentNode`, which, however,
+     * have not been added to `levelParentNode.children` (as, when flattening, this is not done).
+     *
+     * When `_postFilter` is defined, some of the given datums may get excluded.
+     * If a child node ends up with no datums, it is not returned.
+     * However, it may be the case that the datum that gives order to the group (the firstDatum)
+     * is excluded (because it is null?).
+     * Because of that, datums are only excluded after getting a chance to be the first datum of a group.
+     *
+     * @param {cdo.GroupingLevelSpec} levelSpec - The grouping level specification.
+     * @param {object} levelParentNode - The level's parent node.
+     * @param {!cdo.Datum[]} levelDatums - An array of datums to group.
+     * @param {Object.<string, !cdo.Datum[]>} levelExtensionDatumsMap - The level's extension datums map.
+     * @param {boolean} doFlatten - `true` when flattening, in which case `#_onNewChildNodeFlattened` is called
+     * with the new child node.
+     *
+     * @private
+     */
+    _groupLevelDatums: function(levelSpec, levelParentNode, levelDatums, levelExtensionDatumsMap, doFlatten) {
         var childNodeList = [];
-        var childNodeMap  = {};
-
-        var mainDatumComparer = level.mainDatumComparer;
-        var nodeComparer = function(na, nb) { return mainDatumComparer(na.firstDatum, nb.firstDatum); };
+        var childNodeMap = Object.create(null);
 
         var postFilter = this._postFilter;
-        var keySep; // for flattened nodes
+        var keySep = null; // for flattened nodes
 
-        // Group levelDatums By the level#buildDatumKey(.)
-        for(var i = 0, L = levelDatums.length ; i < L ; i++) {
+        var j = -1;
+        var D = levelDatums.length;
+        var buildKey;
+        var buildGroupNode;
+        var nodeComparer;
 
-            var datum = levelDatums[i];
-            var key = level.buildDatumKey(datum);
+        var extensionDimensions = levelSpec.extensionDimensions;
+        if(extensionDimensions !== null) {
+
+            buildKey = levelSpec.buildKeyWithExtension;
+            buildGroupNode = levelSpec.buildGroupNodeWithExtension;
+            nodeComparer = levelSpec.compareNodesWithExtension.bind(levelSpec);
+
+            var crossJoinExtensionDatumsMaps = [];
+
+            crossJoinExtensionDatumsRecursive(crossJoinExtensionDatumsMaps, 0, levelExtensionDatumsMap);
+
+            while(++j < D) groupDatumExtended(levelDatums[j], crossJoinExtensionDatumsMaps);
+
+        } else {
+            buildKey = levelSpec.buildKeyMain;
+            buildGroupNode = levelSpec.buildGroupNodeMain;
+            nodeComparer = levelSpec.compareNodesMain.bind(levelSpec);
+
+            while(++j < D) groupDatum(levelDatums[j], levelExtensionDatumsMap);
+        }
+
+        if(postFilter) {
+            // remove nodes that ended up with no datums passing the filter
+            j = childNodeList.length;
+            while(j--) if(childNodeList[j].datums.length === 0) childNodeList.splice(j, 1);
+        }
+
+        return childNodeList;
+
+        /**
+         * Groups a main datum and extension datums by key.
+         *
+         * @param {!cdo.Datum} datum - The main datum to process.
+         * @param {Object.<string, !cdo.Datum[]>} extensionDatumsMap - A map of arrays of extension datums.
+         */
+        function groupDatum(datum, extensionDatumsMap) {
+
+            var key = buildKey.call(levelSpec, datum, extensionDatumsMap);
             var childNode = def.hasOwnProp.call(childNodeMap, key) && childNodeMap[key];
 
             if(childNode) {
-                // Add datum to existing childNode of same key
+                // Add datum to existing childNode of same key.
                 if(!postFilter || postFilter(datum)) {
                     childNode.datums.push(datum);
                 }
             } else {
-                // First datum with key -> new child
-                /*  childNode = { atoms: {}, dimNames: [] } */
-                childNode = level.atomsInfo(datum);
+                // The first datum with a given key results in a new child group node.
+
+                /* childNode = {
+                 *   atoms: {
+                 *     "city": atomLisbon,
+                 *     "valueRole.dim": atomQty
+                 *   },
+                 *   dimNames: ["city", "valueRole.dim"]
+                 * }
+                 */
+                childNode = buildGroupNode.call(levelSpec, datum, extensionDatumsMap);
                 childNode.key = key;
+
+                // Even if the first datum gets excluded by `postFilter`, it determines the group's relative order.
+                // (see nodeComparer)
                 childNode.firstDatum = datum;
                 childNode.datums = !postFilter || postFilter(datum) ? [datum] : [];
+                childNode.extensionDatumsMap = extensionDatumsMap;
 
                 if(doFlatten) {
-                    if(!keySep) keySep = datum.owner.keySep;
-                    this._onNewChildNodeFlattened(key, keySep, childNode, level, levelParentNode);
+                    if(keySep === null) keySep = datum.owner.keySep;
+
+                    this._onNewChildNodeFlattened(key, keySep, childNode, levelSpec, levelParentNode);
                 }
 
                 def.array.insert(childNodeList, childNode, nodeComparer);
@@ -406,13 +516,39 @@ add(/** @lends cdo.GroupingOper# */{
             }
         }
 
-        if(postFilter) {
-            // remove nodes that ended up with no datums passing the filter
-            i = childNodeList.length;
-            while(i--) if(!childNodeList[i].datums.length) childNodeList.splice(i, 1);
+        function groupDatumExtended(datum, extensionDatumsMaps) {
+
+            var i = -1;
+            var L = extensionDatumsMaps.length;
+
+            while(++i < L) groupDatum(datum, extensionDatumsMaps[i]);
         }
 
-        return childNodeList;
+        // Each extension dimension will cause a cross join to be performed with corresponding datums of levelExtensionDatumsMap.
+        // Extension dimensions which are not cross-joined, pass all of their datums to the next grouping level.
+        function crossJoinExtensionDatumsRecursive(outputMaps, extDimIndex, extensionDatumsMap) {
+
+            var extDimension = extensionDimensions[extDimIndex];
+            var extDataSetName = extDimension.dataSetName;
+            var extDatums = levelExtensionDatumsMap[extDataSetName];
+
+            var i = -1;
+            var L = extDatums.length;
+            var nextExtDimIndex = extDimIndex + 1;
+            var isLastExtDim = nextExtDimIndex >= extensionDimensions.length;
+
+            while(++i < L) {
+                var childExtensionDatumsMap = Object.create(extensionDatumsMap);
+
+                childExtensionDatumsMap[extDataSetName] = [extDatums[i]];
+
+                if(isLastExtDim) {
+                    outputMaps.push(childExtensionDatumsMap);
+                } else {
+                    crossJoinExtensionDatumsRecursive(outputMaps, nextExtDimIndex, childExtensionDatumsMap);
+                }
+            }
+        }
     },
 
     _onNewChildNodeFlattened: function(key, keySep, childNode, level, levelParentNode) {
@@ -436,50 +572,71 @@ add(/** @lends cdo.GroupingOper# */{
     },
 
     _generateData: function(node, parentNode, parentData, rootData) {
-        var data, isNew;
+
+        // The data corresponding to `node`.
+        var data = null;
+
+        // Was `data` created in this call?
+        // !rootData => isNew
+        var isNew = false;
+
         if(node.isRoot) {
             // Root node
-            if(rootData) {
+            if(rootData !== null) {
                 data = rootData;
-                /*global cdo_addDatumsLocal:true*/
-                cdo_addDatumsLocal.call(data, node.datums);
+                data._addDatumsLocal(node.datums);
             } else {
                 isNew = true;
 
-                // Create a *linked* rootNode data
-                data = new cdo.Data({
+                // Create a linked root data set.
+                data = new cdo.GroupingRootData({
+                    groupingOper: this,
+                    groupingSpec: node.groupSpec,
+                    groupingLevelSpec: node.groupLevelSpec,
+
                     linkParent: parentData,
-                    datums:     node.datums
+                    datums: node.datums,
+                    extensionDatums: node.extensionDatumsMap
                 });
                 data.treeHeight = node.treeHeight;
-                data._groupOper = this;
             }
         } else {
-            if(rootData) {
+            if(rootData !== null) {
                 data = parentData.child(node.key);
-                // Add the datums to the data, and its atoms to its dimensions
-                // Should also update linkedChildren (not children).
-                /*global cdo_addDatumsSimple:true*/
-                if(data) cdo_addDatumsSimple.call(data, node.datums);
+                if(data !== null) {
+                    // Add the datums to the data, and its atoms to its dimensions.
+                    // Should also update linkedChildren (not children).
+                    data._addDatumsSimple(node.datums);
+                }
             }
 
-            if(!data) {
+            if(data === null) {
                 isNew = true;
-                var index, siblings;
+
+                var index = null;
+                var siblings;
+
                 // Insert the new sibling in correct order
                 // node.datums[0] is representative of the new Data's position
-                if(rootData && (siblings = parentData.childNodes))
+                if(rootData !== null && (siblings = parentData.childNodes).length > 0) {
+
                     index = ~def.array.binarySearch(
                         siblings,
                         node.datums[0],
                         parentNode.groupLevelSpec.mainDatumComparer);
+                }
 
-                data = new cdo.Data({
-                    parent:   parentData,
-                    atoms:    node.atoms,
+                data = new cdo.GroupData({
+                    groupingOper: this,
+                    groupingSpec: node.groupSpec,
+                    groupingLevelSpec: node.groupLevelSpec,
+
+                    parent: parentData,
+                    atoms:  node.atoms,
+                    datums: node.datums,
+                    index:  index,
                     atomsDimNames: node.dimNames,
-                    datums:   node.datums,
-                    index:    index
+                    extensionDatums: node.extensionDatumsMap
                 });
             }
         }
@@ -498,16 +655,13 @@ add(/** @lends cdo.GroupingOper# */{
         }
 
         var childNodes = node.children;
-        var L = childNodes && childNodes.length;
-        if(L) {
-            if(isNew) {
-                data._groupSpec      = node.groupSpec;
-                data._groupLevelSpec = node.groupLevelSpec;
-            }
+        var L = childNodes ? childNodes.length : 0;
+        if(L > 0) {
+            var i = -1;
+            while(++i < L) this._generateData(childNodes[i], node, data, rootData);
 
-            for(var i = 0 ; i < L ; i++) this._generateData(childNodes[i], node, data, rootData);
         } else if(isNew && !node.isRoot) {
-            // A leaf node
+            // A new leaf node
             var leafs = data.root._leafs;
             data.leafIndex = leafs.length;
             leafs.push(data);

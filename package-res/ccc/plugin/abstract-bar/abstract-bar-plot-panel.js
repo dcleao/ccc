@@ -93,7 +93,7 @@ def
                 {
                     visible: true,
                     isNull: chart.options.ignoreNulls ? false : null,
-                    extensionDataSetsMap: chart.extensionDataSetsMap
+                    extensionDataSetsMap: chart.boundDimensionsDataSetsMap
                 })
                 .childNodes,
 

@@ -299,10 +299,14 @@ def.copyOwn(def, /** @lends def */{
             to = {}, from  = a, props = b;
 
         if(props) {
-            if(from)
-                props.forEach(function(p) { to[p] = from[p];   });
-            else
-                props.forEach(function(p) { to[p] = undefined; });
+            var i = -1;
+            var L = props.length;
+            if(from) {
+                var prop;
+                while(++i < L) to[(prop = props[i])] = from[prop];
+            } else {
+                while(++i < L) to[props[i]] = undefined;
+            }
         }
 
         return to;

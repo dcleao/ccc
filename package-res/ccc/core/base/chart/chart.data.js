@@ -681,7 +681,9 @@ pvc.BaseChart
             dataCell.plot.generateTrendsDataCell(newDatums, dataCell, baseData);
         });
 
-        newDatums.length && this.data.owner.add(newDatums);
+        if(newDatums.length > 0) {
+            this.data.owner.add(newDatums);
+        }
     },
 
     _eachLeafDatasAndDataCells: function(hasMultiRole, dataCells, f, x) {

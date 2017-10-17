@@ -71,36 +71,45 @@
  */
 def.type('cdo.Data', cdo.Complex)
 .init(function(keyArgs) {
-    /* NOTE: this function is a hot spot and as such is performance critical */
 
-    /*jshint expr:true*/
-    keyArgs || def.fail.argumentRequired('keyArgs');
+    /* globals data_setDatums */
+
+    // NOTE: this function is a hot spot and as such is performance critical
+
+    if(keyArgs == null) throw def.error.argumentRequired('keyArgs');
 
     this._visibleNotNullDatums = new def.Map();
 
-    var owner,
-        atoms,
-        atomsIsSet,
-        atomsBase,
-        atomsDimNames,
-        datums,
-        index,
-        parent = this.parent = keyArgs.parent || null;
-    if(parent) {
-        // Not a root
-        this.root  = parent.root;
-        this.depth = parent.depth + 1;
-        this.type  = parent.type;
+    var owner;
+    var datums = null;
+    var atoms = null;
+    var atomsIsSet;
+    var atomsBase;
+    var atomsDimNames;
+    var childIndex;
+    var extensionDatums;
 
-        datums     = keyArgs.datums || def.fail.argumentRequired('datums');
-        owner      = parent.owner;
-        atoms      = keyArgs.atoms || def.fail.argumentRequired('atoms');
+    var parent = this.parent = keyArgs.parent || null;
+    if(parent) {
+        // Not a root.
+        this.root = parent.root;
+        this.depth = parent.depth + 1;
+
+        this.type = parent.type;
+
+        owner = parent.owner;
+        datums = keyArgs.datums || def.fail.argumentRequired('datums');
+        atoms = keyArgs.atoms || def.fail.argumentRequired('atoms');
         atomsDimNames = keyArgs.atomsDimNames || def.fail.argumentRequired('atomsDimNames');
-        atomsBase  = parent.atoms;
+        atomsBase = parent.atoms;
+        extensionDatums = keyArgs.extensionDatums || parent.extensionDatums;
+
         atomsIsSet = Object.create(parent.atomsIsSet);
-        atomsDimNames.forEach(function(p) { atomsIsSet[p] = true; });
+        atomsDimNames.forEach(function(p) {
+            atomsIsSet[p] = true;
+        });
     } else {
-        // Root (topmost or not)
+        // Root, topmost or not.
         this.root = this;
         // depth = 0
 
@@ -108,81 +117,84 @@ def.type('cdo.Data', cdo.Complex)
 
         var linkParent = keyArgs.linkParent || null;
         if(linkParent) {
-            // A root that is not topmost - owned, linked
-            owner = linkParent.owner;
-            //atoms = pv.values(linkParent.atoms); // is atomsBase, below
+            // A root that is not topmost - owned, linked.
 
-            this.type   = owner.type;
-            datums      = keyArgs.datums || def.fail.argumentRequired('datums');//linkParent._datums.slice();
+            owner = linkParent.owner;
+
+            this.type = owner.type;
+            datums = keyArgs.datums || def.fail.argumentRequired('datums');
+
             this._leafs = [];
 
-            this._wherePred = keyArgs.where || null;
-
-            /*
-             * Inherit link parent's atoms.
-             */
+            // Inherit link parent's atoms.
             atomsBase = linkParent.atoms;
             atomsIsSet = Object.create(linkParent.atomsIsSet);
             //atoms = null
 
-            index = def.get(keyArgs, 'index', null);
+            extensionDatums = keyArgs.extensionDatums || linkParent.extensionDatums;
 
-            cdo_addLinkChild.call(linkParent, this, index);
+            childIndex = def.get(keyArgs, 'index', null);
+
+            cdo_addLinkChild.call(linkParent, this, childIndex);
         } else {
-            // Topmost root - an owner
+            // Topmost root - an owner.
             owner = this;
-            //atoms = null
-            atomsBase = {};
-            atomsIsSet = {};
-
-            if(keyArgs.labelSep) this.labelSep = keyArgs.labelSep;
-            if(keyArgs.keySep  ) this.keySep   = keyArgs.keySep;
-
             this.type = keyArgs.type || def.fail.argumentRequired('type');
 
-            // Only owner datas cache selected datums
+            atomsBase = {};
+            atomsIsSet = {};
+            //atoms = null
+
+            if(keyArgs.labelSep) this.labelSep = keyArgs.labelSep;
+            if(keyArgs.keySep)   this.keySep   = keyArgs.keySep;
+
+            // Only owner data sets cache selected datums.
             this._selectedNotNullDatums = new def.Map();
         }
     }
 
-    /*global data_setDatums:true */
-    if(datums) data_setDatums.call(this, datums);
+    if(datums !== null) {
+        data_setDatums.call(this, datums);
+    }
 
     // Must anticipate setting this (and not wait for the base constructor)
     // because otherwise new Dimension( ... ) fails.
     this.owner = owner;
 
-    /* Need this because of null interning/un-interning and atoms chaining */
+    // Need this because of null interning/un-interning and atoms chaining.
     this._atomsBase = atomsBase;
 
     this.atomsIsSet = atomsIsSet;
+
+    this.extensionDatums = extensionDatums || null;
 
     this._dimensions = {};
     this._dimensionsList = [];
     this.type.dimensionsList().forEach(this._initDimension, this);
 
-    // Call base constructors
-    this.base(owner, atoms, atomsDimNames, atomsBase, /* wantLabel */ true);
+    // Call base constructors.
+    this.base(owner, atoms, atomsDimNames, atomsBase, /* wantLabel: */ true);
 
     pv.Dom.Node.call(this); // nodeValue is only created when not undefined
 
-    // Build absolute label and key
-    // The absolute key is relative to the root data (not the owner - the topmost root)
+    // Build absolute key and label.
+    // The absolute key is relative to the root data (not to the owner - the topmost root).
     if(parent) {
-        index = def.get(keyArgs, 'index', null);
+        childIndex = def.get(keyArgs, 'index', null);
 
-        cdo_addChild.call(parent, this, index);
+        cdo_addChild.call(parent, this, childIndex);
+
+        this.absKey = parent.absKey
+            ? def.string.join(owner.keySep, parent.absKey, this.key)
+            : this.key;
 
         this.absLabel = parent.absLabel
             ? def.string.join(owner.labelSep, parent.absLabel, this.label)
             : this.label;
 
-        this.absKey = parent.absKey
-            ? def.string.join(owner.keySep, parent.absKey, this.key)
-            : this.key;
     } else {
+        this.absKey = this.key;
         this.absLabel = this.label;
-        this.absKey   = this.key;
     }
 })
 
@@ -272,38 +284,6 @@ def.type('cdo.Data', cdo.Complex)
      * Only defined in root datas.
      */
     treeHeight: null,
-
-    /**
-     * The grouping operation object used to create this data.
-     * Only defined in root datas.
-     * @type cdo.GroupingOper
-     */
-    _groupOper: null,
-
-    /**
-     * The predicate from which this data was obtained.
-     * Only defined in root datas.
-     * @type function
-     */
-    _wherePred: null,
-
-    /**
-     * A grouping specification object used to create this data,
-     * along with {@link #groupLevel}.
-     * Only defined in datas that have children.
-     *
-     * @type cdo.GroupingSpec
-     */
-    _groupSpec: null,
-
-    /**
-     * A grouping level specification object used to create this data,
-     * along with {@link #groupSpec}.
-     * Only defined in datas that have children.
-     *
-     * @type cdo.GroupingLevelSpec
-     */
-    _groupLevel: null,
 
     /**
      * The datums of this data.

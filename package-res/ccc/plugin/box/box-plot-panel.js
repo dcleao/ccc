@@ -51,7 +51,7 @@ def
                 {
                     visible: true,
                     isNull: this.chart.options.ignoreNulls ? false : null,
-                    extensionDataSetsMap: this.chart.extensionDataSetsMap
+                    extensionDataSetsMap: this.chart.boundDimensionsDataSetsMap
                 })
                 .childNodes,
 
@@ -229,7 +229,7 @@ def
     _buildSceneCore: function(data, axisSeriesDatas, axisCategDatas) {
         //  chart measureVisualRoles would only return bound visual roles.
         var measureVisualRoleInfos = def.query(this.visualRoleList)
-                .where(function(r) { return !r.isDiscrete() && r.isMeasure; })
+                .where(function(r) { return r.isMeasureEffective; })
                 .select(function(r) {
                     return {
                         roleName: r.name,

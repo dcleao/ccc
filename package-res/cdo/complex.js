@@ -54,71 +54,91 @@ var complex_nextId = 1;
 def
 .type('cdo.Complex')
 .init(function(source, atomsByName, dimNames, atomsBase, wantLabel, calculate) {
-    /*jshint expr:true */
 
-    /* NOTE: this function is a hot spot and as such is performance critical */
-    var me = this;
+    // NOTE: this function is a hot spot and as such is performance critical
 
-    me.id = complex_nextId++;
+    this.id = complex_nextId++;
+
+    if(!atomsBase) {
+        atomsBase = null;
+    }
 
     var owner;
     if(source) {
         owner = source.owner;
-        if(!atomsBase) atomsBase = source.atoms;
+        if(atomsBase === null) {
+            atomsBase = source.atoms;
+        }
+    } else {
+        owner = this;
     }
 
-    me.owner = owner = (owner || me);
+    this.owner = owner;
 
-    var type = owner.type || def.fail.argumentRequired('owner.type');
-
-    me.atoms = atomsBase ? Object.create(atomsBase) : {};
+    this.atoms = atomsBase ? Object.create(atomsBase) : {};
 
     var dimNamesSpecified = !!dimNames;
-    if(!dimNames) dimNames = type._dimsNames;
-
-    var atomsMap = me.atoms,
-        D = dimNames.length,
-        i, dimName;
+    if(!dimNames) {
+        dimNames = owner.type._dimsNames;
+    }
 
     if(atomsByName) {
         // Fill the atoms map
+        var atomsMap = this.atoms;
+        var ownerDims = owner._dimensions;
 
-        var ownerDims = owner._dimensions,
-            addAtom = function(dimName) {
+        var addAtom = function(addDimName) {
+            // ownerDims, atomsBase, atomsMap, atomsByName
 
-                // ownerDims, atomsBase, atomsMap, atomsByName
-
-                var v = atomsByName[dimName],
-                    // Need to intern, even if null.
-                    atom = ownerDims[dimName].intern(v);
-
-                // Don't add atoms already in base proto object.
-                // With the exception of (virtual) nulls, which are present at the root proto object,
-                // for every dimension, inheriting an atom means that its value is already fixed at a higher level
-                // (due to a group by operation).
-                // Let's not shadow inherited atoms with an equal atom...
-                // Should it even be possible that a non-null inherited atom would be different from the one
-                // being received?
-                // See also Complex#getSpecifiedAtom(.).
-                if(v != null && (!atomsBase || atom !== atomsBase[dimName])) {
-                    atomsMap[dimName] = atom;
+            var atom = atomsByName[addDimName];
+            // Once extension dimension names have "." in their names, it is safe to not use getOwn.
+            // Also, in terms of efficiency, use of extension dimension is much less frequent than not.
+            var ownerDim = ownerDims[addDimName];
+            if(ownerDim === undefined) {
+                if(!dimNamesSpecified) {
+                    // Or keys and labels would not be correctly determined.
+                    throw def.error.operationInvalid("Extension atom values require dimension names to be specified.");
                 }
-            };
 
+                // An extension atom. Must already be an atom, then.
+                if(!(atom instanceof cdo.AbstractAtom)) {
+                    throw def.error.operationInvalid("Extension atom values must be cdo.Atom instances.");
+                }
+            } else {
+                // atom can be a value.
+                // Need to intern, even if null.
+                atom = ownerDim.intern(atom);
+            }
+
+            // Don't add atoms already in base proto object.
+            // With the exception of (virtual) nulls, which are present at the root proto object,
+            // for every dimension, inheriting an atom means that its value is already fixed at a higher level
+            // (due to a group by operation).
+            // Let's not shadow inherited atoms with an equal atom...
+            // Should it even be possible that a non-null inherited atom would be different from the one
+            // being received?
+            // See also Complex#getSpecifiedAtom(.).
+            if(atom.value != null && (atomsBase === null || atom !== atomsBase[addDimName])) {
+                atomsMap[addDimName] = atom;
+            }
+        };
+
+        var dimName;
         if(!dimNamesSpecified) {
             for(dimName in atomsByName) {
                 addAtom(dimName);
             }
         } else {
-            i = D;
-            while(i--) {
+            var i = -1;
+            var D = dimNames.length;
+            while(++i < D) {
                 addAtom(dimNames[i]);
             }
         }
 
         if(calculate) {
             // May be null
-            atomsByName = type._calculate(me);
+            atomsByName = owner.type._calculate(this);
 
             // Assuming that `atomsByName` only contains dimensions declared by calculations.
 
@@ -132,47 +152,7 @@ def
         }
     }
 
-    /* Build Key and Label */
-    var atom;
-    if(!D) {
-        me.value = null;
-        me.key   = '';
-        if(wantLabel) me.label = "";
-    } else if(D === 1) {
-        atom = atomsMap[dimNames[0]];
-        me.value     = atom.value;    // always typed when only one
-        me.rawValue  = atom.rawValue; // original
-        me.key       = this.generateKey(atom);      // string
-        if(wantLabel) me.label = atom.label;
-    } else {
-        // D >= 2
-        var key = "", label, alabel, value,
-            keySep   = owner.keySep,
-            labelSep = owner.labelSep;
-
-        for(i = 0 ; i < D ; i++) {
-            atom = atomsMap[dimNames[i]];
-
-            // Add to value, null or not
-            if(!i) value  = atom.key;
-            else   value += (keySep + atom.key);
-
-            var currentKey = this.generateKey(atom, keySep, i);
-            if(currentKey) {
-               key += currentKey;
-            }
-
-            // Add to label, when non-empty
-            if(wantLabel && (alabel = atom.label)) {
-                if(label) label += (labelSep + alabel);
-                else      label  = alabel;
-            }
-        }
-
-        me.value = me.rawValue = value;
-        me.key = key;
-        if(wantLabel) me.label = label;
-    }
+    this._initValueKeyLabel(dimNames, wantLabel);
 })
 .add(/** @lends cdo.Complex# */{
 
@@ -195,8 +175,67 @@ def
     label: null,
     rawValue: undefined,
 
-    generateKey: function(atom, keySep, index) {
-        return index ? (keySep + atom.key) : atom.key;
+    _initValueKeyLabel: function(dimNames, wantLabel) {
+        var atom;
+
+        var D = dimNames.length;
+        if(D === 0) {
+            this.key = '';
+            this.value = null;
+            if(wantLabel) {
+                this.label = "";
+            }
+        } else if(D === 1) {
+            atom = this.atoms[dimNames[0]];
+            this.key = this._getAtomKey(atom); // string
+            this.value = atom.value;    // always typed when only one
+            this.rawValue = atom.rawValue; // original
+            if(wantLabel) {
+                this.label = atom.label;
+            }
+        } else {
+            // D >= 2
+            var key = '';
+
+            var keySep = this.owner.keySep;
+            var labelSep = this.owner.labelSep;
+            var atomsMap = this.atoms;
+            var value;
+            var label = "";
+            var atomKey;
+            var atomLabel;
+
+            var i = -1;
+            while(++i < D) {
+                atom = atomsMap[dimNames[i]];
+
+                // Add to value, null or not
+                if(i === 0) value  = atom.key;
+                else        value += (keySep + atom.key);
+
+                atomKey = this._getAtomKey(atom);
+                if(atomKey !== null) {
+                    if(i === 0) key  = atomKey;
+                    else        key += (keySep + atomKey);
+                }
+
+                // Add to label, when non-empty
+                if(wantLabel && (atomLabel = atom.label) !== "") {
+                    if(label === "") label  = atomLabel;
+                    else             label += (labelSep + atomLabel);
+                }
+            }
+
+            this.value = this.rawValue = value;
+            this.key = key;
+            if(wantLabel) {
+                this.label = label;
+            }
+        }
+    },
+
+    _getAtomKey: function(atom) {
+        return atom.key;
     },
 
     /**

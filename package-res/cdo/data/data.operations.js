@@ -47,7 +47,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
 
 
     clearVirtuals: function() {
-        // Recursively clears all virtual datums and atoms
+        // Recursively clears all virtual datums and atoms.
         var datums = this._datums;
         if(datums) {
             this._sumAbsCache = null;
@@ -92,7 +92,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
             }
         }
 
-        /*global dim_uninternVirtualAtoms:true*/
+        /* globals dim_uninternVirtualAtoms */
         def.eachOwn(this._dimensions, function(dim) { dim_uninternVirtualAtoms.call(dim); });
     },
 
@@ -101,11 +101,58 @@ cdo.Data.add(/** @lends cdo.Data# */{
      * @param {cdo.Datum[]|def.Query} datums The datums to add.
      */
     add: function(datums) {
-        /*global cdo_assertIsOwner:true, data_setDatums:true*/
+
+        /* globals cdo_assertIsOwner, data_setDatums */
 
         cdo_assertIsOwner.call(this);
 
         data_setDatums.call(this, datums, {isAdditive: true, doAtomGC: true});
+    },
+
+    _addDatumsSimple: function(newDatums) {
+        this._addDatumsLocal(newDatums);
+        this._onDatumsAdded(newDatums);
+    },
+
+    _onDatumsAdded: function(newDatums) {
+        // Distribute added datums by linked children
+        var linkChildren = this._linkChildren;
+        var L = linkChildren ? linkChildren.length : 0;
+        var i = -1;
+        while(++i < L) linkChildren[i]._addDatumsSimple(newDatums);
+    },
+
+    _addDatumsLocal: function(newDatums) {
+        var ds  = this._datums;
+        var vds = this._visibleNotNullDatums;
+        var sds = this._selectedNotNullDatums;
+        var dsById = this._datumsById;
+
+        // Clear caches
+        this._sumAbsCache = null;
+
+        var i = -1;
+        var L = newDatums.length;
+        while(++i < L) {
+            var newDatum = newDatums[i];
+            var id = newDatum.id;
+
+            dsById[id] = newDatum;
+
+            data_processDatumAtoms.call(
+                this,
+                newDatum,
+                /* intern      */ true,
+                /* markVisited */ false);
+
+            // TODO: make this lazy?
+            if(!newDatum.isNull) {
+                if(sds && newDatum.isSelected) sds.set(id, newDatum);
+                if(       newDatum.isVisible ) vds.set(id, newDatum);
+            }
+
+            ds.push(newDatum);
+        }
     },
 
     /**
@@ -140,9 +187,8 @@ cdo.Data.add(/** @lends cdo.Data# */{
      *
      * @param {Object} [keyArgs] Keyword arguments object.
      *
-     * @param {Object.<string, !cdo.Data>|Array.<Object.<string, !cdo.Data>>} [keyArgs.extensionDataSetsMap] -
-     * A data sets map, or an array of, one per provided grouping specification.
-     * Each map should contain a data set for each of its grouping specification's required extension complex types:
+     * @param {Object.<string, !cdo.Data>} [keyArgs.extensionDataSetsMap] -
+     * A data sets map with a dataset for each of the grouping specifications' required extension complex types:
      * {@link cdo.GroupingSpec#extensionComplexTypeNames}.
      *
      * @param {boolean} [keyArgs.inverted = false] - Inverts the given grouping specification array.
@@ -237,7 +283,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
         // null if nothing to filter on.
         var where = (normalizedQuerySpec || keyArgs) && data_wherePredicate(normalizedQuerySpec, keyArgs);
 
-        return new cdo.Data({linkParent: this, datums: datums, where: where});
+        return new cdo.FilteredData({linkParent: this, datums: datums, where: where});
     },
 
     /**
@@ -506,16 +552,30 @@ function data_setDatums(addDatums, keyArgs) {
         oldDatums = this._datums,
         newDatums, datums, datumsByKey, datumsById;
 
-    if(!oldDatums) {
-        // => !additive
-        isAdditive = false;
-    } else {
+    if(oldDatums) {
         oldDatumsByKey = this._datumsByKey;
-        oldDatumsById  = this._datumsById ;
+        oldDatumsById  = this._datumsById;
     }
 
-    if(isAdditive) {
-        newDatums   = [];
+    // Create/Replace
+    if(!oldDatums || !isAdditive) {
+        this._datums      = datums      = [];
+        this._datumsById  = datumsById  = {};
+        this._datumsByKey = datumsByKey = {};
+
+        // Replace?
+        if(oldDatums) {
+            // Clear children (and caches)
+
+            /* globals cdo_disposeChildLists */
+
+            cdo_disposeChildLists.call(this);
+
+            visDatums.clear();
+            selDatums && selDatums.clear();
+        }
+    } else {
+        // oldDatums && isAdditive
 
         datums      = oldDatums;
         datumsById  = oldDatumsById;
@@ -523,19 +583,10 @@ function data_setDatums(addDatums, keyArgs) {
 
         // Clear caches
         this._sumAbsCache = null;
-    } else {
-        this._datums      = datums      = [];
-        this._datumsById  = datumsById  = {};
-        this._datumsByKey = datumsByKey = {};
+    }
 
-        if(oldDatums) {
-            // Clear children (and caches)
-            /*global cdo_disposeChildLists:true*/
-            cdo_disposeChildLists.call(this);
-
-            visDatums.clear();
-            selDatums && selDatums.clear();
-        }
+    if(isAdditive) {
+        newDatums = [];
     }
 
     if(def.array.is(addDatums)) {
@@ -572,7 +623,7 @@ function data_setDatums(addDatums, keyArgs) {
         }, this);
     }
 
-    if(/*isAdditive && */ newDatums || !isAdditive){
+    if(/* isAdditive && */ newDatums || !isAdditive) {
 
         if(!isAdditive) { newDatums = datums; }
 
@@ -615,7 +666,9 @@ function data_setDatums(addDatums, keyArgs) {
         if(linkChildren) {
             i = 0;
             L = linkChildren.length;
-            while(i < L) cdo_addDatumsSimple.call(linkChildren[i++], newDatums);
+            while(i < L) {
+                linkChildren[i++]._addDatumsSimple(newDatums);
+            }
         }
     }
 
@@ -701,63 +754,6 @@ function data_processDatumAtoms(datum, intern, markVisited) {
                 }
             }
         }
-    }
-}
-
-function cdo_addDatumsSimple(newDatums) {
-    // But may be an empty list
-    /*jshint expr:true */
-    newDatums || def.fail.argumentRequired('newDatums');
-
-    var groupOper = this._groupOper;
-    if(groupOper) {
-        // This data gets its datums,
-        //  possibly filtered (groupOper calls cdo_addDatumsLocal).
-        // Children get their new datums.
-        // Linked children of children get their new datums.
-        newDatums = groupOper.executeAdd(this, newDatums);
-    } else {
-        var wherePred = this._wherePred;
-        if(wherePred) newDatums = newDatums.filter(wherePred);
-
-        cdo_addDatumsLocal.call(this, newDatums);
-    }
-
-    // Distribute added datums by linked children
-    var linkChildren = this._linkChildren,
-        L = linkChildren && linkChildren.length;
-    if(L) for(var i = 0 ; i < L ; i++) cdo_addDatumsSimple.call(linkChildren[i], newDatums);
-}
-
-function cdo_addDatumsLocal(newDatums) {
-    var me = this,
-        ds  = me._datums,
-        vds = me._visibleNotNullDatums,
-        sds = me._selectedNotNullDatums,
-        dsById = me._datumsById;
-
-    // Clear caches
-    me._sumAbsCache = null;
-
-    for(var i = 0, L = newDatums.length ; i < L ; i++) {
-        var newDatum = newDatums[i],
-            id = newDatum.id;
-
-        dsById[id] = newDatum;
-
-        data_processDatumAtoms.call(
-                me,
-                newDatum,
-                /* intern      */ true,
-                /* markVisited */ false);
-
-        // TODO: make this lazy?
-        if(!newDatum.isNull) {
-            if(sds && newDatum.isSelected) sds.set(id, newDatum);
-            if(       newDatum.isVisible ) vds.set(id, newDatum);
-        }
-
-        ds.push(newDatum);
     }
 }
 

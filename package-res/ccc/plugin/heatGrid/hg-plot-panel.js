@@ -66,7 +66,7 @@ def
                 {
                     visible: true,
                     isNull: me.chart.options.ignoreNulls ? false : null,
-                    extensionDataSetsMap: this.chart.extensionDataSetsMap
+                    extensionDataSetsMap: this.chart.boundDimensionsDataSetsMap
                 }).childNodes,
 
             data = me.visibleData({ignoreNulls: false}),

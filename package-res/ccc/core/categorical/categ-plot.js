@@ -15,10 +15,8 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
         /** @override */
         createData: function(baseData, ka) {
 
-            var boundDimensionsDataSetsMap = this.boundDimensionsDataSetsMap;
-
             var ka2 = Object.create(ka);
-            ka2.extensionDataSetsMap = [boundDimensionsDataSetsMap, boundDimensionsDataSetsMap];
+            ka2.extensionDataSetsMap = this.boundDimensionsDataSetsMap;
 
             return baseData.groupBy([
                 this.visualRoles.category.flattenedGrouping(),
