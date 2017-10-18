@@ -474,6 +474,8 @@ def
             seriesScene.vars.series =
                     pvc_ValueLabelVar.fromComplex(seriesGroup);
 
+            // Creates the variable at this level only if the colorRole is sourced (defaultSourceRole: 'series').
+            // TODO: FIXME: this assumes it can only be sourced to "series", as no other variable is defined, that can be cloned from.
             colorVarHelper.onNewScene(seriesScene, /* isLeaf */ false);
 
             seriesGroup
@@ -492,7 +494,11 @@ def
                 scene.vars.x = pvc_ValueLabelVar.fromAtom(xAtom);
                 scene.vars.y = pvc_ValueLabelVar.fromAtom(yAtom);
 
-                sizeVarHelper .onNewScene(scene, /* isLeaf */ true);
+                sizeVarHelper.onNewScene(scene, /* isLeaf */ true);
+
+                // Creates the variable at this level only if the colorRole is not sourced (variable was not created above).
+                // TODO: Ends up creating a variable for a sourced role here, when the source is not "series".
+                // When discrete, the first datum is used; otherwise, number is assumed and sum is performed.
                 colorVarHelper.onNewScene(scene, /* isLeaf */ true);
 
                 scene.isIntermediate = false;

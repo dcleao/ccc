@@ -127,6 +127,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
         var vds = this._visibleNotNullDatums;
         var sds = this._selectedNotNullDatums;
         var dsById = this._datumsById;
+        var dsByKey = this._datumsByKey;
 
         // Clear caches
         this._sumAbsCache = null;
@@ -138,6 +139,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
             var id = newDatum.id;
 
             dsById[id] = newDatum;
+            dsByKey[newDatum.key]  = newDatum;
 
             data_processDatumAtoms.call(
                 this,

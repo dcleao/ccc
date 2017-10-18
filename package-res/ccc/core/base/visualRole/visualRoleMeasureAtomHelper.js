@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 def
-.type('pvc.visual.RoleMeasureAtomHelper')
+.type('pvc.visual.MeasureRoleAtomHelper')
 .init(function(measureRole) {
 
     var grouping = measureRole.grouping;
@@ -22,7 +22,7 @@ def
         return function(groupData) {
             var discrimAtom = groupData.atoms[roleDiscrimDimName];
             if(discrimAtom === undefined) {
-                throw new def.error.operationInvalid("Must bind the measure discriminator dimension.");
+                throw new def.error.operationInvalid("Must bind the measure discriminator dimension '" + roleDiscrimDimName + "'.");
             }
 
             // Is the value dimension one of the visual role's bound dimensions?

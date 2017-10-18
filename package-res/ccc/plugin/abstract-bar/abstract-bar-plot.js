@@ -24,7 +24,7 @@ def('pvc.visual.BarPlotAbstract', pvc.visual.CategoricalPlot.extend({
                 requireSingleDimension: false,
                 requireIsDiscrete: false,
                 valueType: Number,
-                defaultDimension: 'value*'
+                defaultDimension: 'value'
             });
         },
 

@@ -266,11 +266,29 @@ def
     },
     // endregion
 
+    /**
+     * Indicates that the visual role is a measure, is bound and is not discrete.
+     *
+     * While measure visual roles can  we only support the sum aggregation,
+     *
+     * @type {?boolean}
+     * @readOnly
+     */
     get isMeasureEffective() {
         if(!this.isMeasure) return false;
         if(this.isBound()) return !this.isDiscrete();
+        return null;
     },
 
+    /**
+     * Gets a value that indicates if the visual role is considered discrete.
+     *
+     * A visual role is discrete if it is bound to a grouping which is discrete.
+     *
+     * @return {?boolean} `true` if the visual role is discrete;
+     *   `false` if the visual role is not discrete;
+     *   `null` if the visual role is unbound.
+     */
     isDiscrete: function() {
         var g = this.grouping;
         return g && g.isDiscrete();
@@ -286,20 +304,24 @@ def
     },
 
     set sourceRole(value) {
-        this._sourceRole = value;
+        this._sourceRole = value || null;
         this._rootSourceRole = undefined;
     },
 
     /**
-     * Gets the visual role that is the root source of this one, if any, or <code>null</code>, if none.
+     * Gets the visual role that is the root source of this one, if any, or `null`, if none.
      *
      * @type {pvc.visual.Role}
      */
     get rootSourceRole() {
         var r = this._rootSourceRole, r2;
         if(r === undefined) {
-            r = this.sourceRole || null;
-            if(r) while((r2 = r.sourceRole)) r = r2;
+            r = this.sourceRole;
+            if(r !== null) {
+                while((r2 = r.sourceRole) !== null) {
+                    r = r2;
+                }
+            }
             this._rootSourceRole = r;
         }
         return r;

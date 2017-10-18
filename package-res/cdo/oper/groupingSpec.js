@@ -180,17 +180,40 @@ def.type('cdo.GroupingSpec')
 
         extensionComplexTypesMap = this.extensionComplexTypesMap;
 
+        // Discrete if it contains:
+        // 1. any dimensions that are marked as discrete or
+        // 2. dimensions of mixed value types (not all dimensions have the same value type).
+
         var isDiscrete = false;
+        var singleContinuousValueType = null;
 
         this.levels.forEach(function(levelSpec) {
+
             levelSpec.bind(complexType, extensionComplexTypesMap);
 
-            levelSpec.allDimensions.forEach(function(dimSpec) {
-                isDiscrete |= dimSpec.dimensionType.isDiscrete;
-            });
+            if(!isDiscrete) {
+                var allDimSpecs = levelSpec.allDimensions;
+                var i = -1;
+                var L = allDimSpecs.length;
+                while(++i < L) {
+                    var dimType = allDimSpecs[i].dimensionType;
+                    if(dimType.isDiscrete) {
+                        isDiscrete = true;
+                        break;
+                    }
+
+                    if(singleContinuousValueType === null) {
+                        singleContinuousValueType = dimType.valueType;
+                    } else if(singleContinuousValueType !== dimType.valueType) {
+                        isDiscrete = true;
+                        break;
+                    }
+                }
+            }
         });
 
         this._isDiscrete = isDiscrete;
+        this._singleContinuousValueType = isDiscrete ? null : singleContinuousValueType;
     },
 
     get isBound() {
@@ -225,12 +248,30 @@ def.type('cdo.GroupingSpec')
     },
 
     /**
-     * Indicates if the grouping contains at least one discrete dimension.
+     * Indicates that the data of the grouping should be taken as discrete.
      *
-     * @return {boolean}
+     * Typically, group by operations are only performed on discrete groupings.
+     *
+     * A grouping is considered discrete if at least one of its dimensions is marked discrete
+     * or if all of its dimensions are continuous, but they don't all have the same value type.
+     *
+     * @return {boolean} `true` if the grouping is discrete; `false` otherwise.
+     *
+     * @see #singleContinuousValueType
      */
     isDiscrete: function() {
         return this._isDiscrete;
+    },
+
+    /**
+     * Gets the value type that is shared by all of the dimensions of the grouping.
+     *
+     * Only defined for non-discrete grouping specifications.
+     *
+     * @type {?function}
+     */
+    get singleContinuousValueType() {
+        return this._singleContinuousValueType;
     },
 
     /**

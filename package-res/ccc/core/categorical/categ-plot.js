@@ -152,13 +152,17 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
         _getStackedCategoryValueExtent: function(catGroup, valueRole, useAbs) {
             var posSum = null;
             var negSum = null;
-            var measureRoleAtomHelper = new pvc.visual.RoleMeasureAtomHelper(valueRole);
+            var measureRoleAtomHelper = new pvc.visual.MeasureRoleAtomHelper(valueRole);
 
             catGroup
                 .children()
                 // Sum all datum's values on the same leaf
                 .select(function(serGroup) {
+                    // valueDimName may be null when one plot is bound to some dimensions and another to others.
                     var valueDimName = measureRoleAtomHelper.getValueDimensionName(serGroup);
+                    if(valueDimName === null) {
+                        return null;
+                    }
 
                     var value = serGroup.dimensions(valueDimName).value();
 

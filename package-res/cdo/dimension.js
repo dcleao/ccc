@@ -711,9 +711,10 @@ def.type('cdo.Dimension')
      * @see #owner
      */
     valuePercent: function(keyArgs) {
-        var value = this.valueAbs(keyArgs);
+
+        var valueAbs = this.valueAbs(keyArgs);
         // nully or zero
-        if(!value) return 0;
+        if(!valueAbs) return 0;
 
         // if no parent, we're the root and so we're 100%
         var parentData = this.data.parent;
@@ -725,8 +726,8 @@ def.type('cdo.Dimension')
 
         var sum = parentData.dimensionsSumAbs(this.name, keyArgs);
 
-        // assert sum >= value
-        return value / sum;
+        // assert sum >= valueAbs
+        return valueAbs / sum;
     },
 
     /** @deprecated Use valuePercent instead. */
