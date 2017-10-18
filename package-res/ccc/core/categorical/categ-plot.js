@@ -158,12 +158,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
                 .children()
                 // Sum all datum's values on the same leaf
                 .select(function(serGroup) {
-                    // valueDimName may be null when one plot is bound to some dimensions and another to others.
                     var valueDimName = measureRoleAtomHelper.getValueDimensionName(serGroup);
-                    if(valueDimName === null) {
-                        return null;
-                    }
-
                     var value = serGroup.dimensions(valueDimName).value();
 
                     // NOTE: null passes through.

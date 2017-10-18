@@ -110,10 +110,10 @@ def
      * @override
      */
     _createCore: function() {
+
         this.base();
 
-        var me = this,
-            chart = this.chart,
+        var chart = this.chart,
             isStacked = this.stacked,
             dotsVisible  = this.dotsVisible,
             areasVisible = this.areasVisible,
@@ -139,7 +139,7 @@ def
                 .flatten(this.partData(), {
                     visible: true,
                     isNull: chart.options.ignoreNulls ? false : null,
-                    extensionDataSetsMap: chart.boundDimensionsDataSetsMap
+                    extensionDataSetsMap: this.plot.boundDimensionsDataSetsMap
                 })
                 .childNodes,
 
@@ -255,7 +255,7 @@ def
             // they would steal events to the area and generate strange flicker-like effects.
             noLineInteraction = areasVisible && !linesVisible;
 
-        this.pvLine = new pvc.visual.Line(
+        var pvLine = this.pvLine = new pvc.visual.Line(
             this,
             this.pvArea.anchor(this.anchorOpposite(anchor)),
             {
@@ -403,7 +403,7 @@ def
                     // Obtain the line Width of the "sibling" line (if it is visible).
                     // The dot's fill area should have a diameter = line width.
                     var lineWidth = Math.max(
-                            me.pvLine.visible() ? me.pvLine.lineWidth() : 0,
+                            pvLine.visible() ? pvLine.lineWidth() : 0,
                             1); // A diameter < 1 on an isolated dot is almost imperceptible
 
                     // Apply a + 1 correction factor to account for the isolation effect.

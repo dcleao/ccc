@@ -51,7 +51,7 @@ def
                 {
                     visible: true,
                     isNull: this.chart.options.ignoreNulls ? false : null,
-                    extensionDataSetsMap: this.chart.boundDimensionsDataSetsMap
+                    extensionDataSetsMap: this.plot.boundDimensionsDataSetsMap
                 })
                 .childNodes,
 
