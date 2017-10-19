@@ -287,6 +287,10 @@ def.type('cdo.GroupingSpec')
         return def.query(this.levels).prop('allDimensions').selectMany();
     },
 
+    extensionDimensions: function() {
+        return def.query(this.levels).prop('extensionDimensions').selectMany();
+    },
+
     /**
      * The names of the main dimensions of this grouping.
      *

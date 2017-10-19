@@ -220,7 +220,9 @@ cdo.Data.add(/** @lends cdo.Data# */{
         }
 
         if(!data) {
-            if(def.debug >= 7) def.log("[GroupBy] " + (cacheKey ? ("Cache key not found: '" + cacheKey + "'") : "No Cache key"));
+            if(def.debug >= 7) {
+                def.log("[GroupBy] " + (cacheKey ? ("Cache key not found : '" + cacheKey + "' on '" + this.id + "'") : "No Cache key"));
+            }
 
             data = groupOper.execute();
 

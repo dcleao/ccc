@@ -67,12 +67,13 @@ def.type('cdo.GroupingOper', cdo.DataOper)
         groupingSpecs = groupingSpecs.slice().reverse();
     }
 
-    var extensionDataSetsKey = "";
+    var extensionDataSetsKey = '';
 
     this._extensionDataSetsMap = def.get(keyArgs, 'extensionDataSetsMap');
-    if(this._extensionDataSetsMap) {
+
+    if(hasKey && this._extensionDataSetsMap) {
         def.eachOwn(this._extensionDataSetsMap, function(dataSet, dataSetName) {
-            extensionDataSetsKey += ";" + dataSetName + dataSet.id;
+            extensionDataSetsKey += dataSetName + ':' + dataSet.id + ';';
         });
     }
 
@@ -104,9 +105,8 @@ def.type('cdo.GroupingOper', cdo.DataOper)
     });
 
     if(hasKey) {
-        this.key = groupSpecKeys.join('!!') + "$" + [
-            isVisible, isNull, whereKey, extensionDataSetsKey
-        ].join('||');
+        this.key = groupSpecKeys.join('!!') + ":" +
+            [isVisible, isNull, whereKey, extensionDataSetsKey].join(':');
     }
 }).
 add(/** @lends cdo.GroupingOper# */{

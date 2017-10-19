@@ -204,7 +204,7 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
         },
 
         visualRole: function(name) {
-            return def.getOwn(this.visualRoles, name);
+            return def.getOwn(this.visualRoles, name, null);
         },
 
         /**

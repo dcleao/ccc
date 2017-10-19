@@ -519,6 +519,7 @@ def
     // region Bound Dimensions Data Set
     // Complex types are shared by all visual roles with the same local name.
     // Also, the same name is used in the extensionAtoms, whatever the plot (if any) of the visual role.
+    // @see pvc.visual.Role.parseDataSetName
     get boundDimensionsDataSetName() {
         return this.name + "Role";
     },
@@ -731,6 +732,11 @@ def
         }
 
         return parsed;
+    },
+
+    parseDataSetName: function(dataSetName) {
+        var m = /^(.+?)Role$/.exec(dataSetName);
+        return m && m[1];
     }
 });
 
