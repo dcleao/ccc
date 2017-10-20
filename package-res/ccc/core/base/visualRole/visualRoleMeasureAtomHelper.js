@@ -4,17 +4,17 @@
 
 def
 .type('pvc.visual.MeasureRoleAtomHelper')
-.init(function(measureRole) {
+.init(function(measureRole, isWorstCase) {
 
     var grouping = measureRole.grouping;
-    if(grouping.isSingleDimension) {
+    if(!isWorstCase && grouping.isSingleDimension) {
         this.getBoundDimensionName = def.fun.constant(grouping.lastDimensionName());
     } else {
-        this.getBoundDimensionName = this._createGetValueDimName(measureRole);
+        this.getBoundDimensionName = this._createGetValueDimName(measureRole, isWorstCase);
     }
 })
 .add({
-    _createGetValueDimName: function(measureRole) {
+    _createGetValueDimName: function(measureRole, isWorstCase) {
 
         var roleDiscrimDimName = measureRole.discriminatorDimensionFullName;
         var roleBoundDimsDataSet = measureRole.boundDimensionsDataSet;
@@ -22,6 +22,10 @@ def
         return function(groupData) {
             var discrimAtom = groupData.atoms[roleDiscrimDimName];
             if(discrimAtom === undefined) {
+                if(isWorstCase) {
+                    return null;
+                }
+
                 throw new def.error.operationInvalid("Must bind the measure discriminator dimension '" + roleDiscrimDimName + "'.");
             }
 

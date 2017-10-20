@@ -82,7 +82,9 @@ def
                     var measureRole;
                     var measureRoleName = pvc.visual.Role.parseDataSetName(dimSpec.dataSetName);
                     if(measureRoleName !== null && (measureRole = plot.visualRole(measureRoleName)) !== null) {
-                        return new pvc.visual.MeasureRoleAtomHelper(measureRole);
+                        // Chart-level scenes can contain measure discriminators even if a plot's role is only bound to a single dimension.
+                        // Use Worst Case method.
+                        return new pvc.visual.MeasureRoleAtomHelper(measureRole, /* isWorstCase: */true);
                     }
                 })
                 .where(def.notNully)
