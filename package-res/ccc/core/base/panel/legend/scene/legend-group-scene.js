@@ -119,7 +119,7 @@ def
                     var i = -1;
                     var L = measureRoleAtomHelpers.length;
                     while(++i < L) {
-                        if(measureRoleAtomHelpers[i].getValueDimensionName(groupData) === null) {
+                        if(measureRoleAtomHelpers[i].getBoundDimensionName(groupData) === null) {
                             return false;
                         }
                     }

@@ -158,7 +158,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
                 .children()
                 // Sum all datum's values on the same leaf
                 .select(function(serGroup) {
-                    var valueDimName = measureRoleAtomHelper.getValueDimensionName(serGroup);
+                    var valueDimName = measureRoleAtomHelper.getBoundDimensionName(serGroup);
                     var value = serGroup.dimensions(valueDimName).value();
 
                     // NOTE: null passes through.

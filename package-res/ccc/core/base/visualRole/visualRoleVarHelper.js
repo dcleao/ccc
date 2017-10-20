@@ -64,7 +64,7 @@ def
     this.allowNestedVars = !!def.get(keyArgs, 'allowNestedVars');
     this.isNumericMode = false;
     this.isSingleNumberDimension = false;
-    this.getValueDimensionName = null;
+    this.getBoundDimensionName = null;
 
     var hasPercentSubVar = def.get(keyArgs, 'hasPercentSubVar', false);
 
@@ -86,7 +86,7 @@ def
         if(!grouping.isDiscrete() && grouping.singleContinuousValueType === Number) {
             this.isNumericMode = true;
             this.isSingleNumberDimension = grouping.isSingleDimension;
-            this.getValueDimensionName = new pvc.visual.MeasureRoleAtomHelper(role).getValueDimensionName;
+            this.getBoundDimensionName = new pvc.visual.MeasureRoleAtomHelper(role).getBoundDimensionName;
 
             if(hasPercentSubVar) {
                 this.percentFormatter = panel.chart.options.percentValueFormat;
@@ -207,7 +207,7 @@ def
             // Getting a data set (group) to find a discriminator variable requires looking on the parent scene...
             // Only need to know the group when there is more than one dimension.
             var closestGroup = this.isSingleNumberDimension ? null : scene.group || (scene.parent && scene.parent.group);
-            var valueDimName = this.getValueDimensionName(closestGroup);
+            var valueDimName = this.getBoundDimensionName(closestGroup);
 
             roleVar = pvc_ValueLabelVar.fromAtom(datum.atoms[valueDimName]);
 
@@ -241,7 +241,7 @@ def
 
     _createVarFromGroupNumber: function(group) {
 
-        var valueDimName = this.getValueDimensionName(group);
+        var valueDimName = this.getBoundDimensionName(group);
         var valueDim = group.dimensions(valueDimName);
 
         var value = valueDim.value({visible: true, zeroIfNone: false});

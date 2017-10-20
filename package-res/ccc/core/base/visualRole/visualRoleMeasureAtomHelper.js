@@ -8,9 +8,9 @@ def
 
     var grouping = measureRole.grouping;
     if(grouping.isSingleDimension) {
-        this.getValueDimensionName = def.fun.constant(grouping.lastDimensionName());
+        this.getBoundDimensionName = def.fun.constant(grouping.lastDimensionName());
     } else {
-        this.getValueDimensionName = this._createGetValueDimName(measureRole);
+        this.getBoundDimensionName = this._createGetValueDimName(measureRole);
     }
 })
 .add({
