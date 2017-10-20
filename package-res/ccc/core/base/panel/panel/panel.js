@@ -1614,10 +1614,10 @@ def
             ttClasses = classesHtml.bind(null, ttClass),
 
             chart = context.chart,
-            chartInterpolatable,
+            isChartInterpolatable = null,
             group = scene.group,
             allGroup,
-            data  = scene.data(),
+            data = scene.data(),
             complexType = data.type,
             realDatums = Q(datums).where(function(d) { return !d.isVirtual; }).array(),
 
@@ -1656,12 +1656,15 @@ def
             if(isSingleGroup) {
                 rows.push.apply(rows, renderSingleGroupCommonDims());
 
+                // commmonDimNames will be non-nully if there is at least one common, non-null, not hidden atom.
                 if(commonDimNames && hasManyRealDatums)
                     rows.push(tag('tr', {'class': ttClasses('dimSep')}, '<td colspan="3"><hr/></td>'));
             }
 
+            // Renders all dimensions not in `commonDimNames`.
             rows.push.apply(rows, renderRemainingDims());
 
+            // Footer with number of grouped (real) datums.
             if(hasManyRealDatums)
                 rows.push(
                     tag('tr', {'class': ttClasses('datumCount')},
@@ -1674,21 +1677,24 @@ def
 
             var commonAtoms = group.atoms;
 
-            return complexType.sortDimensionNames(def.keys(commonAtoms)).map(function(mainDimName) {
-                var atom = commonAtoms[mainDimName], value, mainDimType;
+            return complexType.sortDimensionNames(def.keys(commonAtoms)).map(function(commonDimName) {
+                var atom = commonAtoms[commonDimName], value, mainDimType;
 
                 // Nulls in groups are inherited from the root and do not mean that
                 // these are actually null in all datums
 
-                // TODO: this test is vulnerable to actually null grouped by values.
+                // NOTE: this test is vulnerable to actually null grouped by values,
+                // but we'd not show them anyway.
 
                 if((value = atom.value) != null) {
 
-                    (commonDimNames || (commonDimNames = {}))[mainDimName] = true;
-
                     mainDimType = atom.dimension.type;
-                    if(!mainDimType.isHidden)
+                    if(!mainDimType.isHidden) {
+
+                        (commonDimNames || (commonDimNames = {}))[commonDimName] = true;
+
                         return renderDim(mainDimType, value, atom.label);
+                    }
                 }
                 return '';
             });
@@ -1722,21 +1728,28 @@ def
                 if(mainDimType.valueType === Number) {
                     // Sum
                     if(hasManyRealDatums) dimAggr = 'sum';
+
                     value      = dim.value(visibleKeyArgs);
                     valueLabel = dim.format(value);
                     calcPct    = value != null ? calcGroupDimPct.bind(null, dim) : null;
 
-                    if(chartInterpolatable == null) chartInterpolatable = chart.interpolatable();
-                    if(chartInterpolatable) {
-                        // NOTE: not sure if it is possible that more than one interpolation
-                        // can occur. Sticking to the first one, as the other case is esoteric anyway.
+                    if(isChartInterpolatable === null) {
+                        isChartInterpolatable = chart.interpolatable();
+                    }
+
+                    if(isChartInterpolatable) {
+                        // NOTE: not sure if it is possible that more than one interpolation can occur.
+                        // Sticking to the first one, as the other case is esoteric anyway.
                         dimInterp = Q(datums)
                             .where (function(d) { return d.isInterpolated && d.interpDimName === mainDimName; })
                             .select(function(d) { return d.interpolation; })
                             .first();
                     }
                 } else {
+                    // Build a list of used distinct values.
+
                     if(hasManyRealDatums) dimAggr = 'list';
+
                     value = valueLabel = dim.atoms(visibleKeyArgs)
                         .filter(function(a) { return a.value != null; })
                         // JIC a non-null atom has an empty label. Advised against, but also not enforced.
@@ -1751,27 +1764,27 @@ def
         }
 
         function renderDim(mainDimType, value, valueLabel, dimAggr, calcPct, dimInterp) {
+
             var rowClasses = ttClasses(
                     'dim',
                     'dimValueType-' + mainDimType.valueTypeName,
                     'dim' + (mainDimType.isDiscrete ? 'Discrete' : 'Continuous'),
                     (dimAggr ? 'dimAgg' : ''),
-                    (dimAggr ? ('dimAgg-' + dimAggr) : '')),
-                anyPercentRole = false,
+                    (dimAggr ? ('dimAgg-' + dimAggr) : ''));
 
-                // TODO: filter visRoles to the ones that are actually bound in this scene
-                // (measure visual roles bound to two dimensions may not be being played by this dimension...)
+            var anyPercentRole = false;
 
-                visRoles = me.visualRolesOf(mainDimType.name, /*includeChart*/true),
+            var visRoles = getDimActiveVisualRoles(mainDimType);
 
-                dimRolesHtml = visRoles
-                    ? visRoles.map(function(role) {
-                            if(calcPct) anyPercentRole |= role.isPercent;
-                            return tag('span', {'class': ttClasses('role', 'role-' + role.name)},
-                                tag('span', {'class': ttClasses('roleIcon')}, ""),
-                                tag('span', {'class': ttClasses('roleLabel')}, escapeHtml(role.label)));
-                        })
-                    : '';
+            var dimRolesHtml = visRoles
+                ? visRoles.map(function(role) {
+
+                      if(calcPct) anyPercentRole |= role.isPercent;
+                      return tag('span', {'class': ttClasses('role', 'role-' + role.name)},
+                          tag('span', {'class': ttClasses('roleIcon')}, ""),
+                          tag('span', {'class': ttClasses('roleLabel')}, escapeHtml(role.label)));
+                  })
+                : '';
 
             return tag('tr', {'class': rowClasses},
                 tag('td', {'class': ttClasses('dimLabel')},
@@ -1794,6 +1807,23 @@ def
                             escapeHtml(def.firstUpperCase(dimInterp) + ' interp.')))
                         : '')
                 ));
+        }
+
+        function getDimActiveVisualRoles(mainDimType) {
+
+            var mainDimName = mainDimType.name;
+
+            var roles = me.visualRolesOf(mainDimName, /*includeChart*/true);
+            if(roles && isSingleGroup) {
+                roles = roles.filter(function(role) {
+                    if(role.isMeasureEffective) {
+                        return mainDimName === (new pvc.visual.MeasureRoleAtomHelper(role).getValueDimensionName(group));
+                    }
+                    return true;
+                });
+            }
+
+            return roles;
         }
 
         function calcGroupDimPct(dim) {

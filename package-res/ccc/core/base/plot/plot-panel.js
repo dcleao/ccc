@@ -81,9 +81,17 @@ def
      * @virtual
      */
     visualRolesOf: function(mainDimName, includeChart) {
-        var visualRolesByDim = this._visRolesByDim;
+
+        var plotVisRoles  = def.getOwn(this._visualRolesByDim, mainDimName, null),
+            chartVisRoles = includeChart ? this.chart.visualRolesOf(mainDimName) : null;
+
+        return plotVisRoles && chartVisRoles ? plotVisRoles.concat(chartVisRoles) : (plotVisRoles || chartVisRoles);
+    },
+
+    get _visualRolesByDim() {
+        var visualRolesByDim = this.__visRolesByDim;
         if(!visualRolesByDim) {
-            visualRolesByDim = this._visRolesByDim = {};
+            visualRolesByDim = this.__visRolesByDim = {};
 
             this.visualRoleList.forEach(function(role) {
                 var grouping = role.grouping;
@@ -93,10 +101,7 @@ def
             });
         }
 
-        var plotVisRoles  = def.getOwn(visualRolesByDim, mainDimName, null),
-            chartVisRoles = includeChart ? this.chart.visualRolesOf(mainDimName) : null;
-
-        return plotVisRoles && chartVisRoles ? plotVisRoles.concat(chartVisRoles) : (plotVisRoles || chartVisRoles);
+        return visualRolesByDim;
     },
 
     /** @override */
