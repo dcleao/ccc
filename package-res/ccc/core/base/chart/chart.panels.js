@@ -343,6 +343,29 @@ pvc.BaseChart
             legendBaseIndex: legendGroupBaseIndex
         });
 
+        // ---
+
+        // For each item data,
+        // find at least one data cell whose role either does not have extension complex types
+        // or for which itemData contains a discriminator measure whose value is one of the
+        // data cell's plot's measure role's dimension...
+        var dataCellsWithExtensionComplexTypesToCheck = null;
+
+        def.query(visibleDataCells).each(function(dataCell) {
+            if(!dataCell.role.grouping.hasExtensionComplexTypes) {
+                // If at least one data cell exists without extension complex types,
+                // then we don't need to check extension complex types data cells
+                // to know if item scenes will be visible.
+                dataCellsWithExtensionComplexTypesToCheck = null; // don't need to check
+                return false; // break
+            }
+
+            if(dataCellsWithExtensionComplexTypesToCheck === null) {
+                dataCellsWithExtensionComplexTypesToCheck = [];
+            }
+            dataCellsWithExtensionComplexTypesToCheck.push(dataCell);
+        });
+
         // Create one Item scene per domain item.
         colorAxis.domainItems().forEach(function(itemData) {
 
@@ -356,6 +379,34 @@ pvc.BaseChart
                 });
 
                 if(!itemHasAnyVisibleDataCells) {
+                    return;
+                }
+            }
+
+            if(dataCellsWithExtensionComplexTypesToCheck !== null) {
+                // Need at least one data cell showing the item scene.
+
+                var isAtLeastOneDataCellVisible = def.query(dataCellsWithExtensionComplexTypesToCheck)
+                    .any(function(dataCell) {
+                        // Will data cell be visible on itemData?
+                        // Code similar to that in pvc.visual.legend.LegendGroupScene#_createDataCellPanel.
+                        return dataCell.role.grouping.extensionDimensions()
+                            .all(function(dimSpec) {
+                                // All of its extension dimensions are bound?
+                                var measureRole;
+                                var measureRoleName = pvc.visual.Role.parseDataSetName(dimSpec.dataSetName);
+                                if(measureRoleName !== null && (measureRole = dataCell.plot.visualRole(measureRoleName)) !== null) {
+                                    var measureRoleAtomHelper = new pvc.visual.MeasureRoleAtomHelper(measureRole, /* isChartMode: */true);
+                                    if(measureRoleAtomHelper.getBoundDimensionName(itemData) !== null) {
+                                        return true;
+                                    }
+                                }
+
+                                return false;
+                            });
+                    });
+
+                if(!isAtLeastOneDataCellVisible) {
                     return;
                 }
             }

@@ -269,7 +269,7 @@ function(dimTypeSpecs) {
             groupLevel = dimension.groupLevel;
 
             // Find the index of the last dimension of the same group
-            // or the one that has a higher level that this one
+            // or the one that has a higher level than this one
             for(var i = 0 ; i < L ; i++) {
                 var dim = this._dimsList[i];
                 if(dim.group === group) {

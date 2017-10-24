@@ -4,17 +4,17 @@
 
 def
 .type('pvc.visual.MeasureRoleAtomHelper')
-.init(function(measureRole, isWorstCase) {
+.init(function(measureRole, isChartMode) {
 
     var grouping = measureRole.grouping;
-    if(!isWorstCase && grouping.isSingleDimension) {
+    if(!isChartMode && grouping.isSingleDimension) {
         this.getBoundDimensionName = def.fun.constant(grouping.lastDimensionName());
     } else {
-        this.getBoundDimensionName = this._createGetValueDimName(measureRole, isWorstCase);
+        this.getBoundDimensionName = this._createGetValueDimName(measureRole, isChartMode);
     }
 })
 .add({
-    _createGetValueDimName: function(measureRole, isWorstCase) {
+    _createGetValueDimName: function(measureRole, isChartMode) {
 
         var roleDiscrimDimName = measureRole.discriminatorDimensionFullName;
         var roleBoundDimsDataSet = measureRole.boundDimensionsDataSet;
@@ -22,7 +22,7 @@ def
         return function(groupData) {
             var discrimAtom = groupData.atoms[roleDiscrimDimName];
             if(discrimAtom === undefined) {
-                if(isWorstCase) {
+                if(isChartMode) {
                     return null;
                 }
 

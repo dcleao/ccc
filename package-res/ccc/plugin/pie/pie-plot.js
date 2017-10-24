@@ -38,7 +38,7 @@ def('pvc.visual.PiePlot', pvc.visual.Plot.extend({
                 isMeasure:  true,
                 isRequired: true,
                 isPercent:  true,
-                requireSingleDimension: true,
+                requireSingleDimension: false,
                 requireIsDiscrete: false,
                 valueType: Number,
                 defaultDimension: 'value'

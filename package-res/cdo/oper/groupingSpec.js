@@ -765,7 +765,7 @@ def.type('cdo.GroupingDimensionSpec')
      * @return {!cdo.GroupingDimensionSpec} The reversed grouping dimension specification.
      */
     reverse: function() {
-        return new cdo.GroupingDimensionSpec(this.name, !this.isReversed, this.dimensionType);
+        return new cdo.GroupingDimensionSpec(this.fullName, !this.isReversed, this.dimensionType);
     },
 
     toString: function() {
