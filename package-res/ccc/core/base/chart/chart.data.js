@@ -62,7 +62,7 @@ pvc.BaseChart
             .context(this._createNewVisualRolesContext())
             .complexTypeProject(complexTypeProj);
 
-        // Do initial VR bindings. Guides translation somewhat.
+        // Do initial VR bindings. These guide translation somewhat.
         binder.init();
 
         // The chart-level `dataPart` visual role may have been explicitly bound
@@ -112,8 +112,7 @@ pvc.BaseChart
 
         // ----
 
-        // Sliding window also configures some dimension options of complexType.
-        this._createSlidingWindow(complexType);
+        this._willBindVisualRoles(complexType);
 
         // ----
 
@@ -126,6 +125,32 @@ pvc.BaseChart
         binder.bind(complexType);
 
         this._dataType = complexType;
+    },
+
+    /**
+     * Allows changing certain properties of the complex type before visual roles are finally bound to it.
+     *
+     * @param {!cdo.ComplexType} complexType - The complex type to which visual roles will be bound.
+     * @protected
+     * @overridable
+     */
+    _willBindVisualRoles: function(complexType) {
+
+        // Sliding window configures some dimension options of complexType.
+        this._createSlidingWindow(complexType);
+    },
+
+    _getPreBoundTrendedDimensionNames: function() {
+        return def.query(this.plotList)
+            .selectMany(def.propGet('dataCellList'))
+            .where(def.propGet('trend'))
+            .selectMany(function(dataCell) {
+                if(dataCell.role.isPreBound()) {
+                    return dataCell.role.preBoundGrouping().dimensionNames();
+                }
+            })
+            .distinct()
+            .array();
     },
 
     _createSlidingWindow: function(complexType) {
@@ -363,7 +388,6 @@ pvc.BaseChart
             timeSeriesFormat:     options.timeSeriesFormat
         };
     },
-
 
     _createTranslationOptions: function(dimsOptions, dataPartDimName) {
         var options = this.options,

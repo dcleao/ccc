@@ -86,7 +86,7 @@ def
         if(!grouping.isDiscrete() && grouping.singleContinuousValueType === Number) {
             this.isNumericMode = true;
             this.isSingleNumberDimension = grouping.isSingleDimension;
-            this.getBoundDimensionName = new pvc.visual.MeasureRoleAtomHelper(role).getBoundDimensionName;
+            this.getBoundDimensionName = pvc.visual.MeasureRoleAtomHelper.createGetBoundDimensionName(role);
 
             if(hasPercentSubVar) {
                 this.percentFormatter = panel.chart.options.percentValueFormat;

@@ -4,17 +4,13 @@
 
 def
 .type('pvc.visual.MeasureRoleAtomHelper')
-.init(function(measureRole, isChartMode) {
-
-    var grouping = measureRole.grouping;
-    if(!isChartMode && grouping.isSingleDimension) {
-        this.getBoundDimensionName = def.fun.constant(grouping.lastDimensionName());
-    } else {
-        this.getBoundDimensionName = this._createGetValueDimName(measureRole, isChartMode);
-    }
-})
+.type()
 .add({
-    _createGetValueDimName: function(measureRole, isChartMode) {
+    createGetBoundDimensionName: function(measureRole, isChartMode) {
+        var grouping = measureRole.grouping;
+        if(!isChartMode && grouping.isSingleDimension) {
+            return def.fun.constant(grouping.lastDimensionName());
+        }
 
         var roleDiscrimDimName = measureRole.discriminatorDimensionFullName;
         var roleBoundDimsDataSet = measureRole.boundDimensionsDataSet;
@@ -39,5 +35,36 @@ def
 
             return dimName;
         };
+    },
+
+    getBoundDimensionName: function(measureRole, groupData, isChartMode) {
+        var getBoundDimensionName = this.createGetBoundDimensionName(measureRole, isChartMode);
+        return getBoundDimensionName(groupData);
+    },
+
+    hasCompatibleBoundDimensionName: function(measureRole, groupData) {
+        var roleDiscrimDimName = measureRole.discriminatorDimensionFullName;
+        var roleBoundDimsDataSet = measureRole.boundDimensionsDataSet;
+
+        var discrimAtom = groupData.atoms[roleDiscrimDimName];
+        if(discrimAtom === undefined) {
+            return true;
+        }
+
+        var dimName = discrimAtom.value;
+        return !!roleBoundDimsDataSet.datumByKey(dimName);
+    },
+
+    getCompatibleBoundDimensionNames: function(measureRole, groupData) {
+        var roleDiscrimDimName = measureRole.discriminatorDimensionFullName;
+        var roleBoundDimsDataSet = measureRole.boundDimensionsDataSet;
+
+        var discrimAtom = groupData.atoms[roleDiscrimDimName];
+        if(discrimAtom === undefined) {
+            return measureRole.grouping.dimensionNames();
+        }
+
+        var dimName = discrimAtom.value;
+        return roleBoundDimsDataSet.datumByKey(dimName) !== null ? [dimName] : [];
     }
 });

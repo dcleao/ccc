@@ -396,8 +396,7 @@ pvc.BaseChart
                                 var measureRole;
                                 var measureRoleName = pvc.visual.Role.parseDataSetName(dimSpec.dataSetName);
                                 if(measureRoleName !== null && (measureRole = dataCell.plot.visualRole(measureRoleName)) !== null) {
-                                    var measureRoleAtomHelper = new pvc.visual.MeasureRoleAtomHelper(measureRole, /* isChartMode: */true);
-                                    if(measureRoleAtomHelper.getBoundDimensionName(itemData) !== null) {
+                                    if(pvc.visual.MeasureRoleAtomHelper.getBoundDimensionName(measureRole, itemData, /* isChartMode: */true) !== null) {
                                         return true;
                                     }
                                 }
@@ -442,15 +441,15 @@ pvc.BaseChart
      * @virtual
      */
     _createContent: function(parentPanel, contentOptions) {
-        var index = 0;
 
         this.plotList.forEach(function(plot) {
-            this._createPlotPanel(plot, parentPanel, contentOptions, index);
-            index++; // added index information to plots: position in plotList, assuming it does not change
+            if(!this.parent || plot.isDataBoundOn(this.data)) {
+                this._createPlotPanel(plot, parentPanel, contentOptions);
+            }
         }, this);
     },
 
-    _createPlotPanel: function(plot, parentPanel, contentOptions, index) {
+    _createPlotPanel: function(plot, parentPanel, contentOptions) {
         var PlotPanelClass = pvc.PlotPanel.getClass(plot.type);
         if(!PlotPanelClass)
             throw def.error.invalidOperation("There is no registered panel class for plot type '{0}'.", [plot.type]);

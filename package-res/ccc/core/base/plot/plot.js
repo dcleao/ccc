@@ -87,10 +87,10 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
             // Process extension points and publish options with the plot's optionId prefix.
             var me = this,
                 options = me.chart.options,
-            // Name has precedence in option resolution,
-            // so use it if it is defined,
-            // so that the the option variant with
-            // the highest precedence is used.
+                // Name has precedence in option resolution,
+                // so use it if it is defined,
+                // so that the the option variant with
+                // the highest precedence is used.
                 extId = (me.isInternal ? me.name : null) || me.optionId;
 
             me.chart._processExtensionPointsIn(plotSpec, extId, function(optValue, optId, optName) {
@@ -235,6 +235,31 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
                 var dataCell = this._getColorDataCell();
                 if (dataCell) this._addDataCell(dataCell);
             }
+        },
+
+        /**
+         * Gets a value that indicates if the plot is bound on the given base data.
+         *
+         * A plot is bound if its data cells of required measure visual roles are all bound
+         * and compatible with any measure discriminator dimensions already set on `baseData`.
+         *
+         * @param {!cdo.Data} baseData - The base data.
+         * @return {boolean} `true` if the plot is bound; `false` otherwise.
+         */
+        isDataBoundOn: function(baseData) {
+
+            var isBoundByData = def.lazy(this, "_isBoundByData");
+            var isBound = def.getOwn(isBoundByData, baseData.id, null);
+            if(isBound === null) {
+                isBound = def.query(this.dataCellList).all(function(dataCell) {
+                    // Optional roles should not affect this.
+                    return !dataCell.role.isBound() || dataCell.isDataBoundOn(baseData);
+                });
+
+                isBoundByData[baseData.id] = isBound;
+            }
+
+            return isBound;
         },
 
         /**

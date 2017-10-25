@@ -83,17 +83,19 @@ pvc.BaseChart
         }
 
         var getAxisState = function(type, axisIndex){
-                if(oldByType){
-                    var axes = oldByType[type];
-                    if(axes){
-                        var axisId = axes[axisIndex].id,
-                            state  = axesState ? axesState[axisId] : undefined;
+            if(oldByType) {
+                var axes = oldByType[type];
+                if(axes) {
+                    var axisId = axes[axisIndex].id,
+                        state  = axesState ? axesState[axisId] : undefined;
 
-                         return state;
-                    }
+                    return state;
                 }
-            };
+            }
+        };
 
+        // ----
+        // Filled by _addAxis
         this.axes = {};
         this.axesList = [];
         this.axesByType = {};
@@ -101,36 +103,28 @@ pvc.BaseChart
         // Clear any previous global color scales
         delete this._rolesColorScale;
 
-        // ATTENTION: requires visual-roles' binding to have been done before!
+        // ATTENTION: requires visual roles' binding to have been done before!
 
-        // Filter only bound dataCells.
-        // ATTENTION: the splicing here performed breaks the correspondence between array index and axisIndex.
-        // So the indexing on axisIndex is no longer valid after this!!
-        // However, in each entry, all dataCells will still have the same axisIndex.
+        // Get bound dataCells.
         var dataCellsByAxisTypeThenIndex = this._dataCellsByAxisTypeThenIndex;
-        if(!this.parent) def.eachOwn(dataCellsByAxisTypeThenIndex, function(dataCellsByAxisIndex, type) {
-            var i = 0, I = dataCellsByAxisIndex.length;
-            while(i < I) {
-                var dataCells = dataCellsByAxisIndex[i];
-                if(dataCells) {
-                    dataCells = dataCells.filter(function (dataCell) {
-                        return dataCell.role.isBound();
-                    });
+        if(!this.parent) {
+            // type -> index -> [datacell array]
+            dataCellsByAxisTypeThenIndex = {};
 
-                    if(dataCells.length) {
-                        dataCellsByAxisIndex[i] = dataCells;
-                        i++;
-                    } else {
-                        dataCellsByAxisIndex.splice(i, 1);
-                        I--;
+            this.plotList.forEach(function(plot) {
+
+                plot.dataCellList.forEach(function(dataCell) {
+
+                    if(dataCell.role.isBound()) {
+                        var dataCellsByAxisIndex = def.array.lazy(dataCellsByAxisTypeThenIndex, dataCell.axisType);
+
+                        def.array.lazy(dataCellsByAxisIndex, dataCell.axisIndex).push(dataCell);
                     }
-                } else {
-                    i++;
-                }
-            }
+                });
+            });
 
-            if(!dataCellsByAxisIndex.length) delete dataCellsByAxisTypeThenIndex[type];
-        });
+            this._dataCellsByAxisTypeThenIndex = dataCellsByAxisTypeThenIndex;
+        }
 
         /* NOTE: Cartesian axes are created even when hasMultiRole && !parent
          * because it is needed to read axis options in the root chart.
@@ -145,32 +139,39 @@ pvc.BaseChart
         // 1 = root, 2 = leaf, 1 | 2 = 3 = everywhere
         var chartLevel = this._chartLevel();
 
-        this._axisCreationOrder.forEach(function(type) {
+        this._axisCreationOrder.forEach(function(axisType) {
             // Create?
-            if((this._axisCreateChartLevel[type] & chartLevel) !== 0) {
-                var AxisClass,
-                    dataCellsOfTypeByIndex = dataCellsByAxisTypeThenIndex[type];
+            if((this._axisCreateChartLevel[axisType] & chartLevel) !== 0) {
+                var AxisClass;
 
+                var dataCellsOfTypeByIndex = dataCellsByAxisTypeThenIndex[axisType];
                 if(dataCellsOfTypeByIndex) {
 
-                    AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
+                    AxisClass = this._getAxisClass(axisType);
 
                     dataCellsOfTypeByIndex.forEach(function(dataCells) {
 
-                        var axisIndex = dataCells[0].axisIndex;
+                        dataCells = dataCells.filter(function(dataCell) {
+                            return !dataCell.plot || !this.parent || dataCell.plot.isDataBoundOn(this.data);
+                        }, this);
 
-                        // Pass the stored state in axis construction.
+                        if(dataCells.length > 0) {
+                            var axisIndex = dataCells[0].axisIndex;
 
-                        new AxisClass(this, type, axisIndex, {state: getAxisState(type, axisIndex)});
+                            // Pass the stored state in axis construction.
+
+                            new AxisClass(this, axisType, axisIndex, {state: getAxisState(axisType, axisIndex)});
+                        }
 
                     }, this);
+                }
 
-                } else if(this._axisCreateIfUnbound[type]) {
+                // None of this type created? Should create one anyway?
+                if(!this.axesByType[axisType] && this._axisCreateIfUnbound[axisType]) {
 
-                    AxisClass = this._axisClassByType[type] || pvc.visual.Axis;
-                    if(AxisClass) {
-                        new AxisClass(this, type, 0);
-                    }
+                    AxisClass = this._getAxisClass(axisType);
+
+                    new AxisClass(this, axisType, 0);
                 }
             }
         }, this);
@@ -186,22 +187,33 @@ pvc.BaseChart
         // Bind
         // Bind all axes with dataCells registered in dataCellsByAxisTypeThenIndex
         // and which were created at this level
-        def.eachOwn(
-            dataCellsByAxisTypeThenIndex,
-            function(dataCellsOfTypeByIndex, type) {
-                // Was created at this level?
-                if((this._axisCreateChartLevel[type] & chartLevel)) {
-                    dataCellsOfTypeByIndex.forEach(function(dataCells) {
-                        var axisIndex = dataCells[0].axisIndex,
-                            axis = this.axes[def.indexedId(type, axisIndex)];
-                        if(!axis.isBound()) axis.bind(dataCells);
+        def.eachOwn(dataCellsByAxisTypeThenIndex, function(dataCellsOfTypeByIndex, type) {
+            // Was created at this level?
+            if((this._axisCreateChartLevel[type] & chartLevel) !== 0) {
+
+                dataCellsOfTypeByIndex.forEach(function(dataCells) {
+
+                    dataCells = dataCells.filter(function(dataCell) {
+                        return !dataCell.plot || !this.parent || dataCell.plot.isDataBoundOn(this.data);
                     }, this);
-                }
-            },
-            this);
+
+                    if(dataCells.length > 0) {
+                        var axisIndex = dataCells[0].axisIndex;
+                        var axis = this.axes[def.indexedId(type, axisIndex)];
+                        if(!axis.isBound()) {
+                            axis.bind(dataCells);
+                        }
+                    }
+                }, this);
+            }
+        }, this);
     },
 
-    /** @virtual */
+    _getAxisClass: function(axisType) {
+        return this._axisClassByType[axisType] || pvc.visual.Axis;
+    },
+
+        /** @virtual */
     _initAxesEnd: function() {
         // Can only be done after axes creation
         if(this.slidingWindow)

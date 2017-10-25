@@ -1817,7 +1817,7 @@ def
             if(roles && isSingleGroup) {
                 roles = roles.filter(function(role) {
                     if(role.isMeasureEffective) {
-                        return mainDimName === (new pvc.visual.MeasureRoleAtomHelper(role).getBoundDimensionName(group));
+                        return mainDimName === pvc.visual.MeasureRoleAtomHelper.getBoundDimensionName(role, group);
                     }
                     return true;
                 });

@@ -72,30 +72,30 @@ def
 
         var colorRole = dataCell.role;
         var plot = dataCell.plot;
-        var measureRoleAtomHelpers = null;
+        var getBoundDimensionNameList = null;
 
         // Is role bound to discriminator dimensions, such as "valueRole.dim"?
         if(colorRole.grouping.hasExtensionComplexTypes) {
 
-            measureRoleAtomHelpers = colorRole.grouping.extensionDimensions()
+            getBoundDimensionNameList = colorRole.grouping.extensionDimensions()
                 .select(function(dimSpec) {
                     var measureRole;
                     var measureRoleName = pvc.visual.Role.parseDataSetName(dimSpec.dataSetName);
                     if(measureRoleName !== null && (measureRole = plot.visualRole(measureRoleName)) !== null) {
                         // Chart-level scenes can contain measure discriminators even if a plot's role is only bound to a single dimension.
                         // Use Chart Mode.
-                        return new pvc.visual.MeasureRoleAtomHelper(measureRole, /* isChartMode: */true);
+                        return pvc.visual.MeasureRoleAtomHelper.createGetBoundDimensionName(measureRole, /* isChartMode: */true);
                     }
                 })
                 .where(def.notNully)
                 .array();
 
-            if(measureRoleAtomHelpers.length === 0) {
-                measureRoleAtomHelpers = null;
+            if(getBoundDimensionNameList.length === 0) {
+                getBoundDimensionNameList = null;
             }
         }
 
-        if(dataPartDimName !== null || measureRoleAtomHelpers !== null) {
+        if(dataPartDimName !== null || getBoundDimensionNameList !== null) {
 
             var dataPartValue = dataCell.dataPartValue;
 
@@ -117,11 +117,11 @@ def
                     return false;
                 }
 
-                if(measureRoleAtomHelpers !== null) {
+                if(getBoundDimensionNameList !== null) {
                     var i = -1;
-                    var L = measureRoleAtomHelpers.length;
+                    var L = getBoundDimensionNameList.length;
                     while(++i < L) {
-                        if(measureRoleAtomHelpers[i].getBoundDimensionName(groupData) === null) {
+                        if(getBoundDimensionNameList[i](groupData) === null) {
                             return false;
                         }
                     }

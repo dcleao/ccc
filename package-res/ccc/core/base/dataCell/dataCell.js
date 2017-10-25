@@ -28,5 +28,27 @@ def
 .add(/** @lends pvc.visual.DataCell# */{
     legendVisible: function() {
         return this.role.legend().visible;
+    },
+
+    /**
+     * Gets a value that indicates if the data cell is bound on the given base data.
+     *
+     * A data cell is bound if it is statically bound to a measure visual role that is bound
+     * and is compatible with any measure discriminator dimensions already set on `baseData`.
+     *
+     * @param {!cdo.Data} baseData - The base data.
+     * @return {boolean} `true` if the data cell is data bound; `false` otherwise.
+     */
+    isDataBoundOn: function(baseData) {
+        var role = this.role;
+        if(!role.isBound()) {
+            return false;
+        }
+
+        if(!role.isMeasureEffective) {
+            return true;
+        }
+
+        return pvc.visual.MeasureRoleAtomHelper.hasCompatibleBoundDimensionName(role, baseData);
     }
 });

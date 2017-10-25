@@ -100,7 +100,7 @@ def.type('cdo.GroupingSpec')
 
                 // Register referenced complex type names.
                 if(dimSpec.dataSetName) {
-                    if(!referencedExtensionComplexTypeNamesMap) {
+                    if(referencedExtensionComplexTypeNamesMap === null) {
                         referencedExtensionComplexTypeNamesMap = Object.create(null);
                     }
 

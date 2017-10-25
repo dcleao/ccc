@@ -139,6 +139,16 @@ function(dimTypeSpecs) {
     },
 
     /**
+     * Filters out any foreign dimensions names from a given array.
+     *
+     * @param {string[]} dimNames - A dimension names array, possibly containing names of extension dimensions.
+     * @return {string[]} A dimension names array.
+     */
+    filterExtensionDimensionNames: function(dimNames) {
+        return dimNames.filter(function(dimName) { return !!def.hasOwn(this, dimName); }, this._dims);
+    },
+
+    /**
      * Obtains an array with all the dimension types.
      *
      * <p>

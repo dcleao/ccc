@@ -101,6 +101,7 @@ pvc.BaseChart
         });
     },
 
+    // @see pvc.BaseChart#_willBindVisualRoles
     _createPlotTrend: function() {
         // Override with an appropriate Trend plot configuration
     },
@@ -136,17 +137,11 @@ pvc.BaseChart
     },
 
     _initPlotsEnd: function() {
-        // type -> index -> [datacell array]
-        var dataCellsByAxisTypeThenIndex = {};
-
         this.plotList.forEach(function(plot) {
             plot.initEnd();
 
             this._registerPlotVisualRoles(plot);
-            this._indexPlotDataCells(plot, dataCellsByAxisTypeThenIndex);
         }, this);
-
-        this._dataCellsByAxisTypeThenIndex = dataCellsByAxisTypeThenIndex;
     },
 
     _registerPlotVisualRoles: function(plot) {
@@ -171,17 +166,6 @@ pvc.BaseChart
 
             this._addVisualRoleCore(role, names);
         }, this);
-    },
-
-    // Ask the plot for "potential" DataCells.
-    // A DataCell is only effective if its visual role actually becomes bound.
-    _indexPlotDataCells: function(plot, dataCellsByAxisTypeThenIndex) {
-        plot.dataCellList.forEach(function(dataCell) {
-            var dataCellsByAxisIndex =
-                def.array.lazy(dataCellsByAxisTypeThenIndex, dataCell.axisType);
-
-            def.array.lazy(dataCellsByAxisIndex, dataCell.axisIndex).push(dataCell);
-        });
     }
 });
 

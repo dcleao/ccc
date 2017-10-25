@@ -328,6 +328,7 @@ new pvc.BarChart({
     legend: true,
     legendPosition: "right",
     baseAxisComposite: true,
+    baseAxisSize: 100,
     readers: ["city", "date", "salesEUR", "salesUSD"],
     plots: [
         {
@@ -391,6 +392,7 @@ new pvc.BarChart({
     legend: true,
     legendPosition: "right",
     baseAxisComposite: true,
+    baseAxisSize: 100,
     readers: ["city", "date", "salesEUR", "salesUSD"],
     plots: [
         {
@@ -584,7 +586,7 @@ new pvc.BarChart({
     </div>
 </div>
 
-<h3>Multichart of a two plots</h3>
+<h3>Multichart of two alternating plots</h3>
 
 <div class="tryItTable">
     <div>
@@ -594,43 +596,98 @@ new pvc.BarChart({
     canvas: "pvcExample8",
     width:  500,
     height: 350,
-    title: "Sales By Region and Split By Brand vs " +
-      "Quantity By Region and Split By Brand",
+    title: "Sales By Date and Split By City vs " +
+      "Profit By Date and Split By City",
     animate: false,
     selectable: true,
     hoverable: true,
     legend: true,
     orthoAxisDomainScope: "cell",
     legendPosition: "right",
-    readers: ["region", "brand", "quantity", "sales"],
+    readers: ["city", "date", "profit", "sales"],
     visualRoles: {
         multiChart: "valueRole.dim",
     },
+    orientation: "horizontal",
     plots: [
         {
             name: "main",
             stacked: true,
             visualRoles: {
-                series: "brand",
-                category: "region",
+                series: "city",
+                category: "date",
                 value: "sales"
             }
         },
         {
             type: "point",
+            areasVisible: true,
+            stacked: true,
             visualRoles: {
-                value: "quantity"
+                value: "profit"
             }
         }
     ]
 })
-.setData(relational_04b, {
+.setData(relational_01_2measures_pos, {
     crosstabMode: false
 })
 .render();</textarea>
             <button id="pvcExample8TryMe" class="tryMe" onclick='tryMe(this)'>Try me</button>
         </div>
         <div><div id="pvcExample8"></div></div>
+    </div>
+</div>
+
+<h3>Multichart of alternating plots (ii)</h3>
+
+<div class="tryItTable">
+    <div>
+        <div>
+<textarea cols="90" rows="21" id="pvcExample9Code">
+new pvc.LineChart({
+    canvas: "pvcExample9",
+    width:  500,
+    height: 350,
+    title: "Sales and associated Statistics By Date and Split By City",
+    animate: false,
+    selectable: true,
+    hoverable: true,
+    legend: true,
+    multiChartColumnsMax: 2,
+    legendPosition: "right",
+    dimensions: {date: {valueType: Date}},
+    readers: ["city", "date", "sales", "p25s", "p75s", "p5s", "p95s"],
+    visualRoles: {
+        multiChart: "valueRole.dim",
+    },
+    plots: [
+        {
+            name: "main",
+            nullInterpolationMode: 'linear',
+            visualRoles: {
+                series: "city",
+                category: "date",
+                value: "sales"
+            }
+        },
+        {
+            type: "point",
+            areasVisible: true,
+            nullInterpolationMode: 'linear',
+            visualRoles: {
+                value: "p25s, p75s, p5s, p95s"
+            }
+        }
+    ]
+})
+.setData(relational_01c, {
+    crosstabMode: false
+})
+.render();</textarea>
+            <button id="pvcExample9TryMe" class="tryMe" onclick='tryMe(this)'>Try me</button>
+        </div>
+        <div><div id="pvcExample9"></div></div>
     </div>
 </div>
 

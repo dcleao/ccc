@@ -68,14 +68,8 @@ def.type('cdo.GroupingOper', cdo.DataOper)
     }
 
     var extensionDataSetsKey = '';
-
-    this._extensionDataSetsMap = def.get(keyArgs, 'extensionDataSetsMap');
-
-    if(hasKey && this._extensionDataSetsMap) {
-        def.eachOwn(this._extensionDataSetsMap, function(dataSet, dataSetName) {
-            extensionDataSetsKey += dataSetName + ':' + dataSet.id + ';';
-        });
-    }
+    var extensionDataSetsMap = null;
+    var extensionDataSetsMapProvided = def.get(keyArgs, 'extensionDataSetsMap', null);
 
     var reverse = def.get(keyArgs, 'reverse', false);
 
@@ -101,8 +95,29 @@ def.type('cdo.GroupingOper', cdo.DataOper)
             groupSpecKeys.push(groupSpec.key);
         }
 
+        if(groupSpec.extensionComplexTypeNames !== null) {
+            groupSpec.extensionComplexTypeNames.forEach(function(dataSetName) {
+                var dataSet;
+                if(extensionDataSetsMapProvided === null || !(dataSet = extensionDataSetsMapProvided[dataSetName])) {
+                    throw def.error.operationInvalid("Grouping specification requires extension data set '{0}'.", [datatSetName]);
+                }
+
+                if(extensionDataSetsMap === null) {
+                    extensionDataSetsMap = Object.create(null);
+                }
+
+                extensionDataSetsMap[dataSetName] = dataSet;
+
+                if(hasKey) {
+                    extensionDataSetsKey += dataSetName + ':' + dataSet.id + ';';
+                }
+            });
+        }
+
         return groupSpec;
     });
+
+    this._extensionDataSetsMap = extensionDataSetsMap;
 
     if(hasKey) {
         this.key = groupSpecKeys.join('!!') + ":" +
@@ -112,9 +127,11 @@ def.type('cdo.GroupingOper', cdo.DataOper)
 add(/** @lends cdo.GroupingOper# */{
 
     /**
-     * Gets a map of datum arrays, indexed by extension data set name.
+     * Gets a map of datum arrays, indexed by extension data set name,
+     * `null`, when there are no extension references, or
+     * `false`, when any extension has no datums.
      *
-     * @return {Object.<string, !cdo.Datum[]>} The extension datums map.
+     * @return {Object.<string, !cdo.Datum[]>|boolean} The extension datums map, or `null` or `false`.
      */
     _getExtensionDatumsMap: function() {
         var extensionDatumsMap = null;
@@ -122,9 +139,40 @@ add(/** @lends cdo.GroupingOper# */{
         if(extensionDataSetsMap) {
             extensionDatumsMap = Object.create(null);
 
-            def.eachOwn(extensionDataSetsMap, function(dataSet, dataSetName) {
-                extensionDatumsMap[dataSetName] = dataSet._datums || [];
-            });
+            var baseExtensionDatumsMap = this._linkParent.extensionDatums;
+
+            var isNoDatums = def.query(Object.keys(extensionDataSetsMap))
+                .each(function(dataSetName) {
+
+                    var dataSet = extensionDataSetsMap[dataSetName];
+
+                    var datums = dataSet._datums;
+                    if(!datums) {
+                        return false; // break;
+                    }
+
+                    // Is the base data set already limited to a set of these datums?
+                    // If so, intesect.
+                    // If we get 0 datums, then the whose grouping results in 0 datums...
+                    if(baseExtensionDatumsMap !== null) {
+                        var baseDatums = baseExtensionDatumsMap[dataSetName];
+                        if(baseDatums) {
+                            datums = baseDatums.filter(function(baseDatum) {
+                                return datums.indexOf(baseDatum) >= 0;
+                            });
+                        }
+                    }
+
+                    if(datums.length === 0) {
+                        return false; // break
+                    }
+
+                    extensionDatumsMap[dataSetName] = datums;
+                });
+
+            if(isNoDatums) {
+                return false;
+            }
         }
 
         return extensionDatumsMap;
@@ -183,10 +231,11 @@ add(/** @lends cdo.GroupingOper# */{
         };
 
         if(rootNode.treeHeight > 0) {
-
+            // Any extensions with no datums cause the whole grouping to result in no datums.
             var extensionDatumsMap = this._getExtensionDatumsMap();
-
-            this._groupSpecRecursive(rootNode, def.query(datumsQuery).array(), extensionDatumsMap, 0);
+            if(extensionDatumsMap !== false) {
+                this._groupSpecRecursive(rootNode, def.query(datumsQuery).array(), extensionDatumsMap, 0);
+            }
         }
 
         return rootNode;
@@ -460,14 +509,14 @@ add(/** @lends cdo.GroupingOper# */{
 
             crossJoinExtensionDatumsRecursive(crossJoinExtensionDatumsMaps, 0, levelExtensionDatumsMap);
 
-            while(++j < D) groupDatumExtended(levelDatums[j], crossJoinExtensionDatumsMaps);
+            while(++j < D) groupDatumExtended.call(this, levelDatums[j], crossJoinExtensionDatumsMaps);
 
         } else {
             buildKey = levelSpec.buildKeyMain;
             buildGroupNode = levelSpec.buildGroupNodeMain;
             nodeComparer = levelSpec.compareNodesMain.bind(levelSpec);
 
-            while(++j < D) groupDatum(levelDatums[j], levelExtensionDatumsMap);
+            while(++j < D) groupDatum.call(this, levelDatums[j], levelExtensionDatumsMap);
         }
 
         if(postFilter) {
@@ -530,7 +579,7 @@ add(/** @lends cdo.GroupingOper# */{
             var i = -1;
             var L = extensionDatumsMaps.length;
 
-            while(++i < L) groupDatum(datum, extensionDatumsMaps[i]);
+            while(++i < L) groupDatum.call(this, datum, extensionDatumsMaps[i]);
         }
 
         // Each extension dimension will cause a cross join to be performed with corresponding datums of levelExtensionDatumsMap.

@@ -152,13 +152,13 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
         _getStackedCategoryValueExtent: function(catGroup, valueRole, useAbs) {
             var posSum = null;
             var negSum = null;
-            var measureRoleAtomHelper = new pvc.visual.MeasureRoleAtomHelper(valueRole);
+            var getBoundDimensionName = pvc.visual.MeasureRoleAtomHelper.createGetBoundDimensionName(valueRole);
 
             catGroup
                 .children()
                 // Sum all datum's values on the same leaf
                 .select(function(serGroup) {
-                    var valueDimName = measureRoleAtomHelper.getBoundDimensionName(serGroup);
+                    var valueDimName = getBoundDimensionName(serGroup);
                     var value = serGroup.dimensions(valueDimName).value();
 
                     // NOTE: null passes through.
@@ -204,20 +204,21 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
 
             var InterpType = this._getNullInterpolationOperType(dataCell.nullInterpolationMode);
             if(InterpType) {
-                this.chart._warnSingleContinuousValueRole(dataCell.role);
-
-                var partData = this.chart.partData(this.dataPartValue, baseData),
-                    visibleData = this.chart.visiblePlotData(this, {baseData: baseData});// [ignoreNulls=true]
+                var partData = this.chart.partData(this.dataPartValue, baseData);
+                var visibleData = this.chart.visiblePlotData(this, {baseData: baseData});// [ignoreNulls=true]
                 if(visibleData.childCount() > 0) {
-                    new InterpType(
-                        baseData,
-                        partData,
-                        visibleData,
-                        this.visualRoles.category,
-                        this.visualRoles.series,
-                        /*valRole*/dataCell.role,
-                        /*stretchEnds*/true) // dataCell.isStacked
-                        .interpolate();
+                    var valueDimNames = pvc.visual.MeasureRoleAtomHelper.getCompatibleBoundDimensionNames(dataCell.role, visibleData);
+                    valueDimNames.forEach(function(valueDimName) {
+                        new InterpType(
+                            baseData,
+                            partData,
+                            visibleData,
+                            this.visualRoles.category,
+                            this.visualRoles.series,
+                            /*valRole*/valueDimName,
+                            /*stretchEnds*/true) // dataCell.isStacked
+                            .interpolate();
+                    }, this);
                 }
             }
         },
@@ -236,85 +237,110 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
 
             if(dataCell.plot !== this) throw def.error.operationInvalid("DataCell not of this plot.");
 
-            var serRole = this.visualRoles.series,
-                xRole   = this.visualRoles.category,
-                yRole   = dataCell.role,
-                trendOptions = dataCell.trend,
-                trendInfo = trendOptions.info;
+            // Visible data grouped by category and then series.
+            // Already takes plot.dataPartValue into account.
+            var data = this.chart.visiblePlotData(this, {baseData: baseData}); // [ignoreNulls=true]
 
-            this.chart._warnSingleContinuousValueRole(yRole);
+            var yRole = dataCell.role;
+            var yDimNames = pvc.visual.MeasureRoleAtomHelper.getCompatibleBoundDimensionNames(yRole, data);
+            if(yDimNames.length === 0) {
+                return;
+            }
 
-            var yDimName = yRole.lastDimensionName(),
-                xDimName,
-                isXDiscrete = xRole.isDiscrete();
-            if(!isXDiscrete) xDimName = xRole.lastDimensionName();
+            var seriesRole = this.visualRoles.series;
+            var xRole = this.visualRoles.category;
 
-            var sumKeyArgs = {zeroIfNone: false},
-                partData = this.chart.partData(dataCell.dataPartValue, baseData),
-                // Visible data grouped by category and then series
-                data = this.chart.visiblePlotData(this, {baseData: baseData}), // [ignoreNulls=true]
-                dataPartAtom = this.chart._getTrendDataPartAtom(),
-                dataPartDimName = dataPartAtom.dimension.name,
-                // TODO: It is usually the case, but not certain, that the base axis'
-                // dataCell(s) span "all" data parts.
-                allCatDatas = xRole.flatten(baseData, {visible: true}).childNodes,
-                qVisibleSeries = serRole.flatten(partData, {visible: true}).children();
+            var trendOptions = dataCell.trend;
+            var trendInfo = trendOptions.info;
 
-            qVisibleSeries.each(genSeriesTrend);
+            var xDimName;
+            var isXDiscrete = xRole.isDiscrete();
+            if(!isXDiscrete) {
+                xDimName = xRole.lastDimensionName();
+            }
 
-            function genSeriesTrend(serData1) {
+            var sumKeyArgs = {zeroIfNone: false};
+            var dataPartAtom = this.chart._getTrendDataPartAtom();
+            var dataPartDimName = dataPartAtom.dimension.name;
+
+            // TODO: It is usually the case, but not certain, that the base axis'
+            // dataCell(s) span "all" data parts of baseData.
+            var allCategDatas = xRole.flatten(baseData, {visible: true}).childNodes;
+
+            var partData = this.chart.partData(dataCell.dataPartValue, baseData);
+            var visibleSeriesDatas = seriesRole.flatten(partData, {visible: true}).children().array();
+
+            var datumDimNames;
+
+            // Generate a trend series for each series and bound measure.
+            yDimNames.forEach(function(yDimName) {
+                datumDimNames = null;
+
+                visibleSeriesDatas.forEach(function(seriesData) {
+                    generateSeriesTrend(seriesData, yDimName);
+                });
+            });
+
+            function generateSeriesTrend(seriesData, yDimName) {
+
                 var funX = isXDiscrete
                         ? null  // means: "use *index* as X value"
-                        : function(allCatData) { return allCatData.atoms[xDimName].value;},
+                        : function(allCatData) { return allCatData.atoms[xDimName].value; };
 
-                    funY = function(allCatData) {
-                        var group = data.child(allCatData.key);
-                        if(group && serData1) group = group.child(serData1.key);
-                        // When null, the data point ends up being ignored
-                        return group ? group.dimensions(yDimName).value(sumKeyArgs) : null;
-                    },
+                var funY = function(allCatData) {
+                    var group = data.child(allCatData.key);
+                    if(group) {
+                        group = group.child(seriesData.key);
+                    }
 
-                    options = def.create(trendOptions, {
-                        rows: def.query(allCatDatas),
-                        x: funX,
-                        y: funY
-                    }),
-                    trendModel = trendInfo.model(options);
+                    // When null, the data point ends up being ignored.
+                    return group ? group.dimensions(yDimName).value(sumKeyArgs) : null;
+                };
 
+                var options = def.create(trendOptions, {
+                    rows: def.query(allCategDatas),
+                    x: funX,
+                    y: funY
+                });
+
+                var trendModel = trendInfo.model(options);
                 if(trendModel) {
                     // At least one point...
                     // Sample the line on each x and create a datum for it
-                    // on the 'trend' data part
-                    allCatDatas.forEach(function(allCatData, index) {
+                    // on the 'trend' data part.
+                    allCategDatas.forEach(function(allCategData, categIndex) {
+
                         var trendX = isXDiscrete ?
-                                index :
-                                allCatData.atoms[xDimName].value,
-                            trendY = trendModel.sample(trendX, funY(allCatData), index);
+                                categIndex :
+                                allCategData.atoms[xDimName].value;
 
+                        var trendY = trendModel.sample(trendX, funY(allCategData), categIndex);
                         if(trendY != null) {
-                            var catData   = data.child(allCatData.key),
-                                efCatData = catData || allCatData,
-                                atoms;
-                            if(serData1) {
-                                var catSerData = catData && catData.child(serData1.key);
-                                if(catSerData) {
-                                    atoms = Object.create(catSerData._datums[0].atoms);
-                                } else {
-                                    // Missing data point
-                                    atoms = Object.create(efCatData._datums[0].atoms);
+                            var categData = data.child(allCategData.key);
+                            var categDataEf = categData || allCategData;
 
-                                    // Now copy series atoms
-                                    def.copyOwn(atoms, serData1.atoms);
-                                }
+                            var atoms;
+                            var categAndSeriesData = categData && categData.child(seriesData.key);
+                            if(categAndSeriesData) {
+                                atoms = Object.create(categAndSeriesData.atoms);
                             } else {
-                                // Series is unbound
-                                atoms = Object.create(efCatData._datums[0].atoms);
+                                // Missing data point
+                                atoms = Object.create(categDataEf.atoms);
+
+                                // Now copy series atoms
+                                def.copyOwn(atoms, seriesData.atoms);
                             }
 
                             atoms[yDimName] = trendY;
                             atoms[dataPartDimName] = dataPartAtom;
 
-                            newDatums.push(new cdo.TrendDatum(efCatData.owner, atoms, trendOptions));
+                            // Exclude all extension dimensions.
+                            // Do this only once, as the structure is the same for every datum.
+                            if(!datumDimNames) {
+                                datumDimNames = data.type.filterExtensionDimensionNames(def.keys(atoms));
+                            }
+
+                            newDatums.push(new cdo.TrendDatum(categDataEf.owner, atoms, datumDimNames, trendOptions));
                         }
                     });
                 }
