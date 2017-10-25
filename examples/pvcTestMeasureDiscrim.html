@@ -665,6 +665,7 @@ new pvc.LineChart({
         {
             name: "main",
             nullInterpolationMode: 'linear',
+            trendType: 'linear',
             visualRoles: {
                 series: "city",
                 category: "date",
@@ -673,8 +674,9 @@ new pvc.LineChart({
         },
         {
             type: "point",
-            areasVisible: true,
             nullInterpolationMode: 'linear',
+            trendType: 'linear',
+            areasVisible: true,
             visualRoles: {
                 value: "p25s, p75s, p5s, p95s"
             }

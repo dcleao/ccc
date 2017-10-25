@@ -84,6 +84,7 @@ def.type('cdo.GroupingSpec')
     var allDimCount = 0;
 
     var isDiscrete = false;
+    var singleContinuousValueType = null;
 
     this.levels = def.query(levelSpecs || undefined) // -> null query
         // Filter out empty levels....
@@ -110,8 +111,15 @@ def.type('cdo.GroupingSpec')
                     accMainDimNames.push(dimSpec.name);
                 }
 
-                if(complexType !== null) {
-                    isDiscrete |= dimSpec.dimensionType.isDiscrete;
+                if(complexType !== null && !isDiscrete) {
+                    var dimType = dimSpec.dimensionType;
+                    if(dimType.isDiscrete) {
+                        isDiscrete = true;
+                    } else if(singleContinuousValueType === null) {
+                        singleContinuousValueType = dimType.valueType;
+                    } else if(singleContinuousValueType !== dimType.valueType) {
+                        isDiscrete = true;
+                    }
                 }
             });
 
@@ -140,6 +148,7 @@ def.type('cdo.GroupingSpec')
     this.depth = this.levels.length;
 
     this._isDiscrete = complexType !== null ? isDiscrete : undefined;
+    this._singleContinuousValueType = complexType !== null ? (isDiscrete ? null : singleContinuousValueType) : undefined;
 
     this.isSingleDimension = allDimCount === 1;
 

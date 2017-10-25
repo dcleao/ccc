@@ -692,12 +692,12 @@ pvc.BaseChart
         if(!dataPartDimName || !this.plots.trend) return;
 
         var dataCells = def.query(this.axesList)
-            .selectMany(def.propGet('dataCells'))
-            .where(def.propGet('trend'))
-            .distinct(function(dataCell) {
-                 return dataCell.role.name  + '|' + (dataCell.dataPartValue || '');
-            })
-            .array();
+                .selectMany(def.propGet('dataCells'))
+                .where(def.propGet('trend'))
+                .distinct(function(dataCell) {
+                     return dataCell.role.prettyId()  + '|' + (dataCell.dataPartValue || '');
+                })
+                .array();
 
         var newDatums = [];
 
