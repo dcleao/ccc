@@ -693,5 +693,45 @@ new pvc.LineChart({
     </div>
 </div>
 
+<h3>Multichart of a single PIE plot; small charts split by measure</h3>
+
+<div class="tryItTable">
+    <div>
+        <div>
+<textarea cols="90" rows="21" id="pvcExample10Code">
+new pvc.PieChart({
+    canvas: "pvcExample10",
+    width:  500,
+    height: 350,
+    title: "Sales or Quantity By Brand, By Region",
+    animate: false,
+    selectable: true,
+    hoverable: true,
+    legend: true,
+    legendPosition: "right",
+    multiChartColumnsMax: 2,
+    readers: ["region", "brand", "quantity", "sales"],
+    visualRoles: {
+        multiChart: "region, valueRole.dim",
+    },
+    plots: [
+        {
+            name: "main",
+            visualRoles: {
+                category: "brand",
+                value: "sales, quantity"
+            }
+        }
+    ]
+})
+.setData(relational_04b, {
+    crosstabMode: false
+})
+.render();</textarea>
+            <button id="pvcExample10TryMe" class="tryMe" onclick='tryMe(this)'>Try me</button>
+        </div>
+        <div><div id="pvcExample10"></div></div>
+    </div>
+</div>
   </body>
 </html>

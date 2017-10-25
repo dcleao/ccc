@@ -326,27 +326,49 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
 
             var data = chart.visiblePlotData(this); // [ignoreNulls=true]
 
-            return def.query(valueRole.grouping.dimensionNames())
-                .select(function(valueDimName) {
+            var valueDimNames = valueRole.grouping.dimensionNames();
+            if(valueAxis.scaleSumNormalized()) {
+                // e.g. Pie angle axis.
+                var sum;
 
-                    if(valueAxis.scaleSumNormalized()) {
-                        var sum = data.dimensionsSumAbs(valueDimName);
-                        return {min: 0, max: sum};
-                    } else {
-                        var useAbs = valueAxis.scaleUsesAbs();
-                        var extent = data.dimensions(valueDimName).extent({abs: useAbs});
-                        if(extent !== undefined) {
-                            // TODO: aren't these Math.abs repeating work??
-                            var minValue = extent.min.value;
-                            var maxValue = extent.max.value;
-                            return {
-                                min: (useAbs ? Math.abs(minValue) : minValue),
-                                max: (useAbs ? Math.abs(maxValue) : maxValue)
-                            };
-                        }
-                    }
-                })
-                .reduce(pvc.unionExtents, null);
+                if(valueDimNames.length === 1) {
+                    // Cached.
+                    sum = data.dimensionsSumAbs(valueDimNames[0]);
+                } else {
+                    // Non-cached.
+
+                    // Implicitly stacked
+                    var getBoundDimensionName = pvc.visual.MeasureRoleAtomHelper.createGetBoundDimensionName(valueRole);
+
+                    // Code similar to that in Data.dimensionsSumAbs except that dimension name is evaluated in each child data.
+                    sum = data.children()
+                        // non-degenerate flattened parent groups would account for the same values more than once.
+                        .where(function(childData) { return !childData._isFlattenGroup || childData._isDegenerateFlattenGroup; })
+                        .select(function(childData) {
+                            var dimName = getBoundDimensionName(childData);
+                            return childData.dimensions(dimName).valueAbs() || 0;
+                        }, this)
+                        .reduce(def.add, 0);
+                }
+
+                return {min: 0, max: sum};
+            }
+
+            // Non-normalized.
+            return def.query(valueDimNames).select(function(valueDimName) {
+                var useAbs = valueAxis.scaleUsesAbs();
+                var extent = data.dimensions(valueDimName).extent({abs: useAbs});
+                if(extent !== undefined) {
+                    // TODO: aren't these Math.abs repeating work??
+                    var minValue = extent.min.value;
+                    var maxValue = extent.max.value;
+                    return {
+                        min: (useAbs ? Math.abs(minValue) : minValue),
+                        max: (useAbs ? Math.abs(maxValue) : maxValue)
+                    };
+                }
+            })
+            .reduce(pvc.unionExtents, null);
         },
 
         _getColorDataCell: function() {

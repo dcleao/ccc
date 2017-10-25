@@ -480,19 +480,19 @@ pvc.BaseChart
 
         var dim;
         var read = function(v) {
-                if(!dim) dim = me.data.owner.dimensions(axis.role.grouping.lastDimensionName());
-                var v = dim.read(v);
-                // Dereference atom
-                return v != null ? v.value : null;
-            };
+            if(!dim) dim = me.data.owner.dimensions(axis.role.grouping.lastDimensionName());
+            var v = dim.read(v);
+            // Dereference atom
+            return v != null ? v.value : null;
+        };
 
         var readLimit = function(name) {
-                if(!opts.isDefined(name)) return null;
+            if(!opts.isDefined(name)) return null;
 
-                var v = opts(name);
-                // may still return null, in case an invalid non-null value is supplied.
-                return v != null ? read(v) : v;
-            };
+            var v = opts(name);
+            // may still return null, in case an invalid non-null value is supplied.
+            return v != null ? read(v) : v;
+        };
 
         // Length is null or > 0.
         var length = opts.isDefined('FixedLength') ? opts('FixedLength') : null;
