@@ -1094,6 +1094,41 @@ var relational_04c = {
     }]
 };
 
+var relational_04d = {
+    resultset: [
+        ["EMEA", "Ford",       72000, 127023],
+        ["EMEA", "Renault",    50000, 107450],
+        ["EMEA", "BMW",        20000, 231978],
+        ["EMEA", "Mercedes",   23000, 157450],
+        ["EMEA", "Mitsubishi", 72000,  97528],
+        ["EMEA", "Peugeut",    50000, 117922],
+        ["EMEA", "Honda",      20000, 203318],
+        ["EMEA", "Audi",       23000, 251240],
+
+        ["APAC", "Ford",       27000,  60124],
+        ["APAC", "Renault",     5000,  50167],
+        ["APAC", "BMW",         2000,  22000],
+        ["APAC", "Mercedes",   32000, 107450],
+        ["APAC", "Fiat",       24000,  82481],
+        ["APAC", "Peugeut",     4000,   2555],
+        ["APAC", "Honda",      90000, 636682],
+        ["APAC", "Audi",       53000, 416727]
+    ],
+    metadata: [{
+        colName: "Region",
+        colType: "String"
+    }, {
+        colName: "Brand",
+        colType: "String"
+    }, {
+        colName: "OtherGains",
+        colType: "Numeric"
+    }, {
+        colName: "Sales",
+        colType: "Numeric"
+    }]
+};
+
 var relational_05 = {
     "resultset": [
         ["2011-07-03", 72],

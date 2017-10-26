@@ -52,7 +52,7 @@ def('pvc.visual.MetricXYPlot', pvc.visual.CartesianPlot.extend({
             var data = this.chart.visiblePlotData(this, {baseData: baseData}); // [ignoreNulls=true]
 
             var yRole = dataCell.role;
-            var yDimNames = pvc.visual.MeasureRoleAtomHelper.getCompatibleBoundDimensionNames(yRole, data);
+            var yDimNames = yRole.getCompatibleBoundDimensionNames(data);
             if(yDimNames.length === 0) {
                 return;
             }

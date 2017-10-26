@@ -1707,17 +1707,21 @@ def
         function renderRemainingDim(mainDimType) {
             var mainDimName = mainDimType.name;
 
-            if(mainDimType.isHidden || def.getOwn(commonDimNames, mainDimName)) return '';
+            if(mainDimType.isHidden || def.getOwn(commonDimNames, mainDimName)) {
+                return '';
+            }
 
-            var dim, value, valueLabel, dimAggr, calcPct, atom, dimInterp;
+            var dim, value, valueLabel, aggregationType, calcPct, interpolationName;
 
             if(isSingleDatum) {
                 // valueLabel, datum, atom
-                atom = firstDatum.atoms[mainDimName];
+                var atom = firstDatum.atoms[mainDimName];
                 value = atom.value;
                 valueLabel = atom.label;
-                if(mainDimType.valueType === Number && value != null) calcPct = calcAtomPct.bind(null, atom);
-                dimInterp = firstDatum.isInterpolated && firstDatum.interpDimName === mainDimName
+                if(mainDimType.valueType === Number && value != null) {
+                    calcPct = calcAtomPct.bind(null, atom);
+                }
+                interpolationName = firstDatum.isInterpolated && firstDatum.interpDimName === mainDimName
                     ? firstDatum.interpolation
                     : null;
             } else {
@@ -1727,7 +1731,7 @@ def
                 dim = allGroup.dimensions(mainDimName);
                 if(mainDimType.valueType === Number) {
                     // Sum
-                    if(hasManyRealDatums) dimAggr = 'sum';
+                    if(hasManyRealDatums) aggregationType = 'sum';
 
                     value      = dim.value(visibleKeyArgs);
                     valueLabel = dim.format(value);
@@ -1740,7 +1744,7 @@ def
                     if(isChartInterpolatable) {
                         // NOTE: not sure if it is possible that more than one interpolation can occur.
                         // Sticking to the first one, as the other case is esoteric anyway.
-                        dimInterp = Q(datums)
+                        interpolationName = Q(datums)
                             .where (function(d) { return d.isInterpolated && d.interpDimName === mainDimName; })
                             .select(function(d) { return d.interpolation; })
                             .first();
@@ -1748,7 +1752,7 @@ def
                 } else {
                     // Build a list of used distinct values.
 
-                    if(hasManyRealDatums) dimAggr = 'list';
+                    if(hasManyRealDatums) aggregationType = 'list';
 
                     value = valueLabel = dim.atoms(visibleKeyArgs)
                         .filter(function(a) { return a.value != null; })
@@ -1760,17 +1764,17 @@ def
                 }
             }
 
-            return renderDim(mainDimType, value, valueLabel, dimAggr, calcPct, dimInterp);
+            return renderDim(mainDimType, value, valueLabel, aggregationType, calcPct, interpolationName);
         }
 
-        function renderDim(mainDimType, value, valueLabel, dimAggr, calcPct, dimInterp) {
+        function renderDim(mainDimType, value, valueLabel, aggregationType, calcPct, interpolationName) {
 
             var rowClasses = ttClasses(
                     'dim',
                     'dimValueType-' + mainDimType.valueTypeName,
                     'dim' + (mainDimType.isDiscrete ? 'Discrete' : 'Continuous'),
-                    (dimAggr ? 'dimAgg' : ''),
-                    (dimAggr ? ('dimAgg-' + dimAggr) : ''));
+                    (aggregationType ? 'dimAgg' : ''),
+                    (aggregationType ? ('dimAgg-' + aggregationType) : ''));
 
             var anyPercentRole = false;
 
@@ -1797,14 +1801,16 @@ def
                     (anyPercentRole
                         // \u00a0 - nbsp
                         ? ('\u00a0' + tag('span', {'class': ttClasses('valuePct')}, function() {
-                                var valPct = calcPct(), formatter = mainDimType.format().percent();
+
+                                var valPct = calcPct();
+                                var formatter = mainDimType.format().percent();
                                 return escapeHtml(formatter(valPct));
                             }))
                         : ''),
 
-                    (dimInterp
-                        ? (' ' + tag('span', {'class': ttClasses('interp', 'interp-' + escapeCssClass(dimInterp))},
-                            escapeHtml(def.firstUpperCase(dimInterp) + ' interp.')))
+                    (interpolationName
+                        ? (' ' + tag('span', {'class': ttClasses('interp', 'interp-' + escapeCssClass(interpolationName))},
+                            escapeHtml(def.firstUpperCase(interpolationName) + ' interp.')))
                         : '')
                 ));
         }
@@ -1813,13 +1819,11 @@ def
 
             var mainDimName = mainDimType.name;
 
+            // Plot-level visual roles are only returned if this panel is a plot panel.
             var roles = me.visualRolesOf(mainDimName, /*includeChart*/true);
             if(roles && isSingleGroup) {
                 roles = roles.filter(function(role) {
-                    if(role.isMeasureEffective) {
-                        return mainDimName === pvc.visual.MeasureRoleAtomHelper.getBoundDimensionName(role, group);
-                    }
-                    return true;
+                    return !role.isMeasureEffective || role.isBoundDimensionName(group, mainDimName);
                 });
             }
 
@@ -1827,6 +1831,8 @@ def
         }
 
         function calcGroupDimPct(dim) {
+            // dim.valueAbs(visible) / sum( dim.data.parent.children.dimension(dim.name).valueAbs(visible) )
+            // dim.valueAbs(visible) / sum( dim.data.parent.children.dimension(visualRole.boundDimOnChildData.name).valueAbs(visible) )
             return dim.valuePercent(visibleKeyArgs);
         }
 
@@ -1834,7 +1840,7 @@ def
             var dimName = atom.dimension.name;
             return isSingleGroup
                 ? calcGroupDimPct(group.dimensions(dimName))
-                : data.dimensions(dimName).percent(atom.value, visibleKeyArgs);
+                : data.dimensions(dimName).percent(atom.value, visibleKeyArgs); // value / dim.sumAbs()  <=> value / sum(abs(data.datums().dim))
         }
     },
 

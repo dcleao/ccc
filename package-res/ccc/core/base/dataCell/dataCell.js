@@ -33,8 +33,10 @@ def
     /**
      * Gets a value that indicates if the data cell is bound on the given base data.
      *
-     * A data cell is bound if it is statically bound to a measure visual role that is bound
-     * and is compatible with any measure discriminator dimensions already set on `baseData`.
+     * A data cell is bound if:
+     * 1. it is statically bound to a visual role that is bound, and
+     * 2. a) it is not bound to a measure visual role or
+     * 2. b) it is bound to a measure visual role that is compatible with any measure discriminator dimensions already set on `baseData`.
      *
      * @param {!cdo.Data} baseData - The base data.
      * @return {boolean} `true` if the data cell is data bound; `false` otherwise.
@@ -49,6 +51,6 @@ def
             return true;
         }
 
-        return pvc.visual.MeasureRoleAtomHelper.hasCompatibleBoundDimensionName(role, baseData);
+        return role.isBoundDimensionCompatible(baseData);
     }
 });

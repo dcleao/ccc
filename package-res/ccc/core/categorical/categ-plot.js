@@ -152,7 +152,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
         _getStackedCategoryValueExtent: function(catGroup, valueRole, useAbs) {
             var posSum = null;
             var negSum = null;
-            var getBoundDimensionName = pvc.visual.MeasureRoleAtomHelper.createGetBoundDimensionName(valueRole);
+            var getBoundDimensionName = valueRole.getBoundDimensionName.bind(valueRole);
 
             catGroup
                 .children()
@@ -207,7 +207,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
                 var partData = this.chart.partData(this.dataPartValue, baseData);
                 var visibleData = this.chart.visiblePlotData(this, {baseData: baseData});// [ignoreNulls=true]
                 if(visibleData.childCount() > 0) {
-                    var valueDimNames = pvc.visual.MeasureRoleAtomHelper.getCompatibleBoundDimensionNames(dataCell.role, visibleData);
+                    var valueDimNames = dataCell.role.getCompatibleBoundDimensionNames(visibleData);
                     valueDimNames.forEach(function(valueDimName) {
                         new InterpType(
                             baseData,
@@ -242,7 +242,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
             var data = this.chart.visiblePlotData(this, {baseData: baseData}); // [ignoreNulls=true]
 
             var yRole = dataCell.role;
-            var yDimNames = pvc.visual.MeasureRoleAtomHelper.getCompatibleBoundDimensionNames(yRole, data);
+            var yDimNames = yRole.getCompatibleBoundDimensionNames(data);
             if(yDimNames.length === 0) {
                 return;
             }

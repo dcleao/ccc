@@ -59,14 +59,10 @@ def
     this.roleName = roleName;
     this.sourceRoleName = null;
     this.panel = null;
-    this.rootContDim = null;
-    this.percentFormatter = null;
+    this.hasPercentSubVar = def.get(keyArgs, 'hasPercentSubVar', false);
     this.allowNestedVars = !!def.get(keyArgs, 'allowNestedVars');
     this.isNumericMode = false;
     this.isSingleNumberDimension = false;
-    this.getBoundDimensionName = null;
-
-    var hasPercentSubVar = def.get(keyArgs, 'hasPercentSubVar', false);
 
     if(grouping !== null) {
         // Role is bound.
@@ -86,18 +82,13 @@ def
         if(!grouping.isDiscrete() && grouping.singleContinuousValueType === Number) {
             this.isNumericMode = true;
             this.isSingleNumberDimension = grouping.isSingleDimension;
-            this.getBoundDimensionName = pvc.visual.MeasureRoleAtomHelper.createGetBoundDimensionName(role);
-
-            if(hasPercentSubVar) {
-                this.percentFormatter = panel.chart.options.percentValueFormat;
-            }
         }
     } else {
         // Role is unbound.
 
         // Place a null variable in the root scene.
         var roleVar = rootScene.vars[roleName] = this._createNullVar();
-        if(hasPercentSubVar) {
+        if(this.hasPercentSubVar) {
             roleVar.percent = this._createNullVar();
         }
     }
@@ -197,51 +188,40 @@ def
         // If there is a single datum, then there is a single atom, and no summing is needed.
 
         var roleVar;
-        var valuePct;
-        var needPercent = this.percentFormatter !== null;
+        var valuePct = null;
+        var valuePctLabel = null;
 
         if(datum === null || datum.isNull) {
             roleVar = this._createNullVar();
         } else {
             // Some scenes are datum-only scenes (e.g. Scatter).
-            // Getting a data set (group) to find a discriminator variable requires looking on the parent scene...
-            // Only need to know the group when there is more than one dimension.
-            var closestGroup = this.isSingleNumberDimension ? null : scene.group || (scene.parent && scene.parent.group);
-            var valueDimName = this.getBoundDimensionName(closestGroup);
+            // So, getting a data set to find a discriminator variable may require looking at the parent scene.
+            var valueDimName = this.role.getBoundDimensionName(scene.data());
 
             roleVar = pvc_ValueLabelVar.fromAtom(datum.atoms[valueDimName]);
 
             var value = roleVar.value;
 
             // Calculate the percent value.
-            if(value != null && needPercent) {
-                if(scene.group !== null) {
-                    valuePct = scene.group.dimensions(valueDimName).valuePercent({visible: true});
-                } else {
-                    // TODO: Shouldn't {visible:true} be added here as well?
-                    // Compare with the code in BasePanel _summaryTooltipFormatter.
-                    // Is all data visible at this point?
-                    valuePct = scene.data().dimensions(valueDimName).percent(value);
-                }
+            if(value != null && this.hasPercentSubVar && scene.group !== null) {
+                valuePct = this.role.percentOf(scene.group, {visible: true});
+
+                var valuePctFormatter = scene.group.dimensions(valueDimName).type.format().percent();
+                valuePctLabel = valuePctFormatter(valuePct);
             }
+            // else if scene.group === null, not supported
         }
 
-        if(needPercent) {
-            roleVar.percent = this._createPercentVar(valuePct);
+        if(this.hasPercentSubVar) {
+            roleVar.percent = this._createPercentVar(valuePct, valuePctLabel);
         }
 
         return roleVar;
     },
 
-    _createPercentVar: function(valuePct) {
-        return valuePct == null
-            ? this._createNullVar()
-            : new pvc_ValueLabelVar(valuePct, this.percentFormatter.call(null, valuePct));
-    },
-
     _createVarFromGroupNumber: function(group) {
 
-        var valueDimName = this.getBoundDimensionName(group);
+        var valueDimName = this.role.getBoundDimensionName(group);
         var valueDim = group.dimensions(valueDimName);
 
         var value = valueDim.value({visible: true, zeroIfNone: false});
@@ -251,11 +231,18 @@ def
 
         var roleVar = new pvc_ValueLabelVar(value, valueDim.format(value), value);
 
-        if(this.percentFormatter !== null) {
-            var valuePct = valueDim.valuePercent({visible: true});
-            roleVar.percent = this._createPercentVar(valuePct);
+        if(this.hasPercentSubVar) {
+            var valuePct = this.role.percentOf(group, {visible: true});
+
+            var valuePctFormatter = valueDim.type.format().percent();
+
+            roleVar.percent = this._createPercentVar(valuePct, valuePctFormatter(valuePct));
         }
 
         return roleVar;
+    },
+
+    _createPercentVar: function(valuePct, valuePctLabel) {
+        return valuePct == null ? this._createNullVar() : new pvc_ValueLabelVar(valuePct, valuePctLabel);
     }
 });

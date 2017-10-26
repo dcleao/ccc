@@ -7,7 +7,7 @@
 
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <script type="text/javascript" src="../package-res/lib/jquery.js"></script>
-    
+
     <script type="text/javascript" src="data/q01-01.js"></script>
     <script type="text/javascript" src="data/steel-wheels.js"></script>
     <script type="text/javascript" src="../package-res/lib/protovis.js"></script>
@@ -119,7 +119,6 @@
         <script type="text/javascript" src="../package-res/ccc/core/base/visualRole/visualRole.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/visualRole/visualRolesBinder.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/visualRole/visualRoleVarHelper.js"></script>
-        <script type="text/javascript" src="../package-res/ccc/core/base/visualRole/visualRoleMeasureAtomHelper.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/dataCell/dataCell.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/dataCell/color-dataCell.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/axis/axis.js"></script>
@@ -226,11 +225,11 @@
         <script type="text/javascript" src="../package-res/ccc/plugin/parallel/par-chart.js"></script>
         <script type="text/javascript" src="../package-res/ccc/plugin/dataTree/dt-chart.js"></script>
     <!-- @SCRIPTSEND@ -->
-    
-    
 
-    
-        
+
+
+
+
     <script type="text/javascript" src="pvcDocUtils.js"></script>
   </head>
   <body>
@@ -238,7 +237,7 @@
     <h1>
       Pie Chart
     </h1>
-Pie charts are useful for performing relative comparisons: how do the parts make up the whole? 
+Pie charts are useful for performing relative comparisons: how do the parts make up the whole?
 An alternative to pie is the donut chart.
 
 <h2>Chart Options</h2>
@@ -322,16 +321,16 @@ var pie = new pvc.PieChart({
     selectable: true,
     hoverable: true,
     tooltipEnabled: true,
-    
+
     valuesVisible: true,
     valuesLabelStyle: 'inside',
     valuesMask: "{category}",
-    
+
     extensionPoints: {
        titleLabel_font: "18px sans-serif",
        slice_strokeStyle: 'white',
        //slice_lineWidth:   0.6,
-       //base_fillStyle:  'blue' 
+       //base_fillStyle:  'blue'
     }
 });
 pie.setData($.extend(true, {},relational_03),
@@ -383,7 +382,7 @@ setting colors, fonts, and more.<br/>
 
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcPie2"></div>
-    
+
 <h3>A Donut</h3>
 
 

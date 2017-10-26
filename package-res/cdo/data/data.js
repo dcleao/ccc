@@ -468,14 +468,14 @@ def.type('cdo.Data', cdo.Complex)
      * Obtains the number of contained datums.
      * @type number
      */
-    count: function() { return this._datums.length; },
+    count: function() { return this._datums ? this._datums.length : 0; },
 
     /**
      * Obtains the first datum of this data, if any.
      * @return {cdo.Datum} The first datum or <i>null</i>.
      * @see #singleDatum
      */
-    firstDatum: function() { return this._datums.length ? this._datums[0] : null; },
+    firstDatum: function() { return this.count() > 0 ? this._datums[0] : null; },
 
     /**
      * Obtains the atoms of the first datum of this data, if any, or the data own atoms, if none.

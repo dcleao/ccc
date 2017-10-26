@@ -116,7 +116,6 @@
         <script type="text/javascript" src="../package-res/ccc/core/base/visualRole/visualRole.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/visualRole/visualRolesBinder.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/visualRole/visualRoleVarHelper.js"></script>
-        <script type="text/javascript" src="../package-res/ccc/core/base/visualRole/visualRoleMeasureAtomHelper.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/dataCell/dataCell.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/dataCell/color-dataCell.js"></script>
         <script type="text/javascript" src="../package-res/ccc/core/base/axis/axis.js"></script>
@@ -731,6 +730,47 @@ new pvc.PieChart({
             <button id="pvcExample10TryMe" class="tryMe" onclick='tryMe(this)'>Try me</button>
         </div>
         <div><div id="pvcExample10"></div></div>
+    </div>
+</div>
+
+<h3>Multichart of a single PIE plot; measures as categories</h3>
+
+<div class="tryItTable">
+    <div>
+        <div>
+<textarea cols="90" rows="21" id="pvcExample11Code">
+new pvc.PieChart({
+    canvas: "pvcExample11",
+    width:  500,
+    height: 400,
+    title: "Sales and Quantity By Brand, By Region",
+    animate: false,
+    selectable: true,
+    hoverable: true,
+    legend: true,
+    legendPosition: "right",
+    multiChartColumnsMax: 1,
+    readers: ["region", "brand", "otherGains", "sales"],
+    visualRoles: {
+        multiChart: "region"
+    },
+    plots: [
+        {
+            name: "main",
+            visualRoles: {
+                category: "brand, valueRole.dim",
+                value: "otherGains, sales"
+            }
+        }
+    ]
+})
+.setData(relational_04d, {
+    crosstabMode: false
+})
+.render();</textarea>
+            <button id="pvcExample11TryMe" class="tryMe" onclick='tryMe(this)'>Try me</button>
+        </div>
+        <div><div id="pvcExample11"></div></div>
     </div>
 </div>
   </body>

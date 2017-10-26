@@ -395,13 +395,9 @@ pvc.BaseChart
                                 // All of its extension dimensions are bound?
                                 var measureRole;
                                 var measureRoleName = pvc.visual.Role.parseDataSetName(dimSpec.dataSetName);
-                                if(measureRoleName !== null && (measureRole = dataCell.plot.visualRole(measureRoleName)) !== null) {
-                                    if(pvc.visual.MeasureRoleAtomHelper.getBoundDimensionName(measureRole, itemData, /* isChartMode: */true) !== null) {
-                                        return true;
-                                    }
-                                }
-
-                                return false;
+                                return measureRoleName !== null &&
+                                    (measureRole = dataCell.plot.visualRole(measureRoleName)) !== null &&
+                                    measureRole.isBoundDimensionCompatible(itemData);
                             });
                     });
 

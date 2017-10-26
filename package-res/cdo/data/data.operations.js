@@ -414,9 +414,15 @@ cdo.Data.add(/** @lends cdo.Data# */{
     /**
      * Sums the absolute value of a specified dimension on each child data.
      *
-     * @param {string} dimName The name of the dimension.
+     * @param {string|function(!cdo.Data):string} dimName The name of the dimension, or a dimension discriminator function
+     *  that, when given a child data set, returns the name of the dimension to use for that child data set.
+     *  When a dimension discriminator function is specified,
+     *  for the results to be cached, an additional `keyArgs.discrimKey` argument must be specified as well.
+     *
      * @param {object} [keyArgs] Optional keyword arguments that are
-     * passed to each dimension's {@link cdo.Dimension#valueAbs} method.
+     *  passed to each dimension's {@link cdo.Dimension#valueAbs} method.
+     * @param {string} [keyArgs.discrimKey] When `dimName` is a dimension discriminator function,
+     *  specifies the cache key to use to identify it. When unspecified, the results are not cached.
      *
      * @type number
      */
@@ -424,21 +430,46 @@ cdo.Data.add(/** @lends cdo.Data# */{
 
         /*global dim_buildDatumsFilterKey:true */
 
-        var key = dimName + ":" + dim_buildDatumsFilterKey(keyArgs),
-            sum = def.getOwn(this._sumAbsCache, key);
+        var sum;
 
-        if(sum == null) {
-            sum = this.children()
-                    /* non-degenerate flattened parent groups would account for the same values more than once */
-                    .where(function(childData) { return !childData._isFlattenGroup || childData._isDegenerateFlattenGroup; })
-                    .select(function(childData) {
-                        return childData.dimensions(dimName).valueAbs(keyArgs) || 0;
-                    }, this)
-                    .reduce(def.add, 0);
+        var discrimFun;
+        var discrimKey = null;
+        if(typeof dimName === 'function') {
+            discrimFun = dimName;
 
-            // assert sum != null
+            discrimKey = def.get(keyArgs, 'discrimKey') || null;
+            if(discrimKey !== null) {
+                discrimKey = "discrim:" + discrimKey;
+            }
+        } else {
+            discrimFun = def.fun.constant(dimName);
+            discrimKey = dimName;
+        }
 
-            (this._sumAbsCache || (this._sumAbsCache = {}))[key] = sum;
+        var cacheKey = null;
+
+        if(discrimKey !== null) {
+            cacheKey = discrimKey + ":" + dim_buildDatumsFilterKey(keyArgs);
+
+            sum = def.getOwn(this._sumAbsCache, cacheKey);
+            if(sum != null) {
+                return sum;
+            }
+        }
+
+
+        sum = this.children()
+                /* non-degenerate flattened parent groups would account for the same values more than once */
+                .where(function(childData) { return !childData._isFlattenGroup || childData._isDegenerateFlattenGroup; })
+                .select(function(childData) {
+                    return childData.dimensions(discrimFun(childData)).valueAbs(keyArgs) || 0;
+                }, this)
+                .reduce(def.add, 0);
+
+        // assert sum != null
+
+        if(cacheKey !== null) {
+            (this._sumAbsCache || (this._sumAbsCache = {}))[cacheKey] = sum;
         }
 
         return sum;

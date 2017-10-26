@@ -633,6 +633,7 @@ def
 
         if(this.isMeasureEffective) {
             this._loadDimensionsDataSet();
+            this._setupGetBoundDimensionName();
         }
 
         return this;
@@ -690,6 +691,110 @@ def
         }
 
         this.grouping = groupingSpec;
+    },
+
+    _setupGetBoundDimensionName: function() {
+        var roleDiscrimDimName = this.discriminatorDimensionFullName;
+        var roleBoundDimsDataSet = this.boundDimensionsDataSet;
+        var singleDimensionName = this.grouping.isSingleDimension ? this.grouping.lastDimensionName() : null;
+
+        this.getBoundDimensionName = function(groupData, isOptional) {
+            var discrimAtom = groupData.atoms[roleDiscrimDimName];
+            if(discrimAtom === undefined) {
+                if(singleDimensionName !== null) {
+                    // Fast path.
+                    return singleDimensionName;
+                }
+
+                if(isOptional) return null;
+                throw this._errorMustBindDiscrimDimension();
+            }
+
+            // Is the value dimension one of the visual role's bound dimensions?
+            // If multi-chart is bound to the discriminator dimensions and multiple plots with different value role bindings are used,
+            // it can happen.
+            var dimName = discrimAtom.value;
+
+            if(!roleBoundDimsDataSet.datumByKey(dimName)) {
+                if(isOptional) return null;
+                throw this._errorMustBindDiscrimDimension();
+            }
+
+            return dimName;
+        };
+    },
+
+    _errorMustBindDiscrimDimension: function() {
+        return new def.error.operationInvalid("Must bind the measure discriminator dimension '" + this.discriminatorDimensionFullName + "'.");
+    },
+
+    getBoundDimensionName: function(groupData, isOptional) {
+        throw def.error.operationInvalid("Not a bound measure visual role.");
+    },
+
+    isBoundDimensionName: function(childData, dimName) {
+        return this.getBoundDimensionName(childData, /* isOptional: */true) === dimName;
+    },
+
+    isBoundDimensionCompatible: function(groupData) {
+        var roleDiscrimDimName = this.discriminatorDimensionFullName;
+        var roleBoundDimsDataSet = this.boundDimensionsDataSet;
+
+        var discrimAtom = groupData.atoms[roleDiscrimDimName];
+        if(discrimAtom === undefined) {
+            return true;
+        }
+
+        var dimName = discrimAtom.value;
+        return !!roleBoundDimsDataSet.datumByKey(dimName);
+    },
+
+    getCompatibleBoundDimensionNames: function(groupData) {
+        var roleDiscrimDimName = this.discriminatorDimensionFullName;
+        var roleBoundDimsDataSet = this.boundDimensionsDataSet;
+
+        var discrimAtom = groupData.atoms[roleDiscrimDimName];
+        if(discrimAtom === undefined) {
+            return this.grouping.dimensionNames();
+        }
+
+        var dimName = discrimAtom.value;
+        return roleBoundDimsDataSet.datumByKey(dimName) !== null ? [dimName] : [];
+    },
+
+    sumAbs: function(parentData, keyArgs) {
+        if(this.grouping.isSingleDimension) {
+            // Better cache reuse using this method.
+            return parentData.dimensionsSumAbs(this.grouping.lastDimensionName(), keyArgs);
+        }
+
+        keyArgs = keyArgs ? Object.create(keyArgs) : {};
+        keyArgs.discrimKey = this.uid;
+
+        return parentData.dimensionsSumAbs(this.getBoundDimensionName.bind(this), keyArgs);
+    },
+
+    percentOf: function(childData, keyArgs) {
+
+        var valueAbs = childData.dimensions(this.getBoundDimensionName(childData)).valueAbs(keyArgs);
+        // Nully or zero?
+        if(!valueAbs) {
+            return 0;
+        }
+
+        // If no parent, we're the root and so we're 100%
+        var parentData = childData.parent;
+        if(!parentData) {
+            return 1;
+        }
+
+        // The following would not work because, in each group, abs would not be used...
+        //var sum = parentData.dimensions(this.name).sum();
+
+        var sum = this.sumAbs(parentData, keyArgs);
+
+        // assert sum >= valueAbs > 0
+        return valueAbs / sum;
     }
     // endregion
 })

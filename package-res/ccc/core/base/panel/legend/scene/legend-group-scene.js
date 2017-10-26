@@ -72,30 +72,29 @@ def
 
         var colorRole = dataCell.role;
         var plot = dataCell.plot;
-        var getBoundDimensionNameList = null;
+        var isBoundDimensionCompatibleList = null;
 
         // Is role bound to discriminator dimensions, such as "valueRole.dim"?
         if(colorRole.grouping.hasExtensionComplexTypes) {
 
-            getBoundDimensionNameList = colorRole.grouping.extensionDimensions()
+            isBoundDimensionCompatibleList = colorRole.grouping.extensionDimensions()
                 .select(function(dimSpec) {
                     var measureRole;
                     var measureRoleName = pvc.visual.Role.parseDataSetName(dimSpec.dataSetName);
                     if(measureRoleName !== null && (measureRole = plot.visualRole(measureRoleName)) !== null) {
                         // Chart-level scenes can contain measure discriminators even if a plot's role is only bound to a single dimension.
-                        // Use Chart Mode.
-                        return pvc.visual.MeasureRoleAtomHelper.createGetBoundDimensionName(measureRole, /* isChartMode: */true);
+                        return measureRole.isBoundDimensionCompatible.bind(measureRole);
                     }
                 })
                 .where(def.notNully)
                 .array();
 
-            if(getBoundDimensionNameList.length === 0) {
-                getBoundDimensionNameList = null;
+            if(isBoundDimensionCompatibleList.length === 0) {
+                isBoundDimensionCompatibleList = null;
             }
         }
 
-        if(dataPartDimName !== null || getBoundDimensionNameList !== null) {
+        if(dataPartDimName !== null || isBoundDimensionCompatibleList !== null) {
 
             var dataPartValue = dataCell.dataPartValue;
 
@@ -117,11 +116,25 @@ def
                     return false;
                 }
 
-                if(getBoundDimensionNameList !== null) {
+                // Example
+                // -------
+                // dataCell.role = plotColorRole
+                //  plotColorRole.grouping.dimensions = "valueRole.dim"
+                //
+                // The value role of the same plot is:
+                //  plotValueRole.grouping.dimensions = "quantity"
+                //
+                // However, groupData may have a discriminator dimension "valueRole.dim" = "sales".
+                // Thus, this plot will not display this data item.
+                //
+                // If, the valueRole.dim is not set, then it is OK, cause,
+                //  it may be set later, on a distinct plot level visual role.
+
+                if(isBoundDimensionCompatibleList !== null) {
                     var i = -1;
-                    var L = getBoundDimensionNameList.length;
+                    var L = isBoundDimensionCompatibleList.length;
                     while(++i < L) {
-                        if(getBoundDimensionNameList[i](groupData) === null) {
+                        if(!isBoundDimensionCompatibleList[i](groupData)) {
                             return false;
                         }
                     }

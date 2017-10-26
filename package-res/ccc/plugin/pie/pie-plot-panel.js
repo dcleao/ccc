@@ -480,7 +480,7 @@ def
     this.base(null, {panel: panel, source: categRootData});
 
     var colorVarHelper = new pvc.visual.RoleVarHelper(this, 'color', panel.visualRoles.color),
-        getValueDimensionName = pvc.visual.MeasureRoleAtomHelper.createGetBoundDimensionName(panel.visualRoles[panel.valueRoleName]),
+        valueRole = panel.visualRoles[panel.valueRoleName],
         firstValueDimName = panel.visualRoles[panel.valueRoleName].firstDimensionName(),
         firstValueDim = categRootData.dimensions(firstValueDimName),
         pctValueFormat = panel.chart.options.percentValueFormat,
@@ -531,7 +531,7 @@ def
             // Value may be negative.
             // Don't create 0-value scenes.
             // null is returned as 0.
-            var valueDimName = getValueDimensionName(categData);
+            var valueDimName = valueRole.getBoundDimensionName(categData);
             var valueDim = categData.dimensions(valueDimName);
             var value = valueDim.value();
             if(value !== 0) {
