@@ -510,11 +510,17 @@ def
         return this;
     },
 
-    isPreBound: function() { return !!this.__grouping; },
+    isPreBound: function() {
+        return !!this.__grouping;
+    },
 
-    preBoundGrouping: function() { return this.__grouping; },
+    preBoundGrouping: function() {
+        return this.__grouping;
+    },
 
-    isBound: function() { return !!this.grouping; },
+    isBound: function() {
+        return !!this.grouping;
+    },
 
     // region Bound Dimensions Data Set
     // Complex types are shared by all visual roles with the same local name.
@@ -597,14 +603,17 @@ def
     postBind: function(complexType, extensionComplexTypesMap) {
         var grouping = this.__grouping;
         if(grouping) {
-            delete this.__grouping;
-
             if(!grouping.isNull) {
 
+                // May throw if binding is not valid.
                 grouping.bind(complexType, extensionComplexTypesMap);
 
+                // May throw if binding is not valid.
                 this.bind(grouping);
             }
+
+            // Only stop being pre-bound if no error occurs.
+            delete this.__grouping;
         }
 
         return this;

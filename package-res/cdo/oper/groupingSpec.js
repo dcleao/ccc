@@ -233,7 +233,9 @@ def.type('cdo.GroupingSpec')
 
         if(this.hasExtensionComplexTypes) {
             if(!extensionComplexTypesMap) {
-                throw def.error.operationInvalid("Expects a map of extension types.");
+                var error = def.error.operationInvalid("Expects a map of extension types.");
+                error.code = "need-extension-map";
+                throw error;
             }
 
             this.extensionComplexTypesMap = def.copyProps(extensionComplexTypesMap, this.extensionComplexTypeNames);

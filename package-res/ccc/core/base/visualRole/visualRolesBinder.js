@@ -536,11 +536,27 @@ pvc.visual.rolesBinder = function() {
         // Validates existence of dimensions referenced in the grouping specifications.
         // Roles that are pre-bound to null groupings discard these (these roles are not required; remain unbound).
 
-        // 1. Bind measure visual roles first. This will populate their chart's data sets of bound dimensions
-        //    (see getBoundDimensionsDataSetOf).
+        // 1. Bind (statically-) measure visual roles first.
+        // For those that are dynamically confirmed to be measures (isMeasureEffective),
+        //  this will populate their chart's data sets of bound dimensions (see getBoundDimensionsDataSetOf).
+        // For those that are not confirmed to be measures and, also, mention a discriminator dimension, ...
+        //  an error will be thrown, cause we're not providing an extensionComplexTypesMap...
         context.query()
-            .where(function(role) { return role.isMeasure && role.isPreBound(); })
-            .each (function(role) { role.postBind(complexType); });
+            .where(function(role) {
+                return role.isMeasure && role.isPreBound();
+            })
+            .each(function(role) {
+                try {
+                    role.postBind(complexType);
+                } catch(ex) {
+                    if(ex.code !== "need-extension-map") {
+                        throw ex;
+                    }
+                    // else remains preBound
+                    // not a measure after all and requires extension map
+                    // let it be bound in the second phase
+                }
+            });
 
         // 2. Gets the `extensionComplexTypesMap` to pass to bind() of non-measure visual roles.
 
@@ -553,11 +569,14 @@ pvc.visual.rolesBinder = function() {
 
         // 3. Bind non-measure visual roles with complexType and extensionComplexTypesMap.
         context.query()
-            .where(function(role) { return !role.isMeasure && role.isPreBound(); })
+            .where(function(role) {
+                return role.isPreBound();
+            })
             .each (function(role) {
                 var extensionComplexTypesMap;
 
                 if(role.name === "dataPart") {
+                    // if bound to a discriminator dimension, will throw a "need-extension-map" error...
                     extensionComplexTypesMap = null;
                 } else if(role.plot) {
                     extensionComplexTypesMap = role.plot.boundDimensionsComplexTypesMap;
@@ -569,7 +588,16 @@ pvc.visual.rolesBinder = function() {
                     extensionComplexTypesMap = chartLevelExtensionComplexTypesMap;
                 }
 
-                role.postBind(complexType, extensionComplexTypesMap);
+                try {
+                    role.postBind(complexType, extensionComplexTypesMap);
+                } catch(ex) {
+                    if(ex.code === "need-extension-map" && role.name === "dataPart") {
+                        // Write out a prettier error message.
+                        throw def.error.operationInvalid("The data part visual role cannot be bound to measure role discriminator dimensions.");
+                    }
+
+                    throw ex;
+                }
             });
 
         // -------
