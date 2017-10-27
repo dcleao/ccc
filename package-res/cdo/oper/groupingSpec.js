@@ -152,7 +152,7 @@ def.type('cdo.GroupingSpec')
 
     this.isSingleDimension = allDimCount === 1;
 
-    this.firstDimension = this.depth > 0 ? this.levels[0].dimensions[0] : null;
+    this.firstDimension = this.depth > 0 ? this.levels[0].allDimensions[0] : null;
     this.lastDimension  = this.depth > 0 ? this.levels[this.depth - 1].lastDimension() : null;
 
     this.rootLabel = def.get(ka, 'rootLabel') || "";
@@ -286,6 +286,35 @@ def.type('cdo.GroupingSpec')
     },
 
     /**
+     * Gets the name of the only dimension of the grouping.
+     * @type {string}
+     * @readonly
+     * @throws {Error} When the grouping does not contain exactly one dimension.
+     */
+    get singleDimensionName() {
+        if(this.isSingleDimension) {
+            return this.firstDimension.name;
+        }
+        throw def.error.operationInvalid("Expected grouping to contain exactly one dimension.");
+    },
+
+    /**
+     * Obtains the dimension type of the only dimension of the grouping.
+     *
+     * Null if grouping is unbound.
+     *
+     * @type {cdo.DimensionType}
+     * @readonly
+     * @throws {Error} When the grouping does not contain exactly one dimension.
+     */
+    get singleDimensionType() {
+        if(this.isSingleDimension) {
+            return this.firstDimension.dimensionType;
+        }
+        throw def.error.operationInvalid("Grouping contains more than one dimension.");
+    },
+
+    /**
      * Obtains an enumerable of the contained dimension specifications.
      *
      * @type def.Query
@@ -314,6 +343,8 @@ def.type('cdo.GroupingSpec')
     /**
      * Obtains the dimension type of the first dimension spec., if any.
      * @type cdo.DimensionType
+     *
+     * @deprecated Use this.firstDimension.dimensionType or this.singleDimensionType
      */
     firstDimensionType: function() {
         var d = this.firstDimension;
@@ -323,6 +354,8 @@ def.type('cdo.GroupingSpec')
     /**
      * Obtains the dimension name of the first dimension spec., if any.
      * @type string
+     *
+     * @deprecated Use this.firstDimension.name or this.singleDimensionName
      */
     firstDimensionName: function() {
         var dt = this.firstDimensionType();
@@ -332,6 +365,8 @@ def.type('cdo.GroupingSpec')
     /**
      * Obtains the dimension value type of the first dimension spec., if any.
      * @type string
+     *
+     * @deprecated Use this.firstDimension.dimensionType.valueType or this.singleDimensionType.valueType
      */
     firstDimensionValueType: function() {
         var dt = this.firstDimensionType();
@@ -341,6 +376,8 @@ def.type('cdo.GroupingSpec')
     /**
      * Obtains the dimension type of the last dimension spec., if any.
      * @type cdo.DimensionType
+     *
+     * @deprecated Use this.lastDimension.dimensionType or this.singleDimensionType
      */
     lastDimensionType: function() {
         var d = this.lastDimension;
@@ -350,6 +387,8 @@ def.type('cdo.GroupingSpec')
     /**
      * Obtains the dimension name of the last dimension spec., if any.
      * @type string
+     *
+     * @deprecated Use this.lastDimension.name or this.singleDimensionName
      */
     lastDimensionName: function() {
         var dt = this.lastDimensionType();
@@ -359,6 +398,8 @@ def.type('cdo.GroupingSpec')
     /**
      * Obtains the dimension value type of the last dimension spec., if any.
      * @type string
+     *
+     * @deprecated Use this.lastDimension.dimensionType.valueType or this.singleDimensionType.valueType
      */
     lastDimensionValueType: function() {
         var dt = this.lastDimensionType();

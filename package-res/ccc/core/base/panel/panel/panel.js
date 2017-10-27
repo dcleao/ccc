@@ -1504,7 +1504,7 @@ def
             dimName  = dimNames[v1Dim];
         if(dimName == null) {
             var role = this.visualRoles[this._v1DimRoleName[v1Dim]];
-            dimName = role ? role.lastDimensionName() : '';
+            dimName = role ? role.grouping.firstDimension.name : '';
             dimNames[v1Dim] = dimName;
         }
 

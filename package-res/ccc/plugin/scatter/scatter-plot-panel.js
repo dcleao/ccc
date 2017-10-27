@@ -452,8 +452,8 @@ def
             roles = this.visualRoles,
             colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', roles.color),
             sizeVarHelper  = new pvc.visual.RoleVarHelper(rootScene, 'size',  roles.size),
-            xDim = data.owner.dimensions(roles.x.lastDimensionName()),
-            yDim = data.owner.dimensions(roles.y.lastDimensionName());
+            xDim = data.owner.dimensions(roles.x.grouping.singleDimensionName),
+            yDim = data.owner.dimensions(roles.y.grouping.singleDimensionName);
 
         // --------------
 

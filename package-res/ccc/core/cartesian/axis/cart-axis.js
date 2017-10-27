@@ -254,7 +254,8 @@ def('pvc.visual.CartesianAxis', pvc_Axis.extend({
                 return false;
 
             // Convert back values to their dimension's data types.
-            var dim = this.chart.data.owner.dimensions(this.role.grouping.lastDimensionName());
+            var readDimName = this.role.grouping.firstDimension.name;
+            var dim = this.chart.data.owner.dimensions(readDimName);
 
             dmin = dim.read(dmin).value;
             dmax = dim.read(dmax).value;

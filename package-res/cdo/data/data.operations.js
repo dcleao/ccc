@@ -49,11 +49,11 @@ cdo.Data.add(/** @lends cdo.Data# */{
     clearVirtuals: function() {
         // Recursively clears all virtual datums and atoms.
         var datums = this._datums;
-        if(datums) {
+        var L = datums.length;
+        if(L > 0) {
             this._sumAbsCache = null;
 
             var i = 0,
-                L = datums.length,
                 removed;
             while(i < L) {
                 var datum = datums[i];
@@ -115,21 +115,29 @@ cdo.Data.add(/** @lends cdo.Data# */{
     },
 
     _onDatumsAdded: function(newDatums) {
-        // Distribute added datums by linked children
         var linkChildren = this._linkChildren;
-        var L = linkChildren ? linkChildren.length : 0;
-        var i = -1;
-        while(++i < L) linkChildren[i]._addDatumsSimple(newDatums);
+        if(linkChildren) {
+            var i = -1;
+            var L = linkChildren.length;
+            while(++i < L) {
+                linkChildren[i]._addDatumsSimple(newDatums);
+            }
+        }
     },
 
     _addDatumsLocal: function(newDatums) {
-        var ds  = this._datums;
-        var vds = this._visibleNotNullDatums;
-        var sds = this._selectedNotNullDatums;
-        var dsById = this._datumsById;
-        var dsByKey = this._datumsByKey;
+        var datums  = this._datums;
+        var visibleDatumsMap = this._visibleNotNullDatums;
+        var selectedDatumsMap = this._selectedNotNullDatums;
+        var datumsById = this._datumsById;
+        var datumsByKey = this._datumsByKey;
 
-        // Clear caches
+        // When creating a non-owner data set, any datums added to it
+        // call this method before its dimensions are actually created.
+        var internAtoms = !!this._dimensions;
+
+        // Clear sums cache.
+        // Group By caches are still valid, as resulting data sets are updated.
         this._sumAbsCache = null;
 
         var i = -1;
@@ -138,22 +146,28 @@ cdo.Data.add(/** @lends cdo.Data# */{
             var newDatum = newDatums[i];
             var id = newDatum.id;
 
-            dsById[id] = newDatum;
-            dsByKey[newDatum.key]  = newDatum;
+            datums.push(newDatum);
+            datumsById[id] = newDatum;
+            datumsByKey[newDatum.key]  = newDatum;
 
-            data_processDatumAtoms.call(
-                this,
-                newDatum,
-                /* intern      */ true,
-                /* markVisited */ false);
+            if(internAtoms) {
+                data_processDatumAtoms.call(
+                    this,
+                    newDatum,
+                    /* intern      */ true,
+                    /* markVisited */ false);
+            }
 
             // TODO: make this lazy?
             if(!newDatum.isNull) {
-                if(sds && newDatum.isSelected) sds.set(id, newDatum);
-                if(       newDatum.isVisible ) vds.set(id, newDatum);
-            }
+                if(selectedDatumsMap && newDatum.isSelected) {
+                    selectedDatumsMap.set(id, newDatum);
+                }
 
-            ds.push(newDatum);
+                if(newDatum.isVisible) {
+                    visibleDatumsMap.set(id, newDatum);
+                }
+            }
         }
     },
 
@@ -264,22 +278,17 @@ cdo.Data.add(/** @lends cdo.Data# */{
         var normalizedQuerySpec = querySpec && data_normalizeQuerySpec.call(this, querySpec);
 
         var datums = this._datums;
-        if(!datums) {
-            datums = [];
-        } else if(normalizedQuerySpec) {
-            // Filter by the query spec, possibly using the specified keyArgs.orderBy.
-            // Also filters by any state attributes (visible, selected, isNull, where).
-            // Internal group by operation is cached.
-            datums = data_where.call(this, normalizedQuerySpec, keyArgs);
-        } else if(keyArgs) {
-            // Filter datums by their "state" attributes.
-            // Search not cached.
-            datums = data_whereState(def.query(datums), keyArgs);
-        }
-
-        if(querySpec) {
-            // Normalize the query spec.
-            normalizedQuerySpec = data_normalizeQuerySpec.call(this, querySpec);
+        if(datums.length > 0) {
+            if(normalizedQuerySpec) {
+                // Filter by the query spec, possibly using the specified keyArgs.orderBy.
+                // Also filters by any state attributes (visible, selected, isNull, where).
+                // Internal group by operation is cached.
+                datums = data_where.call(this, normalizedQuerySpec, keyArgs).array();
+            } else if(keyArgs) {
+                // Filter datums by their "state" attributes.
+                // Search not cached.
+                datums = data_whereState(def.query(datums), keyArgs).array();
+            }
         }
 
         // `normalizedQuerySpec` and `keyArgs` arguments must be compiled into a single where predicate
@@ -368,7 +377,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
      */
     datums: function(querySpec, keyArgs) {
 
-        if(!this._datums) {
+        if(this._datums.length === 0) {
             return def.query();
         }
 
@@ -549,196 +558,259 @@ function data_lowestCommonAncestor(listA, listB) {
  *
  * @name cdo.Data#_setDatums
  * @function
- * @param {cdo.Datum[]|def.Query} addDatums An array or enumerable of datums. When an array, it is not mutated.
+ * @param {cdo.Datum[]|def.Query} setDatums An array or enumerable of datums. When an array, it is not mutated.
  *
  * @param {object} [keyArgs] Keyword arguments.
- * @param {boolean} [keyArgs.isAdditive=false] Indicates that the specified datums are to be added,
+ * @param {boolean} [keyArgs.isPreserveExisting=false] Indicates that the specified datums are to be added,
  * instead of replace existing datums.
  * @param {boolean} [keyArgs.doAtomGC=false] Indicates that atom garbage collection should be performed.
  *
  * @type undefined
  * @private
  */
-function data_setDatums(addDatums, keyArgs) {
+function data_setDatums(setDatums, keyArgs) {
+
+    // cdo_assertIsOwner.call(this);
+
     // But may be an empty list
-    /*jshint expr:true */
-    addDatums || def.fail.argumentRequired('addDatums');
+    if(!setDatums) throw def.error.argumentRequired('setDatums');
 
-    var i, L,
-        doAtomGC   = def.get(keyArgs, 'doAtomGC',   false),
-        isAdditive = def.get(keyArgs, 'isAdditive', false),
-        // When creating a linked data, datums are set when dimensions aren't yet created.
-        // Cannot intern without dimensions...
-        internNewAtoms = !!this._dimensions,
-        visDatums = this._visibleNotNullDatums,
-        selDatums = this._selectedNotNullDatums,
+    var hasExisting = this._datums.length > 0;
+    var isPreserveExisting = !!def.get(keyArgs, 'isAdditive');
+    var existingDatumsByKey = null;
 
-        // When adding:
-        //  * _datums, _datumsByKey and _datumsById can be maintained.
-        //  * If an existing datum comes up in addDatums,
-        //    the original datum is kept, as well as its order.
-        //  * Caches still need to be cleared.
-        // When replacing:
-        //  * Different {new,old}DatumsBy{Key,Id} must be defined for the operation.
-        //  * Same-key datums are maintained, anyway.
-        //  * All child-data and link-child-data are disposed of.
+    var nextDatums;
+    var nextDatumsByKey;
+    var nextDatumsById;
 
-        oldDatumsByKey, oldDatumsById,
-        oldDatums = this._datums,
-        newDatums, datums, datumsByKey, datumsById;
+    var visDatumsMap = this._visibleNotNullDatums;
+    // Owner data sets cache selected datums. Not null.
+    var selDatumsMap = this._selectedNotNullDatums;
 
-    if(oldDatums) {
-        oldDatumsByKey = this._datumsByKey;
-        oldDatumsById  = this._datumsById;
-    }
+    // -- When Has existing datums ---
+    // What if children or linked data sets exist?
+    // Recursive un-interning is not implemented, so if existing datums are removed, things become inconsistent.
+    // When replacing, children are disposed of, and the problem ceases to exist.
+    // When adding, the sliding window better not remove any datums...
+    // The chart solves this by disposing children in any incremental operation...
 
-    // Create/Replace
-    if(!oldDatums || !isAdditive) {
-        this._datums      = datums      = [];
-        this._datumsById  = datumsById  = {};
-        this._datumsByKey = datumsByKey = {};
+    if(hasExisting && !isPreserveExisting) {
 
-        // Replace?
-        if(oldDatums) {
-            // Clear children (and caches)
+        // Replace existing
 
-            /* globals cdo_disposeChildLists */
+        /* globals cdo_disposeChildLists */
 
-            cdo_disposeChildLists.call(this);
+        // Also clears caches.
+        cdo_disposeChildLists.call(this);
+        // No children to notify now...
 
-            visDatums.clear();
-            selDatums && selDatums.clear();
-        }
+        // Need this to be able to reuse existing datums that are equal to those in setDatums.
+        existingDatumsByKey = this._datumsByKey;
+
+        this._datums      = nextDatums      = [];
+        this._datumsById  = nextDatumsById  = {};
+        this._datumsByKey = nextDatumsByKey = {};
+
+        visDatumsMap.clear();
+        selDatumsMap && selDatumsMap.clear();
     } else {
-        // oldDatums && isAdditive
+        // Nothing to replace or
+        // Preserve existing
 
-        datums      = oldDatums;
-        datumsById  = oldDatumsById;
-        datumsByKey = oldDatumsByKey;
+        // !hasExisting || isPreserveExisting
 
-        // Clear caches
-        this._sumAbsCache = null;
-    }
+        // -- If !hasExisting --
+        // Can reuse datums, datumsByKey, datumsById, visDatumsMap, selDatumsMap, _sumAbsCache, ...
+        // They're empty, after all.
+        // Can have children or linked data sets even when no datums exist at the root,
+        // But these data sets must be empty as well, so there's no problem in reusing them.
 
-    if(isAdditive) {
-        newDatums = [];
-    }
+        nextDatums = this._datums;
+        nextDatumsByKey = this._datumsByKey;
+        nextDatumsById = this._datumsById;
 
-    if(def.array.is(addDatums)) {
-        i = 0;
-        L = addDatums.length;
-        while(i < L) maybeAddDatum.call(this, addDatums[i++]);
-    } else if(addDatums instanceof def.Query) {
-        addDatums.each(maybeAddDatum, this);
-    } else {
-        throw def.error.argumentInvalid('addDatums', "Argument is of invalid type.");
-    }
+        if(hasExisting) {
+            // Not disposing children, but it better be a purely additive operation...
 
-    // Datum evaluation according to a score/select criteria
-    // Defaults don't remove anything
-    if(this.select) this.select(datums).forEach(cdo_removeDatumLocal, this);
-
-    // Mark and sweep Garbage Collection pushed to the end of function
-
-    // TODO: change this to a visiting id method,
-    //  that by keeping the atoms on the previous visit id,
-    //  would allow not having to do this mark-visited phase.
-
-    // Visit atoms of existing datums.
-    if(oldDatums && isAdditive && doAtomGC) {
-        // We cannot simply mark all atoms of every dimension
-        //  cause, now, these may already contain new atoms
-        //  used (or not) by the new datums.
-        oldDatums.forEach(function(oldDatum) {
-            data_processDatumAtoms.call(
-                    this,
-                    oldDatum,
-                    /* intern */      false,
-                    /* markVisited */ true);
-        }, this);
-    }
-
-    if(/* isAdditive && */ newDatums || !isAdditive) {
-
-        if(!isAdditive) { newDatums = datums; }
-
-        newDatums.forEach(function(newDatum) {
-            data_processDatumAtoms.call(
-                this,
-                newDatum,
-                /* intern      */ internNewAtoms,
-                /* markVisited */ doAtomGC);
-
-            // TODO: make this lazy?
-            if(!newDatum.isNull) {
-                var id = newDatum.id;
-                if(selDatums && newDatum.isSelected) selDatums.set(id, newDatum);
-                if(newDatum.isVisible) visDatums.set(id, newDatum);
-            }
-
-        }, this);
-    }
-
-    // Atom garbage collection. Un-intern unused atoms.
-    if(doAtomGC) {
-        /*global dim_uninternUnvisitedAtoms:true*/
-        var dims = this._dimensionsList;
-        i = 0;
-        L = dims.length;
-        while(i < L) dim_uninternUnvisitedAtoms.call(dims[i++]);
-    }
-
-    // TODO: not distributing to child lists of this data?
-    // Is this assuming that `this` is the root data,
-    // and thus was not created from grouping, and so having no children?
-
-    if(isAdditive) {
-        // `newDatums` contains really new datums (no duplicates).
-        // These can be further filtered in the grouping operation.
-
-        // Distribute added datums by linked children.
-        var linkChildren = this._linkChildren;
-        if(linkChildren) {
-            i = 0;
-            L = linkChildren.length;
-            while(i < L) {
-                linkChildren[i++]._addDatumsSimple(newDatums);
-            }
+            // Clear sums cache.
+            // Group bys cache is still valid, as groupings' results are updated on added datums.
+            this._sumAbsCache = null;
         }
     }
 
-    function maybeAddDatum(newDatum) {
-         // Ignore.
-        if(!newDatum) return;
+    // From setDatums, those which are actually added to nextDatums, when in preserve mode.
+    // Used to notify any linked data sets.
+    var preserveExistingAddedDatums = null;
 
+    // Any children to notify of added datums?
+    var notifyAddedDatums = !!this._linkChildren && this._linkChildren.length > 0;
+    if(notifyAddedDatums && hasExisting && isPreserveExisting) {
+        preserveExistingAddedDatums = [];
+    }
+
+    // ----------
+
+    // Add new datums to nextDatums.
+
+    if(def.array.is(setDatums)) {
+        var i = 0;
+        var L = setDatums.length;
+        while(i < L) {
+            maybeAddDatum.call(this, setDatums[i++]);
+        }
+    } else if(setDatums instanceof def.Query) {
+        setDatums.each(maybeAddDatum, this);
+    } else {
+        throw def.error.argumentInvalid('setDatums', "Argument is of invalid type.");
+    }
+
+    // ----------
+
+    // Datum evaluation according to a score/select criteria.
+    if(this.select) {
+        this.select(nextDatums).forEach(function(removeDatum) {
+
+            // NOTE: Mutates nextDatums, et. al.
+            cdo_removeDatumLocal.call(this, removeDatum);
+
+            if(preserveExistingAddedDatums !== null) {
+                preserveExistingAddedDatums.splice(preserveExistingAddedDatums.indexOf(removeDatum), 1);
+            }
+        }, this);
+    }
+
+    cdo_doAtomGC.call(this);
+
+    // ----
+
+    if(notifyAddedDatums) {
+        // TODO: not distributing to child lists of this data?
+        // Is this assuming that `this` is the root data,
+        // and thus was not created from grouping, and so having no children?
+
+        // Linked data sets were not disposed, and can thus exist.
+        // Any preserveExistingAddedDatums need to be notified to existing linked data sets.
+        this._onDatumsAdded(preserveExistingAddedDatums || nextDatums);
+    }
+
+    function maybeAddDatum(datumToSet) {
+        // Ignore.
+        if(!datumToSet) {
+            return;
+        }
+
+        // Filter out duplicates in datumsToSet.
         // Use already existing same-key datum, if any.
-        var key = newDatum.key;
+        var key = datumToSet.key;
 
         // Duplicate datum?
-
-        // When isAdditive, datumsByKey = oldDatumsByKey,
-        //  so the following also tests for duplicates with old datums,
-        //  in which case we keep the old and discard the new one.
-        if(def.hasOwnProp.call(datumsByKey, key)) return;
-
-        if(!isAdditive && oldDatumsByKey && def.hasOwnProp.call(oldDatumsByKey, key))
-            // Still preferable to keep/_re-add_ the old and discard the new one.
-            newDatum = oldDatumsByKey[key];
-
-        var id = newDatum.id;
-
-        datums.push(newDatum);
-        datumsByKey[key] = newDatum;
-        datumsById [id ] = newDatum;
-
-        if(/*isAdditive && */newDatums) newDatums.push(newDatum);
-
-        // removed the marking part of Garbage collector
-        // We can mark as selected/visible, because in the removal it's unmarked
-        if(!newDatum.isNull) {
-            if(selDatums && newDatum.isSelected) selDatums.set(id, newDatum);
-            if(newDatum.isVisible) visDatums.set(id, newDatum);
+        // When isPreserveExisting, because nextDatumsByKey = existingDatumsByKey,
+        //  the following also tests for duplicates with existing datums,
+        //  in which case we keep the existing and discard the new one.
+        if(def.hasOwnProp.call(nextDatumsByKey, key)) {
+            return;
         }
+
+        // Not in nextDatums.
+
+        // Preserve existing datum of same key.
+        if(existingDatumsByKey !== null && def.hasOwnProp.call(existingDatumsByKey, key)) {
+            // Still preferable to keep/_re-add_ the old and discard the new one.
+            datumToSet = existingDatumsByKey[key];
+        }
+
+        // Add to nextDatums.
+
+        var id = datumToSet.id;
+
+        nextDatums.push(datumToSet);
+        nextDatumsByKey[key] = datumToSet;
+        nextDatumsById[id] = datumToSet;
+
+        if(preserveExistingAddedDatums !== null) {
+            preserveExistingAddedDatums.push(datumToSet);
+        }
+
+        // Mark as selected/visible here.
+        // If later discarded by the sliding window, cdo_removeDatumLocal un-marks them.
+        if(!datumToSet.isNull) {
+            if(datumToSet.isSelected) {
+                selDatumsMap.set(id, datumToSet);
+            }
+
+            if(datumToSet.isVisible) {
+                visDatumsMap.set(id, datumToSet);
+            }
+        }
+    }
+}
+
+/**
+ * Garbage Collection
+ * ------------------
+ *
+ * Simply creating a Datum, interns its atoms in corresponding Dimensions of its (required) owner data.
+ * If the Datum is not later actually added to the data, through `Data#load` or `Data#add`,
+ * due to, for example, not passing an `isNull` or `where` filter,
+ * the owner Data's Dimensions will contain atoms which have no supporting Datum in the owner data.
+ *
+ * Even if Datums pass the above mentioned filters, and get passed to maybeAddDatum,
+ * the sliding window (`this.select`) may decide to exclude some of the new or some of the existing datums.
+ * Sliding window is only used on owner data sets.
+ *
+ * If these "unused" atoms were left there, operations such as `Dimension#{atoms, min, max}`
+ * would return incorrect results, affecting, for example, the domain of scales.
+ *
+ * ----
+ * Essentially, this reveals a design flaw.
+ * Atoms should only be interned in a Data's Dimensions,
+ * when the container Datum was actually added to the Data.
+ *
+ * However, this would also mean that Atom instances would initially be created every time,
+ * not reusing existing instances, if any, causing wasted memory and computation,
+ * defeating one of the initial goals of interning.
+ *
+ * It's like atoms would have to be interned on a DimensionType's own table/Dimension,
+ * one that is not associated with any owner Data.
+ *
+ * _Disposing a Datum_ would decrease the reference count of the atom,
+ * eventually causing it to be discarded. Not disposing a Datum would
+ * cause Atoms to be leaked in the DimensionType's global Dimension.
+ * ----
+ *
+ * With the current design, we use a Mark and Sweep Garbage Collection method.
+ *
+ * Once the final set of Datums is determined, every atom these reference is marked.
+ * Then, any unmarked atom that is interned in owner dimensions is removed/un-interned.
+ *
+ * Currently, atom Garbage Collection is only supported on owner Datas
+ * (actually, an error is thrown by dim_uninternUnvisitedAtoms),
+ * because un-interning is not implemented as a recursive operation... -
+ * only Data#clearVirtuals implements a recursive un-interning operation
+ * for the special case of virtual-only atoms.
+ * Because existing real datums may be removed, due to the sliding window,
+ * the dimensions of descendant data sets would have to be GC'd as well.
+ *
+ * In conclusion, when doing GC, every child data must have been disposed of.
+ * Currently, when !isPreserveExisting, this is performed here.
+ * Otherwise, when keyArgs.isAdditive, it is being performed in Chart#_initData...
+ */
+function cdo_doAtomGC() {
+    // MARK
+    var i = -1;
+    var datums = this._datums;
+    var L = datums.length;
+    while(++i < L) {
+        // No need to intern on owner dimensions.
+        data_processDatumAtoms.call(this, datums[i], /* intern */false, /* markVisited */true);
+    }
+
+    // SWEEP
+    var dims = this._dimensionsList;
+    i = -1;
+    L = dims.length;
+    while(++i < L) {
+        dim_uninternUnvisitedAtoms.call(dims[i]);
     }
 }
 
@@ -806,8 +878,13 @@ function cdo_removeDatumLocal(datum) {
     delete this._datumsById [id ];
     delete this._datumsByKey[datum.key];
 
-    if(selDatums && datum.isSelected) selDatums.rem(id);
-    if(datum.isVisible) this._visibleNotNullDatums.rem(id);
+    if(selDatums && datum.isSelected) {
+        selDatums.rem(id);
+    }
+
+    if(datum.isVisible) {
+        this._visibleNotNullDatums.rem(id);
+    }
 }
 
 /**
@@ -1130,7 +1207,7 @@ function data_queryDatumFilter(normalizedDatumFilter, keyArgs) {
             // Because only single-dimension per-level is allowed on orderBy,
             // it's always the first dimension that needs to be matched.
 
-            var dimName = parentData._groupLevelSpec.dimensions[0].name;
+            var dimName = parentData.groupingLevelSpec.dimensions[0].name;
 
             normalizedDatumFilter[dimName].forEach(function(orAtom) {
                 var childData = parentData.child(orAtom.globalKey);
@@ -1152,7 +1229,7 @@ function data_queryDatumFilter(normalizedDatumFilter, keyArgs) {
          // No current data means starting
          if(!this._data) {
              this._data = rootData;
-             this._dimAtomsOrQuery = def.query(normalizedDatumFilter[rootData._groupLevelSpec.dimensions[0].name]);
+             this._dimAtomsOrQuery = def.query(normalizedDatumFilter[rootData.groupingLevelSpec.dimensions[0].name]);
 
          // Are there still any datums of the current data to enumerate?
          } else if(this._datumsQuery) {
@@ -1204,7 +1281,7 @@ function data_queryDatumFilter(normalizedDatumFilter, keyArgs) {
                      if(depth < H - 1) {
                          // Keep going up, until a leaf datum is found. Then we stop.
                          this._dimAtomsOrQuery =
-                             def.query(normalizedDatumFilter[childData._groupLevelSpec.dimensions[0].name]);
+                             def.query(normalizedDatumFilter[childData.groupingLevelSpec.dimensions[0].name]);
                          depth++;
                      } else {
                          // Leaf data!

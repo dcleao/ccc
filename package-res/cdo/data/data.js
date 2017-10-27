@@ -72,8 +72,6 @@
 def.type('cdo.Data', cdo.Complex)
 .init(function(keyArgs) {
 
-    /* globals data_setDatums */
-
     // NOTE: this function is a hot spot and as such is performance critical
 
     if(keyArgs == null) throw def.error.argumentRequired('keyArgs');
@@ -153,13 +151,21 @@ def.type('cdo.Data', cdo.Complex)
         }
     }
 
-    if(datums !== null) {
-        data_setDatums.call(this, datums);
-    }
-
     // Must anticipate setting this (and not wait for the base constructor)
     // because otherwise new Dimension( ... ) fails.
     this.owner = owner;
+
+    this._datums = [];
+    this._datumsById = {};
+    this._datumsByKey = {};
+
+    if(datums !== null) {
+        // Not an owner dataset.
+        // By this time, this data set does not yet have Dimensions or any child or linked data sets.
+        // So, this operation adds datums but does not intern atoms of those datums.
+        this._addDatumsLocal(datums);
+    }
+    // else, on an owner data set, datums are added later, by calling #add or #load.
 
     // Need this because of null interning/un-interning and atoms chaining.
     this._atomsBase = atomsBase;
@@ -439,13 +445,12 @@ def.type('cdo.Data', cdo.Complex)
 
     /**
      * Indicates if this data contains the specified datum.
-     * @param {cdo.Datum} d The datum to test for containment.
+     * @param {cdo.Datum} datum The datum to test for containment.
      * @return {boolean} <tt>true</tt> if the datum is contained in this data,
      * or <tt>false</tt>, otherwise.
      */
-    contains: function(d) {
-        var ds = this._datumsById;
-        return !!ds && def.hasOwn(ds, d.id);
+    contains: function(datum) {
+        return def.hasOwn(this._datumsById, datum.id);
     },
 
     /**
@@ -468,14 +473,14 @@ def.type('cdo.Data', cdo.Complex)
      * Obtains the number of contained datums.
      * @type number
      */
-    count: function() { return this._datums ? this._datums.length : 0; },
+    count: function() { return this._datums.length; },
 
     /**
      * Obtains the first datum of this data, if any.
      * @return {cdo.Datum} The first datum or <i>null</i>.
      * @see #singleDatum
      */
-    firstDatum: function() { return this.count() > 0 ? this._datums[0] : null; },
+    firstDatum: function() { return this._datums.length > 0 ? this._datums[0] : null; },
 
     /**
      * Obtains the atoms of the first datum of this data, if any, or the data own atoms, if none.

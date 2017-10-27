@@ -57,7 +57,7 @@ def.type('cdo.GroupingRootData', cdo.GroupingData)
 
     _addDatumsSimple: function(newDatums) {
 
-        // This data gets its datums, possibly filtered (_groupOper.executeAdd calls _addDatumsLocal).
+        // This data gets its datums, possibly filtered (groupingOper.executeAdd calls _addDatumsLocal).
         // Children get their new datums.
         // Linked children of children get their new datums.
         newDatums = this.groupingOper.executeAdd(this, newDatums);

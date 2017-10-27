@@ -214,6 +214,8 @@ def
     /**
      * Obtains the first dimension type that is bound to the role.
      * @type cdo.DimensionType
+     * @deprecated When bound,
+     * use this.grouping.firstDimension.dimensionType or this.grouping.singleDimensionType
      */
     firstDimensionType: function() {
         var g = this.grouping;
@@ -223,6 +225,8 @@ def
     /**
      * Obtains the name of the first dimension type that is bound to the role.
      * @type string
+     *
+     * @deprecated When bound, use this.grouping.firstDimension.name or this.grouping.singleDimensionName
      */
     firstDimensionName: function() {
         var g = this.grouping;
@@ -232,6 +236,9 @@ def
     /**
      * Obtains the value type of the first dimension type that is bound to the role.
      * @type function
+     *
+     * @deprecated When bound,
+     * use this.grouping.firstDimension.dimensionType.valueType or this.grouping.singleContinuousValueType
      */
     firstDimensionValueType: function() {
         var g = this.grouping;
@@ -241,6 +248,9 @@ def
     /**
      * Obtains the last dimension type that is bound to the role.
      * @type cdo.DimensionType
+     *
+     * @deprecated When bound,
+     * use this.grouping.lastDimension.dimensionType or this.grouping.singleDimensionType
      */
     lastDimensionType: function() {
         var g = this.grouping;
@@ -250,6 +260,8 @@ def
     /**
      * Obtains the name of the last dimension type that is bound to the role.
      * @type string
+     *
+     * @deprecated When bound, use this.grouping.lastDimension.name or this.grouping.singleDimensionName
      */
     lastDimensionName: function() {
         var g = this.grouping;
@@ -259,6 +271,9 @@ def
     /**
      * Obtains the value type of the last dimension type that is bound to the role.
      * @type function
+     *
+     * @deprecated When bound,
+     * use this.grouping.lastDimension.dimensionType.valueType or this.grouping.singleContinuousValueType
      */
     lastDimensionValueType: function() {
         var g = this.grouping;
@@ -705,7 +720,7 @@ def
     _setupGetBoundDimensionName: function() {
         var roleDiscrimDimName = this.discriminatorDimensionFullName;
         var roleBoundDimsDataSet = this.boundDimensionsDataSet;
-        var singleDimensionName = this.grouping.isSingleDimension ? this.grouping.lastDimensionName() : null;
+        var singleDimensionName = this.grouping.isSingleDimension ? this.grouping.singleDimensionName : null;
 
         this.getBoundDimensionName = function(groupData, isOptional) {
             var discrimAtom = groupData.atoms[roleDiscrimDimName];
@@ -774,7 +789,7 @@ def
     sumAbs: function(parentData, keyArgs) {
         if(this.grouping.isSingleDimension) {
             // Better cache reuse using this method.
-            return parentData.dimensionsSumAbs(this.grouping.lastDimensionName(), keyArgs);
+            return parentData.dimensionsSumAbs(this.grouping.singleDimensionName, keyArgs);
         }
 
         keyArgs = keyArgs ? Object.create(keyArgs) : {};

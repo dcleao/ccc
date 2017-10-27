@@ -20,6 +20,7 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
         initFromOptions: function() {
             if(this.length) {
                 this.dimension = this.option('Dimension');
+
                 this.override('select', this.option('Select'));
             }
         },
@@ -68,7 +69,9 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
         },
 
         setLayoutPreservation: function(chart) {
-            if(chart.options.preserveLayout == null) chart.options.preserveLayout = true;
+            if(chart.options.preserveLayout == null) {
+                chart.options.preserveLayout = true;
+            }
         },
 
         // called from Chart#_initAxesEnd
@@ -77,7 +80,7 @@ def('pvc.visual.SlidingWindow', pvc.visual.OptionsBase.extend({
                 var role = axis.role;
                 if(role) {
                     // Is a sliding window axis?
-                    if(role.grouping.isSingleDimension && role.grouping.firstDimensionName() === this.dimension)
+                    if(role.grouping.isSingleDimension && role.grouping.singleDimensionName === this.dimension)
                         this._setAxisFixedRatio(axis);
 
                     if(axis.type === "color")
@@ -131,40 +134,36 @@ function slidingWindow_defaultDimensionName() {
     var baseAxis = this.chart.axes.base;
     var baseGrouping = baseAxis && (baseAxis.role.grouping || baseAxis.role.preBoundGrouping());
 
-    return baseGrouping
-        ? baseGrouping.lastDimensionName()
-        : this.chart.data.type.dimensionsNames()[0];
+    return baseGrouping ? baseGrouping.singleDimensionName : this.chart.data.type.dimensionsNames()[0];
 }
 
-function slidingWindow_defaultSelect(allData) {
+function slidingWindow_defaultSelect(datums) {
+    var toRemove = [];
 
-    var dim = this.chart.data.dimensions(this.dimension),
-        maxAtom = dim.max(),
-        mostRecent = maxAtom.value,
-        toRemove = [];
+    var L = datums.length;
+    if(L > 0) {
+        var dimName = this.dimension;
+        var dim = this.chart.data.dimensions(dimName);
 
-    for(var i = 0, L = allData.length; i < L; i++) {
-        var datum      = allData[i],
-            datumScore = datum.atoms[this.dimension].value,
-            scoreAtom  = dim.read(datumScore);
+        var maxAtom = dim.max();
+        var mostRecent = maxAtom ? maxAtom.value : null;
+        var maxLength = this.length;
 
-        if(datumScore == null) {
-            toRemove.push(datum);
-        } else if(scoreAtom == null || (typeof(datumScore) !== typeof(scoreAtom.value))) {
-            // The score has to be of the same type has the dimension valueType.
-            // The typeof comparison is needed when score is string and the valueType is Date.
-            if(def.debug >= 2)
-                def.log("[Warning] The specified scoring function has an invalid return value.");
-
-            toRemove = [];
-            break;
-        } else {
-            // Using the scoring function on both atoms guarantees that even if
-            // the scoring function is overridden, result is still valid.
-            datumScore = scoreAtom.value;
-            var result = (+mostRecent) - (+datumScore);
-            if(result && result > this.length)
+        for(var i = 0; i < L; i++) {
+            var datum = datums[i];
+            var value = datum.atoms[dimName].value;
+            if(value == null) {
+                // Remove any datum that is null on the window dimension.
                 toRemove.push(datum);
+            } else {
+                // assert mostRecent !== null
+                // If valueType is date, converting to number, allows subtracting.
+                // Do not remove values equal to the maximum.
+                var distance = (+mostRecent) - (+value);
+                if(distance > 0 && distance > maxLength) {
+                    toRemove.push(datum);
+                }
+            }
         }
     }
 

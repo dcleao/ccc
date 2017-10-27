@@ -504,9 +504,8 @@ def
             isStacked = this.stacked,
             valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'value', valueRole, {hasPercentSubVar: isStacked}),
             colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', this.visualRoles.color),
-            valueDimName  = valueRole.lastDimensionName(),
-            valueDim = data.owner.dimensions(valueDimName),
-
+            rootData = data.owner,
+            formatNullInterValueDim = rootData.dimensions(valueRole.firstDimensionName()),
             orthoScale = this.axes.ortho.scale,
             orthoNullValue = def.scope(function() {
                     // If the data does not cross the origin,
@@ -534,10 +533,12 @@ def
 
             // Create series-categ scene
             axisCategDatas.forEach(function(axisCategData, categIndex) {
-                var categData = data.child(axisCategData.key),
-                    group = categData;
+                var categData = data.child(axisCategData.key);
+                var group = categData;
 
-                if(group && axisSeriesData) group = group.child(axisSeriesData.key);
+                if(group && axisSeriesData) {
+                    group = group.child(axisSeriesData.key);
+                }
 
                 var serCatScene = new pvc.visual.Scene(seriesScene, {source: group});
 
@@ -688,17 +689,22 @@ def
             var interIsNull = fromScene.isNull || toScene.isNull,
                 areasVisible = this.areasVisible;
 
-            var interValue, interAccValue, interBasePosition;
+            var interValue, interAccValue, interBasePosition, interValueLabel;
 
             if(interIsNull) {
-                /* Value is 0 or the below value */
+                // Value is 0 or the below value
                 if(areasVisible && belowScene && isBaseDiscrete) {
                     var belowValueVar = belowScene.vars.value;
                     interAccValue = belowValueVar.accValue;
-                    interValue = belowValueVar[valueRole.name];
+                    interValue = belowValueVar.value;
                 } else {
                     interValue = interAccValue = orthoNullValue;
                 }
+
+                // Because toScene.group may be null,
+                // how to know which dimension to use to format the inter-value?
+                // Luckily, intermediate scenes don't show tooltips...
+                interValueLabel = formatNullInterValueDim.format(interValue);
 
                 if(areasVisible) {
                     if(isStacked && isBaseDiscrete) {
@@ -724,22 +730,25 @@ def
                 // Average of the already offset values
                 interAccValue     = (toValueVar.accValue  + fromValueVar.accValue ) / 2;
                 interBasePosition = (toScene.basePosition + fromScene.basePosition) / 2;
+
+                var interValueDimName = valueRole.getBoundDimensionName(toScene.group);
+                interValueLabel = rootData.dimensions(interValueDimName).format(interValue);
             }
 
             //----------------
 
             var interScene = new pvc.visual.Scene(seriesScene, {
-                    /* insert immediately before toScene */
-                    index:  toChildIndex,
-                    source: /*toScene.isInterpolatedMiddle ? fromScene.group: */toScene.source
-                });
+                /* insert immediately before toScene */
+                index:  toChildIndex,
+                source: /*toScene.isInterpolatedMiddle ? fromScene.group: */toScene.source
+            });
 
             interScene.dataIndex = toScene.dataIndex;
             interScene.vars.category = toScene.vars.category;
 
             var interValueVar = new pvc_ValueLabelVar(
                                     interValue,
-                                    valueDim.format(interValue),
+                                    interValueLabel,
                                     interValue);
 
             interValueVar.accValue = interAccValue;

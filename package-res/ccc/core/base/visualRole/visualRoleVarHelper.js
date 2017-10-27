@@ -175,8 +175,7 @@ def
 
         if(this.grouping.isSingleDimension) {
             // A single atom.
-            var dimName = this.grouping.lastDimensionName();
-            return pvc_ValueLabelVar.fromAtom(datum.atoms[dimName]);
+            return pvc_ValueLabelVar.fromAtom(datum.atoms[this.grouping.singleDimensionName]);
         }
 
         var view = this.grouping.view(datum);

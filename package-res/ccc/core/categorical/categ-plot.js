@@ -256,7 +256,7 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
             var xDimName;
             var isXDiscrete = xRole.isDiscrete();
             if(!isXDiscrete) {
-                xDimName = xRole.lastDimensionName();
+                xDimName = xRole.grouping.singleDimensionName;
             }
 
             var sumKeyArgs = {zeroIfNone: false};

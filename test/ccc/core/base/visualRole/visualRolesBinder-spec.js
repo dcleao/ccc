@@ -260,8 +260,7 @@ define([
                                     expect(seriesRole.isPreBound()).toBe(true);
                                     var g = seriesRole.preBoundGrouping();
 
-                                    expect(g.isSingleDimension).toBe(true);
-                                    expect(g.lastDimension.name).toBe('dimA');
+                                    expect(g.singleDimensionName).toBe('dimA');
                                 });
                             });
 
@@ -331,8 +330,7 @@ define([
                                     expect(seriesRole.isPreBound()).toBe(true);
                                     var g = seriesRole.preBoundGrouping();
 
-                                    expect(g.isSingleDimension).toBe(true);
-                                    expect(g.lastDimension.name).toBe('dimA');
+                                    expect(g.singleDimensionName).toBe('dimA');
                                 });
                             });
                         });
@@ -360,8 +358,7 @@ define([
                                 expect(seriesRole.isPreBound()).toBe(true);
                                 var g = seriesRole.preBoundGrouping();
 
-                                expect(g.isSingleDimension).toBe(true);
-                                expect(g.lastDimension.name).toBe('dimA');
+                                expect(g.singleDimensionName).toBe('dimA');
                             });
                         });
                     });
@@ -759,8 +756,7 @@ define([
                                         expect(role.isPreBound()).toBe(true);
 
                                         var g = role.preBoundGrouping();
-                                        expect(g.isSingleDimension).toBe(true);
-                                        expect(g.lastDimension.name).toBe('dimA');
+                                        expect(g.singleDimensionName).toBe('dimA');
                                     });
                                 });
                             });
@@ -981,8 +977,7 @@ define([
                                         expect(role.isPreBound()).toBe(true);
 
                                         var g = role.preBoundGrouping();
-                                        expect(g.isSingleDimension).toBe(true);
-                                        expect(g.lastDimension.name).toBe('dimA');
+                                        expect(g.singleDimensionName).toBe('dimA');
                                     });
                                 });
                             });
@@ -1210,8 +1205,7 @@ define([
                             expect(role.isBound()).toBe(true);
 
                             var g = role.grouping;
-                            expect(g.isSingleDimension).toBe(true);
-                            expect(g.lastDimension.name).toBe('dimA');
+                            expect(g.singleDimensionName).toBe('dimA');
                         });
                     });
                 });

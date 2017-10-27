@@ -512,7 +512,7 @@ def
 
         if(this.getCompatFlag("discreteTimeSeriesTickFormat") &&
            grouping.isSingleDimension &&
-           grouping.lastDimensionValueType() === Date) {
+           grouping.singleDimensionType.valueType === Date) {
 
             // Calculate precision from values' extent.
             var domainValues = axis.domainValues();
@@ -541,7 +541,7 @@ def
                     };
                 }
             } else if(tickFormatter) {
-                var dimFormatter = grouping.lastDimensionType().formatter();
+                var dimFormatter = grouping.singleDimensionType.formatter();
                 domainValues.step =
                 domainValues.base = pvc.time.intervals.d;
                 domainValues.mult = 1;

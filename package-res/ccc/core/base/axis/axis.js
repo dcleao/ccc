@@ -192,7 +192,7 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
                         otherRole.flatteningModes = flatteningMode;
                     }
                 } else {
-                    if(!grouping.lastDimensionType().isComparable) {
+                    if(!grouping.firstDimension.dimensionType.isComparable) {
                         throw createError("The visual roles on axis '{0}', assumed continuous, should have 'comparable' groupings.", [this.id]);
                     }
 
@@ -213,7 +213,7 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 
         _getBoundRoleGrouping: function(role) {
             var grouping = role.grouping;
-            if(!grouping) {
+            if(!grouping || !grouping.isBound) {
                 throw def.error.operationInvalid("Axis' role '{0}' is unbound.", [role.name]);
             }
 
@@ -573,7 +573,8 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
                 scale = this.scale;
 
             // TODO: isn't this redundant with the code in _wrapScale??
-            if(grouping.lastDimensionValueType() === Number) {
+            if(grouping.singleContinuousValueType === Number) {
+
                 var nullToZero = def.get(keyArgs, 'nullToZero', true);
 
                 var by = function(scene) {
@@ -598,7 +599,7 @@ def('pvc.visual.Axis', pvc.visual.OptionsBase.extend({
 }));
 
 function axis_groupingScaleType(grouping) {
-    return grouping.isDiscrete()                      ? 'discrete'   :
-           grouping.lastDimensionValueType() === Date ? 'timeSeries' :
+    return grouping.isDiscrete()                       ? 'discrete'   :
+           grouping.singleContinuousValueType === Date ? 'timeSeries' :
            'numeric';
 }

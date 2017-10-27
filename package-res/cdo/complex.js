@@ -92,7 +92,7 @@ def
 
             var atom = atomsByName[addDimName];
             // Once extension dimension names have "." in their names, it is safe to not use getOwn.
-            // Also, in terms of efficiency, use of extension dimension is much less frequent than not.
+            // Also, in terms of performance, use of extension dimension is much less frequent than not.
             var ownerDim = ownerDims[addDimName];
             if(ownerDim === undefined) {
                 if(!dimNamesSpecified) {

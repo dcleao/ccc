@@ -481,14 +481,12 @@ def
 
     var colorVarHelper = new pvc.visual.RoleVarHelper(this, 'color', panel.visualRoles.color),
         valueRole = panel.visualRoles[panel.valueRoleName],
-        firstValueDimName = panel.visualRoles[panel.valueRoleName].firstDimensionName(),
-        firstValueDim = categRootData.dimensions(firstValueDimName),
-        pctValueFormat = panel.chart.options.percentValueFormat,
+        formatSumValueDim = categRootData.dimensions(valueRole.firstDimensionName()),
         angleScale = panel.axes.angle.scale,
         sumAbs = angleScale.isNull ? 0 : angleScale.domain()[1],
         rootScene = this;
 
-        this.vars.sumAbs = new pvc_ValueLabelVar(sumAbs, formatValue(sumAbs, firstValueDim));
+        this.vars.sumAbs = new pvc_ValueLabelVar(sumAbs, formatValue(sumAbs, formatSumValueDim));
 
     // Create category scene sub-class
     var CategSceneClass = def.type(pvc.visual.PieCategoryScene)
@@ -507,6 +505,8 @@ def
 
             // Create percent sub-var of the value var
             var percent = Math.abs(value) / sumAbs;
+            var pctValueFormat = valueDim.type.format().percent();
+
             valueVar.percent = new pvc_ValueLabelVar(
                     percent,
                     pctValueFormat(percent));

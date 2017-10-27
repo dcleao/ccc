@@ -62,7 +62,7 @@ def('pvc.visual.MetricXYPlot', pvc.visual.CartesianPlot.extend({
             var trendOptions = dataCell.trend;
             var trendInfo = trendOptions.info;
 
-            var xDimName = xRole.lastDimensionName();
+            var xDimName = xRole.grouping.singleDimensionName;
 
             var dataPartAtom = this.chart._getTrendDataPartAtom();
             var dataPartDimName = dataPartAtom.dimension.name;

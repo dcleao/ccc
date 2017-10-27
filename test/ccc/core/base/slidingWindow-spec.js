@@ -181,7 +181,7 @@ define([
              it("should set slidingWindow dimension's axis FixedLength default", function() {
                var axes = slidingWindow.chart.axesList;
                axes.filter(function(axis) {
-                    return axis.role.grouping.firstDimension.name == slidingWindow.dimension;
+                    return axis.role.grouping.singleDimensionName == slidingWindow.dimension;
                 }, this)
                 .forEach(function(axis) {
                      expect(axis.option.defaultValue('FixedLength')).toEqual(this.length);

@@ -188,7 +188,7 @@ pvc.BaseChart
             // Interpolations and trends are recreated (virtual datums).
 
             // However, because the whole chart structure (charts, panels, etc.) will be re-created,
-            // it's best to also recreated children and linked data to match the new requirements.
+            // it's best to also recreate children and linked data to match the new requirements.
 
             // Dispose all data children and linked children (recreated as well)
             // Clears data-local caches.
@@ -529,7 +529,7 @@ pvc.BaseChart
         //  and that ends changing the order of datums, to follow
         //  the group operation.
         // Changing order at this level is not acceptable.
-        var dataPartDimName = partRole.lastDimensionName(),
+        var dataPartDimName = partRole.grouping.singleDimensionName,
             dataPartAtoms   = baseData.dimensions(dataPartDimName).getDistinctAtoms(def.array.to(dataPartValues)),
             where = cdo.querySpecPredicate([def.set({}, dataPartDimName, dataPartAtoms)]);
 

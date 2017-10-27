@@ -147,7 +147,7 @@ add(/** @lends cdo.GroupingOper# */{
                     var dataSet = extensionDataSetsMap[dataSetName];
 
                     var datums = dataSet._datums;
-                    if(!datums) {
+                    if(datums.length === 0) {
                         return false; // break;
                     }
 
@@ -186,7 +186,7 @@ add(/** @lends cdo.GroupingOper# */{
     execute: function() {
         // Setup a priori datum filters
 
-        var datums = this._linkParent._datums || [];
+        var datums = this._linkParent._datums;
 
         var datumsQuery = def.query(datums).where(this._preFilter);
 

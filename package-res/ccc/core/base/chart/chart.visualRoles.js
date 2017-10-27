@@ -174,9 +174,9 @@ pvc.BaseChart
 
     _getDataPartDimName: function(useDefault) {
         var role = this.visualRoles.dataPart, preGrouping;
-        return role.isBound()                          ? role.lastDimensionName()        :
-               (preGrouping = role.preBoundGrouping()) ? preGrouping.lastDimensionName() :
-               useDefault                              ? role.defaultDimensionGroup      :
+        return role.isBound()                          ? role.grouping.singleDimensionName :
+               (preGrouping = role.preBoundGrouping()) ? (preGrouping.firstDimension && preGrouping.firstDimension.name) :
+               useDefault                              ? role.defaultDimensionGroup :
                null;
     },
 

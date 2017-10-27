@@ -480,7 +480,11 @@ pvc.BaseChart
 
         var dim;
         var read = function(v) {
-            if(!dim) dim = me.data.owner.dimensions(axis.role.grouping.lastDimensionName());
+            if(!dim) {
+                // Using the first dimension for reading. Its converter, if any, is used.
+                dim = me.data.owner.dimensions(axis.role.grouping.firstDimension.name);
+            }
+
             var v = dim.read(v);
             // Dereference atom
             return v != null ? v.value : null;
@@ -630,7 +634,7 @@ pvc.BaseChart
 
     _setNumericColorAxisScale: function(axis) {
         // TODO: how to handle more?
-        if(axis.dataCells.length !== 1) throw def.error("Can't handle multiple continuous datacells in color axis.");
+        if(axis.dataCells.length !== 1) throw def.error("Can't handle multiple continuous data cells in color axis.");
 
         // Single Continuous
         // -> Global Scope (actually as only the root chart sets the scale, it is implied)
@@ -648,7 +652,7 @@ pvc.BaseChart
                 colorMax:    axis.option('Max'),
                 colorMissing:axis.option('Missing'), // TODO: already handled by the axis wrapping
                 data:        visibleDomainData,
-                colorDimension: axis.role.lastDimensionName(),
+                colorDimension: axis.role.grouping.singleDimensionName,
                 normPerBaseCategory: normByCateg
             };
 

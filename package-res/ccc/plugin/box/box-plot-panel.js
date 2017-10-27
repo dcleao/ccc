@@ -233,7 +233,7 @@ def
                 .select(function(r) {
                     return {
                         roleName: r.name,
-                        dimName:  r.lastDimensionName()
+                        dimName:  r.grouping.singleDimensionName
                     };
                 })
                 .array(),
