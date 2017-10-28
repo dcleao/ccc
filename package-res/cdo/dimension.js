@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var dim_keyArgsAbsTrue = {abs: true};
+
 /**
  * Initializes a dimension instance.
  *
@@ -547,7 +549,7 @@ def.type('cdo.Dimension')
      * @see #sum
      */
     sumAbs: function(keyArgs) {
-        return this.sum(def.create(keyArgs, {abs: true}));
+        return this.sumAbsAtom(keyArgs).value;
     },
 
     /**
@@ -574,7 +576,7 @@ def.type('cdo.Dimension')
      * @see #sum
      */
     value: function(keyArgs) {
-        return this.sum(keyArgs && keyArgs.abs ? def.create(keyArgs, {abs: false}) : keyArgs);
+        return this.valueAtom(keyArgs).value;
     },
 
     /**
@@ -602,9 +604,7 @@ def.type('cdo.Dimension')
      * @see #sum
      */
     valueAbs: function(keyArgs) {
-        var value = this.value(keyArgs);
-        // null or 0
-        return value ? Math.abs(value) : value;
+        return this.valueAbsAtom(keyArgs).value;
     },
 
     /**
@@ -634,26 +634,60 @@ def.type('cdo.Dimension')
      * @see #atoms
      */
     sum: function(keyArgs) {
-        var isAbs = !!def.get(keyArgs, 'abs', false),
-            zeroIfNone = def.get(keyArgs, 'zeroIfNone', true),
-            key   = dim_buildDatumsFilterKey(keyArgs) + ':' + isAbs,
-            sum = def.getOwn(this._sumCache, key);
+        return this.sumAtom(keyArgs).value;
+    },
 
-        if(sum === undefined) {
+    sumAtom: function(keyArgs) {
+        var isAbs = !!def.get(keyArgs, 'abs', false);
+        var zeroIfNone = def.get(keyArgs, 'zeroIfNone', true);
+        var key = dim_buildDatumsFilterKey(keyArgs) + ':' + isAbs;
+
+        var sumAtom = def.getOwn(this._sumCache, key);
+        if(sumAtom === undefined) {
+
             var dimName = this.name;
-            sum = this.data.datums(null, keyArgs).reduce(function(sum2, datum) {
-                var value = datum.atoms[dimName].value;
-                // null < 0 is false
-                if(isAbs && value < 0) value = -value;
 
-                return sum2 != null ? (sum2 + value) : value; // null preservation
+            var sum = this.data.datums(null, keyArgs).reduce(function(result, datum) {
+
+                var value = datum.atoms[dimName].value;
+                if(value === null) {
+                    return result;
+                }
+
+                if(isAbs && value < 0) {
+                    value = -value;
+                }
+
+                return result != null ? (result + value) : value;
             },
             null);
 
-            (this._sumCache || (this._sumCache = {}))[key] = sum;
+            (this._sumCache || (this._sumCache = {}))[key] = sumAtom = this.read(sum);
         }
 
-        return zeroIfNone ? (sum || 0) : sum;
+        return zeroIfNone && sumAtom.value === null ? this.read(0) : sumAtom;
+    },
+
+    sumAbsAtom: function(keyArgs) {
+        if(!keyArgs) {
+            keyArgs = dim_keyArgsAbsTrue;
+        } else {
+            keyArgs = def.create(keyArgs, dim_keyArgsAbsTrue);
+        }
+
+        return this.sumAtom(keyArgs);
+    },
+
+    valueAtom: function(keyArgs) {
+        return this.sumAtom(keyArgs);
+    },
+
+    valueAbsAtom: function(keyArgs) {
+
+        var atom = this.valueAtom(keyArgs);
+
+        // NOTE: null < 0 is false
+        return atom.value < 0 ? this.read(-atom.value) : atom;
     },
 
     /**
@@ -762,150 +796,101 @@ def.type('cdo.Dimension')
      * @param {boolean} [isVirtual=false] Indicates that
      * the (necessarily non-null) atom is the result of interpolation or regression.
      *
-     * @type cdo.Atom
+     * @return {!cdo.Atom} The interned atom.
      */
     intern: function(sourceValue, isVirtual) {
+        return this._read(sourceValue, true, isVirtual);
+    },
+
+    read: function(sourceValue) {
+        return this._read(sourceValue, false);
+    },
+
+    _read: function(sourceValue, intern, isVirtual) {
+
         // NOTE: This function is performance critical!
 
-        // The null path and the existing atom path
-        // are as fast and direct as possible
+        // The null path and the existing atom path are as fast and direct as possible
+
+        var value;
+        var label;
 
         // - NULL -
-        if(sourceValue == null || sourceValue === '')
-            return this._nullAtom || dim_createNullAtom.call(this);
-
-        if(sourceValue instanceof cdo.Atom) {
-            if(sourceValue.dimension !== this) throw def.error.operationInvalid("Atom is of a different dimension.");
-            return sourceValue;
+        if(sourceValue == null || sourceValue === '') {
+            return this._nullAtom || (intern ? dim_createNullAtom.call(this) : this.owner._virtualNullAtom);
         }
 
-        var value, label, type = this.type;
+        if(typeof sourceValue === 'object') {
 
-        // Is google table style cell {v: , f: } ?
-        if(typeof sourceValue === 'object' && ('v' in sourceValue)) {
-            // Get info and get rid of the cell
-            label = sourceValue.f;
-            sourceValue = sourceValue.v;
-            if(sourceValue == null || sourceValue === '') return this._nullAtom || dim_createNullAtom.call(this, label);
+            if(sourceValue instanceof cdo.Atom) {
+                if(sourceValue.dimension !== this) {
+                    throw def.error.operationInvalid("Atom is of a different dimension.");
+                }
+
+                return sourceValue;
+            }
+
+            // Is google table style cell {v: , f: } ?
+            if('v' in sourceValue) {
+
+                label = sourceValue.f;
+
+                if((sourceValue = sourceValue.v) == null || sourceValue === '') {
+                    return this._nullAtom || (intern ? dim_createNullAtom.call(this, label) : this.owner._virtualNullAtom);
+                }
+            }
         }
+
+        var auxFun;
+        var type = this.type;
 
         // - CONVERT -
-        if(!isVirtual) {
-            var converter = type._converter;
-            if(!converter) {
-                value = sourceValue;
-            } else {
-                value = converter(sourceValue);
-                // Null after all
-                if(value == null || value === '') return this._nullAtom || dim_createNullAtom.call(this, sourceValue);
-
-                // Preserve the google style cell label.
-                // The converter is more like a parse function and should not be such that
-                // the corresponding label does not apply anymore - should return the same entity.
-                // If such an entity changing conversion is necessary, and google style cells
-                // are used, a reader should be used instead.
-           }
-        } else {
+        if(isVirtual || (auxFun = type._converter) === null) {
             value = sourceValue;
+        } else if((value = auxFun(sourceValue)) == null || value === '') {
+            // Null after all...
+            return this._nullAtom || (intern ? dim_createNullAtom.call(this) : this.owner._virtualNullAtom);
         }
+        // else
+        //   Preserve the google style cell label.
+        //   The converter is more like a parse function and should not be such that
+        //   the corresponding label does not apply anymore - should return the same entity.
+        //   If such an entity changing conversion is necessary, and google style cells
+        //   are used, a reader should be used instead.
 
         // - CAST -
-        // Any cast function?
-        var cast = type.cast;
-        if(cast) {
-            value = cast(value);
+        if((auxFun = type.cast) !== null && ((value = auxFun(value)) == null || value === '')) {
             // Null after all (normally a cast failure)
-            if(value == null || value === '') return this._nullAtom || dim_createNullAtom.call(this);
+            return this._nullAtom || (intern ? dim_createNullAtom.call(this) : this.owner._virtualNullAtom);
         }
 
         // - KEY -
-        var keyFun = type._key,
-            key = '' + (keyFun ? keyFun(value) : value);
+        var key = '' + ((auxFun = type._key) !== null ? auxFun(value) : value);
+
         // <Debug>
-        /*jshint expr:true */
-        key || def.fail.operationInvalid("Only a null value can have an empty key.");
+        if(key.length === 0) {
+            throw def.error.operationInvalid("Only a null value can have an empty key.");
+        }
         // </Debug>
 
         // - ATOM -
-        var atom = this._atomsByKey[key];
-        if(atom) {
-            if(!isVirtual && atom.isVirtual) delete atom.isVirtual;
+        var atom;
+        if((atom = this._atomsByKey[key]) !== undefined) {
+            if(intern && !isVirtual && atom.isVirtual) {
+                delete atom.isVirtual;
+            }
             return atom;
         }
 
-        return dim_createAtom.call(
-                   this,
-                   type,
-                   sourceValue,
-                   key,
-                   value,
-                   label,
-                   isVirtual);
-    },
-
-    read: function(sourceValue, label) {
-        // - NULL -
-        if(sourceValue == null || sourceValue === '') return null;
-
-        var value,
-            type = this.type,
-            labelSpecified = label != null;
-
-        // Is google table style cell {v: , f: } ?
-        if(typeof sourceValue === 'object' && ('v' in sourceValue)) {
-            // Get info and get rid of the cell
-            label = sourceValue.f;
-            sourceValue = sourceValue.v;
-            if(sourceValue == null || sourceValue === '') return null;
+        if(intern) {
+            return dim_createAndInternAtom.call(this, sourceValue, key, value, label, isVirtual);
         }
 
-        // - CONVERT -
-        var converter = type._converter;
-        value = converter ? converter(sourceValue) : sourceValue;
-        if(value == null || value === '') return null;
-        // Preserve the google style cell label.
-        // The converter is more like a parse function and should not be such that
-        // the corresponding label does not apply anymore - should return the same entity.
-        // If such an entity changing conversion is necessary, and google style cells
-        // are used, a reader should be used instead.
-
-        // - CAST -
-        // Any cast function?
-        var cast = type.cast;
-        if(cast) {
-            value = cast(value);
-            // Null after all?
-            // (normally a cast failure)
-            if(value == null || value === '') return null;
+        if((this !== this.owner) && (atom = this.owner._atomsByKey[key]) !== undefined) {
+            return atom;
         }
 
-        // - KEY -
-        var keyFun = type._key,
-            key = '' + (keyFun ? keyFun(value) : value),
-        // - ATOM -
-            atom = this._atomsByKey[key];
-
-        if(atom) return {
-            rawValue: sourceValue,
-            key:      key,
-            value:    atom.value,
-            label:    '' + (label == null ? atom.label : label)
-        };
-
-        // - LABEL -
-        if(label == null) {
-            var formatter = type._formatter;
-            label = formatter ? formatter(value, sourceValue) : value;
-        }
-
-        label = def.string.to(label); // J.I.C.
-
-        return {
-            rawValue: sourceValue,
-            key:      key,
-            value:    value,
-            label:    label
-        };
+        return new cdo.Atom(this, value, label, sourceValue, key);
     },
 
     /**
@@ -943,7 +928,6 @@ def.type('cdo.Dimension')
  *
  * @name cdo.Dimension#_createAtom
  * @function
- * @param {cdo.DimensionType} type The dimension type of this dimension.
  * @param {any} sourceValue The source value.
  * @param {string} key The key of the value.
  * @param {any} value The typed value.
@@ -952,30 +936,17 @@ def.type('cdo.Dimension')
  * @param {boolean} [isVirtual=false] Indicates if the atom is virtual.
  * @type cdo.Atom
  */
-function dim_createAtom(type, sourceValue, key, value, label, isVirtual) {
+function dim_createAndInternAtom(sourceValue, key, value, label, isVirtual) {
     var atom;
     if(this.owner === this) {
         // Create the atom
-
-        // - LABEL -
-        if(label == null) {
-            var formatter = type._formatter;
-            label = formatter ? formatter(value, sourceValue) : value;
-        }
-
-        label = def.string.to(label); // J.I.C.
-
-        if(!label && def.debug >= 2) def.log("Only the null value should have an empty label.");
-
-        // - ATOM! -
         atom = new cdo.Atom(this, value, label, sourceValue, key);
         if(isVirtual) atom.isVirtual = true;
     } else {
         var source = this.parent || this.linkParent;
         atom = source._atomsByKey[key] ||
-               dim_createAtom.call(
+               dim_createAndInternAtom.call(
                     source,
-                    type,
                     sourceValue,
                     key,
                     value,
@@ -1088,15 +1059,7 @@ function dim_createNullAtom(sourceLabel) {
     var nullAtom = this._nullAtom;
     if(!nullAtom) {
         if(this.owner === this) {
-            var label = sourceLabel;
-            if(sourceLabel == null) {
-                var typeFormatter = this.type._formatter;
-                label = typeFormatter ? def.string.to(typeFormatter.call(null, null, null)) : "";
-            }
-
-            nullAtom = new cdo.Atom(this, null, label, null, '');
-
-            this.data._atomsBase[this.name] = nullAtom;
+            this.data._atomsBase[this.name] = nullAtom = new cdo.Atom(this, null, sourceLabel, null, '');
         } else {
             // Recursively set the null atom, up the parent/linkParent chain
             // until reaching the owner (root) dimension.

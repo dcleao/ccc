@@ -1110,9 +1110,9 @@ var relational_04d = {
         ["APAC", "BMW",         2000,  22000],
         ["APAC", "Mercedes",   32000, 107450],
         ["APAC", "Fiat",       24000,  82481],
-        ["APAC", "Peugeut",     4000,   2555],
-        ["APAC", "Honda",      90000, 636682],
-        ["APAC", "Audi",       53000, 416727]
+        //["APAC", "Peugeut",     4000,   2555],
+        //["APAC", "Honda",      90000, 636682],
+        //["APAC", "Audi",       53000, 416727]
     ],
     metadata: [{
         colName: "Region",

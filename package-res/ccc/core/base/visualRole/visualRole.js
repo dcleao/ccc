@@ -505,6 +505,10 @@ def
 
         keyArgs = def.whiteList(keyArgs, visualRole_flatten_select_keyArgs);
 
+        if(!keyArgs.extensionDataSetsMap) {
+            keyArgs.extensionDataSetsMap = (this.plot || this.chart).boundDimensionsDataSetsMap;
+        }
+
         return data.groupBy(grouping, keyArgs);
     },
 
@@ -723,8 +727,9 @@ def
         var singleDimensionName = this.grouping.isSingleDimension ? this.grouping.singleDimensionName : null;
 
         this.getBoundDimensionName = function(groupData, isOptional) {
+            var dimName;
             var discrimAtom = groupData.atoms[roleDiscrimDimName];
-            if(discrimAtom === undefined) {
+            if(discrimAtom === undefined || (dimName = discrimAtom.value) === null) {
                 if(singleDimensionName !== null) {
                     // Fast path.
                     return singleDimensionName;
@@ -737,8 +742,6 @@ def
             // Is the value dimension one of the visual role's bound dimensions?
             // If multi-chart is bound to the discriminator dimensions and multiple plots with different value role bindings are used,
             // it can happen.
-            var dimName = discrimAtom.value;
-
             if(!roleBoundDimsDataSet.datumByKey(dimName)) {
                 if(isOptional) return null;
                 throw this._errorMustBindDiscrimDimension();
@@ -786,39 +789,43 @@ def
         return roleBoundDimsDataSet.datumByKey(dimName) !== null ? [dimName] : [];
     },
 
-    sumAbs: function(parentData, keyArgs) {
+    numberValueOf: function(data, keyArgs) {
+
         if(this.grouping.isSingleDimension) {
             // Better cache reuse using this method.
-            return parentData.dimensionsSumAbs(this.grouping.singleDimensionName, keyArgs);
+            return data.dimensionNumberValue(this.grouping.singleDimensionName, keyArgs);
         }
 
-        keyArgs = keyArgs ? Object.create(keyArgs) : {};
-        keyArgs.discrimKey = this.uid;
+        keyArgs = this._getDimensionOperKeyArgs(keyArgs);
 
-        return parentData.dimensionsSumAbs(this.getBoundDimensionName.bind(this), keyArgs);
+        return data.dimensionNumberValue(this.getBoundDimensionName.bind(this), keyArgs);
     },
 
     percentOf: function(childData, keyArgs) {
 
-        var valueAbs = childData.dimensions(this.getBoundDimensionName(childData)).valueAbs(keyArgs);
-        // Nully or zero?
-        if(!valueAbs) {
-            return 0;
+        if(this.grouping.isSingleDimension) {
+            return childData.dimensionPercentValue(this.grouping.singleDimensionName, keyArgs);
         }
 
-        // If no parent, we're the root and so we're 100%
-        var parentData = childData.parent;
-        if(!parentData) {
-            return 1;
-        }
+        keyArgs = this._getDimensionOperKeyArgs(keyArgs);
 
-        // The following would not work because, in each group, abs would not be used...
-        //var sum = parentData.dimensions(this.name).sum();
+        return childData.dimensionPercentValue(this.getBoundDimensionName.bind(this), keyArgs);
+    },
 
-        var sum = this.sumAbs(parentData, keyArgs);
+    _getDimensionOperKeyArgs: function(keyArgs) {
 
-        // assert sum >= valueAbs > 0
-        return valueAbs / sum;
+        keyArgs = keyArgs ? Object.create(keyArgs) : {};
+
+        keyArgs.discrimKey = this.uid;
+
+        // The discriminator dimension can not be set in two cases:
+        // * hierarchical scenes, in which the discrim is only set in a deeper data set.
+        // * the discriminator dimension was not bound to any visual role...
+        // Providing this argument enables the summing the value of all dimensions,
+        // when a discriminator dimension is not set.
+        keyArgs.discrimPossibleDims = this.grouping.allDimensionNames;
+
+        return keyArgs;
     }
     // endregion
 })

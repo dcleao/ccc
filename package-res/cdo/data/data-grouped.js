@@ -51,6 +51,37 @@ def.type('cdo.GroupingRootData', cdo.GroupingData)
         throw def.error.argumentRequired('keyArgs.linkParent');
     }
 
+    var groupSpec = keyArgs.groupingSpec;
+    if(groupSpec == null) {
+        throw def.error.argumentRequired('keyArgs.groupingSpec');
+    }
+
+    // Let the base class validate requiredness of groupingOper.
+    var groupOper = keyArgs.groupingOper;
+
+    if(groupOper && groupSpec.hasExtensionComplexTypes) {
+
+        // Ensure that, at a minimum, a null atom exists in Data#atoms,
+        // for each extension dimension of the grouping specification.
+        // This ensures that, for example, `cdo.Complex.view(complex, grouping.allDimensionNames)`
+        // can be used to create a ComplexView with the dimensions of the grouping that generated the data.
+        // In the worst case, the discriminator dimension is only defined in the leaf grouping data sets,
+        // and this protects the levels before.
+
+        keyArgs = Object.create(keyArgs);
+
+        var atomsBase = keyArgs.atomsBase = Object.create(keyArgs.linkParent.atoms);
+
+        var extensionDataSetsMap = groupOper._extensionDataSetsMap;
+
+        groupSpec.extensionDimensions().each(function(dimSpec) {
+            if(atomsBase[dimSpec.fullName] === undefined) {
+                // The null atom.
+                atomsBase[dimSpec.fullName] = extensionDataSetsMap[dimSpec.dataSetName].owner.atoms[dimSpec.name];
+            }
+        });
+    }
+
     this.base(keyArgs);
 })
 .add(/** @lends cdo.GroupingRootData# */{

@@ -80,8 +80,7 @@ def.type('cdo.GroupingSpec')
 
     // Accumulated main dimension names, from first level to last.
     var accMainDimNames = [];
-
-    var allDimCount = 0;
+    var allDimNames = [];
 
     var isDiscrete = false;
     var singleContinuousValueType = null;
@@ -95,7 +94,7 @@ def.type('cdo.GroupingSpec')
 
             levelKeys.push(levelSpec.key);
 
-            allDimCount += levelSpec.allDimensions.length;
+            allDimNames.push.apply(allDimNames, levelSpec.allDimensionNames);
 
             levelSpec.allDimensions.forEach(function(dimSpec) {
 
@@ -144,13 +143,14 @@ def.type('cdo.GroupingSpec')
 
     // TODO: should this contain only distinct dimension names?
     this._dimNames = accMainDimNames;
+    this._allDimNames = allDimNames;
 
     this.depth = this.levels.length;
 
     this._isDiscrete = complexType !== null ? isDiscrete : undefined;
     this._singleContinuousValueType = complexType !== null ? (isDiscrete ? null : singleContinuousValueType) : undefined;
 
-    this.isSingleDimension = allDimCount === 1;
+    this.isSingleDimension = allDimNames.length === 1;
 
     this.firstDimension = this.depth > 0 ? this.levels[0].allDimensions[0] : null;
     this.lastDimension  = this.depth > 0 ? this.levels[this.depth - 1].lastDimension() : null;
@@ -341,6 +341,15 @@ def.type('cdo.GroupingSpec')
     },
 
     /**
+     * The names of all of the dimensions of this grouping.
+     *
+     * @type {!string[]}
+     */
+    get allDimensionNames() {
+        return this._allDimNames;
+    },
+
+    /**
      * Obtains the dimension type of the first dimension spec., if any.
      * @type cdo.DimensionType
      *
@@ -492,7 +501,12 @@ def.type('cdo.GroupingSpec')
     // endregion
 
     view: function(complex) {
-        return complex.view(this.dimensionNames());
+        // Datums never have extension atoms in their atoms map.
+        var dimNames = (complex instanceof cdo.Datum)
+            ? this.dimensionNames()
+            : this.allDimensionNames;
+
+        return complex.view(dimNames);
     },
 
     toString: function() {

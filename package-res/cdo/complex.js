@@ -101,25 +101,28 @@ def
                 }
 
                 // An extension atom. Must already be an atom, then.
-                if(!(atom instanceof cdo.AbstractAtom)) {
+                if(!(atom instanceof cdo.Atom)) {
                     throw def.error.operationInvalid("Extension atom values must be cdo.Atom instances.");
                 }
+
+                // Add all extension atoms. Even if null.
+                atomsMap[addDimName] = atom;
             } else {
                 // atom can be a value.
                 // Need to intern, even if null.
                 atom = ownerDim.intern(atom);
-            }
 
-            // Don't add atoms already in base proto object.
-            // With the exception of (virtual) nulls, which are present at the root proto object,
-            // for every dimension, inheriting an atom means that its value is already fixed at a higher level
-            // (due to a group by operation).
-            // Let's not shadow inherited atoms with an equal atom...
-            // Should it even be possible that a non-null inherited atom would be different from the one
-            // being received?
-            // See also Complex#getSpecifiedAtom(.).
-            if(atom.value != null && (atomsBase === null || atom !== atomsBase[addDimName])) {
-                atomsMap[addDimName] = atom;
+                // Don't add atoms already in base proto object.
+                // With the exception of (virtual) nulls, which are present at the root proto object,
+                // for every dimension, inheriting an atom means that its value is already fixed at a higher level
+                // (due to a group by operation).
+                // Let's not shadow inherited atoms with an equal atom...
+                // Should it even be possible that a non-null inherited atom would be different from the one
+                // being received?
+                // See also Complex#getSpecifiedAtom(.).
+                if(atom.value != null && (atomsBase === null || atom !== atomsBase[addDimName])) {
+                    atomsMap[addDimName] = atom;
+                }
             }
         };
 

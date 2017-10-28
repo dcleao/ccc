@@ -105,7 +105,9 @@ pvc.BaseChart
         // ----
 
         // Create the complex type.
-        var complexType = new cdo.ComplexType();
+        var complexType = new cdo.ComplexType(null, {
+            formatProto: this._format
+        });
 
         // Configure it from complexTypeProj.
         complexTypeProj.configureComplexType(complexType, commonDimOptions);

@@ -185,63 +185,63 @@ def
     _createVarFromDatumNumber: function(datum, scene) {
 
         // If there is a single datum, then there is a single atom, and no summing is needed.
+        // This is the most common case.
 
         var roleVar;
-        var valuePct = null;
-        var valuePctLabel = null;
+        var valuePctAtom = null;
 
         if(datum === null || datum.isNull) {
             roleVar = this._createNullVar();
         } else {
             // Some scenes are datum-only scenes (e.g. Scatter).
             // So, getting a data set to find a discriminator variable may require looking at the parent scene.
-            var valueDimName = this.role.getBoundDimensionName(scene.data());
 
-            roleVar = pvc_ValueLabelVar.fromAtom(datum.atoms[valueDimName]);
+            var valueAtom;
+            var groupData = scene.group;
+            var valueDimName = this.role.getBoundDimensionName(groupData || scene.data(), /* isOptional: */ groupData != null);
+            if(valueDimName !== null) {
+                valueAtom = datum.atoms[valueDimName];
+            } else {
+                // A hierarchical scene, with a single datum, where the discriminator dimension is only settled on a deeper level.
+                // E.g. sunburst with sizeRole.dim in category, as a last dimension.
+                // Go through the general, slower path.
+                valueAtom = this.role.numberValueOf(groupData);
+            }
 
-            var value = roleVar.value;
+            roleVar = pvc_ValueLabelVar.fromAtom(valueAtom);
 
             // Calculate the percent value.
-            if(value != null && this.hasPercentSubVar && scene.group !== null) {
-                valuePct = this.role.percentOf(scene.group, {visible: true});
-
-                var valuePctFormatter = scene.group.dimensions(valueDimName).type.format().percent();
-                valuePctLabel = valuePctFormatter(valuePct);
+            if(roleVar.value != null && this.hasPercentSubVar && scene.group !== null) {
+                valuePctAtom = this.role.percentOf(scene.group);
             }
             // else if scene.group === null, not supported
         }
 
         if(this.hasPercentSubVar) {
-            roleVar.percent = this._createPercentVar(valuePct, valuePctLabel);
+            roleVar.percent = this._createPercentVar(valuePctAtom);
         }
 
         return roleVar;
     },
 
-    _createVarFromGroupNumber: function(group) {
+    _createVarFromGroupNumber: function(groupData) {
 
-        var valueDimName = this.role.getBoundDimensionName(group);
-        var valueDim = group.dimensions(valueDimName);
+        var valueAtom = this.role.numberValueOf(groupData);
 
-        var value = valueDim.value({visible: true, zeroIfNone: false});
-        if(value == null) {
-            return this._createNullVar();
-        }
-
-        var roleVar = new pvc_ValueLabelVar(value, valueDim.format(value), value);
+        var roleVar = pvc_ValueLabelVar.fromAtom(valueAtom);
 
         if(this.hasPercentSubVar) {
-            var valuePct = this.role.percentOf(group, {visible: true});
+            var valuePctAtom = valueAtom.value !== null ? this.role.percentOf(groupData) : null;
 
-            var valuePctFormatter = valueDim.type.format().percent();
-
-            roleVar.percent = this._createPercentVar(valuePct, valuePctFormatter(valuePct));
+            roleVar.percent = this._createPercentVar(valuePctAtom);
         }
 
         return roleVar;
     },
 
-    _createPercentVar: function(valuePct, valuePctLabel) {
-        return valuePct == null ? this._createNullVar() : new pvc_ValueLabelVar(valuePct, valuePctLabel);
+    _createPercentVar: function(valuePctAtom) {
+        return valuePctAtom == null
+            ? this._createNullVar()
+            : new pvc_ValueLabelVar(valuePctAtom.value, valuePctAtom.labelPercent);
     }
 });

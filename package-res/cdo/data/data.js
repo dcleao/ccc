@@ -125,8 +125,8 @@ def.type('cdo.Data', cdo.Complex)
             this._leafs = [];
 
             // Inherit link parent's atoms.
-            atomsBase = linkParent.atoms;
-            atomsIsSet = Object.create(linkParent.atomsIsSet);
+            atomsBase = keyArgs.atomsBase || linkParent.atoms;
+            atomsIsSet = keyArgs.atomsBaseIsSet || Object.create(linkParent.atomsIsSet);
             //atoms = null
 
             extensionDatums = keyArgs.extensionDatums || linkParent.extensionDatums;
@@ -167,6 +167,7 @@ def.type('cdo.Data', cdo.Complex)
     }
     // else, on an owner data set, datums are added later, by calling #add or #load.
 
+    // TODO: should only be set on an owner data set?
     // Need this because of null interning/un-interning and atoms chaining.
     this._atomsBase = atomsBase;
 
@@ -378,7 +379,9 @@ def.type('cdo.Data', cdo.Complex)
         return dim;
     },
 
-    dimensionsList: function() { return this._dimensionsList; },
+    dimensionsList: function() {
+        return this._dimensionsList;
+    },
 
     /**
      * Gets an atom if it was specified.
@@ -425,7 +428,7 @@ def.type('cdo.Data', cdo.Complex)
      */
     children: function() {
         var cs = this.childNodes;
-        return cs.length ? def.query(cs) : def.query();
+        return cs.length > 0 ? def.query(cs) : def.query();
     },
 
     /**
@@ -434,7 +437,9 @@ def.type('cdo.Data', cdo.Complex)
      * @param {string} key The key of the child data.
      * @type cdo.Data | null
      */
-    child: function(key) { return def.getOwn(this._childrenByKey, key, null); },
+    child: function(key) {
+        return def.getOwn(this._childrenByKey, key, null);
+    },
 
     /**
      * Obtains the number of children.

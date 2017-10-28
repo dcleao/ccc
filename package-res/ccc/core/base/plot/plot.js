@@ -329,7 +329,7 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
             var valueDimNames = valueRole.grouping.dimensionNames();
             if(valueAxis.scaleSumNormalized()) {
                 // e.g. Pie angle axis.
-                return {min: 0, max: valueRole.sumAbs(data)};
+                return {min: 0, max: Math.abs(valueRole.numberValueOf(data).value || 0)};
             }
 
             // Non-normalized.

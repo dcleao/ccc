@@ -451,13 +451,18 @@ def
         }
 
         var o = $.extend({}, me.markEventDefaults, options),
-            pseudoAtom = baseDim.read(sourceValue, label),
-            basePos    = baseScale(pseudoAtom.value),
-            baseRange  = baseScale.range(),
+            atom = baseDim.read(sourceValue),
+            basePos = baseScale(atom.value),
+            baseRange = baseScale.range(),
             baseEndPos = baseRange[1];
+
         if(basePos < baseRange[0] || basePos > baseEndPos) {
             me.log.warn("Cannot mark event because it is outside the base scale's domain.");
             return me;
+        }
+
+        if(!label) {
+            label = atom.label;
         }
 
         // Chart's main plot
@@ -469,7 +474,7 @@ def
         if(!o.forceHorizontalAnchor) {
             var alignRight    = ha === "right",
                 availableSize = alignRight ? (baseEndPos - basePos) : basePos,
-                labelSize = pv.Text.measureWidth(pseudoAtom.label, o.font);
+                labelSize = pv.Text.measureWidth(label, o.font);
             if(availableSize < labelSize) ha = alignRight ? "left" : "right";
         }
 
@@ -488,7 +493,7 @@ def
             .top(topPos)
             .add(pv.Label)
             .font(o.font)
-            .text(pseudoAtom.label)
+            .text(label)
             .textStyle(o.textStyle);
 
         return me;

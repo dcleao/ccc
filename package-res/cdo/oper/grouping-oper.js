@@ -38,6 +38,15 @@ def.type('cdo.GroupingOper', cdo.DataOper)
 
     groupingSpecs || def.fail.argumentRequired('groupingSpecs');
 
+    groupingSpecs = def.array.as(groupingSpecs);
+    if(groupingSpecs.length === 0) {
+        throw def.error.argumentRequired('groupingSpecText');
+    }
+
+    if(def.get(keyArgs, 'inverted', false)) {
+        groupingSpecs = groupingSpecs.slice().reverse();
+    }
+
     this.base(linkParent, keyArgs);
 
     // Pre-filters
@@ -62,11 +71,6 @@ def.type('cdo.GroupingOper', cdo.DataOper)
 
     var groupSpecKeys = hasKey ? [] : null;
 
-    groupingSpecs = def.array.as(groupingSpecs);
-    if(def.get(keyArgs, 'inverted', false)) {
-        groupingSpecs = groupingSpecs.slice().reverse();
-    }
-
     var extensionDataSetsKey = '';
     var extensionDataSetsMap = null;
     var extensionDataSetsMapProvided = def.get(keyArgs, 'extensionDataSetsMap', null);
@@ -81,6 +85,10 @@ def.type('cdo.GroupingOper', cdo.DataOper)
         } else {
             // Must be a non-empty string, or throws
             groupSpec = cdo.GroupingSpec.parse(groupSpec, linkParent.type);
+        }
+
+        if(groupSpec.isNull) {
+            throw def.error.argumentInvalid('groupingSpecText', "Null grouping specification.");
         }
 
         if(groupSpec.flatteningMode === cdo.FlatteningMode.SingleLevel) {
@@ -99,7 +107,7 @@ def.type('cdo.GroupingOper', cdo.DataOper)
             groupSpec.extensionComplexTypeNames.forEach(function(dataSetName) {
                 var dataSet;
                 if(extensionDataSetsMapProvided === null || !(dataSet = extensionDataSetsMapProvided[dataSetName])) {
-                    throw def.error.operationInvalid("Grouping specification requires extension data set '{0}'.", [datatSetName]);
+                    throw def.error.operationInvalid("Grouping specification requires extension data set '{0}'.", [dataSetName]);
                 }
 
                 if(extensionDataSetsMap === null) {
@@ -152,7 +160,7 @@ add(/** @lends cdo.GroupingOper# */{
                     }
 
                     // Is the base data set already limited to a set of these datums?
-                    // If so, intesect.
+                    // If so, intersect.
                     // If we get 0 datums, then the whose grouping results in 0 datums...
                     if(baseExtensionDatumsMap !== null) {
                         var baseDatums = baseExtensionDatumsMap[dataSetName];
@@ -212,30 +220,34 @@ add(/** @lends cdo.GroupingOper# */{
 
     _group: function(datumsQuery) {
 
-        // Create the root node
+        // Create the root node - the root node of the first grouping spec.
         var rootNode = {
             isRoot: true,
             treeHeight: def
                 .query(this._groupSpecs)
-                .select(function(spec) {
-                    var levelCount = spec.levels.length;
-                    if(!levelCount) { return 0; }
-                    return (spec.flatteningMode & cdo.FlatteningMode.Dfs) ? 1 : levelCount;
+                .select(function(groupSpec) {
+                    return (groupSpec.flatteningMode & cdo.FlatteningMode.Dfs) ? 1 : groupSpec.depth;
                 })
                 .reduce(def.add, 0),
 
-            datums: []
+            datums: [],
+            datumsById: {},
+
+            // J.I.C. of early bailout; ensure the root node has all of these.
+            groupSpec: this._groupSpecs[0],
+            groupLevelSpec: this._groupSpecs[0].levels[0]
+
             // children
-            // atoms       // not on rootNode
+            // atoms          // not on rootNode
             // isFlattenGroup // on parents of a flattened group spec
         };
 
-        if(rootNode.treeHeight > 0) {
-            // Any extensions with no datums cause the whole grouping to result in no datums.
-            var extensionDatumsMap = this._getExtensionDatumsMap();
-            if(extensionDatumsMap !== false) {
-                this._groupSpecRecursive(rootNode, def.query(datumsQuery).array(), extensionDatumsMap, 0);
-            }
+        // assert rootNode.treeHeight > 0
+
+        // Any extensions with no datums cause the whole grouping to result in no datums.
+        var extensionDatumsMap = this._getExtensionDatumsMap();
+        if(extensionDatumsMap !== false) {
+            this._groupSpecRecursive(rootNode, def.query(datumsQuery).array(), extensionDatumsMap, 0);
         }
 
         return rootNode;
@@ -303,6 +315,7 @@ add(/** @lends cdo.GroupingOper# */{
                     // Backup the just grouped child datums and reset them in childNode.
                     var childDatums = childNode.datums;
                     childNode.datums = [];
+                    childNode.datumsById = {};
 
                     // Now send childDatums down to be further grouped (and re-ordered).
 
@@ -317,7 +330,28 @@ add(/** @lends cdo.GroupingOper# */{
                 }
 
                 // Datums were already added to _childNode_.
-                def.array.append(levelParentNode.datums, childNode.datums);
+                this._addChildDatums(levelParentNode, childNode.datums, groupExtensionDatumsMap);
+            }
+        }
+    },
+
+    _addChildDatums: function(parentNode, childDatums, groupExtensionDatumsMap) {
+
+        var datums = parentNode.datums;
+
+        if(groupExtensionDatumsMap === null) {
+            // There is no way that there are duplicates.
+            def.array.append(datums, childDatums);
+        } else {
+            var datumsById = parentNode.datumsById;
+            var i = -1;
+            var L = childDatums.length;
+            while(++i < L) {
+                var childDatum = childDatums[i];
+                if(datumsById[childDatum.id] === undefined) {
+                    datumsById[childDatum.id] = childDatum;
+                    datums.push(childDatum);
+                }
             }
         }
     },
@@ -645,6 +679,8 @@ add(/** @lends cdo.GroupingOper# */{
                 data._addDatumsLocal(node.datums);
             } else {
                 isNew = true;
+
+                // TODO: should receive atoms with null atoms for used extension dimensions...
 
                 // Create a linked root data set.
                 data = new cdo.GroupingRootData({

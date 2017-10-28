@@ -42,7 +42,7 @@ def('pvc.visual.SunburstPlot', pvc.visual.Plot.extend({
                 isMeasure:  true,
                 isRequired: false,
                 isPercent:  true,
-                requireSingleDimension: true,
+                requireSingleDimension: false,
                 requireIsDiscrete: false,
                 valueType: Number,
                 defaultDimension: 'size'

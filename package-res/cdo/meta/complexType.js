@@ -18,7 +18,7 @@
  */
 def.type('cdo.ComplexType')
 .init(
-function(dimTypeSpecs) {
+function(dimTypeSpecs, keyArgs) {
     /**
      * A map of the dimension types by name.
      *
@@ -84,6 +84,17 @@ function(dimTypeSpecs) {
      * @private
      */
     this._dimsNamesByGroup = {};
+
+    /* globals formProvider */
+
+    /**
+     * The format provider to use when a dimension format provider is not available.
+     * @type {!cdo.FormatProvider}
+     * @readOnly
+     */
+    this.format = formProvider(null, def.get(keyArgs, "formatProto"));
+
+    this.nullNumberAtom = new cdo.NumberAtom(this, null);
 
     if(dimTypeSpecs) for(var name in dimTypeSpecs) this.addDimension(name, dimTypeSpecs[name]);
 })

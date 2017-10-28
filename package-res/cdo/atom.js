@@ -38,9 +38,8 @@
  *           It must be consistent with the corresponding {@link cdo.DimensionType#valueType}.
  *
  * @property {string} label The formatted value.
- *           <p>
  *           Only the null atom can have a empty label.
- *           </p>
+ *           When nully, it is determined lazily.
  *
  * @property {string} key The value of the atom expressed as a
  *           string in a way that is unique amongst all atoms of its dimension.
@@ -57,15 +56,56 @@
  * @param {any} rawValue The source value.
  * @param {string} key The key.
  */
-
-def.type('cdo.AbstractAtom')
-.add( /** @lends cdo.AbstractAtom# */{
+def.type('cdo.Atom')
+.init(function(dimension, value, label, rawValue, key) {
+    this.dimension = dimension;
+    this.id = (value == null ? -def.nextId() : def.nextId()); // Ensure null sorts first, when sorted by id
+    this.value = value;
+    this._label = label == null ? null : label;
+    if(rawValue !== undefined) this.rawValue = rawValue;
+    this.key = key;
+})
+.add(/** @lends cdo.Atom# */{
 
     isVirtual: false,
     rawValue: undefined,
 
     /**
+     * Gets or sets the formatted value of an atom.
+     *
+     * When unspecified, the formatted value is the result of applying the
+     * atom's dimension formatter to the atom's value.
+     *
+     * @type {string}
+     * @readOnly
+     */
+    get label() {
+        var label = this._label;
+        if(label === null) {
+            this._label = label = this.dimension.format(this.value, this.rawValue);
+        }
+        return label;
+    },
+
+    set label(label) {
+        this._label = def.string.to(label);
+    },
+
+    /**
+     * Gets the label of a numeric atom formatted as a percentage.
+     *
+     * @type {string}
+     * @readOnly
+     */
+    get labelPercent() {
+        var valuePctFormatter = this.dimension.type.format().percent();
+        return valuePctFormatter(this.value);
+    },
+
+    /**
      * Obtains the label of the atom.
+     *
+     * @return {string} A string representation of the value of the atom.
      */
     toString: function() {
         var label = this.label;
@@ -76,81 +116,42 @@ def.type('cdo.AbstractAtom')
     }
 });
 
-def.type('cdo.Atom', cdo.AbstractAtom)
-.init(function(dimension, value, label, rawValue, key) {
-    this.dimension = dimension;
-    this.id = (value == null ? -def.nextId() : def.nextId()); // Ensure null sorts first, when sorted by id
-    this.value = value;
-    this.label = label;
-    if(rawValue !== undefined) this.rawValue = rawValue;
-    this.key = key;
-});
+def.type('cdo.NumberAtom')
+.init(function(complexType, value, label) {
+    this.complexType = complexType;
+    this.id = def.nextId();
 
-// Aggregated Atoms are used ONLY within Data#atoms,
-// for dimensions which are not part of the overall group by key.
-//
-// data.atoms.sales          .{value,label} (default aggregation can be read directly)
-// data.atoms.sales.sum      .{value,label}
-// data.atoms.sales.percent  .{value,label} (requires a parent data)
-// data.atoms.sales.minimum  .{value,label}
+    this.value = value == null ? null : value;
+    this._label = label == null ? null : label;
+    this.key = value == null ? "" : value.toString();
+})
+.add(/** @lends cdo.NumberAtom# */{
 
-var cdo_AggAtom_keyArgs = {zeroIfNone: false};
+    dimension: null,
 
-def.type('cdo.AggregatedAtom', cdo.AbstractAtom)
-.init(function(dimension) {
-    this.dimension = dimension;
-}).add( /** @lends cdo.AggregatedAtom# */{
-    __read: function(value) {
-        var dim = this.dimension;
-        var pseudoAtom = dim.read(value);
-        return pseudoAtom || dim.owner._virtualNullAtom;
-    },
-
-    __agg: function() {
-        // eq to this.sum...
-        return this.__read(this.dimension.value(cdo_AggAtom_keyArgs));
-    },
-
-    // Direct atom properties, expose the atom corresponding to the dimension's "default aggregation":
-    get id() {
-        return this.__agg().id; // NOT DEFINED!!!
-    },
     get key() {
-        return this.__agg().key;
+        return '' + this.value;
     },
-    get value() {
-        return this.__agg().value;
-    },
+
     get rawValue() {
-        return this.__agg().rawValue;
+        return this.value;
     },
+
     get label() {
-        return this.__agg().label;
+        var label = this._label;
+        if(label === null) {
+            this._label = label = this.complexType.format.number()(this.value, this.rawValue);
+        }
+        return label;
     },
 
-    // Atoms of derived sub-dimensions (statistical, metadata).
+    set label(label) {
+        this._label = def.string.to(label);
+    },
 
-    // For numeric dimensions
-    get sum() {
-        return this.__read(this.dimension.sum(cdo_AggAtom_keyArgs));
-    },
-    get sumAbs() {
-        return this.__read(this.dimension.sumAbs(cdo_AggAtom_keyArgs));
-    },
-    get percent() {
-        return this.__read(this.dimension.valuePercent(cdo_AggAtom_keyArgs));
-    },
-    // TODO: average, ...
-
-    // For ordinal dimensions
-    get minimum() {
-        return this.__read(this.dimension.min(cdo_AggAtom_keyArgs));
-    },
-    get maximum() {
-        return this.__read(this.dimension.max(cdo_AggAtom_keyArgs));
+    get labelPercent() {
+        return this.complexType.format.percent()(this.value);
     }
-
-    // TODO: dimensions
 });
 
 /**

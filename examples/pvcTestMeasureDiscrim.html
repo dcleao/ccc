@@ -743,7 +743,7 @@ new pvc.PieChart({
     canvas: "pvcExample11",
     width:  500,
     height: 400,
-    title: "Sales and Quantity By Brand, By Region",
+    title: "Sales and Other Gains By Brand, By Region",
     animate: false,
     selectable: true,
     hoverable: true,
@@ -771,6 +771,41 @@ new pvc.PieChart({
             <button id="pvcExample11TryMe" class="tryMe" onclick='tryMe(this)'>Try me</button>
         </div>
         <div><div id="pvcExample11"></div></div>
+    </div>
+</div>
+
+<h3>Hierarchical chart with the discriminator amid the main category role</h3>
+
+<div class="tryItTable">
+    <div>
+        <div>
+<textarea cols="90" rows="21" id="pvcExample12Code">
+new pvc.SunburstChart({
+    canvas: "pvcExample12",
+    width:  500,
+    height: 400,
+    title: "Sales and Other Gains By Brand, By Region",
+    animate: false,
+    selectable: true,
+    hoverable: true,
+    readers: ["region", "brand", "otherGains", "sales"],
+    plots: [
+        {
+            name: "main",
+            visualRoles: {
+                category: "region, sizeRole.dim, brand",
+                size: "otherGains, sales"
+            }
+        }
+    ]
+})
+.setData(relational_04d, {
+    crosstabMode: false
+})
+.render();</textarea>
+            <button id="pvcExample12TryMe" class="tryMe" onclick='tryMe(this)'>Try me</button>
+        </div>
+        <div><div id="pvcExample12"></div></div>
     </div>
 </div>
   </body>

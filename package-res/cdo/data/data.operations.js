@@ -146,26 +146,29 @@ cdo.Data.add(/** @lends cdo.Data# */{
             var newDatum = newDatums[i];
             var id = newDatum.id;
 
-            datums.push(newDatum);
-            datumsById[id] = newDatum;
-            datumsByKey[newDatum.key]  = newDatum;
+            // J.I.C.
+            if(datumsById[id] === undefined) {
+                datums.push(newDatum);
+                datumsById[id] = newDatum;
+                datumsByKey[newDatum.key]  = newDatum;
 
-            if(internAtoms) {
-                data_processDatumAtoms.call(
-                    this,
-                    newDatum,
-                    /* intern      */ true,
-                    /* markVisited */ false);
-            }
-
-            // TODO: make this lazy?
-            if(!newDatum.isNull) {
-                if(selectedDatumsMap && newDatum.isSelected) {
-                    selectedDatumsMap.set(id, newDatum);
+                if(internAtoms) {
+                    data_processDatumAtoms.call(
+                        this,
+                        newDatum,
+                        /* intern      */ true,
+                        /* markVisited */ false);
                 }
 
-                if(newDatum.isVisible) {
-                    visibleDatumsMap.set(id, newDatum);
+                // TODO: make this lazy?
+                if(!newDatum.isNull) {
+                    if(selectedDatumsMap && newDatum.isSelected) {
+                        selectedDatumsMap.set(id, newDatum);
+                    }
+
+                    if(newDatum.isVisible) {
+                        visibleDatumsMap.set(id, newDatum);
+                    }
                 }
             }
         }
@@ -421,7 +424,8 @@ cdo.Data.add(/** @lends cdo.Data# */{
     },
 
     /**
-     * Sums the absolute value of a specified dimension on each child data.
+     * Sums the absolute value of a specified dimension on each child data
+     * and returns an atom having its value.
      *
      * @param {string|function(!cdo.Data):string} dimName The name of the dimension, or a dimension discriminator function
      *  that, when given a child data set, returns the name of the dimension to use for that child data set.
@@ -432,56 +436,162 @@ cdo.Data.add(/** @lends cdo.Data# */{
      *  passed to each dimension's {@link cdo.Dimension#valueAbs} method.
      * @param {string} [keyArgs.discrimKey] When `dimName` is a dimension discriminator function,
      *  specifies the cache key to use to identify it. When unspecified, the results are not cached.
+     * @param {string[]} [keyArgs.discrimPossibleDims] When `dimName` is a dimension discriminator function,
+     *  specifies the possible dimensions it can returns. If, at the last descendant level of this data set,
+     *  the discriminator function does not return a fixed dimension, the sum of these dimensions is returned.
+     * @return {number}
      *
-     * @type number
+     * @deprecated Use #dimensionNumberValue.
      */
     dimensionsSumAbs: function(dimName, keyArgs) {
 
-        /*global dim_buildDatumsFilterKey:true */
+        var value = this.dimensionNumberValue(dimName, keyArgs).value;
 
-        var sum;
+        return value !== null && value < 0 ? -value : value;
+    },
 
+    dimensionNumberValue: function(dimName, keyArgs) {
+
+        var operArgs = this._createDimensionOperArgs(dimName, keyArgs);
+
+        return this._dimensionNumberValue(operArgs);
+    },
+
+    _createDimensionOperArgs: function(dimName, keyArgs) {
         var discrimFun;
+        var discrimPossibleDimNames;
         var discrimKey = null;
+
         if(typeof dimName === 'function') {
             discrimFun = dimName;
-
+            discrimPossibleDimNames = def.get(keyArgs, 'discrimPossibleDims') || null;
             discrimKey = def.get(keyArgs, 'discrimKey') || null;
             if(discrimKey !== null) {
                 discrimKey = "discrim:" + discrimKey;
             }
         } else {
             discrimFun = def.fun.constant(dimName);
+            discrimPossibleDimNames = [dimName];
             discrimKey = dimName;
         }
 
+        /* globals dim_buildDatumsFilterKey */
+
         var cacheKey = null;
-
         if(discrimKey !== null) {
-            cacheKey = discrimKey + ":" + dim_buildDatumsFilterKey(keyArgs);
+            cacheKey = discrimKey + ":" + dim_buildDatumsFilterKey(keyArgs) + ':' + (discrimPossibleDimNames || []).join("|");
+        }
 
-            sum = def.getOwn(this._sumAbsCache, cacheKey);
-            if(sum != null) {
-                return sum;
+        return {
+            discrimFun: discrimFun,
+            discrimPossibleDimNames: discrimPossibleDimNames,
+            cacheKey: cacheKey,
+            keyArgs: keyArgs
+        };
+    },
+
+    _dimensionNumberValue: function(operArgs) {
+
+        var valueAtom;
+        var cacheKey = operArgs.cacheKey;
+        if(cacheKey === null || (valueAtom = def.getOwn(this._sumAbsCache, cacheKey)) === undefined) {
+
+            valueAtom = this._dimensionNumberValueCore(operArgs);
+
+            if(cacheKey !== null) {
+                (this._sumAbsCache || (this._sumAbsCache = {}))[cacheKey] = valueAtom;
             }
         }
 
+        return valueAtom;
+    },
 
-        sum = this.children()
-                /* non-degenerate flattened parent groups would account for the same values more than once */
-                .where(function(childData) { return !childData._isFlattenGroup || childData._isDegenerateFlattenGroup; })
+    _dimensionNumberValueCore: function(operArgs) {
+
+        // If the measure dimension is not defined at this level,
+        // create a neutral-atom, formatted using a default number formatter.
+        var valueDimName = operArgs.discrimFun(this, /* isOptional: */ operArgs.discrimPossibleDimNames !== null);
+
+        // Because leaf data sets do not use abs to sum their datums,
+        // and any other ascendant data set uses abs to sum its children, for matters of percent calculations,
+        // to ensure that sums are consistent in hierarchical data sets (with more than two levels),
+        // and that it is the leaf grouping that imposes actual valid groupings of datums,
+        // any data set which has child data sets cannot simply sum its datums directly,
+        // but must instead sum the values of its children.
+        // Thus, the value of the "dimension" is only the direct sum of its datums if
+        // this data set does have any child data sets...
+
+        var value;
+
+        if(this.childCount() === 0) {
+            if(valueDimName !== null) {
+                // Already cached.
+                return this.dimensions(valueDimName).valueAtom(operArgs.keyArgs);
+            }
+
+            // Assume that summing the value across all bound dimensions is meaningful.
+            value = def.query(operArgs.discrimPossibleDimNames)
+                        .select(function(possibleDimName) {
+                            return this.dimensions(possibleDimName).valueAbsAtom(operArgs.keyArgs).value;
+                        }, this)
+                        .reduce(def.addPreservingNull, null);
+        } else {
+
+            value = this.children()
+                // Non-degenerate flattened parent groups would account for the same values more than once.
+                .where(function(childData) {
+                    return !childData._isFlattenGroup || childData._isDegenerateFlattenGroup;
+                })
                 .select(function(childData) {
-                    return childData.dimensions(discrimFun(childData)).valueAbs(keyArgs) || 0;
-                }, this)
-                .reduce(def.add, 0);
+                    var value = childData._dimensionNumberValue(operArgs).value;
 
-        // assert sum != null
-
-        if(cacheKey !== null) {
-            (this._sumAbsCache || (this._sumAbsCache = {}))[cacheKey] = sum;
+                    return value !== null && value < 0 ? -value : value;
+                })
+                .reduce(def.addPreservingNull, null);
         }
 
-        return sum;
+        if(valueDimName !== null) {
+            return this.dimensions(valueDimName).read(value);
+        }
+
+        // Choosing one of discrimPossibleDimNames over the other could produce strange results, when formatted.
+        // It's better to use a general formatter.
+        return value === null ? this.type.nullNumberAtom : new cdo.NumberAtom(this.type, value);
+    },
+
+    dimensionPercentValue: function(dimName, keyArgs) {
+
+        var operArgs = this._createDimensionOperArgs(dimName, keyArgs);
+
+        var valueAtom = this._dimensionNumberValue(operArgs);
+
+        var value = valueAtom.value;
+        if(value === null) {
+            return valueAtom;
+        }
+
+        var valueDim = valueAtom.dimension;
+
+        // Zero?
+        if(value === 0) {
+            return getAtom.call(this, 0);
+        }
+
+        // If no parent, we're the root and so we're 100%
+        var parentData = this.parent;
+        if(parentData === null) {
+            return getAtom.call(this, 1);
+        }
+
+        var sumAbsAtom = parentData._dimensionNumberValue(operArgs);
+
+        // assert sumAbs >= |value| > 0
+
+        return getAtom.call(this, Math.abs(value) / sumAbsAtom.value);
+
+        function getAtom(value) {
+            return valueDim === null ? new cdo.NumberAtom(this.type, value) : valueDim.read(value);
+        }
     }
 })
 .type()
