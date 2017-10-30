@@ -768,7 +768,7 @@ def
         var roleBoundDimsDataSet = this.boundDimensionsDataSet;
 
         var discrimAtom = groupData.atoms[roleDiscrimDimName];
-        if(discrimAtom === undefined) {
+        if(discrimAtom === undefined || discrimAtom.value === null) {
             return true;
         }
 
@@ -781,7 +781,7 @@ def
         var roleBoundDimsDataSet = this.boundDimensionsDataSet;
 
         var discrimAtom = groupData.atoms[roleDiscrimDimName];
-        if(discrimAtom === undefined) {
+        if(discrimAtom === undefined || discrimAtom.value === null) {
             return this.grouping.dimensionNames();
         }
 
