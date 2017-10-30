@@ -506,6 +506,7 @@ def
             colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', this.visualRoles.color),
             rootData = data.owner,
             formatNullInterValueDim = rootData.dimensions(valueRole.firstDimensionName()),
+            defaultNumberFormatter = data.type.format.number(),
             orthoScale = this.axes.ortho.scale,
             orthoNullValue = def.scope(function() {
                     // If the data does not cross the origin,
@@ -745,8 +746,10 @@ def
                 interAccValue     = (toValueVar.accValue  + fromValueVar.accValue ) / 2;
                 interBasePosition = (toScene.basePosition + fromScene.basePosition) / 2;
 
-                var interValueDimName = valueRole.getBoundDimensionName(toScene.group);
-                interValueLabel = rootData.dimensions(interValueDimName).format(interValue);
+                var interValueDimName = toValueVar.dimensionName;
+                interValueLabel = interValueDimName
+                    ? rootData.dimensions(interValueDimName).format(interValue)
+                    : defaultNumberFormatter(interValue);
             }
 
             //----------------
