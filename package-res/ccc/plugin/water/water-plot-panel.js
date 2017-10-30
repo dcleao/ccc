@@ -279,12 +279,17 @@ def
             var categScene = new pvc.visual.Scene(rootScene, {source: categData1});
             var categVar = categScene.vars.category = pvc_ValueLabelVar.fromComplex(categData1);
             var value = ruleInfo.offset;
+            var valueLabel;
 
-            var valueDimName = valueRole.getBoundDimensionName(categData1);
-            var valueDim = rootData.dimensions(valueDimName);
+            var valueDimName = valueRole.getBoundDimensionName(categData1, /* isOptional: */true);
+            if(valueDimName !== null) {
+                valueLabel = rootData.dimensions(valueDimName).format(value);
+            } else {
+                valueLabel = rootData.type.format.number()(value);
+            }
 
             categVar.group = categData1;
-            categScene.vars.value = new pvc_ValueLabelVar(value, valueDim.format(value));
+            categScene.vars.value = new pvc_ValueLabelVar(value, valueLabel);
         }
 
         function completeCategScene(categScene, index) {

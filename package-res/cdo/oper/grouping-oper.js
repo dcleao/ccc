@@ -330,20 +330,18 @@ add(/** @lends cdo.GroupingOper# */{
                 }
 
                 // Datums were already added to _childNode_.
-                this._addChildDatums(levelParentNode, childNode.datums, groupExtensionDatumsMap);
+                this._addChildDatums(
+                    levelParentNode.datums, levelParentNode.datumsById, childNode.datums, groupExtensionDatumsMap);
             }
         }
     },
 
-    _addChildDatums: function(parentNode, childDatums, groupExtensionDatumsMap) {
-
-        var datums = parentNode.datums;
+    _addChildDatums: function(datums, datumsById, childDatums, groupExtensionDatumsMap) {
 
         if(groupExtensionDatumsMap === null) {
             // There is no way that there are duplicates.
             def.array.append(datums, childDatums);
         } else {
-            var datumsById = parentNode.datumsById;
             var i = -1;
             var L = childDatums.length;
             while(++i < L) {
@@ -371,6 +369,7 @@ add(/** @lends cdo.GroupingOper# */{
             absKey:   '',
             atoms:    {},
             datums:   [],
+            datumsById: {},
             label:    groupSpec.rootLabel,
             dimNames: []
         };
@@ -408,6 +407,7 @@ add(/** @lends cdo.GroupingOper# */{
             //
             // NOTE: levelParentNode.datums is initially empty
             var levelParentNodeDatums = !isLastGroup ? [] : levelParentNode.datums;
+            var levelParentNodeDatumsById = !isLastGroup ? {} : levelParentNode.datumsById;
 
             for(var i = 0, C = childNodes.length ; i < C ; i++) {
                 var childNode = childNodes[i],
@@ -428,7 +428,8 @@ add(/** @lends cdo.GroupingOper# */{
                     // Don't add as child of realGroupParentNode.
                     //
                     // We need to add its datums to group parent, anyway.
-                    def.array.append(levelParentNodeDatums, childDatums);
+                    this._addChildDatums(
+                        levelParentNodeDatums, levelParentNodeDatumsById, childDatums, groupExtensionDatumsMap);
                     continue;
                 }
 
@@ -440,6 +441,7 @@ add(/** @lends cdo.GroupingOper# */{
 
                 if(!isLastLevelOfLastGroupSpec) {
                     childNode.datums = [];
+                    childNode.datumsById = {};
 
                     if(!isLastLevel)
                         groupLevelRecursive.call(this, childNode, childDatums, levelExtensionDatumsMap, levelIndex + 1);
@@ -448,7 +450,8 @@ add(/** @lends cdo.GroupingOper# */{
                 }
 
                 // Datums are now already added to 'childNode'.
-                def.array.append(levelParentNodeDatums, childNode.datums);
+                this._addChildDatums(
+                    levelParentNodeDatums, levelParentNodeDatumsById, childNode.datums, groupExtensionDatumsMap);
 
                 if(isPostOrder) {
                     if(def.hasOwn(flatChildrenByKey, childNode.key)) {
@@ -650,7 +653,8 @@ add(/** @lends cdo.GroupingOper# */{
         // Also, does this need to be done when !levelParentNode.dimNames.atoms.
         def.copy(childNode.atoms, levelParentNode.atoms);
 
-        childNode.dimNames = level.accDimensionNames();
+        // levelParentNode.dimNames.concat(childNode.dimNames);
+        childNode.dimNames = level.accAllDimensionNames();
 
         // The _key_ is the _absKey_, trimmed of keySep at the end.
         // Foo~Bar~~~~ <--- this happens because of null values.

@@ -79,7 +79,7 @@ def.type('cdo.GroupingSpec')
     var levelKeys = [];
 
     // Accumulated main dimension names, from first level to last.
-    var accMainDimNames = [];
+    var mainDimNames = [];
     var allDimNames = [];
 
     var isDiscrete = false;
@@ -94,7 +94,7 @@ def.type('cdo.GroupingSpec')
 
             levelKeys.push(levelSpec.key);
 
-            allDimNames.push.apply(allDimNames, levelSpec.allDimensionNames);
+            mainDimNames.push.apply(mainDimNames, levelSpec.dimensionNames());
 
             levelSpec.allDimensions.forEach(function(dimSpec) {
 
@@ -105,9 +105,9 @@ def.type('cdo.GroupingSpec')
                     }
 
                     referencedExtensionComplexTypeNamesMap[dimSpec.dataSetName] = true;
+                    allDimNames.push(dimSpec.fullName);
                 } else {
-                    // Accumulate main dimension names.
-                    accMainDimNames.push(dimSpec.name);
+                    allDimNames.push(dimSpec.name);
                 }
 
                 if(complexType !== null && !isDiscrete) {
@@ -122,8 +122,8 @@ def.type('cdo.GroupingSpec')
                 }
             });
 
-            // Provide the level with the accumulated main dimensions names.
-            levelSpec._setAccDimNames(accMainDimNames.slice(0));
+            // Provide the level with the accumulated all dimensions names.
+            levelSpec._setAccAllDimNames(allDimNames.slice(0));
 
             return levelSpec;
         })
@@ -142,7 +142,7 @@ def.type('cdo.GroupingSpec')
     // ---
 
     // TODO: should this contain only distinct dimension names?
-    this._dimNames = accMainDimNames;
+    this._dimNames = mainDimNames;
     this._allDimNames = allDimNames;
 
     this.depth = this.levels.length;
@@ -565,7 +565,7 @@ def.type('cdo.GroupingLevelSpec')
     this._dimNames = dimNames;
     this._allDimNames = allDimNames;
 
-    // Set by #_setAccDimNames.
+    // Set by #_setAccAllDimNames.
     this._accDimNames = null;
 
     this.depth = this.allDimensions.length;
@@ -574,12 +574,12 @@ def.type('cdo.GroupingLevelSpec')
 })
 .add( /** @lends cdo.GroupingLevelSpec# */{
 
-    _setAccDimNames: function(accDimNames) {
+    _setAccAllDimNames: function(accDimNames) {
         this._accDimNames = accDimNames;
     },
 
-    // Accumulated main dimensions names.
-    accDimensionNames: function() {
+    // Accumulated all dimensions names.
+    accAllDimensionNames: function() {
         return this._accDimNames;
     },
 
