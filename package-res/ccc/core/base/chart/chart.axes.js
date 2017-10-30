@@ -607,7 +607,7 @@ pvc.BaseChart
         }
 
         // This implementation takes the union of
-        // the extents of each data cell.
+        // the extents of all data cells.
         // Even when a data cell has multiple data parts,
         // it is evaluated as a whole.
         return def.query(dataCells)

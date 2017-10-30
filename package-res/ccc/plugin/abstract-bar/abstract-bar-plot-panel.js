@@ -581,33 +581,33 @@ def
     },
 
     _buildSceneCore: function(data, axisSeriesDatas, axisCategDatas) {
-        var rootScene  = new pvc.visual.Scene(null, {panel: this, source: data}),
-            roles = this.visualRoles,
-            valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'value', roles.value, {hasPercentSubVar: this.stacked}),
-            colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', roles.color);
 
-        // Create starting scene tree
+        var rootScene  = new pvc.visual.Scene(null, {panel: this, source: data});
+
+        var valueVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'value', this.visualRoles.value, {hasPercentSubVar: this.stacked});
+        var colorVarHelper = new pvc.visual.RoleVarHelper(rootScene, 'color', this.visualRoles.color);
+
         axisSeriesDatas.forEach(createSeriesScene);
 
         return rootScene;
 
         function createSeriesScene(axisSeriesData) {
             /* Create series scene */
-            var seriesScene = new pvc.visual.Scene(rootScene, {source: axisSeriesData}),
-                seriesKey   = axisSeriesData.key;
+            var seriesScene = new pvc.visual.Scene(rootScene, {source: axisSeriesData});
+            var seriesKey = axisSeriesData.key;
 
             seriesScene.vars.series = pvc_ValueLabelVar.fromComplex(axisSeriesData);
 
             colorVarHelper.onNewScene(seriesScene, /* isLeaf */ false);
 
             axisCategDatas.forEach(function(axisCategData) {
-                /* Create leaf scene */
-                var categData = data.child(axisCategData.key),
-                    group = categData && categData.child(seriesKey),
-                    scene = new pvc.visual.Scene(seriesScene, {source: group}),
-                    categVar = scene.vars.category =
-                        pvc_ValueLabelVar.fromComplex(categData);
 
+                var categData = data.child(axisCategData.key);
+                var group = categData && categData.child(seriesKey);
+
+                var scene = new pvc.visual.Scene(seriesScene, {source: group});
+
+                var categVar = scene.vars.category = pvc_ValueLabelVar.fromComplex(categData);
                 categVar.group = categData;
 
                 valueVarHelper.onNewScene(scene, /* isLeaf */ true);

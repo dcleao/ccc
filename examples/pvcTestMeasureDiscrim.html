@@ -808,5 +808,43 @@ new pvc.SunburstChart({
         <div><div id="pvcExample12"></div></div>
     </div>
 </div>
+
+<h3>Chart with two measures but no discriminator</h3>
+
+<div class="tryItTable">
+    <div>
+        <div>
+<textarea cols="90" rows="21" id="pvcExample13Code">
+new pvc.BarChart({
+    canvas: "pvcExample13",
+    width:  500,
+    height: 400,
+    title: "Sales and Other Gains By Brand, split by Region",
+    animate: false,
+    selectable: true,
+    hoverable: true,
+    legend: true,
+    legendPosition: "right",
+    readers: ["region", "brand", "otherGains", "sales"],
+    plots: [
+        {
+            name: "main",
+            visualRoles: {
+                series: "region",
+                category: "brand",
+                value: "otherGains, sales"
+            }
+        }
+    ]
+})
+.setData(relational_04d, {
+    crosstabMode: false
+})
+.render();</textarea>
+            <button id="pvcExample13TryMe" class="tryMe" onclick='tryMe(this)'>Try me</button>
+        </div>
+        <div><div id="pvcExample13"></div></div>
+    </div>
+</div>
   </body>
 </html>

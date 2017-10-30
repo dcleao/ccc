@@ -93,17 +93,14 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
             var useAbs = valueAxis.scaleUsesAbs();
             if(valueAxis.type !== 'ortho' || !valueDataCell.isStacked) {
 
-                return def.query(valueRole.grouping.dimensionNames())
-                    .select(function(valueDimName) {
-
-                        return data.leafs()
-                            .select(function(serGroup) {
-                                var value = serGroup.dimensions(valueDimName).value();
-                                return useAbs && value < 0 ? -value : value;
-                            })
-                            .range();
+                // Leaf data sets either have a discriminator dimension settled or not.
+                // If yes, use that dimension, if not sum all bound dimensions.
+                return data.leafs()
+                    .select(function(serGroup) {
+                        var value = valueRole.numberValueOf(serGroup).value;
+                        return useAbs && value < 0 ? -value : value;
                     })
-                    .reduce(pvc.unionExtents, null);
+                    .range();
             }
 
             // ortho axis and stacked...!
@@ -152,7 +149,6 @@ def('pvc.visual.CategoricalPlot', pvc.visual.CartesianPlot.extend({
         _getStackedCategoryValueExtent: function(catGroup, valueRole, useAbs) {
             var posSum = null;
             var negSum = null;
-            var getBoundDimensionName = valueRole.getBoundDimensionName.bind(valueRole);
 
             catGroup
                 .children()
