@@ -209,6 +209,7 @@ def
             }
 
             roleVar = pvc_ValueLabelVar.fromAtom(valueAtom);
+            roleVar.dimensionName = valueDimName;
 
             // Calculate the percent value.
             if(roleVar.value != null && this.hasPercentSubVar && scene.group !== null) {
@@ -229,6 +230,7 @@ def
         var valueAtom = this.role.numberValueOf(groupData);
 
         var roleVar = pvc_ValueLabelVar.fromAtom(valueAtom);
+        roleVar.dimensionName = valueAtom.dimension !== null ? valueAtom.dimension.name : null;
 
         if(this.hasPercentSubVar) {
             var valuePctAtom = valueAtom.value !== null ? this.role.percentOf(groupData) : null;

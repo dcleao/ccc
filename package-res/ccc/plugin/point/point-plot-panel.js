@@ -552,7 +552,8 @@ def
                 valueVarHelper.onNewScene(serCatScene, /* isLeaf */ true);
 
                 var valueVar = serCatScene.vars.value,
-                    value    = valueVar.value;
+                    value    = valueVar.value,
+                    valueDimName = valueVar.dimensionName;
 
                 // accumulated value, for stacked
                 valueVar.accValue = value != null ? value : orthoNullValue;
@@ -565,8 +566,21 @@ def
                 // When ignoreNulls=false and nullInterpolatedMode!='none'
                 // an interpolated datum may appear along a null datum...
                 // Testing if the first datum is interpolated is thus not sufficient.
-                var isInterpolated = group != null &&
-                                     group.datums().prop('isInterpolated').any(def.truthy);
+                var isInterpolated = false;
+                if(group != null) {
+                    var valueDimNames = null;
+                    if(valueDimName === null) {
+                        valueDimNames = valueRole.getCompatibleBoundDimensionNames(group);
+                    }
+
+                    isInterpolated = group.datums()
+                        .any(function(datum) {
+                            return datum.isInterpolated &&
+                                (valueDimName !== null
+                                    ? datum.interpDimName === valueDimName
+                                    : valueDimNames.indexOf(datum.interpDimName) >= 0);
+                        });
+                }
                 //isInterpolatedMiddle = firstDatum.isInterpolatedMiddle;
 
                 serCatScene.isInterpolated = isInterpolated;

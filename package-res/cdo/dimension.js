@@ -62,6 +62,8 @@ def.type('cdo.Dimension')
         // Atoms are interned by #intern
         this._atoms = [];
 
+        this._lazyInit = null;
+
         dim_createVirtualNullAtom.call(this);
 
     } else {
@@ -247,7 +249,7 @@ def.type('cdo.Dimension')
      * @see cdo.Dimension#owner
      */
     count: function() {
-        if(this._lazyInit) this._lazyInit();
+        if(this._lazyInit !== null) this._lazyInit();
         return this._atoms.length;
     },
 
@@ -266,7 +268,7 @@ def.type('cdo.Dimension')
      * @type boolean
      */
     isVisible: function(atom) {
-        if(this._lazyInit) this._lazyInit();
+        if(this._lazyInit !== null) this._lazyInit();
 
         // <Debug>
         /*jshint expr:true */
@@ -296,7 +298,7 @@ def.type('cdo.Dimension')
      * @see cdo.Dimension#owner
      */
     atoms: function(keyArgs) {
-        if(this._lazyInit) this._lazyInit();
+        if(this._lazyInit !== null) this._lazyInit();
 
         var visible = def.get(keyArgs, 'visible');
         if(visible == null) return this._atoms;
@@ -321,7 +323,7 @@ def.type('cdo.Dimension')
      * @type number[]
      */
     indexes: function(keyArgs) {
-        if(this._lazyInit) this._lazyInit();
+        if(this._lazyInit !== null) this._lazyInit();
 
         var visible = def.get(keyArgs, 'visible');
         // Not used much so generate each time
@@ -346,7 +348,7 @@ def.type('cdo.Dimension')
         if(value == null || value === '') return this._nullAtom; // may be null
         if(value instanceof cdo.Atom) return value;
 
-        if(this._lazyInit) this._lazyInit();
+        if(this._lazyInit !== null) this._lazyInit();
         var typeKey = this.type._key,
             key = typeKey ? typeKey.call(null, value) : value;
         return this._atomsByKey[key] || null; // undefined -> null
@@ -642,6 +644,8 @@ def.type('cdo.Dimension')
         var zeroIfNone = def.get(keyArgs, 'zeroIfNone', true);
         var key = dim_buildDatumsFilterKey(keyArgs) + ':' + isAbs;
 
+        // NOTE: does not need _lazyInit, so _sumCache must be cleared even if not lazyInited.
+
         var sumAtom = def.getOwn(this._sumCache, key);
         if(sumAtom === undefined) {
 
@@ -874,19 +878,22 @@ def.type('cdo.Dimension')
         // </Debug>
 
         // - ATOM -
-        var atom;
-        if((atom = this._atomsByKey[key]) !== undefined) {
-            if(intern && !isVirtual && atom.isVirtual) {
-                delete atom.isVirtual;
-            }
-            return atom;
-        }
 
+        var atom;
         if(intern) {
+            if(this._lazyInit !== null) this._lazyInit();
+
+            if((atom = this._atomsByKey[key]) !== undefined) {
+                if(intern && !isVirtual && atom.isVirtual) {
+                    delete atom.isVirtual;
+                }
+                return atom;
+            }
+
             return dim_createAndInternAtom.call(this, sourceValue, key, value, label, isVirtual);
         }
 
-        if((this !== this.owner) && (atom = this.owner._atomsByKey[key]) !== undefined) {
+        if((atom = this.owner._atomsByKey[key]) !== undefined) {
             return atom;
         }
 
@@ -937,6 +944,9 @@ def.type('cdo.Dimension')
  * @type cdo.Atom
  */
 function dim_createAndInternAtom(sourceValue, key, value, label, isVirtual) {
+
+    // Requires _lazyInit to have been called before.
+
     var atom;
     if(this.owner === this) {
         // Create the atom
@@ -981,6 +991,8 @@ function dim_internAtom(atom) {
     var key = atom.key,
         me = this;
 
+    var hasInited = !me._lazyInit;
+
     // Root load will fall in this case
     if(atom.dimension === me) {
         /*jshint expr:true */
@@ -994,17 +1006,26 @@ function dim_internAtom(atom) {
         // and the virtual null atom will not show up again,
         // because it appears through the prototype chain
         // as a default value.
-        if(!key && atom === me._virtualNullAtom) atom = me.intern(null);
+        if(!key && atom === me._virtualNullAtom) {
+            atom = me.intern(null);
+        } else if(hasInited) {
+            dim_clearVisiblesCache.call(this);
+        } else {
+            this._sumCache = null;
+        }
 
         return atom;
     }
 
-    var hasInited = !me._lazyInit;
     if(hasInited) {
         // Else, not yet initialized, so there's no need to add the atom now
         var localAtom = me._atomsByKey[key];
         if(localAtom) {
             if(localAtom !== atom) throw def.error.operationInvalid("Atom is from a different root data.");
+
+            // Anyway, because we're probably adding datums to the owner data,
+            // clear caches.
+            dim_clearVisiblesCache.call(me);
             return atom;
         }
 
@@ -1026,6 +1047,8 @@ function dim_internAtom(atom) {
         }
 
         dim_clearVisiblesCache.call(me);
+    } else {
+        this._sumCache = null;
     }
 
     return atom;

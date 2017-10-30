@@ -153,6 +153,7 @@ cdo.Data.add(/** @lends cdo.Data# */{
                 datumsByKey[newDatum.key]  = newDatum;
 
                 if(internAtoms) {
+                    // Also clears dimensions' caches.
                     data_processDatumAtoms.call(
                         this,
                         newDatum,
