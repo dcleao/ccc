@@ -419,5 +419,79 @@ A pie can be converted into a donut by simple adding an extension point:
 
         <button class="tryMe" onclick='tryMe(this)'>Try me</button>
         <div id="pvcPie3"></div>
+
+
+    <h3>Concentric Pies</h3>
+
+    <textarea cols="55" rows="23" id="pvcPie4Code">
+var pie4 = new pvc.PieChart({
+    canvas: 'pvcPie4',
+    width:  450,
+    height: 350,
+
+    // Data source
+    crosstabMode: false,
+    readers: 'region, brand, quantity, sales',
+
+    // Data
+    dimensions: {
+        // Dimension bound to "dataPart" is hidden by default
+        region: {isHidden: false},
+        // Sort brands
+        brand:  {comparer: def.ascending},
+        // Notice the currency sign and the /1000 scale factor (the comma beside the dot).
+        sales:  {valueType: Number, format: "¤#,0,.0K"}
+    },
+
+    // Visual Roles
+    visualRoles: {
+        // Chart
+        dataPart: 'region',
+
+        // Main plot
+        value:    'sales',
+        category: 'brand'
+    },
+
+    // Plots
+    plots: [
+        {
+            // Main plot (outer)
+            name: 'main',
+            dataPart: 'EMEA',
+            valuesLabelStyle: 'inside',
+            valuesOptimizeLegibility: true,
+            slice_innerRadiusEx: '60%',
+            slice_strokeStyle:   'white'
+        },
+        {
+            // Second plot (inner)
+            name: 'inner',
+            type: 'pie',
+            dataPart: 'APAC',
+            valuesLabelStyle: 'inside',
+            valuesOptimizeLegibility: true,
+            slice_strokeStyle: 'white',
+            slice_outerRadius: function() {
+                return 0.5 * this.delegate(); // 50%
+            }
+        }
+    ],
+
+    // Panels
+    legend: true,
+
+    // Chart/Interaction
+    animate:    false,
+    selectable: true,
+    hoverable:  true
+})
+.setData(relational_04b)
+.render();
+</textarea>
+
+    <button class="tryMe" onclick='tryMe(this)'>Try me</button>
+    <div id="pvcPie4"></div>
+
   </body>
 </html>

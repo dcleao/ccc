@@ -593,21 +593,20 @@ new pvc.BarChart({
 <textarea cols="90" rows="21" id="pvcExample8Code">
 new pvc.BarChart({
     canvas: "pvcExample8",
-    width:  500,
+    width:  600,
     height: 350,
-    title: "Sales By Date and Split By City vs " +
-      "Profit By Date and Split By City",
+    title: "Sales and Profit By Date and Split By City",
     animate: false,
     selectable: true,
     hoverable: true,
     legend: true,
     orthoAxisDomainScope: "cell",
+    multiChartColumnsMax: 1,
     legendPosition: "right",
-    readers: ["city", "date", "profit", "sales"],
+    readers: ["city", "date", "costs", "sales"],
     visualRoles: {
         multiChart: "valueRole.dim",
     },
-    orientation: "horizontal",
     plots: [
         {
             name: "main",
@@ -620,15 +619,14 @@ new pvc.BarChart({
         },
         {
             type: "point",
-            areasVisible: true,
             stacked: true,
             visualRoles: {
-                value: "profit"
+                value: "costs"
             }
         }
     ]
 })
-.setData(relational_01_2measures_pos, {
+.setData(relational_01_2measures_costs_sales_pos, {
     crosstabMode: false
 })
 .render();</textarea>
