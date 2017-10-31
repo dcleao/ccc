@@ -71,8 +71,6 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
         this.dataCellList = [];
         this.dataCellsByRole = {}; // role name -> [] dataCells
 
-        this.dataPartValue = this.option('DataPart');
-
         // -------------
 
         var plotSpec = def.get(keyArgs, 'spec');
@@ -80,6 +78,12 @@ def('pvc.visual.Plot', pvc.visual.OptionsBase.extend({
     },
 
     methods: /** @lends pvc.visual.Plot# */{
+
+        // Reading on constructor caused problems because processSpec had not been called yet, for internal plots.
+        get dataPartValue() {
+            return this.option('DataPart');
+        },
+
         /** @override */
         _buildOptionId: function(keyArgs) { return def.get(keyArgs, 'optionId', this.id); },
 
